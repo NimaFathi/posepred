@@ -6,9 +6,9 @@ from collections import defaultdict
 from preprocessor.preprocessor import Processor, OUTPUT_DIR
 
 
-class PoseTrack_Preprocessor(Processor):
+class PoseTrackPreprocessor(Processor):
     def __init__(self, mask):
-        super(PoseTrack_Preprocessor, self).__init__()
+        super(PoseTrackPreprocessor, self).__init__()
         self.dataset_total_frame_num = 30
         self.mask = mask
 
