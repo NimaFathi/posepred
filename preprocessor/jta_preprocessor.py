@@ -3,10 +3,10 @@ import json
 import os
 import re
 from collections import defaultdict
-
 import numpy as np
 
 from preprocessor.preprocessor import Processor, OUTPUT_DIR
+
 
 class JTA_Preprocessor(Processor):
     def __init__(self, is_3d, mask):
@@ -28,7 +28,8 @@ class JTA_Preprocessor(Processor):
             writer.writerow(header)
 
         total_frame_num = self.obs_frame_num + self.pred_frame_num
-        section_range = self.dataset_total_frame_num // (total_frame_num * self.skip_frame_num) if self.use_video_once is False else 1
+        section_range = self.dataset_total_frame_num // (
+                    total_frame_num * self.skip_frame_num) if self.use_video_once is False else 1
 
         for entry in os.scandir(self.dataset_path):
             with open(entry.path, 'r') as json_file:
@@ -74,7 +75,8 @@ class JTA_Preprocessor(Processor):
             writer.writerow(header)
 
         total_frame_num = self.obs_frame_num + self.pred_frame_num
-        section_range = self.dataset_total_frame_num // (total_frame_num * self.skip_frame_num) if self.use_video_once is False else 1
+        section_range = self.dataset_total_frame_num // (
+                    total_frame_num * self.skip_frame_num) if self.use_video_once is False else 1
 
         for entry in os.scandir(self.dataset_path):
             with open(entry.path, 'r') as json_file:
@@ -120,7 +122,8 @@ class JTA_Preprocessor(Processor):
                                 future_dict_global[p_id].append(global_poses[p_id])
                                 future_dict_local[p_id].append(local_poses[p_id])
                     for p_id in obs_dict_global:
-                        if p_id in future_dict_global.keys() and obs_dict_global[p_id].__len__() == self.obs_frame_num and \
+                        if p_id in future_dict_global.keys() and obs_dict_global[
+                            p_id].__len__() == self.obs_frame_num and \
                                 future_dict_global[
                                     p_id].__len__() == self.pred_frame_num:
                             obs_global.append(obs_dict_global[p_id])
@@ -137,7 +140,6 @@ class JTA_Preprocessor(Processor):
                     writer = csv.writer(f_object)
                     writer.writerows(data_local)
 
-
     def mask(self, data_type='train'):
         header = ['video_section', 'observed_mask', 'future_mask']
         with open(os.path.join(OUTPUT_DIR, 'JTA_{}.csv'.format(data_type)), 'w') as f_object:
@@ -145,7 +147,8 @@ class JTA_Preprocessor(Processor):
             writer.writerow(header)
 
         total_frame_num = self.obs_frame_num + self.pred_frame_num
-        section_range = self.dataset_total_frame_num // (total_frame_num * self.skip_frame_num) if self.use_video_once is False else 1
+        section_range = self.dataset_total_frame_num // (
+                    total_frame_num * self.skip_frame_num) if self.use_video_once is False else 1
 
         for entry in os.scandir(self.dataset_path):
             with open(entry.path, 'r') as json_file:
