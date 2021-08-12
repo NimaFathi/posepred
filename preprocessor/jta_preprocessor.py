@@ -3,14 +3,16 @@ import json
 import os
 import re
 from collections import defaultdict
+
 import numpy as np
 
 from preprocessor.preprocessor import Processor, OUTPUT_DIR
 
 
 class JTAPreprocessor(Processor):
-    def __init__(self, is_3d, mask):
-        super(JTAPreprocessor, self).__init__()
+    def __init__(self, is_3d, mask, is_disentangle, obs_frame_num, pred_frame_num, skip_frame_num, use_video_once):
+        super(JTAPreprocessor, self).__init__(is_disentangle, obs_frame_num, pred_frame_num, skip_frame_num,
+                                              use_video_once)
         self.dataset_total_frame_num = 900
         self.is_3d = is_3d
         self.mask = mask
@@ -164,7 +166,7 @@ class JTAPreprocessor(Processor):
                     future = []
                     for j in range(1, total_frame_num * self.skip_frame_num + 1, self.skip_frame_num):
                         poses = defaultdict(list)
-                        frame = matrix[matrix[:, 0] == i * total_frame_num * self.skip_frame_num + j]  # find frame data
+                        frame = matrix[matrix[:, 0] == i * total_frame_num * self.skip_frame_num + j]
                         for pose in frame:
                             masked = 0
                             for masking_state in range(8, 10):

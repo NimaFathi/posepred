@@ -7,8 +7,9 @@ from preprocessor.preprocessor import Processor, OUTPUT_DIR
 
 
 class PoseTrackPreprocessor(Processor):
-    def __init__(self, mask):
-        super(PoseTrackPreprocessor, self).__init__()
+    def __init__(self, mask, is_disentangle, obs_frame_num, pred_frame_num, skip_frame_num, use_video_once):
+        super(PoseTrackPreprocessor, self).__init__(is_disentangle, obs_frame_num, pred_frame_num, skip_frame_num,
+                                                    use_video_once)
         self.dataset_total_frame_num = 30
         self.mask = mask
 
@@ -18,7 +19,8 @@ class PoseTrackPreprocessor(Processor):
             writer = csv.writer(f_object)
             writer.writerow(header)
         total_frame_num = self.obs_frame_num + self.pred_frame_num
-        section_range = self.dataset_total_frame_num // (total_frame_num * self.skip_frame_num) if self.use_video_once is False else 1
+        section_range = self.dataset_total_frame_num // (
+                    total_frame_num * self.skip_frame_num) if self.use_video_once is False else 1
 
         for entry in os.scandir(self.dataset_path):
             with open(entry.path, 'r') as json_file:
@@ -63,7 +65,8 @@ class PoseTrackPreprocessor(Processor):
             writer = csv.writer(f_object)
             writer.writerow(header)
         total_frame_num = self.obs_frame_num + self.pred_frame_num
-        section_range = self.dataset_total_frame_num // (total_frame_num * self.skip_frame_num) if self.use_video_once is False else 1
+        section_range = self.dataset_total_frame_num // (
+                    total_frame_num * self.skip_frame_num) if self.use_video_once is False else 1
 
         for entry in os.scandir(self.dataset_path):
             with open(entry.path, 'r') as json_file:
@@ -104,7 +107,8 @@ class PoseTrackPreprocessor(Processor):
             writer = csv.writer(f_object)
             writer.writerow(header)
         total_frame_num = self.obs_frame_num + self.pred_frame_num
-        section_range = self.dataset_total_frame_num // (total_frame_num * self.skip_frame_num) if self.use_video_once is False else 1
+        section_range = self.dataset_total_frame_num // (
+                    total_frame_num * self.skip_frame_num) if self.use_video_once is False else 1
 
         for entry in os.scandir(self.dataset_path):
             with open(entry.path, 'r') as json_file:
@@ -154,7 +158,8 @@ class PoseTrackPreprocessor(Processor):
             writer = csv.writer(f_object)
             writer.writerow(header)
         total_frame_num = self.obs_frame_num + self.pred_frame_num
-        section_range = self.dataset_total_frame_num // (total_frame_num * self.skip_frame_num) if self.use_video_once is False else 1
+        section_range = self.dataset_total_frame_num // (
+                    total_frame_num * self.skip_frame_num) if self.use_video_once is False else 1
 
         for entry in os.scandir(self.dataset_path):
             with open(entry.path, 'r') as json_file:
