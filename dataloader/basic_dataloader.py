@@ -14,7 +14,9 @@ def basic_dataloader(dataset_name, use_mask, skip_frame, is_multi_person, batch_
     return dataloader
 
 
-dataloader = basic_dataloader('simple_dataset', True, 0, False, 32, True, False, 1)
+dataloader = basic_dataloader(dataset_name='simple_dataset', use_mask=False, skip_frame=0, is_multi_person=False,
+                              batch_size=3, shuffle=False, pin_memory=False, num_workers=1)
 
-for idx, (obs_s, target_s, obs_pose, target_pose, obs_mask, target_mask) in enumerate(dataloader):
+for idx, (obs_pose, obs_vel, future_pose, future_vel) in enumerate(dataloader):
+    print(obs_s)
     print(idx)

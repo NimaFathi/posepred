@@ -43,7 +43,7 @@ class Basic_Dataset(Dataset):
             person_future_pose_frames = seq.future_pose[person_index]
             future_pose = torch.tensor(
                 [person_future_pose_frames[i] for i in range(0, self.future_frames_num, self.skip_frame + 1)])
-            future_vel = torch.cat((future_pose[0] - obs_pose[-1]).unsqueeze(0), future_pose[1:] - future_pose[:-1])
+            future_vel = torch.cat(((future_pose[0] - obs_pose[-1]).unsqueeze(0), future_pose[1:] - future_pose[:-1]))
 
             outputs_p.append(obs_pose)
             outputs_p.append(obs_vel)
@@ -55,10 +55,10 @@ class Basic_Dataset(Dataset):
                 obs_mask = torch.tensor(
                     [person_obs_mask_frames[i] for i in range(0, self.obs_frames_num, self.skip_frame + 1)])
                 person_future_mask_frames = seq.future_mask[person_index]
-                true_mask = torch.tensor(
+                future_mask = torch.tensor(
                     [person_future_mask_frames[i] for i in range(0, self.future_frames_num, self.skip_frame + 1)])
                 outputs.append(obs_mask)
-                outputs.append(true_mask)
+                outputs.append(future_mask)
             outputs.append(tuple(outputs_p))
 
         if self.is_multi_person:
