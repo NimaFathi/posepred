@@ -29,6 +29,7 @@ class Basic_Dataset(Dataset):
         seq = self.data.iloc[index]
         assert len(seq.observed_pose) == len(
             seq.future_pose), "number of persons must be equal in observed and future frames."
+        seq_persons_num = len(seq.observed_pose)
 
         outputs = []
         for person_index in range(seq_persons_num):
