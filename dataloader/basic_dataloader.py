@@ -67,15 +67,3 @@ def basic_dataloader(args):
         dataset, batch_size=args.batch_size, shuffle=args.loader_shuffle,
         pin_memory=args.pin_memory)
     return dataloader
-
-# data = pd.read_csv('../preprocessed_data/simple_dataset.csv')
-# for col in list(data.columns.values):
-#     try:
-#         data.loc[:, col] = data.loc[:, col].apply(lambda x: literal_eval(x))
-#     except Exception as e:
-#         print("Exception of type", type(e), "occurred: ", e.args)
-#         continue
-# self_data = data.copy().reset_index(drop=True)
-#
-# seq = self_data.iloc[0]
-# print(seq.observed_pose)
