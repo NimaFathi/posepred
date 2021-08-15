@@ -1,8 +1,7 @@
 import os
 from consts import ROOT_DIR
 
-
-OUTPUT_DIR = os.path.join(ROOT_DIR, 'preprocessed_data')
+OUTPUT_DIR = os.path.join(ROOT_DIR[:ROOT_DIR.rindex('/')], 'preprocessed_data/')
 
 
 class Processor:
@@ -12,5 +11,3 @@ class Processor:
         self.pred_frame_num = pred_frame_num
         self.skip_frame_num = skip_frame_num
         self.use_video_once = use_video_once
-
-

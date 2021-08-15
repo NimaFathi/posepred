@@ -2,6 +2,7 @@ import torch
 from torch.utils.data import Dataset, DataLoader
 import pandas as pd
 from ast import literal_eval
+from consts import ROOT_DIR
 
 
 class Basic_Dataset(Dataset):
@@ -61,9 +62,13 @@ class Basic_Dataset(Dataset):
         return tuple(outputs)
 
 
-def basic_dataloader(args):
-    dataset = Basic_Dataset(args)
-    dataloader = DataLoader(
-        dataset, batch_size=args.batch_size, shuffle=args.loader_shuffle,
-        pin_memory=args.pin_memory)
-    return dataloader
+# def basic_dataloader(args):
+#     dataset = Basic_Dataset(args)
+#     dataloader = DataLoader(
+#         dataset, batch_size=args.batch_size, shuffle=args.loader_shuffle,
+#         pin_memory=args.pin_memory)
+#     return dataloader
+
+
+
+print(ROOT_DIR)
