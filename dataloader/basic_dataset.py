@@ -2,10 +2,11 @@ import torch
 from torch.utils.data import Dataset
 import pandas as pd
 from ast import literal_eval
+import random
 
 
 class Basic_Dataset(Dataset):
-    def __init__(self, dataset_path, use_mask, skip_frame):
+    def __init__(self, dataset_path, use_mask, skip_frame, is_multi_person):
         data = pd.read_csv(dataset_path)
         for col in list(data.columns.values):
             try:
@@ -19,6 +20,7 @@ class Basic_Dataset(Dataset):
         self.future_frames_num = len(seq.future_pose[0])
         self.use_mask = use_mask
         self.skip_frame = skip_frame
+        self.is_multi_person = is_multi_person
 
     def __len__(self):
         return len(self.data)
@@ -27,7 +29,6 @@ class Basic_Dataset(Dataset):
         seq = self.data.iloc[index]
         assert len(seq.observed_pose) == len(
             seq.future_pose), "number of persons must be equal in observed and future frames."
-        seq_persons_num = len(seq.observed_pose)
 
         outputs = []
         for person_index in range(seq_persons_num):
@@ -57,6 +58,9 @@ class Basic_Dataset(Dataset):
                     [person_future_mask_frames[i] for i in range(0, self.future_frames_num, self.skip_frame + 1)])
                 outputs.append(obs_mask)
                 outputs.append(true_mask)
-            outputs.append(outputs_p)
+            outputs.append(tuple(outputs_p))
 
-        return tuple(outputs)
+        if self.is_multi_person:
+            return outputs
+        else:
+            return random.choice(outputs)
