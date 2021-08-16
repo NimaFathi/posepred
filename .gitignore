@@ -239,3 +239,6 @@ venv
 venv/
 
 # End of https://www.toptal.com/developers/gitignore/api/pycharm,pycharm+iml,pycharm+all,venv
+
+*__pycache__*
+*.pyc
