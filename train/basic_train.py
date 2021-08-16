@@ -38,7 +38,7 @@ class TrainHandler:
         train_s_scores = []
         val_s_scores = []
         for epoch in range(self.training_args.start_epoch, self.training_args.epochs):
-            epoch_time_0 = time.time()
+            train_time = time.time()
             avg_epoch_train_speed_loss = AverageMeter()
             avg_epoch_val_speed_loss = AverageMeter()
             avg_epoch_train_mask_loss = AverageMeter()
