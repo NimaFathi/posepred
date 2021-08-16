@@ -1,7 +1,7 @@
 import os
 from consts import ROOT_DIR
 
-OUTPUT_DIR = os.path.join(ROOT_DIR[:ROOT_DIR.rindex('/')], 'preprocessed_data/')
+OUTPUT_DIR = os.path.join(ROOT_DIR, 'preprocessed_data/')
 
 
 class Processor:
