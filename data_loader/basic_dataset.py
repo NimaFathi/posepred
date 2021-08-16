@@ -5,7 +5,7 @@ from ast import literal_eval
 
 
 class BasicDataset(Dataset):
-    def __init__(self, dataset_path, use_mask, skip_frame):
+    def __init__(self, dataset_path, data_dim, use_mask, skip_frame):
         data = pd.read_csv(dataset_path)
         for col in list(data.columns.values):
             try:
@@ -15,6 +15,7 @@ class BasicDataset(Dataset):
                 continue
         self.data = data.copy().reset_index(drop=True)
         seq = self.data.iloc[0]
+        self.data_dim = data_dim
         self.obs_frames_num = len(seq.observed_pose[0])
         self.future_frames_num = len(seq.future_pose[0])
         self.use_mask = use_mask

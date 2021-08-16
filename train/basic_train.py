@@ -30,6 +30,7 @@ class TrainHandler:
         self.l1 = nn.L1Loss()
         self.bce = nn.BCELoss()
         self.device = 'cuda'
+        self.dim = self.dataloader.dataset.data_dim
 
     def train(self):
         train_time_0 = time.time()
