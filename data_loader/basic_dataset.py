@@ -15,11 +15,17 @@ class BasicDataset(Dataset):
                 continue
         self.data = data.copy().reset_index(drop=True)
         seq = self.data.iloc[0]
-        self.data_dim = data_dim
+        self.dim = data_dim
         self.obs_frames_num = len(seq.observed_pose[0])
         self.future_frames_num = len(seq.future_pose[0])
         self.use_mask = use_mask
         self.skip_frame = skip_frame
+
+        obs_frame = seq.observed_pose[0][0]
+        future_frame = seq.future_pose[0][0]
+        assert len(obs_frame) == len(future_frame), "(joints_num * dim) must be equal for observed and future frames."
+        assert len(obs_frame) % self.dim == 0, "for each joint, you sould specify " + str(self.dim) + " cordinates."
+        self.joints = len(obs_frame) / self.dim
 
     def __len__(self):
         return len(self.data)
