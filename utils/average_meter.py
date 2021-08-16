@@ -12,4 +12,7 @@ class AverageMeter(object):
         self.count += n
 
     def get_average(self):
+        assert not (self.count == 0 and self.sum != 0)
+        if self.count == 0:
+            return 0
         return self.sum / self.count
