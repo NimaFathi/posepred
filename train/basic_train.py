@@ -1,5 +1,14 @@
+import os
+import sys
+import time
+import torch
+import torch.optim as optim
+import torch.nn as nn
+
 from dataloader.dataloader import get_dataloader
-from utils.others import get_model, load_model, save_model
+from utils.save_load import get_model, load_model, save_checkpoint
+
+
 #
 # for idx, persons in enumerate(dataloader):
 #     print(idx)
@@ -7,37 +16,25 @@ from utils.others import get_model, load_model, save_model
 #         print(obs_pose.shape)
 
 
-import os, sys, time
-import torch
-import torch.nn as nn
-
-if __name__ == '__main__':
-
-    train_loader, val_loader = set_dataloader(opt)
-
-    optimizer = set_optimizer(opt, model)
-    scheduler = set_scheduler(opt, optimizer)
-    train(train_loader, val_loader, model, optimizer, scheduler, opt)
-
-
 class TrainHandler:
 
     def __init__(self, dataloader_args, model_args, training_args):
         self.dataloader = get_dataloader(dataloader_args)
+        self.model = load_model(model_args.load_path) if model_args.load_path else get_model(model_args)
+        self.optimizer = optim.Adam(self.model.parameters(), lr=training_args.lr)
+        self.scheduler = optim.lr_scheduler.ReduceLROnPlateau(self.optimizer, factor=training_args.decay_factor,
+                                                              patience=training_args.decay_patience, threshold=1e-8,
+                                                              verbose=True)
+        self.training_args = training_args
+        self.l1 = nn.L1Loss()
+        self.bce = nn.BCELoss()
 
-        if model_args.load_checkpoint_path is not None:
-            model = load_model()
-        else:
-            model = get_model(model_args)
-
-    def train(train_loader, val_loader, model, optimizer, scheduler, opt):
-        training_start = time.time()
-        l1e = nn.L1Loss()
-        bce = nn.BCELoss()
+    def train(self):
+        train_time_0 = time.time()
         train_s_scores = []
         val_s_scores = []
-        for epoch in range(opt.epochs):
-            start = time.time()
+        for epoch in range(self.training_args.start_epoch, self.training_args.epochs):
+            epoch_time_0 = time.time()
             avg_epoch_train_speed_loss = AverageMeter()
             avg_epoch_val_speed_loss = AverageMeter()
             avg_epoch_train_mask_loss = AverageMeter()
@@ -59,8 +56,8 @@ class TrainHandler:
                 batch_size = obs_s.shape[0]
                 model.zero_grad()
                 (speed_preds, mask_preds) = model(pose=obs_pose, vel=obs_s, mask=obs_mask)
-                speed_loss = l1e(speed_preds, target_s)
-                mask_loss = bce(mask_preds, target_mask)
+                speed_loss = self.l1(speed_preds, target_s)
+                mask_loss = self.bce(mask_preds, target_mask)
                 mask_acc = mask_accuracy(mask_preds, target_mask)
 
                 preds_p = speed2pos(speed_preds, obs_pose)
@@ -116,6 +113,3 @@ class TrainHandler:
             sys.stdout.flush()
         print("*" * 100)
         print('TRAINING Postrack DONE in:{}!'.format(time.time() - training_start))
-
-
-
