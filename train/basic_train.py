@@ -1,4 +1,5 @@
 from dataloader.dataloader import get_dataloader
+from utils.others import get_model, load_model, save_model
 #
 # for idx, persons in enumerate(dataloader):
 #     print(idx)
@@ -10,11 +11,20 @@ import os, sys, time
 import torch
 import torch.nn as nn
 
+if __name__ == '__main__':
+
+    train_loader, val_loader = set_dataloader(opt)
+
+    optimizer = set_optimizer(opt, model)
+    scheduler = set_scheduler(opt, optimizer)
+    train(train_loader, val_loader, model, optimizer, scheduler, opt)
+
 
 class TrainHandler:
 
     def __init__(self, dataloader_args, model_args, training_args):
         self.dataloader = get_dataloader(dataloader_args)
+        model = get_model(model_args)
 
     def train(train_loader, val_loader, model, optimizer, scheduler, opt):
         training_start = time.time()
@@ -103,12 +113,5 @@ class TrainHandler:
         print("*" * 100)
         print('TRAINING Postrack DONE in:{}!'.format(time.time() - training_start))
 
-    if __name__ == '__main__':
-        opt = parse_option('lstm_vel', 'posetrack')
-        train_loader, val_loader = set_dataloader(opt)
-        model = set_model(opt)
-        if opt.load_ckpt is not None:
-            model = load_model(opt)
-        optimizer = set_optimizer(opt, model)
-        scheduler = set_scheduler(opt, optimizer)
-        train(train_loader, val_loader, model, optimizer, scheduler, opt)
+
+
