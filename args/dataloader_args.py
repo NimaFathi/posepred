@@ -12,7 +12,7 @@ class DataloaderArgs:
 
 
 def parse_dataloader_args():
-    parser = argparse.ArgumentParser('Argument for Dataloader.')
+    parser = argparse.ArgumentParser('Argument for Dataloader')
     parser.add_argument('--dataset_name', type=str, help='dataset_name')
     parser.add_argument('--use_mask', type=bool, default=False, help='visibility mask')
     parser.add_argument('--batch_size', type=int, default=1, help='batch_size')
