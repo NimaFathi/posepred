@@ -24,7 +24,11 @@ class TrainHandler:
 
     def __init__(self, dataloader_args, model_args, training_args):
         self.dataloader = get_dataloader(dataloader_args)
-        model = get_model(model_args)
+
+        if model_args.load_checkpoint_path is not None:
+            model = load_model()
+        else:
+            model = get_model(model_args)
 
     def train(train_loader, val_loader, model, optimizer, scheduler, opt):
         training_start = time.time()
