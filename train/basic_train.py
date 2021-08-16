@@ -5,7 +5,7 @@ import torch
 import torch.optim as optim
 import torch.nn as nn
 
-from dataloader.dataloader import get_dataloader
+from data_loader.data_loader import get_dataloader
 from utils.save_load import get_model, load_model, save_checkpoint
 from utils.average_meter import AverageMeter
 

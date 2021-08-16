@@ -1,5 +1,5 @@
 from torch.utils.data import DataLoader
-from dataloader.basicdataset import BasicDataset
+from data_loader.basic_dataset import BasicDataset
 from consts import ROOT_DIR
 import os
 
