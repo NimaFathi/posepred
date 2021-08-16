@@ -1,7 +1,7 @@
 import argparse
 
 
-class Dataloader_Args:
+class DataloaderArgs:
     def __init__(self, dataset_name, use_mask=False, batch_size=1, shuffle=True, pin_memory=False, num_workers=1):
         self.dataset_name = dataset_name
         self.use_mask = use_mask
@@ -11,7 +11,7 @@ class Dataloader_Args:
         self.num_workers = num_workers
 
 
-def dataloader_parse_args():
+def parse_dataloader_args():
     parser = argparse.ArgumentParser('Argument for Dataloader.')
     parser.add_argument('--dataset_name', type=str, help='dataset_name')
     parser.add_argument('--use_mask', type=bool, default=False, help='visibility mask')

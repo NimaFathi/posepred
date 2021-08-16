@@ -4,7 +4,7 @@ import pandas as pd
 from ast import literal_eval
 
 
-class Basic_Dataset(Dataset):
+class BasicDataset(Dataset):
     def __init__(self, dataset_path, use_mask, skip_frame):
         data = pd.read_csv(dataset_path)
         for col in list(data.columns.values):
