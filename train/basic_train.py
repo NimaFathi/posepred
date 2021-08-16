@@ -13,7 +13,7 @@ import torch.nn as nn
 
 class TrainHandler:
 
-    def __init__(self, dataloader_args, model_args, loss_args, learning_args):
+    def __init__(self, dataloader_args, model_args, learning_args):
         self.dataloader = get_dataloader(dataloader_args)
 
 
