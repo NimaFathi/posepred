@@ -23,6 +23,8 @@ class PoseTrackPreprocessor(Processor):
         section_range = 30 // (total_frame_num * 1) if self.use_video_once is False else 1
 
         for entry in os.scandir(self.dataset_path):
+            if not entry.path.endswith('.json'):
+                continue
             with open(entry.path, 'r') as json_file:
                 json_data = json.load(json_file)
                 annotations = json_data.get('annotations')
@@ -37,7 +39,8 @@ class PoseTrackPreprocessor(Processor):
                     for i in range(1, len(keypoints) + 1):
                         if i % 3 == 0:
                             frame_mask.append(keypoints[i - 1])
-                        frame_pose.append(keypoints[i - 1])
+                        else:
+                            frame_pose.append(keypoints[i - 1])
                     pose[annotation.get('track_id')].append(frame_pose)
 
                     mask[annotation.get('track_id')].append(frame_mask)
@@ -54,6 +57,8 @@ class PoseTrackPreprocessor(Processor):
                     future_mask = []
                     for j in range(1, total_frame_num * self.skip_frame_num + 1, self.skip_frame_num):
                         for pedestrian in pose.keys():
+                            if pose[pedestrian].__len__() < j:
+                                continue
                             if j <= self.obs_frame_num * self.skip_frame_num:
                                 video_dict['obs_pose'][pedestrian].append(pose[pedestrian][j - 1])
                                 video_dict['obs_mask'][pedestrian].append(mask[pedestrian][j - 1])
@@ -87,34 +92,56 @@ class PoseTrackPreprocessor(Processor):
                 total_frame_num * self.skip_frame_num) if self.use_video_once is False else 1
 
         for entry in os.scandir(self.dataset_path):
+            if not entry.path.endswith('.json'):
+                continue
             with open(entry.path, 'r') as json_file:
                 json_data = json.load(json_file)
                 annotations = json_data.get('annotations')
                 video_id = json_data.get('images')[0].get('vid_id')
-                global_pose = defaultdict(list)
+                frame_global_data = {
+                    'pose': defaultdict(list),
+                    'mask': defaultdict(list)
+                }
                 data = []
                 for annotation in annotations:
                     keypoints = annotation.get('keypoints')
-                    global_pose[annotation.get('track_id')].append([keypoints[3], keypoints[4]])
+                    frame_global_data['pose'][annotation.get('track_id')].append([keypoints[3], keypoints[4]])
+                    frame_global_data['mask'][annotation.get('track_id')].append(keypoints[5])
                 for i in range(section_range):
-                    obs_dict_global = defaultdict(list)
-                    future_dict_global = defaultdict(list)
-                    obs_global = []
-                    future_global = []
+                    video_data = {
+                        'obs_pose': defaultdict(list),
+                        'future_pose': defaultdict(list),
+                        'obs_mask': defaultdict(list),
+                        'future_mask': defaultdict(list)
+                    }
+                    obs_pose_global = []
+                    obs_mask_global = []
+                    future_pose_global = []
+                    future_mask_global = []
                     for j in range(1, total_frame_num * self.skip_frame_num + 1, self.skip_frame_num):
-                        for pedestrian in global_pose.keys():
+                        for pedestrian in frame_global_data['pose'].keys():
+                            if frame_global_data['pose'][pedestrian].__len__() < j:
+                                continue
                             if j <= self.obs_frame_num * self.skip_frame_num:
-                                obs_dict_global[pedestrian].append(global_pose[pedestrian][j - 1])
+                                video_data['obs_pose'][pedestrian].append(frame_global_data['pose'][pedestrian][j - 1])
+                                video_data['obs_mask'][pedestrian].append(frame_global_data['mask'][pedestrian][j - 1])
                             else:
-                                future_dict_global[pedestrian].append(global_pose[pedestrian][j - 1])
-                    for p_id in obs_dict_global.keys():
-                        if p_id in future_dict_global.keys() and obs_dict_global[
+                                video_data['future_pose'][pedestrian].append(
+                                    frame_global_data['pose'][pedestrian][j - 1])
+                                video_data['future_mask'][pedestrian].append(
+                                    frame_global_data['mask'][pedestrian][j - 1])
+                    for p_id in video_data['obs_pose'].keys():
+                        if p_id in video_data['future_pose'].keys() and video_data['obs_pose'][
                             p_id].__len__() == self.obs_frame_num and \
-                                future_dict_global[
+                                video_data['future_pose'][
                                     p_id].__len__() == self.pred_frame_num:
-                            obs_global.append(obs_dict_global[p_id])
-                            future_global.append(future_dict_global[p_id])
-                    data.append(['%s_%d' % (video_id, i), obs_global, future_global])
+                            obs_pose_global.append(video_data['obs_pose'][p_id])
+                            obs_mask_global.append(video_data['obs_mask'][p_id])
+                            future_pose_global.append(video_data['future_pose'][p_id])
+                            future_mask_global.append(video_data['future_mask'][p_id])
+                    data.append(
+                        ['%s_%d' % (video_id, i), obs_pose_global, future_pose_global, obs_mask_global,
+                         future_mask_global])
                 with open(os.path.join(OUTPUT_DIR, 'PoseTrack_global_{}.csv'.format(data_type)), 'a') as f_object:
                     writer = csv.writer(f_object)
                     writer.writerows(data)
@@ -129,6 +156,8 @@ class PoseTrackPreprocessor(Processor):
                 total_frame_num * self.skip_frame_num) if self.use_video_once is False else 1
 
         for entry in os.scandir(self.dataset_path):
+            if not entry.path.endswith('.json'):
+                continue
             with open(entry.path, 'r') as json_file:
                 json_data = json.load(json_file)
                 annotations = json_data.get('annotations')
@@ -166,6 +195,8 @@ class PoseTrackPreprocessor(Processor):
                     future_mask_local = []
                     for j in range(1, total_frame_num * self.skip_frame_num + 1, self.skip_frame_num):
                         for pedestrian in frame_local_data['pose'].keys():
+                            if frame_local_data[pedestrian].__len__() < j:
+                                continue
                             if j <= self.obs_frame_num * self.skip_frame_num:
                                 video_data['obs_pose'][pedestrian].append(frame_local_data['pose'][pedestrian][j - 1])
                                 video_data['obs_mask'][pedestrian].append(frame_local_data['mask'][pedestrian][j - 1])

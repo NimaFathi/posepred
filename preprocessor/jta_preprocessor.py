@@ -36,6 +36,8 @@ class JTAPreprocessor(Processor):
                 total_frame_num * self.skip_frame_num) if self.use_video_once is False else 1
 
         for entry in os.scandir(self.dataset_path):
+            if not entry.path.endswith('.json'):
+                continue
             with open(entry.path, 'r') as json_file:
                 print(entry.path)
                 video_number = re.search('seq_(\d+)', entry.name).group(1)
@@ -105,6 +107,8 @@ class JTAPreprocessor(Processor):
                 total_frame_num * self.skip_frame_num) if self.use_video_once is False else 1
 
         for entry in os.scandir(self.dataset_path):
+            if not entry.path.endswith('.json'):
+                continue
             with open(entry.path, 'r') as json_file:
                 print(entry.path)
                 video_number = re.search('seq_(\d+)', entry.name).group(1)
