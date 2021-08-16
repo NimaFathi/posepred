@@ -7,6 +7,7 @@ import torch.nn as nn
 
 from data_loader.data_loader import get_dataloader
 from utils.save_load import get_model, load_model, save_checkpoint
+from train.reporter import Reporter
 from utils.average_meter import AverageMeter
 
 
@@ -38,19 +39,8 @@ class TrainHandler:
         train_s_scores = []
         val_s_scores = []
         for epoch in range(self.training_args.start_epoch, self.training_args.epochs):
-            train_time = time.time()
-            avg_epoch_train_speed_loss = AverageMeter()
-            avg_epoch_val_speed_loss = AverageMeter()
-            avg_epoch_train_mask_loss = AverageMeter()
-            avg_epoch_val_mask_loss = AverageMeter()
-            avg_epoch_train_mask_acc = AverageMeter()
-            avg_epoch_val_mask_acc = AverageMeter()
-            ade_train = AverageMeter()
-            ade_val = AverageMeter()
-            fde_train = AverageMeter()
-            fde_val = AverageMeter()
-
-            for idx, (obs_s, target_s, obs_pose, target_pose, obs_mask, target_mask) in enumerate(self.dataloader):
+            train_reporter = Reporter()
+            for idx, (obs_pose, obs_vel, future_pose, future_vel, obs_mask, future_mask) in enumerate(self.dataloader):
                 obs_s = obs_s.to(self.device)
                 target_s = target_s.to(self.device)
                 obs_pose = obs_pose.to(self.device)
