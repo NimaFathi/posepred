@@ -13,9 +13,8 @@ import torch.nn as nn
 
 class TrainHandler:
 
-    def __init__(self, dataloader_args, model_args, learning_args):
+    def __init__(self, dataloader_args, model_args, training_args):
         self.dataloader = get_dataloader(dataloader_args)
-
 
     def train(train_loader, val_loader, model, optimizer, scheduler, opt):
         training_start = time.time()
