@@ -2,7 +2,6 @@ import torch
 from torch.utils.data import Dataset
 import pandas as pd
 from ast import literal_eval
-import random
 
 
 class Basic_Dataset(Dataset):
@@ -50,7 +49,6 @@ class Basic_Dataset(Dataset):
             outputs_p.append(future_vel)
 
             if self.use_mask:
-
                 assert 'observed_mask' in seq, 'use_mask is true but there is no observed_mask in dataset.'
                 person_obs_mask_frames = seq.observed_mask[person_index]
                 obs_mask = torch.tensor(
