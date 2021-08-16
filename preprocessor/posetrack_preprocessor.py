@@ -20,7 +20,7 @@ class PoseTrackPreprocessor(Processor):
             writer = csv.writer(f_object)
             writer.writerow(header)
         total_frame_num = self.obs_frame_num + self.pred_frame_num
-        section_range = 30 // (total_frame_num * 1) if False is False else 1
+        section_range = 30 // (total_frame_num * 1) if self.use_video_once is False else 1
 
         for entry in os.scandir(self.dataset_path):
             with open(entry.path, 'r') as json_file:
