@@ -12,7 +12,6 @@ class LearningArgs:
 
 def parse_learning_args():
     parser = argparse.ArgumentParser('Arguments for Learning')
-
     parser.add_argument('--epochs', type=int, help='number of training epochs')
     parser.add_argument('--start_epoch', type=0, default=200, help='start epoch')
     parser.add_argument('--lr', type=float, default=0.001, help='learning rate')
