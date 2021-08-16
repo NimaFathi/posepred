@@ -7,6 +7,7 @@ import torch.nn as nn
 
 from dataloader.dataloader import get_dataloader
 from utils.save_load import get_model, load_model, save_checkpoint
+from utils.average_meter import AverageMeter
 
 
 #
@@ -28,6 +29,7 @@ class TrainHandler:
         self.training_args = training_args
         self.l1 = nn.L1Loss()
         self.bce = nn.BCELoss()
+        self.device = 'cuda'
 
     def train(self):
         train_time_0 = time.time()
@@ -46,16 +48,18 @@ class TrainHandler:
             fde_train = AverageMeter()
             fde_val = AverageMeter()
 
-            for idx, (obs_s, target_s, obs_pose, target_pose, obs_mask, target_mask) in enumerate(train_loader):
-                obs_s = obs_s.to(device=opt.device)
-                target_s = target_s.to(device=opt.device)
-                obs_pose = obs_pose.to(device=opt.device)
-                target_pose = target_pose.to(device=opt.device)
-                obs_mask = obs_mask.to(device=opt.device)
-                target_mask = target_mask.to(device=opt.device)
+            for idx, (obs_s, target_s, obs_pose, target_pose, obs_mask, target_mask) in enumerate(self.dataloader):
+                obs_s = obs_s.to(self.device)
+                target_s = target_s.to(self.device)
+                obs_pose = obs_pose.to(self.device)
+                target_pose = target_pose.to(self.device)
+                obs_mask = obs_mask.to(self.device)
+                target_mask = target_mask.to(self.device)
+
                 batch_size = obs_s.shape[0]
-                model.zero_grad()
-                (speed_preds, mask_preds) = model(pose=obs_pose, vel=obs_s, mask=obs_mask)
+                self.model.zero_grad()
+
+                speed_preds, mask_preds = self.model(pose=obs_pose, vel=obs_s, mask=obs_mask)
                 speed_loss = self.l1(speed_preds, target_s)
                 mask_loss = self.bce(mask_preds, target_mask)
                 mask_acc = mask_accuracy(mask_preds, target_mask)
