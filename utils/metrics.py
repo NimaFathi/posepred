@@ -22,27 +22,16 @@ def ADE(pred, target, dim):
 
 def FDE(pred, target, dim):
     b, n, p = pred.size()[0], pred.size()[1], pred.size()[2]
-    pred = torch.reshape(pred, (b, n, int(p / 2), 2))
-    target = torch.reshape(target, (b, n, int(p / 2), 2))
-    displacement = torch.sqrt(
-        (pred[:, -1, :, 0] - target[:, -1, :, 0]) ** 2 + (
-                pred[:, -1, :, 1] - target[:, -1, :, 1]) ** 2)
-    fde = torch.mean(torch.mean(displacement, dim=1))
+    pred = torch.reshape(pred, (b, n, int(p / dim), dim))
+    target = torch.reshape(target, (b, n, int(p / dim), dim))
+    displacement = 0
+    for d in range(dim):
+        displacement += (pred[:, -1, :, d] - target[:, -1, :, d]) ** 2
+    fde = torch.mean(torch.mean(torch.sqrt(displacement), dim=1))
     return fde
 
 
-def FDE_3d(pred, target):
-    b, n, p = pred.size()[0], pred.size()[1], pred.size()[2]
-    pred = torch.reshape(pred, (b, n, int(p / 3), 3))
-    target = torch.reshape(target, (b, n, int(p / 3), 3))
-    displacement = torch.sqrt(
-        (pred[:, -1, :, 0] - target[:, -1, :, 0]) ** 2 + (pred[:, -1, :, 1] - target[:, -1, :, 1]) ** 2)
-    fde = torch.mean(torch.mean(displacement, dim=1))
-    return fde
-
-
-# TODO: VIM depends on dataset_name!
-def VIM(target, pred, dataset_name, mask):
+def VIM(pred, target, mask, dim):
     """
     Visibilty Ignored Metric
     Inputs:
@@ -54,22 +43,24 @@ def VIM(target, pred, dataset_name, mask):
         errorPose:
     """
 
-    gt_i_global = np.copy(target)
-    if dataset_name == "posetrack":
+    target_i_global = np.copy(target)
+    if dim == 2:
         mask = np.repeat(mask, 2, axis=-1)
-        errorPose = np.power(gt_i_global - pred, 2) * mask
+        errorPose = np.power(target_i_global - pred, 2) * mask
         # get sum on joints and remove the effect of missing joints by averaging on visible joints
         errorPose = np.sqrt(np.divide(np.sum(errorPose, 1), np.sum(mask, axis=1)))
         where_are_NaNs = np.isnan(errorPose)
         errorPose[where_are_NaNs] = 0
-    else:  # 3dpw
-        errorPose = np.power(gt_i_global - pred, 2)
+    elif dim == 3:
+        errorPose = np.power(target_i_global - pred, 2)
         errorPose = np.sum(errorPose, 1)
         errorPose = np.sqrt(errorPose)
+    else:
+        raise Exception("Dimension of data must be either 2D or 3D.")
     return errorPose
 
 
-def VAM(target, pred, occ_cutoff, pred_visib):
+def VAM(target, pred, occ_cutoff, pred_mask):
     """
     Visibility Aware Metric
     Inputs:
@@ -80,29 +71,31 @@ def VAM(target, pred, occ_cutoff, pred_visib):
     Output:
         seq_err:
     """
-    pred_visib = np.repeat(pred_visib, 2, axis=-1)
+    pred_mask = np.repeat(pred_mask, 2, axis=-1)
     seq_err = []
     if type(target) is list:
         target = np.array(target)
-    GT_mask = np.where(abs(target) < 0.5, 0, 1)
+    target_mask = np.where(abs(target) < 0.5, 0, 1)
     for frame in range(target.shape[0]):
         f_err = 0
         N = 0
         for j in range(0, target.shape[1], 2):
-            if GT_mask[frame][j] == 0:
-                if pred_visib[frame][j] == 0:
+            if target_mask[frame][j] == 0:
+                if pred_mask[frame][j] == 0:
                     dist = 0
-                elif pred_visib[frame][j] == 1:
+                elif pred_mask[frame][j] == 1:
                     dist = occ_cutoff
                     N += 1
-            elif GT_mask[frame][j] > 0:
+            elif target_mask[frame][j] > 0:
                 N += 1
-                if pred_visib[frame][j] == 0:
+                if pred_mask[frame][j] == 0:
                     dist = occ_cutoff
-                elif pred_visib[frame][j] == 1:
+                elif pred_mask[frame][j] == 1:
                     d = np.power(target[frame][j:j + 2] - pred[frame][j:j + 2], 2)
                     d = np.sum(np.sqrt(d))
                     dist = min(occ_cutoff, d)
+            else:
+                raise Exception("Target mask must be positive values.")
             f_err += dist
         if N > 0:
             seq_err.append(f_err / N)
