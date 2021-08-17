@@ -6,7 +6,7 @@ class DataloaderArgs:
                  batch_size=1, shuffle=True, pin_memory=False, num_workers=0):
         self.dataset_name = dataset_name
         self.data_dim = data_dim
-        self.is_predict = is_testing
+        self.is_testing = is_testing
         self.use_mask = use_mask
         self.is_multi_person = is_multi_person
         self.skip_frame = skip_frame
