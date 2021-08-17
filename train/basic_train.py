@@ -1,12 +1,14 @@
 import os
 import sys
 import time
+from consts import ROOT_DIR
+
 import torch
 import torch.optim as optim
 import torch.nn as nn
 
 from data_loader.data_loader import get_dataloader
-from utils.save_load import get_model, load_model
+from utils.save_load import get_model, load_model, create_new_dir
 from utils.metrics import accuracy, ADE, FDE
 from train.reporter import Reporter
 
@@ -62,10 +64,11 @@ class TrainHandler:
                     fde = FDE(pred_pose, target_pose, self.dim)
                     train_reporter.update([vel_loss, mask_loss, mask_acc, ade, fde], batch_size)
 
-            if (epoch + 1) % opt.save_freq == 0:
-                save_file = os.path.join(
-                    opt.save_folder, '{name}_epoch{epoch}.pth'.format(name=opt.name, epoch=epoch))
-                save_model(model, optimizer, opt, epoch, save_file)
+            if (epoch + 1) % self.args.save_interval == 0:
+                dir_path = create_new_dir(os.path.join(ROOT_DIR, 'exps/test/'))
+                save_path = os.path.join(dir_path, '%03d.pt' % (epoch + 1))
+                save_model(self.model, self.optimizer, opt, epoch, save_path)
+
             train_s_scores.append(avg_epoch_train_speed_loss.avg)
 
             for idx, (obs_s, target_s, obs_pose, target_pose, obs_mask, target_mask) in enumerate(val_loader):

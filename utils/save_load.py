@@ -1,3 +1,5 @@
+import os
+
 import torch
 from models.lstm_vel.lstm_vel import LSTMVel3dpw
 
@@ -37,3 +39,17 @@ def save_checkpoint(model, optimizer, model_args, dataloader_args, training_args
     }
     torch.save(checkpoint, save_path)
     del checkpoint
+
+
+def create_new_dir(dir_path):
+    os.makedirs(dir_path, exist_ok=True)
+    for i in range(1, 1000000):
+        new_dir_path = os.path.join(dir_path, str(i) + '/')
+        if not os.path.isdir(new_dir_path):
+            os.makedirs(new_dir_path, exist_ok=False)
+            return new_dir_path
+    assert "Too many folders exist."
+
+
+
+

@@ -11,4 +11,3 @@ if __name__ == '__main__':
         for i, d in enumerate(data):
             print(d.shape)
         break
-
