@@ -5,69 +5,72 @@ from ast import literal_eval
 
 
 class BasicDataset(Dataset):
-    def __init__(self, dataset_path, data_dim, use_mask, skip_frame):
+    def __init__(self, dataset_path, data_dim, is_testing, use_mask, skip_frame):
         data = pd.read_csv(dataset_path)
-        for col in list(data.columns.values):
+        for col in list(data.columns[1:].values):
             try:
                 data.loc[:, col] = data.loc[:, col].apply(lambda x: literal_eval(x))
-            except Exception as e:
-                print("Exception of type", type(e), "occurred: ", e.args)
-                continue
+            except:
+                raise Exception("data must be convertable to valid data-scructures")
+
         self.data = data.copy().reset_index(drop=True)
-        seq = self.data.iloc[0]
         self.dim = data_dim
-        self.obs_frames_num = len(seq.observed_pose[0])
-        self.future_frames_num = len(seq.future_pose[0])
+        self.is_testing = is_testing
         self.use_mask = use_mask
         self.skip_frame = skip_frame
 
-        obs_frame = seq.observed_pose[0][0]
-        future_frame = seq.future_pose[0][0]
-        assert len(obs_frame) == len(future_frame), "(joints_num * dim) must be equal for observed and future frames."
-        assert len(obs_frame) % self.dim == 0, "for each joint, you sould specify " + str(self.dim) + " cordinates."
-        self.joints = len(obs_frame) / self.dim
+        seq = self.data.iloc[0]
+        self.joints = len(seq.observed_pose[0][0]) / self.dim
+        self.obs_frames_num = len(seq.observed_pose[0])
+        if not self.is_testing:
+            self.future_frames_num = len(seq.future_pose[0])
 
     def __len__(self):
         return len(self.data)
 
     def __getitem__(self, index):
         seq = self.data.iloc[index]
-        assert len(seq.observed_pose) == len(
-            seq.future_pose), "number of persons must be equal in observed and future frames."
-        seq_persons_num = len(seq.observed_pose)
+        persons_num = len(seq.observed_pose)
 
-        outputs = []
-        for person_index in range(seq_persons_num):
-            outputs_p = []
+        assert 'observed_pose' in seq, 'there is no observed_pose in dataset.'
+        obs_pose = torch.tensor(
+            [[seq['observed_pose'][person_idx][frame_idx]
+              for frame_idx in range(0, self.obs_frames_num, self.skip_frame + 1)]
+             for person_idx in range(persons_num)])
+        obs_vel = (obs_pose[:, 1:, :] - obs_pose[:, :-1, :])
+        outputs = [obs_pose, obs_vel]
 
-            person_obs_pose_frames = seq.observed_pose[person_index]
-            obs_pose = torch.tensor(
-                [person_obs_pose_frames[i] for i in range(0, self.obs_frames_num, self.skip_frame + 1)])
-            obs_vel = (obs_pose[1:] - obs_pose[:-1])
+        if self.use_mask:
+            assert 'observed_mask' in seq, 'use_mask is true but there is no observed_mask in dataset.'
+            obs_mask = torch.tensor(
+                [[seq.observed_mask[person_idx][frame_idx]
+                  for frame_idx in range(0, self.obs_frames_num, self.skip_frame + 1)]
+                 for person_idx in range(persons_num)])
+            outputs.append(obs_mask)
 
-            person_future_pose_frames = seq.future_pose[person_index]
+        if not self.is_testing:
+            assert 'future_pose' in seq, 'is_testing is false but there is no future_pose in dataset.'
+            assert len(seq.observed_pose) == len(seq.future_pose), "unequal persons in observed and future frames."
             future_pose = torch.tensor(
-                [person_future_pose_frames[i] for i in range(0, self.future_frames_num, self.skip_frame + 1)])
-            future_vel = torch.cat(((future_pose[0] - obs_pose[-1]).unsqueeze(0), future_pose[1:] - future_pose[:-1]))
-
-            outputs_p.append(obs_pose)
-            outputs_p.append(obs_vel)
-            outputs_p.append(future_pose)
-            outputs_p.append(future_vel)
+                [[seq.future_pose[person_idx][frame_idx]
+                  for frame_idx in range(0, self.future_frames_num, self.skip_frame + 1)]
+                 for person_idx in range(persons_num)])
+            future_vel = torch.cat(((future_pose[:, 0, :] - obs_pose[:, -1, :]).unsqueeze(1),
+                                    future_pose[:, 1:, :] - future_pose[:, :-1, :]), 1)
+            outputs += [future_pose, future_vel]
 
             if self.use_mask:
-                assert 'observed_mask' in seq, 'use_mask is true but there is no observed_mask in dataset.'
-                person_obs_mask_frames = seq.observed_mask[person_index]
-                obs_mask = torch.tensor(
-                    [person_obs_mask_frames[i] for i in range(0, self.obs_frames_num, self.skip_frame + 1)])
-
                 assert 'future_mask' in seq, 'use_mask is true but there is no future_mask in dataset.'
-                person_future_mask_frames = seq.future_mask[person_index]
                 future_mask = torch.tensor(
-                    [person_future_mask_frames[i] for i in range(0, self.future_frames_num, self.skip_frame + 1)])
-
-                outputs.append(obs_mask)
+                    [[seq.future_mask[person_idx][frame_idx]
+                      for frame_idx in range(0, self.future_frames_num, self.skip_frame + 1)]
+                     for person_idx in range(persons_num)])
                 outputs.append(future_mask)
-            outputs.append(tuple(outputs_p))
 
-        return outputs
+        return tuple(outputs)
+
+    def get_tensor(self):
+        future_mask = torch.tensor(
+            [[seq.future_mask[person_idx][frame_idx]
+              for frame_idx in range(0, self.future_frames_num, self.skip_frame + 1)]
+             for person_idx in range(persons_num)])

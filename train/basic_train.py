@@ -8,7 +8,6 @@ import torch.nn as nn
 from data_loader.data_loader import get_dataloader
 from utils.save_load import get_model, load_model, save_checkpoint
 from train.reporter import Reporter
-from utils.average_meter import AverageMeter
 
 
 #
@@ -27,6 +26,7 @@ class TrainHandler:
         self.scheduler = optim.lr_scheduler.ReduceLROnPlateau(self.optimizer, factor=training_args.decay_factor,
                                                               patience=training_args.decay_patience, threshold=1e-8,
                                                               verbose=True)
+        self.is_multi_person = model_args.is_multi_person
         self.training_args = training_args
         self.l1 = nn.L1Loss()
         self.bce = nn.BCELoss()
@@ -40,13 +40,16 @@ class TrainHandler:
         val_s_scores = []
         for epoch in range(self.training_args.start_epoch, self.training_args.epochs):
             train_reporter = Reporter()
-            for idx, (obs_pose, obs_vel, future_pose, future_vel, obs_mask, future_mask) in enumerate(self.dataloader):
-                obs_s = obs_s.to(self.device)
-                target_s = target_s.to(self.device)
-                obs_pose = obs_pose.to(self.device)
-                target_pose = target_pose.to(self.device)
-                obs_mask = obs_mask.to(self.device)
-                target_mask = target_mask.to(self.device)
+
+            for persons in self.dataloader:
+                if self.is_multi_person:
+                    pass
+                else:
+                    for person_data in persons:
+                        for i, data in person_data:
+                            person_data[i] = data.to(self.device)
+
+                # (obs_pose, obs_vel, future_pose, future_vel, obs_mask, future_mask)
 
                 batch_size = obs_s.shape[0]
                 self.model.zero_grad()
