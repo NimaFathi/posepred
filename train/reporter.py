@@ -15,7 +15,7 @@ class Reporter:
         self.attrs['FDE'] = AverageMeter()
         self.time = time.time()
 
-    def update(self, batch_size, values):
+    def update(self, values, batch_size):
         self.time = time.time() - self.time
         for i, avg_meter in enumerate(self.attrs.values()):
             avg_meter.update(values[i], batch_size)
