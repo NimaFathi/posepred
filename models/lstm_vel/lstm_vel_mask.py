@@ -1,21 +1,21 @@
 import torch.nn as nn
 
-from models.decoder import VelDecoder, MaskDecoder
+from models.decoder import Decoder
 from models.encoder import Encoder
 
 
-class LSTMVelPlusMask(nn.Module):
-    def __init__(self, args):
+class LSTMVelMask(nn.Module):
+    def __init__(self, args, pred_frames_num, keypoint_dim, keypoints_num):
         super().__init__()
-        self.args = args
-        self.pose_encoder = Encoder(args=self.args, input_size=args.pose_input_size)
-        self.vel_encoder = Encoder(args=self.args, input_size=args.pose_input_size)
-        self.vel_decoder = VelDecoder(args=self.args, out_features=args.pose_out_features,
-                                      input_size=args.pose_input_size)
+        input_size = output_size = keypoints_num * keypoint_dim
+        self.pose_encoder = Encoder(input_size, args.hidden_size, args.n_layers, args.dropout_encoder)
+        self.vel_encoder = Encoder(input_size, args.hidden_size, args.n_layers, args.dropout_encoder)
+        self.vel_decoder = Decoder(pred_frames_num, input_size, output_size, args.hidden_size, args.n_layers,
+                                   args.dropout_pose_dec, 'hardtanh', args.hardtanh_limit)
 
-        self.mask_encoder = Encoder(args=self.args, input_size=args.mask_input_size)
-        self.mask_decoder = MaskDecoder(args=self.args, out_features=args.mask_out_features,
-                                        input_size=args.mask_input_size)
+        self.mask_encoder = Encoder(keypoints_num, args.hidden_size, args.n_layers, args.dropout_encoder)
+        self.mask_decoder = Decoder(pred_frames_num, keypoints_num, keypoints_num, args.hidden_size, args.n_layers,
+                                    args.dropout_mask_dec, 'sigmoid')
 
     def forward(self, pose=None, vel=None, mask=None):
         outputs = []

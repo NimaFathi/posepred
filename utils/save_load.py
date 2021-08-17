@@ -3,13 +3,13 @@ import os
 import torch
 import torch.optim as optim
 
-from models.lstm_vel.lstm_vel import LSTMVel3dpw
+from models.lstm_vel.lstm_vel import LSTMVel
 
 
-# TODO: edit get_model to support all models.
+# TODO: support models with mask.
 def get_model(model_args):
     if model_args.model_name == 'lstm_vel':
-        return LSTMVel3dpw(model_args).to(torch.device('cuda'))
+        return LSTMVel(model_args).to(torch.device('cuda'))
 
 
 # TODO map_location="cuda:0" ???

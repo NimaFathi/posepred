@@ -4,16 +4,14 @@ from models.decoder import VelDecoder
 from models.encoder import Encoder
 
 
-class LSTMVel3dpw(nn.Module):
-    def __init__(self, args):
-        super(LSTMVel3dpw, self).__init__()
-        self.args = args
-
-        self.pose_encoder = Encoder(args=self.args, input_size=args.pose_input_size)
-        self.vel_encoder = Encoder(args=self.args, input_size=args.pose_input_size)
-
-        self.vel_decoder = VelDecoder(args=self.args, out_features=args.pose_out_features,
-                                      input_size=args.pose_input_size)
+class LSTMVel(nn.Module):
+    def __init__(self, args, pred_frames_num, dim, keypoints_num):
+        super(LSTMVel, self).__init__()
+        input_size = output_size = keypoints_num * dim
+        self.pose_encoder = Encoder(input_size, args.hidden_size, args.n_layers, args.dropout_encoder)
+        self.vel_encoder = Encoder(input_size, args.hidden_size, args.n_layers, args.dropout_encoder)
+        self.vel_decoder = VelDecoder(pred_frames_num, input_size, output_size, args.hardtanh_limit, args.hidden_size,
+                                      args.n_layers, args.dropout_pose_dec)
 
     def forward(self, pose=None, vel=None):
         outputs = []
@@ -26,10 +24,9 @@ class LSTMVel3dpw(nn.Module):
         hidden_pose = hidden_pose.squeeze(0)
         cell_pose = cell_pose.squeeze(0)
 
-        VelDec_inp = vel[:, -1, :]
-
+        vel_dec_input = vel[:, -1, :]
         hidden_dec = hidden_pose + hidden_vel
         cell_dec = cell_pose + cell_vel
 
-        outputs.append(self.vel_decoder(VelDec_inp, hidden_dec, cell_dec))
+        outputs.append(self.vel_decoder(vel_dec_input, hidden_dec, cell_dec))
         return tuple(outputs)
