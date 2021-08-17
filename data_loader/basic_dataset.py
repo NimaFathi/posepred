@@ -30,47 +30,32 @@ class BasicDataset(Dataset):
 
     def __getitem__(self, index):
         seq = self.data.iloc[index]
-        persons_num = len(seq.observed_pose)
 
-        assert 'observed_pose' in seq, 'there is no observed_pose in dataset.'
-        obs_pose = torch.tensor(
-            [[seq['observed_pose'][person_idx][frame_idx]
-              for frame_idx in range(0, self.obs_frames_num, self.skip_frame + 1)]
-             for person_idx in range(persons_num)])
+        obs_pose = self.get_tensor(seq, 'observed_pose', self.obs_frames_num)
         obs_vel = (obs_pose[:, 1:, :] - obs_pose[:, :-1, :])
         outputs = [obs_pose, obs_vel]
 
         if self.use_mask:
-            assert 'observed_mask' in seq, 'use_mask is true but there is no observed_mask in dataset.'
-            obs_mask = torch.tensor(
-                [[seq.observed_mask[person_idx][frame_idx]
-                  for frame_idx in range(0, self.obs_frames_num, self.skip_frame + 1)]
-                 for person_idx in range(persons_num)])
+            obs_mask = self.get_tensor(seq, 'observed_mask', self.obs_frames_num)
             outputs.append(obs_mask)
 
         if not self.is_testing:
-            assert 'future_pose' in seq, 'is_testing is false but there is no future_pose in dataset.'
             assert len(seq.observed_pose) == len(seq.future_pose), "unequal persons in observed and future frames."
-            future_pose = torch.tensor(
-                [[seq.future_pose[person_idx][frame_idx]
-                  for frame_idx in range(0, self.future_frames_num, self.skip_frame + 1)]
-                 for person_idx in range(persons_num)])
+            future_pose = self.get_tensor(seq, 'future_pose', self.future_frames_num)
             future_vel = torch.cat(((future_pose[:, 0, :] - obs_pose[:, -1, :]).unsqueeze(1),
                                     future_pose[:, 1:, :] - future_pose[:, :-1, :]), 1)
             outputs += [future_pose, future_vel]
 
             if self.use_mask:
-                assert 'future_mask' in seq, 'use_mask is true but there is no future_mask in dataset.'
-                future_mask = torch.tensor(
-                    [[seq.future_mask[person_idx][frame_idx]
-                      for frame_idx in range(0, self.future_frames_num, self.skip_frame + 1)]
-                     for person_idx in range(persons_num)])
+                future_mask = self.get_tensor(seq, 'future_mask', self.future_frames_num)
                 outputs.append(future_mask)
 
         return tuple(outputs)
 
-    def get_tensor(self):
-        future_mask = torch.tensor(
-            [[seq.future_mask[person_idx][frame_idx]
-              for frame_idx in range(0, self.future_frames_num, self.skip_frame + 1)]
+    def get_tensor(self, seq, segment, frames_num):
+        assert segment in seq, 'No segment named: ' + segment
+        persons_num = len(seq.observed_pose)
+        return torch.tensor(
+            [[seq[segment][person_idx][frame_idx]
+              for frame_idx in range(0, frames_num, self.skip_frame + 1)]
              for person_idx in range(persons_num)])
