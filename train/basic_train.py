@@ -22,14 +22,17 @@ class TrainHandler:
         self.train_dataloader_args = train_dataloader_args
         self.valid_dataloader_args = valid_dataloader_args
         if load_snapshot_path:
-            self.model, self.model_args, self.optimizer, epoch = load_snapshot(load_snapshot_path, args.lr)
+            self.model, self.model_args, self.optimizer, epoch, reporters = load_snapshot(load_snapshot_path, args.lr)
             self.args.start_epoch = epoch
-            self.save_snapshots_path = load_snapshot_path[:load_snapshot_path.rindex('/') + 1]
+            self.snapshots_path = load_snapshot_path[:load_snapshot_path.rindex('/') + 1]
+            self.train_reporter, self.valid_reporter = reporters
         else:
             self.model = get_model(model_args)
             self.model_args = model_args
             self.optimizer = optim.Adam(self.model.parameters(), lr=args.lr)
-            self.save_snapshots_path = self.get_snapshots_dir()
+            self.snapshots_path = self.create_snapshots_dir()
+            self.train_reporter = Reporter()
+            self.valid_reporter = Reporter()
 
         self.scheduler = optim.lr_scheduler.ReduceLROnPlateau(self.optimizer, factor=args.decay_factor,
                                                               patience=args.decay_patience, threshold=1e-8,
@@ -41,17 +44,12 @@ class TrainHandler:
 
         self.train_dataloader = get_dataloader(train_dataloader_args)
         self.valid_dataloader = get_dataloader(valid_dataloader_args)
+        self.dim = train_dataloader_args.data_dim
 
     def train(self):
         self.model.train()
-
-        train_time_0 = time.time()
-        train_s_scores = []
-        val_s_scores = []
-
-        train_reporter = Reporter()
+        self.train_reporter.start_time = time.time()
         for epoch in range(self.args.start_epoch, self.args.epochs):
-            train_reporter.reset()
             for data in self.train_dataloader:
                 if self.train_dataloader.is_multi_person:
                     pass
@@ -74,12 +72,13 @@ class TrainHandler:
                     pred_pose = speed2pos(pred_vel, obs_pose)
                     ade = ADE(pred_pose, target_pose, self.dim)
                     fde = FDE(pred_pose, target_pose, self.dim)
-                    train_reporter.update([vel_loss, mask_loss, mask_acc, ade, fde], batch_size)
+                    self.train_reporter.update([vel_loss, mask_loss, mask_acc, ade, fde], batch_size)
+
+            self.train_reporter.next_epoch()
 
             if (epoch + 1) % self.args.snapshot_interval == 0:
-                save_snapshot(self.model, self.optimizer, self.model_args, 0, self.save_snapshots_path)
-
-            train_s_scores.append(avg_epoch_train_speed_loss.avg)
+                save_snapshot(self.model, self.optimizer, self.model_args, epoch + 1, self.train_reporter,
+                              self.valid_reporter, self.snapshots_path)
 
             for idx, (obs_s, target_s, obs_pose, target_pose, obs_mask, target_mask) in enumerate(val_loader):
                 obs_s = obs_s.to(device='cuda')
@@ -117,7 +116,7 @@ class TrainHandler:
         print("*" * 100)
         print('TRAINING Postrack DONE in:{}!'.format(time.time() - training_start))
 
-    def get_snapshots_dir(self):
+    def create_snapshots_dir(self):
         dir_path = create_new_dir(os.path.join(ROOT_DIR, 'exps/train/'))
         with open(dir_path + 'training_args' + '.json', 'w') as f:
             json.dump(self.args, f)
@@ -128,5 +127,5 @@ class TrainHandler:
         with open(dir_path + 'model_args' + '.json', 'w') as f:
             json.dump(self.model_args, f)
             f.close()
-        save_snapshot(self.model, self.optimizer, self.model_args, 0, self.save_snapshots_path)
+        save_snapshot(self.model, self.optimizer, self.model_args, 0, self.snapshots_path)
         return os.path.join(dir_path + 'snapshots/')

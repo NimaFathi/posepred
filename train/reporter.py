@@ -12,7 +12,7 @@ class Reporter:
         self.attrs['mask_acc'] = AverageMeter()
         self.attrs['ADE'] = AverageMeter()
         self.attrs['FDE'] = AverageMeter()
-        self.time = time.time()
+        self.start_time = None
 
         self.history = dict()
         self.history['vel_loss'] = []
@@ -20,22 +20,26 @@ class Reporter:
         self.history['mask_acc'] = []
         self.history['ADE'] = []
         self.history['FDE'] = []
+        self.history['time'] = []
 
     def update(self, values, batch_size):
-        self.time = time.time() - self.time
         for i, avg_meter in enumerate(self.attrs.values()):
             avg_meter.update(values[i], batch_size)
 
-    def reset(self):
-        self.time = time.time()
+    def next_epoch(self, log=True):
+        self.history.get('time').append(time.time() - self.start_time)
+        for key, avg_meter in self.attrs.items():
+            self.history.get(key).append(avg_meter.get_average())
+        if log:
+            self.print_values()
+        self.reset_avr_meters()
+
+    def reset_avr_meters(self):
+        self.start_time = time.time()
         for i, avg_meter in enumerate(self.attrs.values()):
             avg_meter.reset()
 
     def print_values(self):
-        print("time:", self.time)
-        for key, avg_meter in self.attrs.items():
-            print(key + ":", avg_meter.get_average())
+        for key, item in self.history.items():
+            print(key + ":", item[-1])
         print('-' * 30)
-
-    def next_epoch(self):
-

@@ -18,16 +18,19 @@ def load_snapshot(load_snapshot_path, optimizer_lr):
     model_args = snapshot['model_args']
     model = get_model(model_args).load_state_dict(snapshot['model_state'])
     optimizer = optim.Adam(model.parameters(), lr=optimizer_lr)
-    return model, model_args, optimizer, snapshot['epoch']
+    reporters = (snapshot['train_reporter'], snapshot['valid_reporter'])
+    return model, model_args, optimizer, snapshot['epoch'], reporters
 
 
-def save_snapshot(model, optimizer, model_args, epoch, save_path):
+def save_snapshot(model, optimizer, model_args, epoch, train_reporter, valid_reporter, save_path):
     print('### Taking Snapshot ###')
     snapshot = {
         'model_state_dict': model.state_dict(),
         'optimizer_state_dict': optimizer.state_dict(),
         'model_args': model_args,
         'epoch': epoch,
+        'train_reporter': train_reporter,
+        'valid_reporter': valid_reporter
     }
     torch.save(snapshot, os.path.join(save_path, '%03d.pt' % epoch))
     del snapshot
