@@ -8,6 +8,7 @@ def parse_option():
     parser = argparse.ArgumentParser('argument for predictions')
     parser.add_argument('--dataset', type=str, choices=['posetrack', '3dpw', 'jta'], default='posetrack')
     parser.add_argument('--dataset_path', type=str, default='./raw_data', help='path of dataset')
+    parser.add_argument('--data_type', type=str, default='train', choices=['train', 'validation', 'test'])
     parser.add_argument('--is_disentangle', type=bool, default=False)
     parser.add_argument('--obs_frame_num', type=int, default=16)
     parser.add_argument('--pred_frame_num', type=int, default=14)
@@ -38,6 +39,6 @@ if __name__ == '__main__':
     else:
         preprocessor = None
     if opt.is_disentangle is True:
-        preprocessor.disentangle()
+        preprocessor.disentangle(data_type=opt.data_type)
     else:
-        preprocessor.normal()
+        preprocessor.normal(data_type=opt.data_type)

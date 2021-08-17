@@ -28,6 +28,8 @@ class PoseTrackPreprocessor(Processor):
             with open(entry.path, 'r') as json_file:
                 json_data = json.load(json_file)
                 annotations = json_data.get('annotations')
+                if not annotations:
+                    continue
                 video_id = json_data.get('images')[0].get('vid_id')
                 pose = defaultdict(list)
                 mask = defaultdict(list)
@@ -97,6 +99,8 @@ class PoseTrackPreprocessor(Processor):
             with open(entry.path, 'r') as json_file:
                 json_data = json.load(json_file)
                 annotations = json_data.get('annotations')
+                if not annotations:
+                    continue
                 video_id = json_data.get('images')[0].get('vid_id')
                 frame_global_data = {
                     'pose': defaultdict(list),
@@ -161,6 +165,8 @@ class PoseTrackPreprocessor(Processor):
             with open(entry.path, 'r') as json_file:
                 json_data = json.load(json_file)
                 annotations = json_data.get('annotations')
+                if not annotations:
+                    continue
                 video_id = json_data.get('images')[0].get('vid_id')
                 frame_local_data = {
                     'pose': defaultdict(list),
