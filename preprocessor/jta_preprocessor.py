@@ -100,7 +100,7 @@ class JTAPreprocessor(Processor):
                             obs_mask.append(video_data['obs_mask'][p_id])
                             future.append(video_data['future_pose'][p_id])
                             future_mask.append(video_data['future_mask'][p_id])
-                    if self.is_interactive:
+                    if not self.is_interactive:
                         for p_id in range(len(obs)):
                             data.append(['%s-%d' % (video_number, i), obs[p_id], future[p_id], obs_mask[p_id],
                                          future_mask[p_id]])
@@ -220,7 +220,7 @@ class JTAPreprocessor(Processor):
                             obs_mask_local.append(local_dict['obs_mask'][p_id])
                             future_local.append(local_dict['future_pose'][p_id])
                             future_mask_local.append(local_dict['future_mask'][p_id])
-                    if self.is_interactive:
+                    if not self.is_interactive:
                         for p_id in range(len(obs_global)):
                             data_global.append(['%s-%d' % (video_number, i), obs_global[p_id], future_global[p_id],
                                                 obs_mask_global[p_id], future_mask_global[p_id]])

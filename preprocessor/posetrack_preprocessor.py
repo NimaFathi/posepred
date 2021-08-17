@@ -83,7 +83,7 @@ class PoseTrackPreprocessor(Processor):
                             obs_mask.append(video_dict['obs_mask'][p_id])
                             future_pose.append(video_dict['future_pose'][p_id])
                             future_mask.append(video_dict['future_mask'][p_id])
-                    if self.is_interactive:
+                    if not self.is_interactive:
                         for p_id in range(len(obs_pose)):
                             data.append(['%s-%d' % (video_id, i), obs_pose[p_id], future_pose[p_id], obs_mask[p_id],
                                          future_mask[p_id]])
@@ -162,7 +162,7 @@ class PoseTrackPreprocessor(Processor):
                             obs_mask_global.append(video_data['obs_mask'][p_id])
                             future_pose_global.append(video_data['future_pose'][p_id])
                             future_mask_global.append(video_data['future_mask'][p_id])
-                    if self.is_interactive:
+                    if not self.is_interactive:
                         for p_id in range(len(obs_pose_global)):
                             data.append(['%s-%d' % (video_id, i), obs_pose_global[p_id], future_pose_global[p_id],
                                          obs_mask_global[p_id], future_mask_global[p_id]])
@@ -248,7 +248,7 @@ class PoseTrackPreprocessor(Processor):
                             obs_mask_local.append(video_data['obs_mask'][p_id])
                             future_pose_local.append(video_data['future_pose'][p_id])
                             future_mask_local.append(video_data['future_mask'][p_id])
-                    if self.is_interactive:
+                    if not self.is_interactive:
                         for p_id in range(len(obs_pose_local)):
                             data.append(['%s-%d' % (video_id, i), obs_pose_local[p_id], future_pose_local[p_id],
                                          obs_mask_local[p_id], future_mask_local[p_id]])
