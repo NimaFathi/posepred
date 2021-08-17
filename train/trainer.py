@@ -8,9 +8,10 @@ import torch.optim as optim
 import torch.nn as nn
 
 from data_loader.data_loader import get_dataloader
+from train.reporter import Reporter
 from utils.save_load import get_model, create_new_dir, save_snapshot, load_snapshot
 from utils.metrics import accuracy, ADE, FDE
-from train.reporter import Reporter
+from utils.others import pose_from_vel
 
 
 class Trainer:
@@ -78,7 +79,7 @@ class Trainer:
                 vel_loss = self.distance_loss(pred_vel, target_vel)
                 mask_loss = self.mask_loss(pred_mask, target_mask)
                 mask_acc = accuracy(pred_mask, target_mask)
-                pred_pose = speed2pos(pred_vel, obs_pose[..., -1, :])
+                pred_pose = pose_from_vel(pred_vel, obs_pose[..., -1, :])
                 ade = ADE(pred_pose, target_pose, self.dim)
                 fde = FDE(pred_pose, target_pose, self.dim)
                 self.train_reporter.update([vel_loss, mask_loss, mask_acc, ade, fde], batch_size)
@@ -110,7 +111,7 @@ class Trainer:
                     vel_loss = self.distance_loss(pred_vel, target_vel)
                     mask_loss = self.mask_loss(pred_mask, target_mask)
                     mask_acc = accuracy(pred_mask, target_mask)
-                    pred_pose = speed2pos(pred_vel, obs_pose)
+                    pred_pose = pose_from_vel(pred_vel, obs_pose)
                     ade = ADE(pred_pose, target_pose, self.dim)
                     fde = FDE(pred_pose, target_pose, self.dim)
                     self.valid_reporter.update([vel_loss, mask_loss, mask_acc, ade, fde], batch_size)
