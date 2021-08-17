@@ -10,13 +10,12 @@ from preprocessor.preprocessor import Processor, OUTPUT_DIR
 
 
 class JTAPreprocessor(Processor):
-    def __init__(self, is_3d, mask, dataset_path, is_disentangle, obs_frame_num, pred_frame_num, skip_frame_num,
+    def __init__(self, is_3d, dataset_path, is_disentangle, obs_frame_num, pred_frame_num, skip_frame_num,
                  use_video_once, custom_name, is_interactive):
-        super(JTAPreprocessor, self).__init__(dataset_path, is_disentangle, obs_frame_num, pred_frame_num,
-                                              skip_frame_num, use_video_once, custom_name, is_interactive)
+        super(JTAPreprocessor, self).__init__(dataset_path, is_disentangle,is_interactive, obs_frame_num,
+                                              pred_frame_num, skip_frame_num, use_video_once, custom_name)
         self.dataset_total_frame_num = 900
         self.is_3d = is_3d
-        self.mask = mask
         if is_3d:
             self.start_dim = 5
             self.end_dim = 8
@@ -33,6 +32,8 @@ class JTAPreprocessor(Processor):
                 self.output_dir = os.path.join(OUTPUT_DIR, 'JTA_interactive', '2D')
             else:
                 self.output_dir = os.path.join(OUTPUT_DIR, 'JTA', '2D')
+        if not os.path.exists(self.output_dir):
+            os.makedirs(self.output_dir)
 
     def normal(self, data_type='train'):
         print('start creating JTA normal static data ... ')

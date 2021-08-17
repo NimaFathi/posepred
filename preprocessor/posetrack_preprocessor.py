@@ -16,6 +16,8 @@ class PoseTrackPreprocessor(Processor):
         self.mask = mask
         self.output_dir = os.path.join(OUTPUT_DIR, 'PoseTrack_interactive') if self.is_interactive else os.path.join(
             OUTPUT_DIR, 'PoseTrack')
+        if not os.path.exists(self.output_dir):
+            os.makedirs(self.output_dir)
 
     def normal(self, data_type='train'):
         print('start creating PoseTrack normal static data ... ')
@@ -38,6 +40,7 @@ class PoseTrackPreprocessor(Processor):
                 annotations = json_data.get('annotations')
                 if not annotations:
                     continue
+                print(f'file name: {entry.name}')
                 video_id = json_data.get('images')[0].get('vid_id')
                 pose = defaultdict(list)
                 mask = defaultdict(list)
