@@ -1,44 +1,36 @@
 import os
 
 import torch
+import torch.optim as optim
+
 from models.lstm_vel.lstm_vel import LSTMVel3dpw
 
-
-# TODO: rewrite save and load
 
 # TODO: edit get_model to support all models.
 def get_model(model_args):
     if model_args.model_name == 'lstm_vel':
-        return LSTMVel3dpw(model_args).to('cuda')
+        return LSTMVel3dpw(model_args).to(torch.device('cuda'))
 
 
-def load_model(load_path):
-    checkpoint = torch.load(load_path, map_location='cpu')
-    model_args = checkpoint['model_args']
-    model = get_model(model_args).load_state_dict(checkpoint['model_state'])
-    return model
+# TODO map_location="cuda:0" ???
+def load_snapshot(load_snapshot_path, optimizer_lr):
+    snapshot = torch.load(load_snapshot_path, map_location='cpu')
+    model_args = snapshot['model_args']
+    model = get_model(model_args).load_state_dict(snapshot['model_state'])
+    optimizer = optim.Adam(model.parameters(), lr=optimizer_lr)
+    return model, model_args, optimizer, snapshot['epoch']
 
 
-def load_checkpoint(load_path):
-    checkpoint = torch.load(load_path, map_location='cpu')
-    model_args = checkpoint['model_args']
-    model = get_model(model_args).load_state_dict(checkpoint['model_state'])
-
-    return model, checkpoint['model_args'], checkpoint['dataloader_args'], checkpoint['training_args']
-
-
-def save_checkpoint(model, optimizer, model_args, dataloader_args, training_args, epoch, save_path):
-    print('==> Saving...')
-    checkpoint = {
-        'model_state': model.state_dict(),
-        'optimizer_state': optimizer.state_dict(),
+def save_snapshot(model, optimizer, model_args, epoch, save_path):
+    print('### Taking Snapshot ###')
+    snapshot = {
+        'model_state_dict': model.state_dict(),
+        'optimizer_state_dict': optimizer.state_dict(),
         'model_args': model_args,
-        'dataloader_args': dataloader_args,
-        'training_args': training_args,
         'epoch': epoch,
     }
-    torch.save(checkpoint, save_path)
-    del checkpoint
+    torch.save(snapshot, os.path.join(save_path, '%03d.pt' % epoch))
+    del snapshot
 
 
 def create_new_dir(dir_path):
@@ -47,9 +39,6 @@ def create_new_dir(dir_path):
         new_dir_path = os.path.join(dir_path, str(i) + '/')
         if not os.path.isdir(new_dir_path):
             os.makedirs(new_dir_path, exist_ok=False)
+            os.makedirs(new_dir_path + 'snapshots/', exist_ok=False)
             return new_dir_path
     assert "Too many folders exist."
-
-
-
-

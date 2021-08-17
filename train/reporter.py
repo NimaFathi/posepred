@@ -14,6 +14,13 @@ class Reporter:
         self.attrs['FDE'] = AverageMeter()
         self.time = time.time()
 
+        self.history = dict()
+        self.history['vel_loss'] = []
+        self.history['mask_loss'] = []
+        self.history['mask_acc'] = []
+        self.history['ADE'] = []
+        self.history['FDE'] = []
+
     def update(self, values, batch_size):
         self.time = time.time() - self.time
         for i, avg_meter in enumerate(self.attrs.values()):
@@ -29,3 +36,6 @@ class Reporter:
         for key, avg_meter in self.attrs.items():
             print(key + ":", avg_meter.get_average())
         print('-' * 30)
+
+    def next_epoch(self):
+

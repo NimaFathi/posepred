@@ -1,6 +1,7 @@
 import os
 import sys
 import time
+import json
 from consts import ROOT_DIR
 
 import torch
@@ -8,40 +9,51 @@ import torch.optim as optim
 import torch.nn as nn
 
 from data_loader.data_loader import get_dataloader
-from utils.save_load import get_model, load_model, create_new_dir
+from utils.save_load import get_model, create_new_dir, save_snapshot, load_snapshot
 from utils.metrics import accuracy, ADE, FDE
 from train.reporter import Reporter
 
 
 class TrainHandler:
 
-    def __init__(self, dataloader_args, model_args, training_args):
-        self.dataloader = get_dataloader(dataloader_args)
-        self.model = load_model(model_args.load_path) if model_args.load_path else get_model(model_args)
-        self.optimizer = optim.Adam(self.model.parameters(), lr=training_args.lr)
-        self.scheduler = optim.lr_scheduler.ReduceLROnPlateau(self.optimizer, factor=training_args.decay_factor,
-                                                              patience=training_args.decay_patience, threshold=1e-8,
+    def __init__(self, args, train_dataloader_args, valid_dataloader_args, model_args=None, load_snapshot_path=None):
+
+        self.args = args
+        self.train_dataloader_args = train_dataloader_args
+        self.valid_dataloader_args = valid_dataloader_args
+        if load_snapshot_path:
+            self.model, self.model_args, self.optimizer, epoch = load_snapshot(load_snapshot_path, args.lr)
+            self.args.start_epoch = epoch
+            self.save_snapshots_path = load_snapshot_path[:load_snapshot_path.rindex('/') + 1]
+        else:
+            self.model = get_model(model_args)
+            self.model_args = model_args
+            self.optimizer = optim.Adam(self.model.parameters(), lr=args.lr)
+            self.save_snapshots_path = self.get_snapshots_dir()
+
+        self.scheduler = optim.lr_scheduler.ReduceLROnPlateau(self.optimizer, factor=args.decay_factor,
+                                                              patience=args.decay_patience, threshold=1e-8,
                                                               verbose=True)
 
-        self.device = 'cuda'
-        self.distance_loss = nn.L1Loss() if training_args.distance_loss == 'L1' else nn.MSELoss()
+        self.device = torch.device('cuda')
+        self.distance_loss = nn.L1Loss() if args.distance_loss == 'L1' else nn.MSELoss()
         self.mask_loss = nn.BCELoss()
-        self.args = training_args
-        self.dim = self.dataloader.dataset.dim
-        self.joints = self.dataloader.dataset.joints
-        self.is_multi_person = dataloader_args.is_multi_person
+
+        self.train_dataloader = get_dataloader(train_dataloader_args)
+        self.valid_dataloader = get_dataloader(valid_dataloader_args)
 
     def train(self):
+        self.model.train()
 
         train_time_0 = time.time()
         train_s_scores = []
         val_s_scores = []
 
+        train_reporter = Reporter()
         for epoch in range(self.args.start_epoch, self.args.epochs):
-
-            train_reporter = Reporter()
-            for data in self.dataloader:
-                if self.is_multi_person:
+            train_reporter.reset()
+            for data in self.train_dataloader:
+                if self.train_dataloader.is_multi_person:
                     pass
                 else:
                     for i, d in enumerate(data):
@@ -64,10 +76,8 @@ class TrainHandler:
                     fde = FDE(pred_pose, target_pose, self.dim)
                     train_reporter.update([vel_loss, mask_loss, mask_acc, ade, fde], batch_size)
 
-            if (epoch + 1) % self.args.save_interval == 0:
-                dir_path = create_new_dir(os.path.join(ROOT_DIR, 'exps/test/'))
-                save_path = os.path.join(dir_path, '%03d.pt' % (epoch + 1))
-                save_model(self.model, self.optimizer, opt, epoch, save_path)
+            if (epoch + 1) % self.args.snapshot_interval == 0:
+                save_snapshot(self.model, self.optimizer, self.model_args, 0, self.save_snapshots_path)
 
             train_s_scores.append(avg_epoch_train_speed_loss.avg)
 
@@ -106,3 +116,17 @@ class TrainHandler:
             sys.stdout.flush()
         print("*" * 100)
         print('TRAINING Postrack DONE in:{}!'.format(time.time() - training_start))
+
+    def get_snapshots_dir(self):
+        dir_path = create_new_dir(os.path.join(ROOT_DIR, 'exps/train/'))
+        with open(dir_path + 'training_args' + '.json', 'w') as f:
+            json.dump(self.args, f)
+            f.close()
+        with open(dir_path + 'train_dataloader_args' + '.json', 'w') as f:
+            json.dump(self.train_dataloader_args, f)
+            f.close()
+        with open(dir_path + 'model_args' + '.json', 'w') as f:
+            json.dump(self.model_args, f)
+            f.close()
+        save_snapshot(self.model, self.optimizer, self.model_args, 0, self.save_snapshots_path)
+        return os.path.join(dir_path + 'snapshots/')
