@@ -11,9 +11,9 @@ from preprocessor.preprocessor import Processor, OUTPUT_DIR
 
 class JTAPreprocessor(Processor):
     def __init__(self, is_3d, mask, dataset_path, is_disentangle, obs_frame_num, pred_frame_num, skip_frame_num,
-                 use_video_once):
+                 use_video_once, custom_name, is_interactive):
         super(JTAPreprocessor, self).__init__(dataset_path, is_disentangle, obs_frame_num, pred_frame_num,
-                                              skip_frame_num, use_video_once)
+                                              skip_frame_num, use_video_once, custom_name, is_interactive)
         self.dataset_total_frame_num = 900
         self.is_3d = is_3d
         self.mask = mask
@@ -23,11 +23,25 @@ class JTAPreprocessor(Processor):
         else:
             self.start_dim = 3
             self.end_dim = 5
+        if self.is_3d:
+            if self.is_interactive:
+                self.output_dir = os.path.join(OUTPUT_DIR, 'JTA_interactive', '3D')
+            else:
+                self.output_dir = os.path.join(OUTPUT_DIR, 'JTA', '3D')
+        else:
+            if self.is_interactive:
+                self.output_dir = os.path.join(OUTPUT_DIR, 'JTA_interactive', '2D')
+            else:
+                self.output_dir = os.path.join(OUTPUT_DIR, 'JTA', '2D')
 
     def normal(self, data_type='train'):
-        print('create normal csv files for JTA ... ')
+        print('start creating JTA normal static data ... ')
         header = ['video_section', 'observed_pose', 'future_pose', 'observed_mask', 'future_mask']
-        with open(os.path.join(OUTPUT_DIR, 'JTA_{}.csv'.format(data_type)), 'w') as f_object:
+        if self.custom_name:
+            output_file_name = f'{data_type}_{self.obs_frame_num}_{self.pred_frame_num}_{self.skip_frame_num}_{self.custom_name}.csv'
+        else:
+            output_file_name = f'{data_type}_{self.obs_frame_num}_{self.pred_frame_num}_{self.skip_frame_num}_JTA.csv'
+        with open(os.path.join(self.output_dir, output_file_name), 'w') as f_object:
             writer = csv.writer(f_object)
             writer.writerow(header)
 
@@ -39,7 +53,7 @@ class JTAPreprocessor(Processor):
             if not entry.path.endswith('.json'):
                 continue
             with open(entry.path, 'r') as json_file:
-                print(entry.path)
+                print(f'file name: {entry.name}')
                 video_number = re.search('seq_(\d+)', entry.name).group(1)
                 data = []
                 matrix = json.load(json_file)
@@ -86,19 +100,34 @@ class JTAPreprocessor(Processor):
                             obs_mask.append(video_data['obs_mask'][p_id])
                             future.append(video_data['future_pose'][p_id])
                             future_mask.append(video_data['future_mask'][p_id])
-                    data.append(['%s_%d' % (video_number, i), obs, future, obs_mask, future_mask])
-                print(len(data))
-                with open(os.path.join(OUTPUT_DIR, 'JTA_{}.csv'.format(data_type)), 'a') as f_object:
+                    if not self.is_interactive:
+                        for p_id in range(len(obs)):
+                            data.append(['%s-%d' % (video_number, i), obs[p_id], future[p_id], obs_mask[p_id],
+                                         future_mask[p_id]])
+                    else:
+                        data.append(['%s-%d' % (video_number, i), obs, future, obs_mask, future_mask])
+                with open(os.path.join(self.output_dir, output_file_name), 'a') as f_object:
                     writer = csv.writer(f_object)
                     writer.writerows(data)
 
     def disentangle(self, data_type='train'):
-        print('create disentangle csv files for JTA ... ')
+        print('start creating JTA disentangle static data ...')
         header = ['video_section', 'observed_pose', 'future_pose', 'observed_mask', 'future_mask']
-        with open(os.path.join(OUTPUT_DIR, 'JTA_global_{}.csv'.format(data_type)), 'w') as f_object:
+        if self.custom_name:
+            global_file_name = f'global_{data_type}_{self.obs_frame_num}_{self.pred_frame_num}_{self.skip_frame_num}_' \
+                               f'{self.custom_name}.csv'
+            local_file_name = f'local_{data_type}_{self.obs_frame_num}_{self.pred_frame_num}_{self.skip_frame_num}_' \
+                              f'{self.custom_name}.csv'
+        else:
+            global_file_name = f'global_{data_type}_{self.obs_frame_num}_{self.pred_frame_num}_' \
+                               f'{self.skip_frame_num}_JTA.csv'
+            local_file_name = f'local_{data_type}_{self.obs_frame_num}_{self.pred_frame_num}_' \
+                              f'{self.skip_frame_num}_JTA.csv'
+
+        with open(os.path.join(self.output_dir, global_file_name), 'w') as f_object:
             writer = csv.writer(f_object)
             writer.writerow(header)
-        with open(os.path.join(OUTPUT_DIR, 'JTA_local_{}.csv'.format(data_type)), 'w') as f_object:
+        with open(os.path.join(self.output_dir, local_file_name), 'w') as f_object:
             writer = csv.writer(f_object)
             writer.writerow(header)
 
@@ -110,14 +139,13 @@ class JTAPreprocessor(Processor):
             if not entry.path.endswith('.json'):
                 continue
             with open(entry.path, 'r') as json_file:
-                print(entry.path)
+                print(f'file name: {entry.name}')
                 video_number = re.search('seq_(\d+)', entry.name).group(1)
                 data_global = []
                 data_local = []
                 matrix = json.load(json_file)
                 matrix = np.array(matrix)
                 for i in range(section_range):
-                    print(i)
                     global_dict = {
                         'obs_pose': defaultdict(list), 'future_pose': defaultdict(list),
                         'obs_mask': defaultdict(list), 'future_mask': defaultdict(list)
@@ -192,14 +220,21 @@ class JTAPreprocessor(Processor):
                             obs_mask_local.append(local_dict['obs_mask'][p_id])
                             future_local.append(local_dict['future_pose'][p_id])
                             future_mask_local.append(local_dict['future_mask'][p_id])
-                    data_global.append(
-                        ['%s_%d' % (video_number, i), obs_global, future_global, obs_mask_global, future_mask_global])
-                    data_local.append(
-                        ['%s_%d' % (video_number, i), obs_local, future_local, obs_mask_local, future_mask_local])
-                print(len(data_local))
-                with open(os.path.join(OUTPUT_DIR, 'JTA_global_{}.csv'.format(data_type)), 'a') as f_object:
+                    if not self.is_interactive:
+                        for p_id in range(len(obs_global)):
+                            data_global.append(['%s-%d' % (video_number, i), obs_global[p_id], future_global[p_id],
+                                                obs_mask_global[p_id], future_mask_global[p_id]])
+                            data_local.append(['%s-%d' % (video_number, i), obs_global[p_id], future_global[p_id],
+                                               obs_mask_global[p_id], future_mask_global[p_id]])
+                    else:
+                        data_global.append(
+                            ['%s-%d' % (video_number, i), obs_global, future_global, obs_mask_global,
+                             future_mask_global])
+                        data_local.append(
+                            ['%s-%d' % (video_number, i), obs_local, future_local, obs_mask_local, future_mask_local])
+                with open(os.path.join(self.output_dir, global_file_name), 'a') as f_object:
                     writer = csv.writer(f_object)
                     writer.writerows(data_global)
-                with open(os.path.join(OUTPUT_DIR, 'JTA_local_{}.csv'.format(data_type)), 'a') as f_object:
+                with open(os.path.join(self.output_dir, local_file_name), 'a') as f_object:
                     writer = csv.writer(f_object)
                     writer.writerows(data_local)
