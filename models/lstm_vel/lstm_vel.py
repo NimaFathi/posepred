@@ -5,11 +5,13 @@ from models.encoder import Encoder
 
 
 class LSTMVel(nn.Module):
-    def __init__(self, args, outputs_num, input_size, output_size):
+    def __init__(self, args, pred_frames_num, dim, keypoints_num):
         super(LSTMVel, self).__init__()
+        input_size = output_size = keypoints_num * dim
         self.pose_encoder = Encoder(input_size, args.hidden_size, args.n_layers, args.dropout_encoder)
         self.vel_encoder = Encoder(input_size, args.hidden_size, args.n_layers, args.dropout_encoder)
-        self.vel_decoder = VelDecoder(outputs_num, input_size, output_size, args.hardtanh_limit, args.hidden_size, args.n_layers, args.dropout_pose_dec)
+        self.vel_decoder = VelDecoder(pred_frames_num, input_size, output_size, args.hardtanh_limit, args.hidden_size,
+                                      args.n_layers, args.dropout_pose_dec)
 
     def forward(self, pose=None, vel=None):
         outputs = []
