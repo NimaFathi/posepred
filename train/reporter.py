@@ -1,3 +1,5 @@
+
+import sys
 import time
 
 from utils.average_meter import AverageMeter
@@ -26,20 +28,20 @@ class Reporter:
         for i, avg_meter in enumerate(self.attrs.values()):
             avg_meter.update(values[i], batch_size)
 
-    def next_epoch(self, log=True):
+    def epoch_finished(self):
         self.history.get('time').append(time.time() - self.start_time)
         for key, avg_meter in self.attrs.items():
             self.history.get(key).append(avg_meter.get_average())
-        if log:
-            self.print_values()
         self.reset_avr_meters()
 
     def reset_avr_meters(self):
-        self.start_time = time.time()
+        self.start_time = None
         for i, avg_meter in enumerate(self.attrs.values()):
             avg_meter.reset()
 
     def print_values(self):
+        msg = 'epoch:' + str(len(self.history['time']))
         for key, item in self.history.items():
-            print(key + ":", item[-1])
-        print('-' * 30)
+            msg += '| ' + key + ': %.2f' % item[-1]
+        print(msg)
+        sys.stdout.flush()
