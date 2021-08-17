@@ -7,16 +7,24 @@ from preprocessor.preprocessor import Processor, OUTPUT_DIR
 
 
 class PoseTrackPreprocessor(Processor):
-    def __init__(self, mask, dataset_path, is_disentangle, obs_frame_num, pred_frame_num, skip_frame_num,
-                 use_video_once):
-        super(PoseTrackPreprocessor, self).__init__(dataset_path, is_disentangle, obs_frame_num, pred_frame_num,
-                                                    skip_frame_num, use_video_once)
+    def __init__(self, mask, dataset_path, is_disentangle, is_interactive, obs_frame_num, pred_frame_num,
+                 skip_frame_num,
+                 use_video_once, custom_name):
+        super(PoseTrackPreprocessor, self).__init__(dataset_path, is_disentangle, is_interactive, obs_frame_num,
+                                                    pred_frame_num, skip_frame_num, use_video_once, custom_name)
         self.dataset_total_frame_num = 30
         self.mask = mask
+        self.output_dir = os.path.join(OUTPUT_DIR, 'PoseTrack_interactive') if self.is_interactive else os.path.join(
+            OUTPUT_DIR, 'PoseTrack')
 
     def normal(self, data_type='train'):
+        print('start creating PoseTrack normal static data ... ')
         header = ['video_section', 'observed_pose', 'future_pose', 'observed_mask', 'future_mask']
-        with open(os.path.join(OUTPUT_DIR, 'PoseTrack_{}.csv'.format(data_type)), 'w') as f_object:
+        if self.custom_name:
+            output_file_name = f'{data_type}_{self.obs_frame_num}_{self.pred_frame_num}_{self.skip_frame_num}_{self.custom_name}.csv'
+        else:
+            output_file_name = f'{data_type}_{self.obs_frame_num}_{self.pred_frame_num}_{self.skip_frame_num}_PoseTrack.csv'
+        with open(os.path.join(self.output_dir, output_file_name), 'w') as f_object:
             writer = csv.writer(f_object)
             writer.writerow(header)
         total_frame_num = self.obs_frame_num + self.pred_frame_num
@@ -75,18 +83,28 @@ class PoseTrackPreprocessor(Processor):
                             obs_mask.append(video_dict['obs_mask'][p_id])
                             future_pose.append(video_dict['future_pose'][p_id])
                             future_mask.append(video_dict['future_mask'][p_id])
-                    data.append(['%s_%d' % (video_id, i), obs_pose, future_pose, obs_mask, future_mask])
-                with open(os.path.join(OUTPUT_DIR, 'PoseTrack_{}.csv'.format(data_type)), 'a') as f_object:
+                    if self.is_interactive:
+                        for p_id in range(len(obs_pose)):
+                            data.append(['%s-%d' % (video_id, i), obs_pose[p_id], future_pose[p_id], obs_mask[p_id],
+                                         future_mask[p_id]])
+                    else:
+                        data.append(['%s-%d' % (video_id, i), obs_pose, future_pose, obs_mask, future_mask])
+                with open(os.path.join(self.output_dir, output_file_name), 'a') as f_object:
                     writer = csv.writer(f_object)
                     writer.writerows(data)
 
     def disentangle(self, data_type='train'):
+        print('start creating PoseTrack disentangle static data ... ')
         self.disentangle_global(data_type)
         self.disentangle_local(data_type)
 
     def disentangle_global(self, data_type='train'):
         header = ['video_section', 'observed_pose', 'future_pose', 'observed_mask', 'future_mask']
-        with open(os.path.join(OUTPUT_DIR, 'PoseTrack_global_{}.csv'.format(data_type)), 'w') as f_object:
+        if self.custom_name:
+            global_file_name = f'global_{data_type}_{self.obs_frame_num}_{self.pred_frame_num}_{self.skip_frame_num}_{self.custom_name}.csv'
+        else:
+            global_file_name = f'global_{data_type}_{self.obs_frame_num}_{self.pred_frame_num}_{self.skip_frame_num}_PoseTrack.csv'
+        with open(os.path.join(self.output_dir, global_file_name), 'w') as f_object:
             writer = csv.writer(f_object)
             writer.writerow(header)
         total_frame_num = self.obs_frame_num + self.pred_frame_num
@@ -101,6 +119,7 @@ class PoseTrackPreprocessor(Processor):
                 annotations = json_data.get('annotations')
                 if not annotations:
                     continue
+                print('global: {}'.format(entry.name))
                 video_id = json_data.get('images')[0].get('vid_id')
                 frame_global_data = {
                     'pose': defaultdict(list),
@@ -143,16 +162,25 @@ class PoseTrackPreprocessor(Processor):
                             obs_mask_global.append(video_data['obs_mask'][p_id])
                             future_pose_global.append(video_data['future_pose'][p_id])
                             future_mask_global.append(video_data['future_mask'][p_id])
-                    data.append(
-                        ['%s_%d' % (video_id, i), obs_pose_global, future_pose_global, obs_mask_global,
-                         future_mask_global])
-                with open(os.path.join(OUTPUT_DIR, 'PoseTrack_global_{}.csv'.format(data_type)), 'a') as f_object:
+                    if self.is_interactive:
+                        for p_id in range(len(obs_pose_global)):
+                            data.append(['%s-%d' % (video_id, i), obs_pose_global[p_id], future_pose_global[p_id],
+                                         obs_mask_global[p_id], future_mask_global[p_id]])
+                    else:
+                        data.append(
+                            ['%s-%d' % (video_id, i), obs_pose_global, future_pose_global, obs_mask_global,
+                             future_mask_global])
+                with open(os.path.join(self.output_dir, 'PoseTrack_global_{}.csv'.format(data_type)), 'a') as f_object:
                     writer = csv.writer(f_object)
                     writer.writerows(data)
 
     def disentangle_local(self, data_type='train'):
         header = ['video_section', 'observed_pose', 'future_pose', 'observed_mask', 'future_mask']
-        with open(os.path.join(OUTPUT_DIR, 'PoseTrack_local_{}.csv'.format(data_type)), 'w') as f_object:
+        if self.custom_name:
+            local_file_name = f'local_{data_type}_{self.obs_frame_num}_{self.pred_frame_num}_{self.skip_frame_num}_{self.custom_name}.csv'
+        else:
+            local_file_name = f'local_{data_type}_{self.obs_frame_num}_{self.pred_frame_num}_{self.skip_frame_num}_PoseTrack.csv'
+        with open(os.path.join(self.output_dir, local_file_name), 'w') as f_object:
             writer = csv.writer(f_object)
             writer.writerow(header)
         total_frame_num = self.obs_frame_num + self.pred_frame_num
@@ -167,6 +195,7 @@ class PoseTrackPreprocessor(Processor):
                 annotations = json_data.get('annotations')
                 if not annotations:
                     continue
+                print('local: {}'.format(entry.name))
                 video_id = json_data.get('images')[0].get('vid_id')
                 frame_local_data = {
                     'pose': defaultdict(list),
@@ -201,7 +230,7 @@ class PoseTrackPreprocessor(Processor):
                     future_mask_local = []
                     for j in range(1, total_frame_num * self.skip_frame_num + 1, self.skip_frame_num):
                         for pedestrian in frame_local_data['pose'].keys():
-                            if frame_local_data[pedestrian].__len__() < j:
+                            if frame_local_data['pose'][pedestrian].__len__() < j:
                                 continue
                             if j <= self.obs_frame_num * self.skip_frame_num:
                                 video_data['obs_pose'][pedestrian].append(frame_local_data['pose'][pedestrian][j - 1])
@@ -219,8 +248,14 @@ class PoseTrackPreprocessor(Processor):
                             obs_mask_local.append(video_data['obs_mask'][p_id])
                             future_pose_local.append(video_data['future_pose'][p_id])
                             future_mask_local.append(video_data['future_mask'][p_id])
-                    data.append(
-                        ['%s_%d' % (video_id, i), obs_pose_local, future_pose_local, obs_mask_local, future_mask_local])
-                with open(os.path.join(OUTPUT_DIR, 'PoseTrack_local_{}.csv'.format(data_type)), 'a') as f_object:
+                    if self.is_interactive:
+                        for p_id in range(len(obs_pose_local)):
+                            data.append(['%s-%d' % (video_id, i), obs_pose_local[p_id], future_pose_local[p_id],
+                                         obs_mask_local[p_id], future_mask_local[p_id]])
+                    else:
+                        data.append(
+                            ['%s%d' % (video_id, i), obs_pose_local, future_pose_local, obs_mask_local,
+                             future_mask_local])
+                with open(os.path.join(self.output_dir, local_file_name), 'a') as f_object:
                     writer = csv.writer(f_object)
                     writer.writerows(data)
