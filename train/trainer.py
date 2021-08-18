@@ -36,9 +36,9 @@ class Trainer:
             self.model = get_model(model_args)
             self.model_args = model_args
             self.optimizer = optim.Adam(self.model.parameters(), lr=args.lr)
-            self.snapshots_dir_path = self.create_snapshots_dir(train_dataloader_args, valid_dataloader_args)
             self.train_reporter = Reporter()
             self.valid_reporter = Reporter()
+            self.snapshots_dir_path = self.create_snapshots_dir(train_dataloader_args, valid_dataloader_args)
 
         self.scheduler = optim.lr_scheduler.ReduceLROnPlateau(self.optimizer, factor=args.decay_factor,
                                                               patience=args.decay_patience, threshold=1e-8,
@@ -72,19 +72,25 @@ class Trainer:
                 for i, d in enumerate(data):
                     data[i] = d.to(self.device)
                 batch_size = data[0].shape[0]
-                obs_pose, obs_vel, obs_mask, target_pose, target_vel, target_mask = data
+
+                if self.use_mask:
+                    obs_pose, obs_vel, obs_mask, target_pose, target_vel, target_mask = data
+                    model_input = (obs_pose, obs_vel, obs_mask)
+                else:
+                    obs_pose, obs_vel, target_pose, target_vel = data
+                    model_input = (obs_pose, obs_vel)
 
                 # predict
                 self.model.zero_grad()
-                pred_vel, pred_mask = self.model(pose=obs_pose, vel=obs_vel, mask=obs_mask)
+                pred_vel, pred_mask = self.model(model_input)
 
                 # calculate metrics
                 vel_loss = self.distance_loss(pred_vel, target_vel)
                 mask_loss = self.mask_loss(pred_mask, target_mask)
                 mask_acc = accuracy(pred_mask, target_mask)
                 pred_pose = pose_from_vel(pred_vel, obs_pose[..., -1, :])
-                ade = ADE(pred_pose, target_pose, self.dim)
-                fde = FDE(pred_pose, target_pose, self.dim)
+                ade = ADE(pred_pose, target_pose, self.model_args.keypoint_dim)
+                fde = FDE(pred_pose, target_pose, self.model_args.keypoint_dim)
                 self.train_reporter.update([vel_loss, mask_loss, mask_acc, ade, fde], batch_size)
 
                 # calculate loss and backpropagate
@@ -115,8 +121,8 @@ class Trainer:
                     mask_loss = self.mask_loss(pred_mask, target_mask)
                     mask_acc = accuracy(pred_mask, target_mask)
                     pred_pose = pose_from_vel(pred_vel, obs_pose)
-                    ade = ADE(pred_pose, target_pose, self.dim)
-                    fde = FDE(pred_pose, target_pose, self.dim)
+                    ade = ADE(pred_pose, target_pose, self.model_args.keypoint_dim)
+                    fde = FDE(pred_pose, target_pose, self.model_args.keypoint_dim)
                     self.valid_reporter.update([vel_loss, mask_loss, mask_acc, ade, fde], batch_size)
 
         self.valid_reporter.epoch_finished()
@@ -133,5 +139,5 @@ class Trainer:
         with open(dir_path + 'valid_dataloader_args.txt', 'w') as f:
             f.write(json.dumps(valid_dataloader_args, indent=4, cls=JSONEncoder_))
         save_snapshot(self.model, self.optimizer, self.model_args, 0, self.train_reporter, self.valid_reporter,
-                      self.snapshots_dir_path)
+                      dir_path + 'snapshots/')
         return os.path.join(dir_path + 'snapshots/')

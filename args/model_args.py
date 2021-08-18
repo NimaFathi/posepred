@@ -14,6 +14,7 @@ class ModelArgs:
         self.pred_frames_num = None
         self.keypoint_dim = None
         self.keypoints_num = None
+        self.use_mask = None
 
 
 def parse_model_args():

@@ -6,7 +6,7 @@ from models.encoder import Encoder
 
 class LSTMVelMask(nn.Module):
     def __init__(self, args):
-        super().__init__()
+        super(LSTMVel, self).__init__()
         input_size = output_size = int(args.keypoints_num * args.keypoint_dim)
         self.pose_encoder = Encoder(input_size, args.hidden_size, args.n_layers, args.dropout_encoder)
         self.vel_encoder = Encoder(input_size, args.hidden_size, args.n_layers, args.dropout_encoder)

@@ -17,8 +17,3 @@ if __name__ == '__main__':
 
     trainer = Trainer(training_args, dataloader_args, dataloader_args, model_args)
     print(trainer.model_args.keypoint_dim)
-
-    # dataloader = get_dataloader(dataloader_args)
-    # for data in dataloader:
-    #     obs_pose = data[0]
-    #     print(obs_pose.shape)
