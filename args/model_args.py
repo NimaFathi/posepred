@@ -11,6 +11,9 @@ class ModelArgs:
         self.dropout_enc = dropout_enc
         self.dropout_pose_dec = dropout_pose_dec
         self.dropout_mask_dec = dropout_mask_dec
+        self.pred_frames_num = None
+        self.keypoint_dim = None
+        self.keypoints_num = None
 
 
 def parse_model_args():

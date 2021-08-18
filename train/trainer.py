@@ -18,12 +18,20 @@ class Trainer:
 
     def __init__(self, args, train_dataloader_args, valid_dataloader_args, model_args=None, load_snapshot_path=None):
         self.args = args
+        self.train_dataloader = get_dataloader(train_dataloader_args)
+        self.valid_dataloader = get_dataloader(valid_dataloader_args)
+        self.use_mask = train_dataloader_args.use_mask
+        self.is_interactive = train_dataloader_args.is_interactive
+
         if load_snapshot_path:
             self.model, self.model_args, self.optimizer, epoch, reporters = load_snapshot(load_snapshot_path, args.lr)
             self.args.start_epoch = epoch
             self.snapshots_dir_path = load_snapshot_path[:load_snapshot_path.rindex('/') + 1]
             self.train_reporter, self.valid_reporter = reporters
         else:
+            model_args.keypoint_dim = self.train_dataloader.dataset.keypoint_dim
+            model_args.keypoints_num = self.train_dataloader.dataset.keypoints_num
+            model_args.pred_frames_num = self.train_dataloader.dataset.future_frames_num
             self.model = get_model(model_args)
             self.model_args = model_args
             self.optimizer = optim.Adam(self.model.parameters(), lr=args.lr)
@@ -37,12 +45,6 @@ class Trainer:
         self.device = torch.device('cuda')
         self.distance_loss = nn.L1Loss() if args.distance_loss == 'L1' else nn.MSELoss()
         self.mask_loss = nn.BCELoss()
-
-        self.train_dataloader = get_dataloader(train_dataloader_args)
-        self.valid_dataloader = get_dataloader(valid_dataloader_args)
-        self.dim = train_dataloader_args.data_dim
-        self.use_mask = train_dataloader_args.use_mask
-        self.is_multi_person = False
 
     def train(self):
 

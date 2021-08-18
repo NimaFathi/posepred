@@ -5,17 +5,17 @@ from models.encoder import Encoder
 
 
 class LSTMVelMask(nn.Module):
-    def __init__(self, args, pred_frames_num, keypoint_dim, keypoints_num):
+    def __init__(self, args):
         super().__init__()
-        input_size = output_size = keypoints_num * keypoint_dim
+        input_size = output_size = int(args.keypoints_num * args.keypoint_dim)
         self.pose_encoder = Encoder(input_size, args.hidden_size, args.n_layers, args.dropout_encoder)
         self.vel_encoder = Encoder(input_size, args.hidden_size, args.n_layers, args.dropout_encoder)
-        self.vel_decoder = Decoder(pred_frames_num, input_size, output_size, args.hidden_size, args.n_layers,
+        self.vel_decoder = Decoder(args.pred_frames_num, input_size, output_size, args.hidden_size, args.n_layers,
                                    args.dropout_pose_dec, 'hardtanh', args.hardtanh_limit)
 
-        self.mask_encoder = Encoder(keypoints_num, args.hidden_size, args.n_layers, args.dropout_encoder)
-        self.mask_decoder = Decoder(pred_frames_num, keypoints_num, keypoints_num, args.hidden_size, args.n_layers,
-                                    args.dropout_mask_dec, 'sigmoid')
+        self.mask_encoder = Encoder(args.keypoints_num, args.hidden_size, args.n_layers, args.dropout_encoder)
+        self.mask_decoder = Decoder(args.pred_frames_num, args.keypoints_num, args.keypoints_num, args.hidden_size,
+                                    args.n_layers, args.dropout_mask_dec, 'sigmoid')
 
     def forward(self, pose=None, vel=None, mask=None):
         outputs = []
@@ -32,11 +32,11 @@ class LSTMVelMask(nn.Module):
         hidden_mask = hidden_mask.squeeze(0)
         cell_mask = cell_mask.squeeze(0)
 
-        VelDec_inp = vel[:, -1, :]
-        MaskDec_inp = mask[:, -1, :]
+        vel_dec_input = vel[:, -1, :]
+        mask_dec_input = mask[:, -1, :]
 
         hidden_dec = hidden_pose + hidden_vel
         cell_dec = cell_pose + cell_vel
-        outputs.append(self.vel_decoder(VelDec_inp, hidden_dec, cell_dec))
-        outputs.append(self.mask_decoder(MaskDec_inp, hidden_mask, cell_mask))
+        outputs.append(self.vel_decoder(vel_dec_input, hidden_dec, cell_dec))
+        outputs.append(self.mask_decoder(mask_dec_input, hidden_mask, cell_mask))
         return outputs

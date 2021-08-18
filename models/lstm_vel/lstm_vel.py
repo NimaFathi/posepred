@@ -1,17 +1,17 @@
 import torch.nn as nn
 
-from models.decoder import VelDecoder
+from models.decoder import Decoder
 from models.encoder import Encoder
 
 
 class LSTMVel(nn.Module):
-    def __init__(self, args, pred_frames_num, dim, keypoints_num):
+    def __init__(self, args):
         super(LSTMVel, self).__init__()
-        input_size = output_size = keypoints_num * dim
-        self.pose_encoder = Encoder(input_size, args.hidden_size, args.n_layers, args.dropout_encoder)
-        self.vel_encoder = Encoder(input_size, args.hidden_size, args.n_layers, args.dropout_encoder)
-        self.vel_decoder = VelDecoder(pred_frames_num, input_size, output_size, args.hardtanh_limit, args.hidden_size,
-                                      args.n_layers, args.dropout_pose_dec)
+        input_size = output_size = int(args.keypoints_num * args.keypoint_dim)
+        self.pose_encoder = Encoder(input_size, args.hidden_size, args.n_layers, args.dropout_enc)
+        self.vel_encoder = Encoder(input_size, args.hidden_size, args.n_layers, args.dropout_enc)
+        self.vel_decoder = Decoder(args.pred_frames_num, input_size, output_size, args.hardtanh_limit, args.hidden_size,
+                                   args.n_layers, args.dropout_pose_dec)
 
     def forward(self, pose=None, vel=None):
         outputs = []
