@@ -3,7 +3,7 @@ import os
 import torch
 import torch.optim as optim
 
-from models.lstm_vel.lstm_vel import LSTMVel
+from models.lstm_vel import LSTMVel
 
 
 # TODO: support models with mask.

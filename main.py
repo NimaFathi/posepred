@@ -17,3 +17,6 @@ if __name__ == '__main__':
 
     trainer = Trainer(training_args, dataloader_args, dataloader_args, model_args)
     print(trainer.model_args.keypoint_dim)
+
+
+
