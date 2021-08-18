@@ -5,7 +5,8 @@ from train.trainer import Trainer
 from data_loader.data_loader import get_dataloader
 
 if __name__ == '__main__':
-    dataloader_args = DataloaderArgs('simple_dataset', keypoint_dim=2, is_interactive=False, use_mask=False, is_testing=False, skip_frame=0,
+    dataloader_args = DataloaderArgs('simple_dataset', keypoint_dim=2, is_interactive=False, use_mask=False,
+                                     is_testing=False, skip_frame=0,
                                      batch_size=1, shuffle=False, pin_memory=False, num_workers=0)
 
     training_args = TrainingArgs(epochs=6, start_epoch=0, lr=0.001, decay_factor=0.95, decay_patience=20,

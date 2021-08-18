@@ -7,6 +7,7 @@ import torch
 import torch.optim as optim
 import torch.nn as nn
 
+from args.json_serializer import JSONEncoder_
 from data_loader.data_loader import get_dataloader
 from train.reporter import Reporter
 from utils.save_load import get_model, create_new_dir, save_snapshot, load_snapshot
@@ -65,7 +66,7 @@ class Trainer:
     def train_(self):
         self.train_reporter.start_time = time.time()
         for data in self.train_dataloader:
-            if self.is_multi_person:
+            if self.is_interactive:
                 pass
             else:
                 for i, d in enumerate(data):
@@ -97,7 +98,7 @@ class Trainer:
     def validate_(self):
         self.train_reporter.start_time = time.time()
         for data in self.valid_dataloader:
-            if self.is_multi_person:
+            if self.is_interactive:
                 pass
             else:
                 for i, d in enumerate(data):
@@ -123,18 +124,14 @@ class Trainer:
 
     def create_snapshots_dir(self, train_dataloader_args, valid_dataloader_args):
         dir_path = create_new_dir(os.path.join(ROOT_DIR, 'exps/train/'))
-        with open(dir_path + 'training_args' + '.json', 'w') as f:
-            json.dump(self.args, f)
-            f.close()
-        with open(dir_path + 'model_args' + '.json', 'w') as f:
-            json.dump(self.model_args, f)
-            f.close()
-        with open(dir_path + 'train_dataloader_args' + '.json', 'w') as f:
-            json.dump(train_dataloader_args, f)
-            f.close()
-        with open(dir_path + 'valid_dataloader_args' + '.json', 'w') as f:
-            json.dump(valid_dataloader_args, f)
-            f.close()
+        with open(dir_path + 'training_args.txt', 'w') as f:
+            f.write(json.dumps(self.args, indent=4, cls=JSONEncoder_))
+        with open(dir_path + 'model_args.txt', 'w') as f:
+            f.write(json.dumps(self.model_args, indent=4, cls=JSONEncoder_))
+        with open(dir_path + 'train_dataloader_args.txt', 'w') as f:
+            f.write(json.dumps(train_dataloader_args, indent=4, cls=JSONEncoder_))
+        with open(dir_path + 'valid_dataloader_args.txt', 'w') as f:
+            f.write(json.dumps(valid_dataloader_args, indent=4, cls=JSONEncoder_))
         save_snapshot(self.model, self.optimizer, self.model_args, 0, self.train_reporter, self.valid_reporter,
                       self.snapshots_dir_path)
         return os.path.join(dir_path + 'snapshots/')
