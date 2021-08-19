@@ -4,9 +4,9 @@ from consts import ROOT_DIR
 from args.training_args import TrainingArgs
 from args.helper import TrainerArgs, DataloaderArgs, ModelArgs
 from data_loader.data_loader import get_dataloader
-from utils.save_load import load_snapshot, get_model, save_snapshot, save_args, create_save_dir
+from utils.save_load import load_snapshot, get_model, save_snapshot, save_args, setup_training_dir
 from utils.reporter import Reporter
-from train.trainer import Trainer
+from entangled.trainer import Trainer
 
 
 if __name__ == '__main__':
@@ -41,7 +41,7 @@ if __name__ == '__main__':
         optimizer = optim.Adam(model.parameters(), lr=trainer_args.lr)
         train_reporter = Reporter()
         valid_reporter = Reporter()
-        trainer_args.save_dir = create_save_dir(ROOT_DIR)
+        trainer_args.save_dir = setup_training_dir(ROOT_DIR)
         save_args(trainer_args, model.args, trainer_args.save_dir)
         save_snapshot(model, optimizer, trainer_args.lr, 0, train_reporter, valid_reporter, trainer_args.save_dir)
 
