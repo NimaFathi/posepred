@@ -24,11 +24,9 @@ class Reporter:
         self.history['mask_acc'] = []
         self.history['time'] = []
 
-    def update(self, values, batch_size):
-        for i, avg_meter in enumerate(self.attrs.values()):
-            avg_meter.update(values[i], batch_size)
-            if i == len(values) - 1:
-                break
+    def update(self, metrics, batch_size):
+        for key, value in metrics.items():
+            self.attrs.get(key).update(value, batch_size)
 
     def epoch_finished(self):
         self.history.get('time').append(time.time() - self.start_time)
