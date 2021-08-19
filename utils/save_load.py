@@ -1,5 +1,6 @@
 import os
 import json
+import pickle
 import torch
 import torch.optim as optim
 
@@ -41,6 +42,12 @@ def save_args(trainer_args, model_args, save_dir):
         f.write(json.dumps(trainer_args, indent=4, cls=JSONEncoder_))
     with open(save_dir + 'model_args.txt', 'w') as f:
         f.write(json.dumps(model_args, indent=4, cls=JSONEncoder_))
+
+
+def save_test_results(result_df, result_tensor, save_dir):
+    result_df.to_csv(save_dir + '/results.csv', index=False)
+    with open(save_dir + '/results.pkl', 'wb') as f:
+        pickle.dump(result_tensor, f)
 
 
 def setup_training_dir(root_dir):
