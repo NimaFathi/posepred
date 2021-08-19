@@ -9,8 +9,8 @@ class LSTMVel(nn.Module):
         super(LSTMVel, self).__init__()
         self.args = args
         input_size = output_size = int(args.keypoints_num * args.keypoint_dim)
-        self.pose_encoder = Encoder(input_size, args.hidden_size, args.n_layers, args.dropout_encoder)
-        self.vel_encoder = Encoder(input_size, args.hidden_size, args.n_layers, args.dropout_encoder)
+        self.pose_encoder = Encoder(input_size, args.hidden_size, args.n_layers, args.dropout_enc)
+        self.vel_encoder = Encoder(input_size, args.hidden_size, args.n_layers, args.dropout_enc)
         self.vel_decoder = Decoder(args.pred_frames_num, input_size, output_size, args.hidden_size, args.n_layers,
                                    args.dropout_pose_dec, 'hardtanh', args.hardtanh_limit)
 

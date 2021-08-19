@@ -1,10 +1,8 @@
 import os
 import json
-
 import torch
 import torch.optim as optim
 
-from consts import ROOT_DIR
 from args.helper import JSONEncoder_
 from models.lstm_vel import LSTMVel
 
@@ -35,7 +33,7 @@ def save_snapshot(model, optimizer, optimizer_lr, epoch, train_reporter, valid_r
         'train_reporter': train_reporter,
         'valid_reporter': valid_reporter
     }
-    torch.save(snapshot, os.path.join(save_path + 'snapshots/', '%03d.pt' % epoch))
+    torch.save(snapshot, os.path.join(save_path + '/snapshots/', '%03d.pt' % epoch))
     del snapshot
 
 
@@ -46,18 +44,18 @@ def save_args(trainer_args, model_args, save_dir):
         f.write(json.dumps(model_args, indent=4, cls=JSONEncoder_))
 
 
-def create_save_dir():
-    dir_path = create_new_dir(os.path.join(ROOT_DIR, 'exps/train/'))
+def create_save_dir(root_dir):
+    dir_path = create_new_dir(os.path.join(root_dir, '/exps/train/'))
     return dir_path
 
 
 def create_new_dir(dir_path):
     os.makedirs(dir_path, exist_ok=True)
     for i in range(1, 1000000):
-        new_dir_path = os.path.join(dir_path, str(i) + '/')
+        new_dir_path = os.path.join(dir_path, str(i))
         if not os.path.isdir(new_dir_path):
             os.makedirs(new_dir_path, exist_ok=False)
-            os.makedirs(new_dir_path + 'snapshots/', exist_ok=False)
-            os.makedirs(new_dir_path + 'plots/', exist_ok=False)
+            os.makedirs(new_dir_path + '/snapshots/', exist_ok=False)
+            os.makedirs(new_dir_path + '/plots/', exist_ok=False)
             return new_dir_path
     assert "Too many folders exist."

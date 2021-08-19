@@ -4,8 +4,6 @@ import matplotlib.pyplot as plt
 
 from utils.average_meter import AverageMeter
 
-from consts import ROOT_DIR
-
 
 class Reporter:
 
@@ -59,14 +57,4 @@ class Reporter:
             plt.plot(item)
             plt.xlabel('epoch')
             plt.ylabel(key)
-            plt.savefig(save_dir + 'plots/' + key + '.png')
-        sys.stdout.flush()
-
-
-a = [10, 20, 5, 30, 40, 50, 100]
-
-plt.plot(a)
-plt.xlabel("epoch")
-plt.ylabel("loss")
-plt.savefig(ROOT_DIR + 'test.png')
-print(ROOT_DIR)
+            plt.savefig(save_dir + '/plots/' + key + '.png')
