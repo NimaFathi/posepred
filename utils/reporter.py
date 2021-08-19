@@ -53,14 +53,9 @@ class Reporter:
         for key, value in self.history.items():
             if not use_mask and 'mask' in key:
                 continue
+            with open(save_dir + '/plots/' + key + '.json', "w") as f:
+                json.dump(value, f, indent=4)
             plt.plot(value)
             plt.xlabel('epoch')
             plt.ylabel(key)
             plt.savefig(save_dir + '/plots/' + key + '.png')
-
-    def save_history(self, use_mask, save_dir):
-        for key, value in self.history.items():
-            if not use_mask and 'mask' in key:
-                continue
-            with open(save_dir + '/plots/' + key + '.json', "w") as f:
-                json.dump(value, f, indent=4)
