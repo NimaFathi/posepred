@@ -6,7 +6,7 @@ from utils.metrics import accuracy, ADE, FDE
 from utils.others import pose_from_vel
 
 
-class Trainer:
+class Tester:
     def __init__(self, trainer_args, model, train_dataloader, valid_dataloader, optimizer, scheduler, train_reporter,
                  valid_reporter):
         self.args = trainer_args
