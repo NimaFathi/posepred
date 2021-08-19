@@ -1,79 +1,51 @@
-import os
 import time
-import json
-from consts import ROOT_DIR
-
 import torch
-import torch.optim as optim
 import torch.nn as nn
-
-from args.json_serializer import JSONEncoder_
-from data_loader.data_loader import get_dataloader
-from train.reporter import Reporter
-from utils.save_load import get_model, create_new_dir, save_snapshot, load_snapshot
+from utils.save_load import save_snapshot
 from utils.metrics import accuracy, ADE, FDE
 from utils.others import pose_from_vel
 
 
 class Trainer:
 
-    def __init__(self, args, train_dataloader_args, valid_dataloader_args, model_args=None, load_snapshot_path=None):
-        self.args = args
-        self.train_dataloader = get_dataloader(train_dataloader_args)
-        self.valid_dataloader = get_dataloader(valid_dataloader_args)
-        self.use_mask = train_dataloader_args.use_mask
-        self.is_interactive = train_dataloader_args.is_interactive
-
-        if load_snapshot_path:
-            self.model, self.model_args, self.optimizer, epoch, reporters = load_snapshot(load_snapshot_path, args.lr)
-            self.args.start_epoch = epoch
-            self.snapshots_dir_path = load_snapshot_path[:load_snapshot_path.rindex('/') + 1]
-            self.train_reporter, self.valid_reporter = reporters
-        else:
-            model_args.keypoint_dim = self.train_dataloader.dataset.keypoint_dim
-            model_args.keypoints_num = self.train_dataloader.dataset.keypoints_num
-            model_args.pred_frames_num = self.train_dataloader.dataset.future_frames_num
-            self.model = get_model(model_args)
-            self.model_args = model_args
-            self.optimizer = optim.Adam(self.model.parameters(), lr=args.lr)
-            self.train_reporter = Reporter()
-            self.valid_reporter = Reporter()
-            self.snapshots_dir_path = self.create_snapshots_dir(train_dataloader_args, valid_dataloader_args)
-
-        self.scheduler = optim.lr_scheduler.ReduceLROnPlateau(self.optimizer, factor=args.decay_factor,
-                                                              patience=args.decay_patience, threshold=1e-8,
-                                                              verbose=True)
-        self.device = torch.device('cuda')
-        self.distance_loss = nn.L1Loss() if args.distance_loss == 'L1' else nn.MSELoss()
+    def __init__(self, trainer_args, model, train_dataloader, valid_dataloader, optimizer, scheduler, train_reporter,
+                 valid_reporter):
+        self.args = trainer_args
+        self.model = model
+        self.train_dataloader = train_dataloader
+        self.valid_dataloader = valid_dataloader
+        self.optimizer = optimizer
+        self.scheduler = scheduler
+        self.train_reporter = train_reporter
+        self.valid_reporter = valid_reporter
+        self.distance_loss = nn.L1Loss() if self.args.distance_loss == 'L1' else nn.MSELoss()
         self.mask_loss = nn.BCELoss()
+        self.device = torch.device('cuda')
 
     def train(self):
-
         self.model.train()
         time0 = time.time()
         for epoch in range(self.args.start_epoch, self.args.epochs):
             self.train_()
             self.validate_()
             self.scheduler.step(self.valid_reporter.history['vel_loss'][-1])
-
             if (epoch + 1) % self.args.snapshot_interval == 0:
-                save_snapshot(self.model, self.optimizer, self.model_args, epoch + 1, self.train_reporter,
-                              self.valid_reporter, self.snapshots_dir_path)
-
+                save_snapshot(self.model, self.optimizer, self.args.lr, epoch + 1, self.train_reporter,
+                              self.valid_reporter, self.args.save_dir)
         print("-" * 100)
         print('Training is completed in: %.2f' % (time.time() - time0))
 
     def train_(self):
         self.train_reporter.start_time = time.time()
         for data in self.train_dataloader:
-            if self.is_interactive:
+            if self.args.is_interactive:
                 pass
             else:
                 for i, d in enumerate(data):
                     data[i] = d.to(self.device)
                 batch_size = data[0].shape[0]
 
-                if self.use_mask:
+                if self.model_args.use_mask:
                     obs_pose, obs_vel, obs_mask, target_pose, target_vel, target_mask = data
                     model_input = (obs_pose, obs_vel, obs_mask)
                 else:
@@ -104,7 +76,7 @@ class Trainer:
     def validate_(self):
         self.train_reporter.start_time = time.time()
         for data in self.valid_dataloader:
-            if self.is_interactive:
+            if self.args.is_interactive:
                 pass
             else:
                 for i, d in enumerate(data):
@@ -127,17 +99,3 @@ class Trainer:
 
         self.valid_reporter.epoch_finished()
         self.valid_reporter.print_values()
-
-    def create_snapshots_dir(self, train_dataloader_args, valid_dataloader_args):
-        dir_path = create_new_dir(os.path.join(ROOT_DIR, 'exps/train/'))
-        with open(dir_path + 'training_args.txt', 'w') as f:
-            f.write(json.dumps(self.args, indent=4, cls=JSONEncoder_))
-        with open(dir_path + 'model_args.txt', 'w') as f:
-            f.write(json.dumps(self.model_args, indent=4, cls=JSONEncoder_))
-        with open(dir_path + 'train_dataloader_args.txt', 'w') as f:
-            f.write(json.dumps(train_dataloader_args, indent=4, cls=JSONEncoder_))
-        with open(dir_path + 'valid_dataloader_args.txt', 'w') as f:
-            f.write(json.dumps(valid_dataloader_args, indent=4, cls=JSONEncoder_))
-        save_snapshot(self.model, self.optimizer, self.model_args, 0, self.train_reporter, self.valid_reporter,
-                      dir_path + 'snapshots/')
-        return os.path.join(dir_path + 'snapshots/')

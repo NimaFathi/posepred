@@ -7,14 +7,14 @@ from models.encoder import Encoder
 class LSTMVel(nn.Module):
     def __init__(self, args):
         super(LSTMVel, self).__init__()
-        self.use_mask = args.use_mask
+        self.args = args
         input_size = output_size = int(args.keypoints_num * args.keypoint_dim)
         self.pose_encoder = Encoder(input_size, args.hidden_size, args.n_layers, args.dropout_encoder)
         self.vel_encoder = Encoder(input_size, args.hidden_size, args.n_layers, args.dropout_encoder)
         self.vel_decoder = Decoder(args.pred_frames_num, input_size, output_size, args.hidden_size, args.n_layers,
                                    args.dropout_pose_dec, 'hardtanh', args.hardtanh_limit)
 
-        if self.use_mask:
+        if self.args.use_mask:
             self.mask_encoder = Encoder(args.keypoints_num, args.hidden_size, args.n_layers, args.dropout_encoder)
             self.mask_decoder = Decoder(args.pred_frames_num, args.keypoints_num, args.keypoints_num, args.hidden_size,
                                         args.n_layers, args.dropout_mask_dec, 'sigmoid')
@@ -36,7 +36,7 @@ class LSTMVel(nn.Module):
         cell_dec = cell_pose + cell_vel
         outputs.append(self.vel_decoder(vel_dec_input, hidden_dec, cell_dec))
 
-        if self.use_mask:
+        if self.args.use_mask:
             mask = inputs[2]
             (hidden_mask, cell_mask) = self.mask_encoder(mask.permute(1, 0, 2))
             hidden_mask = hidden_mask.squeeze(0)
