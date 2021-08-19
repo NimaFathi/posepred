@@ -35,7 +35,7 @@ def save_snapshot(model, optimizer, optimizer_lr, epoch, train_reporter, valid_r
         'train_reporter': train_reporter,
         'valid_reporter': valid_reporter
     }
-    torch.save(snapshot, os.path.join(save_path, '%03d.pt' % epoch))
+    torch.save(snapshot, os.path.join(save_path + 'snapshots/', '%03d.pt' % epoch))
     del snapshot
 
 
@@ -48,7 +48,7 @@ def save_args(trainer_args, model_args, save_dir):
 
 def create_save_dir():
     dir_path = create_new_dir(os.path.join(ROOT_DIR, 'exps/train/'))
-    return os.path.join(dir_path + 'snapshots/')
+    return dir_path
 
 
 def create_new_dir(dir_path):
@@ -58,5 +58,6 @@ def create_new_dir(dir_path):
         if not os.path.isdir(new_dir_path):
             os.makedirs(new_dir_path, exist_ok=False)
             os.makedirs(new_dir_path + 'snapshots/', exist_ok=False)
+            os.makedirs(new_dir_path + 'plots/', exist_ok=False)
             return new_dir_path
     assert "Too many folders exist."

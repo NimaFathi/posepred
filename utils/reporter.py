@@ -1,7 +1,10 @@
 import sys
 import time
+import matplotlib.pyplot as plt
 
 from utils.average_meter import AverageMeter
+
+from consts import ROOT_DIR
 
 
 class Reporter:
@@ -48,3 +51,22 @@ class Reporter:
             msg += '| ' + key + ': %.2f' % item[-1]
         print(msg)
         sys.stdout.flush()
+
+    def save_plots(self, use_mask, save_dir):
+        for key, item in self.history.items():
+            if not use_mask and 'mask' in key:
+                continue
+            plt.plot(item)
+            plt.xlabel('epoch')
+            plt.ylabel(key)
+            plt.savefig(save_dir + 'plots/' + key + '.png')
+        sys.stdout.flush()
+
+
+a = [10, 20, 5, 30, 40, 50, 100]
+
+plt.plot(a)
+plt.xlabel("epoch")
+plt.ylabel("loss")
+plt.savefig(ROOT_DIR + 'test.png')
+print(ROOT_DIR)

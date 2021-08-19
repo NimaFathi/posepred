@@ -8,6 +8,7 @@ from utils.reporter import Reporter
 from train.trainer import Trainer
 
 if __name__ == '__main__':
+
     args = TrainingArgs(train_dataset_name='simple_dataset', valid_dataset_name='simple_dataset', model_name='lstm_vel',
                         keypoint_dim=2, epochs=6, load_path=None)
 
@@ -30,7 +31,7 @@ if __name__ == '__main__':
     if args.load_path:
         model, optimizer, epoch, train_reporter, valid_reporter = load_snapshot(args.load_path)
         trainer_args.start_epoch = epoch
-        trainer_args.save_dir = args.load_path[:args.load_path.rindex('/') + 1]
+        trainer_args.save_dir = args.load_path[:args.load_path.rindex('snapshots/')]
     else:
         model = get_model(model_args)
         model.args.pred_frames_num = train_dataloader.dataset.future_frames_num
