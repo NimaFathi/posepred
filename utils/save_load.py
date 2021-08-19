@@ -37,11 +37,10 @@ def save_snapshot(model, optimizer, optimizer_lr, epoch, train_reporter, valid_r
     del snapshot
 
 
-def save_args(trainer_args, model_args, save_dir):
-    with open(save_dir + 'trainer_args.txt', 'w') as f:
-        f.write(json.dumps(trainer_args, indent=4, cls=JSONEncoder_))
-    with open(save_dir + 'model_args.txt', 'w') as f:
-        f.write(json.dumps(model_args, indent=4, cls=JSONEncoder_))
+def save_args(args, save_dir):
+    for key, arg in args.items():
+        with open(save_dir + '/' + key + '.txt', 'w') as f:
+            f.write(json.dumps(arg, indent=4, cls=JSONEncoder_))
 
 
 def save_test_results(result_df, result_tensor, save_dir):

@@ -42,7 +42,7 @@ if __name__ == '__main__':
         train_reporter = Reporter()
         valid_reporter = Reporter()
         trainer_args.save_dir = setup_training_dir(ROOT_DIR)
-        save_args(trainer_args, model.args, trainer_args.save_dir)
+        save_args({'trainer_args': trainer_args, 'model_args': model.args}, trainer_args.save_dir)
         save_snapshot(model, optimizer, trainer_args.lr, 0, train_reporter, valid_reporter, trainer_args.save_dir)
 
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=trainer_args.decay_factor,
