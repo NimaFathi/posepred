@@ -103,15 +103,18 @@ class Trainer:
                     pred_vel = outputs[0]
                     vel_loss = self.distance_loss(pred_vel, target_vel)
                     pred_pose = pose_from_vel(pred_vel, obs_pose[..., -1, :])
-                    report_metrics = [vel_loss]
+                    report_metrics = {'vel_loss': vel_loss}
                     if self.model.args.use_mask:
                         pred_mask = outputs[1]
                         mask_loss = self.mask_loss(pred_mask, target_mask)
                         mask_acc = accuracy(pred_mask, target_mask)
-                        report_metrics += [mask_loss, mask_acc]
+                        report_metrics['mask_loss'] = mask_loss
+                        report_metrics['mask_acc'] = mask_acc
                     ade = ADE(pred_pose, target_pose, self.model.args.keypoint_dim)
                     fde = FDE(pred_pose, target_pose, self.model.args.keypoint_dim)
-                    self.valid_reporter.update([ade, fde] + report_metrics, batch_size)
+                    report_metrics['ADE'] = ade
+                    report_metrics['FDE'] = fde
+                    self.valid_reporter.update(report_metrics, batch_size)
 
         self.valid_reporter.epoch_finished()
         self.valid_reporter.print_values()

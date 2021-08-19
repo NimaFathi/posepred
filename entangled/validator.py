@@ -6,12 +6,11 @@ from utils.others import pose_from_vel
 
 
 class Validator:
-    def __init__(self, model, dataloader, reporter, distance_loss, is_interactive, save_dir):
+    def __init__(self, model, dataloader, reporter, distance_loss, is_interactive):
         self.model = model
         self.dataloader = dataloader
         self.reporter = reporter
         self.is_interactive = is_interactive
-        self.save_dir = save_dir
         self.distance_loss = nn.L1Loss() if distance_loss == 'L1' else nn.MSELoss()
         self.mask_loss = nn.BCELoss()
         self.device = torch.device('cuda')
@@ -20,7 +19,6 @@ class Validator:
         self.model.eval()
         time0 = time.time()
         self.validate_()
-        self.reporter.save_plots(self.model.args.use_mask, self.save_dir)
         print("-" * 100)
         print('Validation is completed in: %.2f' % (time.time() - time0))
 

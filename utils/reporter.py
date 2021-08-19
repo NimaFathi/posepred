@@ -1,6 +1,7 @@
 import sys
 import time
 import matplotlib.pyplot as plt
+import json
 
 from utils.average_meter import AverageMeter
 
@@ -49,10 +50,17 @@ class Reporter:
         sys.stdout.flush()
 
     def save_plots(self, use_mask, save_dir):
-        for key, item in self.history.items():
+        for key, value in self.history.items():
             if not use_mask and 'mask' in key:
                 continue
-            plt.plot(item)
+            plt.plot(value)
             plt.xlabel('epoch')
             plt.ylabel(key)
             plt.savefig(save_dir + '/plots/' + key + '.png')
+
+    def save_history(self, use_mask, save_dir):
+        for key, value in self.history.items():
+            if not use_mask and 'mask' in key:
+                continue
+            with open(save_dir + '/plots/' + key + '.json', "w") as f:
+                json.dump(value, f, indent=4)

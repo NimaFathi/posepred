@@ -44,8 +44,8 @@ def save_args(args, save_dir):
 
 
 def save_test_results(result_df, result_tensor, save_dir):
-    result_df.to_csv(save_dir + '/results.csv', index=False)
-    with open(save_dir + '/results.pkl', 'wb') as f:
+    result_df.to_csv(save_dir + '/outputs/' + '/results.csv', index=False)
+    with open(save_dir + '/outputs/' + '/results.pkl', 'wb') as f:
         pickle.dump(result_tensor, f)
 
 
@@ -69,5 +69,6 @@ def setup_testing_dir(root_dir):
         new_dir = os.path.join(test_dir, str(i))
         if not os.path.isdir(new_dir):
             os.makedirs(new_dir, exist_ok=False)
+            os.makedirs(new_dir + '/outputs/', exist_ok=False)
             return new_dir
     assert "Too many folders exist."
