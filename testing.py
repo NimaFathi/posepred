@@ -16,7 +16,7 @@ if __name__ == '__main__':
     if args.model_path:
         model, optimizer, epoch, train_reporter, valid_reporter = load_snapshot(args.model_path)
     else:
-        raise Exception("no model is selected.")
+        raise Exception("No model is selected.")
 
     dataloader = get_dataloader(dataloader_args)
     save_dir = setup_testing_dir(ROOT_DIR)

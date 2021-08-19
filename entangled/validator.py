@@ -6,7 +6,7 @@ from utils.others import pose_from_vel
 
 
 class Validator:
-    def __init__(self, model, dataloader, reporter, distance_loss, is_interactive):
+    def __init__(self, model, dataloader, reporter, is_interactive, distance_loss):
         self.model = model
         self.dataloader = dataloader
         self.reporter = reporter
