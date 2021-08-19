@@ -7,7 +7,6 @@ from args.helper import JSONEncoder_
 from models.lstm_vel import LSTMVel
 
 
-# TODO: support models with mask.
 def get_model(model_args):
     if model_args.model_name == 'lstm_vel':
         return LSTMVel(model_args).to(torch.device('cuda'))
@@ -44,18 +43,25 @@ def save_args(trainer_args, model_args, save_dir):
         f.write(json.dumps(model_args, indent=4, cls=JSONEncoder_))
 
 
-def create_save_dir(root_dir):
-    dir_path = create_new_dir(os.path.join(root_dir, '/exps/train/'))
-    return dir_path
-
-
-def create_new_dir(dir_path):
-    os.makedirs(dir_path, exist_ok=True)
+def setup_training_dir(root_dir):
+    train_dir = os.path.join(root_dir, '/exps/train/')
+    os.makedirs(train_dir, exist_ok=True)
     for i in range(1, 1000000):
-        new_dir_path = os.path.join(dir_path, str(i))
-        if not os.path.isdir(new_dir_path):
-            os.makedirs(new_dir_path, exist_ok=False)
-            os.makedirs(new_dir_path + '/snapshots/', exist_ok=False)
-            os.makedirs(new_dir_path + '/plots/', exist_ok=False)
-            return new_dir_path
+        new_dir = os.path.join(train_dir, str(i))
+        if not os.path.isdir(new_dir):
+            os.makedirs(new_dir, exist_ok=False)
+            os.makedirs(new_dir + '/snapshots/', exist_ok=False)
+            os.makedirs(new_dir + '/plots/', exist_ok=False)
+            return new_dir
+    assert "Too many folders exist."
+
+
+def setup_testing_dir(root_dir):
+    test_dir = os.path.join(root_dir, '/exps/test/')
+    os.makedirs(test_dir, exist_ok=True)
+    for i in range(1, 1000000):
+        new_dir = os.path.join(test_dir, str(i))
+        if not os.path.isdir(new_dir):
+            os.makedirs(new_dir, exist_ok=False)
+            return new_dir
     assert "Too many folders exist."
