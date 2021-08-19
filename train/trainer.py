@@ -7,7 +7,6 @@ from utils.others import pose_from_vel
 
 
 class Trainer:
-
     def __init__(self, trainer_args, model, train_dataloader, valid_dataloader, optimizer, scheduler, train_reporter,
                  valid_reporter):
         self.args = trainer_args
@@ -45,33 +44,37 @@ class Trainer:
                     data[i] = d.to(self.device)
                 batch_size = data[0].shape[0]
 
-                if self.model_args.use_mask:
+                if self.model.args.use_mask:
                     obs_pose, obs_vel, obs_mask, target_pose, target_vel, target_mask = data
-                    model_input = (obs_pose, obs_vel, obs_mask)
                 else:
                     obs_pose, obs_vel, target_pose, target_vel = data
-                    model_input = (obs_pose, obs_vel)
 
                 # predict
                 self.model.zero_grad()
-                pred_vel, pred_mask = self.model(model_input)
+                outputs = self.model(data[:len(data) / 2])
 
                 # calculate metrics
+                pred_vel = outputs[0]
                 vel_loss = self.distance_loss(pred_vel, target_vel)
-                mask_loss = self.mask_loss(pred_mask, target_mask)
-                mask_acc = accuracy(pred_mask, target_mask)
                 pred_pose = pose_from_vel(pred_vel, obs_pose[..., -1, :])
-                ade = ADE(pred_pose, target_pose, self.model_args.keypoint_dim)
-                fde = FDE(pred_pose, target_pose, self.model_args.keypoint_dim)
-                self.train_reporter.update([vel_loss, mask_loss, mask_acc, ade, fde], batch_size)
+                loss = vel_loss
+                report_metrics = [vel_loss]
+                if self.model.args.use_mask:
+                    pred_mask = outputs[1]
+                    mask_loss = self.mask_loss(pred_mask, target_mask)
+                    mask_acc = accuracy(pred_mask, target_mask)
+                    loss += self.args.mask_loss_weight * mask_loss
+                    report_metrics += [mask_loss, mask_acc]
+                ade = ADE(pred_pose, target_pose, self.model.args.keypoint_dim)
+                fde = FDE(pred_pose, target_pose, self.model.args.keypoint_dim)
+                self.train_reporter.update([ade, fde] + report_metrics, batch_size)
 
-                # calculate loss and backpropagate
-                loss = vel_loss + self.args.mask_loss_weight * mask_loss
+                # backpropagate and optimize
                 loss.backward()
                 self.optimizer.step()
 
         self.train_reporter.epoch_finished()
-        self.train_reporter.print_values()
+        self.train_reporter.print_values(self.model.args.use_mask)
 
     def validate_(self):
         self.train_reporter.start_time = time.time()
@@ -82,20 +85,28 @@ class Trainer:
                 for i, d in enumerate(data):
                     data[i] = d.to(self.device)
                 batch_size = data[0].shape[0]
-                obs_pose, obs_vel, obs_mask, target_pose, target_vel, target_mask = data
+                if self.model.args.use_mask:
+                    obs_pose, obs_vel, obs_mask, target_pose, target_vel, target_mask = data
+                else:
+                    obs_pose, obs_vel, target_pose, target_vel = data
 
                 with torch.no_grad():
                     # predict
-                    pred_vel, pred_mask = self.model(pose=obs_pose, vel=obs_vel, mask=obs_mask)
+                    outputs = self.model(data[:len(data) / 2])
 
                     # calculate metrics
+                    pred_vel = outputs[0]
                     vel_loss = self.distance_loss(pred_vel, target_vel)
-                    mask_loss = self.mask_loss(pred_mask, target_mask)
-                    mask_acc = accuracy(pred_mask, target_mask)
-                    pred_pose = pose_from_vel(pred_vel, obs_pose)
-                    ade = ADE(pred_pose, target_pose, self.model_args.keypoint_dim)
-                    fde = FDE(pred_pose, target_pose, self.model_args.keypoint_dim)
-                    self.valid_reporter.update([vel_loss, mask_loss, mask_acc, ade, fde], batch_size)
+                    pred_pose = pose_from_vel(pred_vel, obs_pose[..., -1, :])
+                    report_metrics = [vel_loss]
+                    if self.model.args.use_mask:
+                        pred_mask = outputs[1]
+                        mask_loss = self.mask_loss(pred_mask, target_mask)
+                        mask_acc = accuracy(pred_mask, target_mask)
+                        report_metrics += [mask_loss, mask_acc]
+                    ade = ADE(pred_pose, target_pose, self.model.args.keypoint_dim)
+                    fde = FDE(pred_pose, target_pose, self.model.args.keypoint_dim)
+                    self.valid_reporter.update([ade, fde] + report_metrics, batch_size)
 
         self.valid_reporter.epoch_finished()
         self.valid_reporter.print_values()

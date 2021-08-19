@@ -45,4 +45,6 @@ if __name__ == '__main__':
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=trainer_args.decay_factor,
                                                      patience=trainer_args.decay_patience, threshold=1e-8, verbose=True)
 
-    trainer = Trainer(trainer_args, model, train_dataloader, valid_dataloader, optimizer, scheduler, train_reporter, valid_reporter)
+    trainer = Trainer(trainer_args, model, train_dataloader, valid_dataloader, optimizer, scheduler, train_reporter,
+                      valid_reporter)
+    trainer.train()

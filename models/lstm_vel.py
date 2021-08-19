@@ -45,4 +45,4 @@ class LSTMVel(nn.Module):
             mask_dec_input = mask[:, -1, :]
             outputs.append(self.mask_decoder(mask_dec_input, hidden_mask, cell_mask))
 
-        return outputs
+        return tuple(outputs)
