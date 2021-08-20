@@ -1,6 +1,7 @@
 import sys
 import time
 import matplotlib.pyplot as plt
+import json
 
 from utils.average_meter import AverageMeter
 
@@ -24,11 +25,9 @@ class Reporter:
         self.history['mask_acc'] = []
         self.history['time'] = []
 
-    def update(self, values, batch_size):
-        for i, avg_meter in enumerate(self.attrs.values()):
-            avg_meter.update(values[i], batch_size)
-            if i == len(values) - 1:
-                break
+    def update(self, metrics, batch_size):
+        for key, value in metrics.items():
+            self.attrs.get(key).update(value, batch_size)
 
     def epoch_finished(self):
         self.history.get('time').append(time.time() - self.start_time)
@@ -51,10 +50,12 @@ class Reporter:
         sys.stdout.flush()
 
     def save_plots(self, use_mask, save_dir):
-        for key, item in self.history.items():
+        for key, value in self.history.items():
             if not use_mask and 'mask' in key:
                 continue
-            plt.plot(item)
+            with open(save_dir + '/plots/' + key + '.json', "w") as f:
+                json.dump(value, f, indent=4)
+            plt.plot(value)
             plt.xlabel('epoch')
             plt.ylabel(key)
             plt.savefig(save_dir + '/plots/' + key + '.png')

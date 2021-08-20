@@ -1,15 +1,19 @@
 import os
 import json
+import pickle
 import torch
 import torch.optim as optim
 
 from args.helper import JSONEncoder_
 from models.lstm_vel import LSTMVel
+from models.zero_velocity import ZeroVelocity
 
 
 def get_model(model_args):
     if model_args.model_name == 'lstm_vel':
         return LSTMVel(model_args).to(torch.device('cuda'))
+    elif model_args.model_name == 'zero_velocity':
+        return ZeroVelocity(model_args).to(torch.device('cuda'))
 
 
 # TODO map_location="cuda:0" ???
@@ -36,11 +40,16 @@ def save_snapshot(model, optimizer, optimizer_lr, epoch, train_reporter, valid_r
     del snapshot
 
 
-def save_args(trainer_args, model_args, save_dir):
-    with open(save_dir + 'trainer_args.txt', 'w') as f:
-        f.write(json.dumps(trainer_args, indent=4, cls=JSONEncoder_))
-    with open(save_dir + 'model_args.txt', 'w') as f:
-        f.write(json.dumps(model_args, indent=4, cls=JSONEncoder_))
+def save_args(args, save_dir):
+    for key, arg in args.items():
+        with open(save_dir + '/' + key + '.txt', 'w') as f:
+            f.write(json.dumps(arg, indent=4, cls=JSONEncoder_))
+
+
+def save_test_results(result_df, result_tensor, save_dir):
+    result_df.to_csv(save_dir + '/outputs/' + '/results.csv', index=False)
+    with open(save_dir + '/outputs/' + '/results.pkl', 'wb') as f:
+        pickle.dump(result_tensor, f)
 
 
 def setup_training_dir(root_dir):
@@ -63,5 +72,6 @@ def setup_testing_dir(root_dir):
         new_dir = os.path.join(test_dir, str(i))
         if not os.path.isdir(new_dir):
             os.makedirs(new_dir, exist_ok=False)
+            os.makedirs(new_dir + '/outputs/', exist_ok=False)
             return new_dir
     assert "Too many folders exist."
