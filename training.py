@@ -8,11 +8,10 @@ from utils.save_load import load_snapshot, get_model, save_snapshot, save_args, 
 from utils.reporter import Reporter
 from entangled.trainer import Trainer
 
-
 if __name__ == '__main__':
 
-    args = TrainingArgs(train_dataset_name='simple_dataset', valid_dataset_name='simple_dataset', model_name='lstm_vel',
-                        keypoint_dim=2, epochs=6, load_path=None)
+    args = TrainingArgs(train_dataset_name='simple_non_interactive_dataset', valid_dataset_name='simple_dataset',
+                        model_name='lstm_vel', keypoint_dim=2, epochs=6, load_path=None)
 
     trainer_args = TrainerArgs(args.epochs, args.is_interactive, args.start_epoch, args.lr, args.decay_factor,
                                args.decay_patience, args.distance_loss, args.mask_loss_weight, args.snapshot_interval)

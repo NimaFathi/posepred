@@ -7,7 +7,7 @@ from entangled.validator import Validator
 
 if __name__ == '__main__':
 
-    args = ValidationArgs(dataset_name='simple_dataset', model_name='zero_velocity', load_path=None, keypoint_dim=2)
+    args = ValidationArgs(dataset_name='simple_non_interactive_dataset', model_name='zero_velocity', load_path=None, keypoint_dim=2)
 
     dataloader_args = DataloaderArgs(args.dataset_name, args.keypoint_dim, args.is_interactive, args.use_mask,
                                      args.is_testing, args.skip_frame, args.batch_size, args.shuffle, args.pin_memory,
