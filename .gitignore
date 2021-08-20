@@ -243,3 +243,4 @@ venv/
 *__pycache__*
 *.pyc
 exps/
+*.ipynb
