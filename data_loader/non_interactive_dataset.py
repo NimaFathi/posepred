@@ -4,7 +4,7 @@ import pandas as pd
 from ast import literal_eval
 
 
-class BasicDataset(Dataset):
+class NonInteractiveDataset(Dataset):
     def __init__(self, dataset_path, keypoint_dim, is_testing, use_mask, skip_frame):
         data = pd.read_csv(dataset_path)
         for col in list(data.columns[1:].values):
@@ -20,10 +20,10 @@ class BasicDataset(Dataset):
 
         seq = self.data.iloc[0]
         self.keypoint_dim = keypoint_dim
-        self.keypoints_num = len(seq.observed_pose[0][0]) / self.keypoint_dim
-        self.obs_frames_num = len(seq.observed_pose[0])
+        self.keypoints_num = int(len(seq.observed_pose[0]) / self.keypoint_dim)
+        self.obs_frames_num = len(seq.observed_pose)
         if not self.is_testing:
-            self.future_frames_num = len(seq.future_pose[0])
+            self.future_frames_num = len(seq.future_pose)
 
     def __len__(self):
         return len(self.data)
@@ -31,31 +31,28 @@ class BasicDataset(Dataset):
     def __getitem__(self, index):
         seq = self.data.iloc[index]
 
-        obs_pose = self.get_tensor(seq, 'observed_pose', self.obs_frames_num)
-        obs_vel = (obs_pose[:, 1:, :] - obs_pose[:, :-1, :])
+        obs_pose = self.get_tensor(seq, 'observed_pose')
+        obs_vel = (obs_pose[1:, :] - obs_pose[:-1, :])
         outputs = [obs_pose, obs_vel]
 
         if self.use_mask:
-            obs_mask = self.get_tensor(seq, 'observed_mask', self.obs_frames_num)
+            obs_mask = self.get_tensor(seq, 'observed_mask')
             outputs.append(obs_mask)
 
         if not self.is_testing:
             assert len(seq.observed_pose) == len(seq.future_pose), "unequal persons in observed and future frames."
-            future_pose = self.get_tensor(seq, 'future_pose', self.future_frames_num)
-            future_vel = torch.cat(((future_pose[:, 0, :] - obs_pose[:, -1, :]).unsqueeze(1),
-                                    future_pose[:, 1:, :] - future_pose[:, :-1, :]), 1)
+            future_pose = self.get_tensor(seq, 'future_pose')
+            future_vel = torch.cat(
+                ((future_pose[0, :] - obs_pose[-1, :]).unsqueeze(1), future_pose[1:, :] - future_pose[:-1, :]), 1)
             outputs += [future_pose, future_vel]
 
             if self.use_mask:
-                future_mask = self.get_tensor(seq, 'future_mask', self.future_frames_num)
+                future_mask = self.get_tensor(seq, 'future_mask')
                 outputs.append(future_mask)
 
         return tuple(outputs)
 
-    def get_tensor(self, seq, segment, frames_num):
+    def get_tensor(self, seq, segment):
         assert segment in seq, 'No segment named: ' + segment
-        persons_num = len(seq.observed_pose)
-        return torch.tensor(
-            [[seq[segment][person_idx][frame_idx]
-              for frame_idx in range(0, frames_num, self.skip_frame + 1)]
-             for person_idx in range(persons_num)])
+        frames_num = len(seq[segment])
+        return torch.tensor([seq[segment][frame_idx] for frame_idx in range(0, frames_num, self.skip_frame + 1)])
