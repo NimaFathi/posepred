@@ -5,7 +5,7 @@ from utils.metrics import accuracy, ADE, FDE
 from utils.others import pose_from_vel
 
 
-class Validator:
+class Evaluator:
     def __init__(self, model, dataloader, reporter, is_interactive, distance_loss):
         self.model = model
         self.dataloader = dataloader
@@ -15,14 +15,14 @@ class Validator:
         self.mask_loss = nn.BCELoss()
         self.device = torch.device('cuda')
 
-    def validate(self):
+    def evaluate(self):
         self.model.eval()
         time0 = time.time()
-        self.validate_()
+        self.__evaluate()
         print("-" * 100)
         print('Validation is completed in: %.2f' % (time.time() - time0))
 
-    def validate_(self):
+    def __evaluate(self):
         self.reporter.start_time = time.time()
         for data in self.dataloader:
             if self.is_interactive:

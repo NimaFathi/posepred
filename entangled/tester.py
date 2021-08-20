@@ -22,12 +22,12 @@ class Tester:
     def test(self):
         self.model.eval()
         time0 = time.time()
-        self.test_()
+        self.__test()
         save_test_results(self.result, [self.pred_pose, self.pred_vel, self.pred_mask], self.save_dir)
         print("-" * 100)
         print('Testing is completed in: %.2f' % (time.time() - time0))
 
-    def test_(self):
+    def __test(self):
         for data in self.dataloader:
             if self.is_interactive:
                 pass
