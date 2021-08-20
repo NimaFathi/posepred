@@ -1,19 +1,20 @@
 import cv2
 import matplotlib.pyplot as plt
+from matplotlib.pyplot import MultipleLocator
 import numpy as np
 import torch
-from matplotlib.pyplot import MultipleLocator
+
 
 from visualization.color_generator import color_generator
 from visualization.keypoints_connection import keypoint_connections
 
 
 class Visualizer:
-    def __init__(self, dataset, num_keypoints):
-        self.dataset = dataset
+    def __init__(self, dataset_name, num_keypoints):
+        self.dataset_name = dataset_name
         self.num_keypoints = num_keypoints
 
-    def visualizer_3D(self, poses: list, images_paths=None, fig_size=(8, 6)):
+    def visualize_3D(self, poses: list, images_paths=None, fig_size=(8, 6)):
         """
             visualizer_3D(poses, images_paths, fig_size) -> None
             .   @brief Draws a 3D figure with matplotlib (it can have multiple sub figures).
@@ -41,7 +42,7 @@ class Visualizer:
             )
         plt.show()
 
-    def visualizer_2D(self, poses, masks=None, images_paths=None, fig_size=(8, 6)):
+    def visualize_2D(self, poses, masks=None, images_paths=None, fig_size=(8, 6)):
         """
              visualizer_2D(poses, masks, images_paths, fig_size) -> None
             .   @brief Draws a 2D figure with matplotlib (it can have multiple sub figures).
@@ -78,7 +79,7 @@ class Visualizer:
     def __generate_3D_figure(self, all_poses, ax, image_path=None):
         poses = all_poses.reshape(all_poses.shape[0], self.num_keypoints, 3)
         for i, keypoints in enumerate(poses):
-            for ie, edge in enumerate(keypoint_connections[self.dataset]):
+            for ie, edge in enumerate(keypoint_connections[self.dataset_name]):
                 ax.plot([keypoints[edge, 0][0], keypoints[edge, 0][1]],
                         [keypoints[edge, 1][0], keypoints[edge, 1][1]],
                         [keypoints[edge, 2][0], keypoints[edge, 2][1]], linewidth=1)
@@ -101,7 +102,7 @@ class Visualizer:
                     cv2.putText(image, f"{keypoint}",
                                 (int(keypoints[keypoint, 0] + 10), int(keypoints[keypoint, 1] - 5)),
                                 cv2.FONT_HERSHEY_SIMPLEX, 0.3, (255, 120, 0), 1)
-            for ie, edge in enumerate(keypoint_connections[self.dataset]):
+            for ie, edge in enumerate(keypoint_connections[self.dataset_name]):
                 if not ((keypoints[edge, 0][0] <= 0 or keypoints[edge, 1][0] <= 0) or (
                         keypoints[edge, 0][1] <= 0 or keypoints[edge, 1][1] <= 0)) and (
                         all_masks[i][edge[0]] != 0) and (
