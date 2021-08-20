@@ -4,7 +4,7 @@ import numpy as np
 import torch
 from matplotlib.pyplot import MultipleLocator
 
-from color_generator import color_generator
+from visualization.color_generator import color_generator
 from visualization.keypoints_connection import keypoint_connections
 
 
@@ -30,7 +30,6 @@ class Visualizer:
         fig = plt.figure(figsize=fig_size, dpi=100)
         axarr = []
         for i in range(comparison_number):
-            print(i)
             axarr.append(fig.add_subplot(1, comparison_number, i + 1, projection='3d'))
             axarr[i].xaxis.set_major_locator(MultipleLocator(0.5))
             axarr[i].yaxis.set_major_locator(MultipleLocator(0.5))
@@ -83,7 +82,6 @@ class Visualizer:
                 ax.plot([keypoints[edge, 0][0], keypoints[edge, 0][1]],
                         [keypoints[edge, 1][0], keypoints[edge, 1][1]],
                         [keypoints[edge, 2][0], keypoints[edge, 2][1]], linewidth=1)
-            print(keypoints[:, 0].shape)
             ax.scatter(keypoints[:, 0], keypoints[:, 1], keypoints[:, 2])
 
     def __generate_2D_figure(self, all_poses, all_masks=None, image_path=None):
