@@ -2,6 +2,7 @@ import sys
 import time
 import matplotlib.pyplot as plt
 import json
+import numpy as np
 
 from utils.average_meter import AverageMeter
 
@@ -59,3 +60,11 @@ class Reporter:
             plt.xlabel('epoch')
             plt.ylabel(key)
             plt.savefig(save_dir + '/plots/' + key + '.png')
+
+    def print_mean_std(self, use_mask):
+        msg = ''
+        for key, item in self.history.items():
+            if not use_mask and 'mask' in key:
+                continue
+            msg += key + ': (mean=%.3f, std=%.3f)' % (np.mean(item), np.std(item))
+        print(msg)

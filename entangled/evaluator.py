@@ -17,10 +17,12 @@ class Evaluator:
 
     def evaluate(self):
         self.model.eval()
-        time0 = time.time()
-        self.__evaluate()
-        print("-" * 100)
-        print('Validation is completed in: %.2f' % (time.time() - time0))
+        print('Start evaluation.')
+        for i in range(5):
+            print('round', i + 1)
+            self.__evaluate()
+        print('-' * 100)
+        self.reporter.print_mean_std(self.model.args.use_mask)
 
     def __evaluate(self):
         self.reporter.start_time = time.time()
@@ -58,4 +60,3 @@ class Evaluator:
                     self.reporter.update(report_metrics, batch_size)
 
         self.reporter.epoch_finished()
-        self.reporter.print_values()
