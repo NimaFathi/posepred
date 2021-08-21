@@ -25,8 +25,8 @@ class Trainer:
         self.model.train()
         time0 = time.time()
         for epoch in range(self.args.start_epoch, self.args.epochs):
-            self.train_()
-            self.validate_()
+            self.__train()
+            self.__validate()
             self.scheduler.step(self.valid_reporter.history['vel_loss'][-1])
             if (epoch + 1) % self.args.snapshot_interval == 0 or (epoch + 1) == self.args.epochs:
                 save_snapshot(self.model, self.optimizer, self.args.lr, epoch + 1, self.train_reporter,
@@ -36,7 +36,7 @@ class Trainer:
         print("-" * 100)
         print('Training is completed in: %.2f' % (time.time() - time0))
 
-    def train_(self):
+    def __train(self):
         self.train_reporter.start_time = time.time()
         for data in self.train_dataloader:
             if self.args.is_interactive:
@@ -81,7 +81,7 @@ class Trainer:
         self.train_reporter.epoch_finished()
         self.train_reporter.print_values(self.model.args.use_mask)
 
-    def validate_(self):
+    def __validate(self):
         self.valid_reporter.start_time = time.time()
         for data in self.valid_dataloader:
             if self.args.is_interactive:

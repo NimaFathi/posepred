@@ -1,13 +1,13 @@
-from args.validation_args import ValidationArgs
+from args.evaluation_args import EvaluationArgs
 from args.helper import DataloaderArgs, ModelArgs
 from data_loader.data_loader import get_dataloader
 from utils.save_load import get_model, load_snapshot
 from utils.reporter import Reporter
-from entangled.validator import Validator
+from entangled.evaluator import Evaluator
 
 if __name__ == '__main__':
 
-    args = ValidationArgs(dataset_name='simple_dataset', model_name='zero_velocity', load_path=None, keypoint_dim=2)
+    args = EvaluationArgs(dataset_name='simple_non_interactive_dataset', model_name='zero_velocity', load_path=None, keypoint_dim=2)
 
     dataloader_args = DataloaderArgs(args.dataset_name, args.keypoint_dim, args.is_interactive, args.use_mask,
                                      args.is_testing, args.skip_frame, args.batch_size, args.shuffle, args.pin_memory,
@@ -27,5 +27,5 @@ if __name__ == '__main__':
 
     reporter = Reporter()
 
-    validator = Validator(model, dataloader, reporter, args.is_interactive, args.distance_loss)
-    validator.validate()
+    evaluator = Evaluator(model, dataloader, reporter, args.is_interactive, args.distance_loss)
+    evaluator.evaluate()

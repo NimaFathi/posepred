@@ -1,28 +1,31 @@
 import time
 import torch
-import torch.nn as nn
+
 from utils.metrics import accuracy, ADE, FDE
 from utils.others import pose_from_vel
+from utils.loss import L1, MSE, BCE
 
 
-class Validator:
+class Evaluator:
     def __init__(self, model, dataloader, reporter, is_interactive, distance_loss):
         self.model = model
         self.dataloader = dataloader
         self.reporter = reporter
         self.is_interactive = is_interactive
-        self.distance_loss = nn.L1Loss() if distance_loss == 'L1' else nn.MSELoss()
-        self.mask_loss = nn.BCELoss()
+        self.distance_loss = L1() if distance_loss == 'L1' else MSE()
+        self.mask_loss = BCE()
         self.device = torch.device('cuda')
 
-    def validate(self):
+    def evaluate(self):
         self.model.eval()
-        time0 = time.time()
-        self.validate_()
-        print("-" * 100)
-        print('Validation is completed in: %.2f' % (time.time() - time0))
+        print('Start evaluation.')
+        for i in range(5):
+            print('round', i + 1)
+            self.__evaluate()
+        print('-' * 100)
+        self.reporter.print_mean_std(self.model.args.use_mask)
 
-    def validate_(self):
+    def __evaluate(self):
         self.reporter.start_time = time.time()
         for data in self.dataloader:
             if self.is_interactive:
@@ -58,4 +61,3 @@ class Validator:
                     self.reporter.update(report_metrics, batch_size)
 
         self.reporter.epoch_finished()
-        self.reporter.print_values()
