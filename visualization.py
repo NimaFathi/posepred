@@ -6,7 +6,7 @@ from utils.save_load import get_model, load_snapshot
 if __name__ == '__main__':
 
     args = VisualArgs(dataset_name='simple_non_interactive_dataset', model_name='zero_velocity', load_path=None,
-                      keypoint_dim=2, seq_index=5)
+                      pred_frames_num=2, keypoint_dim=2, seq_index=5)
 
     dataloader_args = DataloaderArgs(args.dataset_name, args.keypoint_dim, args.is_interactive, args.use_mask,
                                      args.is_testing, args.skip_frame, args.batch_size, args.shuffle, args.pin_memory,
@@ -24,6 +24,22 @@ if __name__ == '__main__':
     else:
         raise Exception("Please provide either a model_name or a load_path to a trained model.")
 
-    print(dataloader.dataset.__getitem__(args.seq_index))
+    model.zero_grad()
+    data = dataloader.dataset.__getitem__(args.seq_index)
+
+    if args.is_testing:
+        if model.args.use_mask:
+            obs_pose, obs_vel, obs_mask = data
+        else:
+            obs_pose, obs_vel = data
+        outputs = model(data)
+    else:
+        if model.args.use_mask:
+            obs_pose, obs_vel, obs_mask, target_pose, target_vel, target_mask = data
+        else:
+            obs_pose, obs_vel, target_pose, target_vel = data
+        outputs = model(data[:len(data) / 2])
+
+
     # evaluator = Evaluator(model, dataloader, reporter, args.is_interactive, args.distance_loss)
     # evaluator.evaluate()
