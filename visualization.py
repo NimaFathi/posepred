@@ -2,7 +2,6 @@ from args.visual_args import VisualArgs
 from args.helper import DataloaderArgs, ModelArgs
 from data_loader.data_loader import get_dataloader
 from utils.save_load import get_model, load_snapshot
-from entangled.evaluator import Evaluator
 
 if __name__ == '__main__':
 
@@ -19,7 +18,7 @@ if __name__ == '__main__':
         model, optimizer, epoch, train_reporter, valid_reporter = load_snapshot(args.load_path)
     elif args.model_name:
         model_args = ModelArgs(args.model_name, args.use_mask, args.keypoint_dim)
-        model_args.pred_frames_num = dataloader.dataset.future_frames_num
+        model_args.pred_frames_num = args.pred_frames_num if args.is_testing else dataloader.dataset.future_frames_num
         model_args.keypoints_num = dataloader.dataset.keypoints_num
         model = get_model(model_args)
     else:

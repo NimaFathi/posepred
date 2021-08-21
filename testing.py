@@ -7,7 +7,8 @@ from entangled.tester import Tester
 
 if __name__ == '__main__':
 
-    args = TestingArgs(dataset_name='simple_non_interactive_dataset', model_name='zero_velocity', load_path=None, keypoint_dim=2)
+    args = TestingArgs(dataset_name='simple_non_interactive_dataset', model_name='zero_velocity', pred_frames_num=2,
+                       load_path=None, keypoint_dim=2)
 
     dataloader_args = DataloaderArgs(args.dataset_name, args.keypoint_dim, args.is_interactive, args.use_mask,
                                      args.is_testing, args.skip_frame, args.batch_size, args.shuffle, args.pin_memory,
@@ -19,7 +20,7 @@ if __name__ == '__main__':
         model, optimizer, epoch, train_reporter, valid_reporter = load_snapshot(args.load_path)
     elif args.model_name:
         model_args = ModelArgs(args.model_name, args.use_mask, args.keypoint_dim)
-        model_args.pred_frames_num = dataloader.dataset.future_frames_num
+        model_args.pred_frames_num = args.pred_frames_num
         model_args.keypoints_num = dataloader.dataset.keypoints_num
         model = get_model(model_args)
     else:
