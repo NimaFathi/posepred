@@ -1,13 +1,13 @@
-from args.evaluation_args import EvaluationArgs
+from args.visual_args import VisualArgs
 from args.helper import DataloaderArgs, ModelArgs
 from data_loader.data_loader import get_dataloader
 from utils.save_load import get_model, load_snapshot
-from utils.reporter import Reporter
 from entangled.evaluator import Evaluator
 
 if __name__ == '__main__':
 
-    args = EvaluationArgs(dataset_name='simple_non_interactive_dataset', model_name='zero_velocity', load_path=None, keypoint_dim=2)
+    args = VisualArgs(dataset_name='simple_non_interactive_dataset', model_name='zero_velocity', load_path=None,
+                      keypoint_dim=2, seq_index=5)
 
     dataloader_args = DataloaderArgs(args.dataset_name, args.keypoint_dim, args.is_interactive, args.use_mask,
                                      args.is_testing, args.skip_frame, args.batch_size, args.shuffle, args.pin_memory,
@@ -25,7 +25,6 @@ if __name__ == '__main__':
     else:
         raise Exception("Please provide either a model_name or a load_path to a trained model.")
 
-    reporter = Reporter()
 
     evaluator = Evaluator(model, dataloader, reporter, args.is_interactive, args.distance_loss)
     evaluator.evaluate()
