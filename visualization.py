@@ -25,6 +25,6 @@ if __name__ == '__main__':
     else:
         raise Exception("Please provide either a model_name or a load_path to a trained model.")
 
-
-    evaluator = Evaluator(model, dataloader, reporter, args.is_interactive, args.distance_loss)
-    evaluator.evaluate()
+    print(dataloader.dataset.__getitem__(args.seq_index))
+    # evaluator = Evaluator(model, dataloader, reporter, args.is_interactive, args.distance_loss)
+    # evaluator.evaluate()

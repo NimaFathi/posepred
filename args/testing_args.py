@@ -2,7 +2,7 @@ import argparse
 
 
 class TestingArgs:
-    def __init__(self, dataset_name, keypoint_dim, model_name=None, load_path=None, is_interactive=False, use_mask=False, skip_frame=0,
+    def __init__(self, dataset_name, keypoint_dim, pred_frames_num, model_name=None, load_path=None, is_interactive=False, use_mask=False, skip_frame=0,
                  batch_size=1, shuffle=True, pin_memory=False, num_workers=0):
         # dataloader_args
         self.dataset_name = dataset_name
@@ -18,6 +18,7 @@ class TestingArgs:
 
         self.model_name = model_name
         self.load_path = load_path
+        self.pred_frames_num = pred_frames_num
 
 
 def parse_testing_args():
@@ -36,6 +37,7 @@ def parse_testing_args():
 
     parser.add_argument('--model_name', type=str, help='model_name')
     parser.add_argument('--load_path', type=str, default=None, help='load_path')
+    parser.add_argument('--pred_frames_num', type=str, help='number of frames to predict')
 
     training_args = parser.parse_args()
     return training_args
