@@ -19,9 +19,44 @@ class PoseTrackPreprocessor(Processor):
         if not os.path.exists(self.output_dir):
             os.makedirs(self.output_dir)
 
+    def __generate_image_path(self, json_data, frame_ids, total_frame_num):
+        video_dict = {
+            'obs_frames': defaultdict(list),
+            'future_frames': defaultdict(list)
+        }
+        obs_frames = []
+        future_frames = []
+        for j in range(1, total_frame_num * self.skip_frame_num + 1, self.skip_frame_num):
+            for pedestrian in frame_ids.keys():
+                if frame_ids[pedestrian].__len__() < j:
+                    continue
+                if j <= self.obs_frame_num * self.skip_frame_num:
+                    video_dict['obs_frames'][pedestrian].append(frame_ids[pedestrian][j - 1])
+                else:
+                    video_dict['future_frames'][pedestrian].append(frame_ids[pedestrian][j - 1])
+        for p_id in video_dict['obs_frames'].keys():
+            if p_id in video_dict['future_frames'].keys() and video_dict['obs_frames'][
+                p_id].__len__() == self.obs_frame_num and \
+                    video_dict['future_frames'][p_id].__len__() == self.pred_frame_num:
+                obs_frames.append(video_dict['obs_frames'][p_id])
+                future_frames.append(video_dict['future_frames'][p_id])
+        images = json_data.get('images')
+        for image in images:
+            image_id = image.get('frame_id')
+            for indx in range(len(obs_frames)):
+                for j, frame_id in enumerate(obs_frames[indx]):
+                    if frame_id == image_id:
+                        obs_frames[indx][j] = image.get('file_name')
+            for indx in range(len(future_frames)):
+                for j, frame_id in enumerate(future_frames[indx]):
+                    if frame_id == image_id:
+                        future_frames[indx][j] = image.get('file_name')
+        return obs_frames, future_frames
+
     def normal(self, data_type='train'):
         print('start creating PoseTrack normal static data ... ')
-        header = ['video_section', 'observed_pose', 'future_pose', 'observed_mask', 'future_mask']
+        header = ['video_section', 'observed_pose', 'future_pose', 'observed_mask', 'future_mask',
+                  'obs_frames_related_path', 'future_frames_related_path']
         if self.custom_name:
             output_file_name = f'{data_type}_{self.obs_frame_num}_{self.pred_frame_num}_{self.skip_frame_num}_{self.custom_name}.csv'
         else:
@@ -44,25 +79,27 @@ class PoseTrackPreprocessor(Processor):
                 video_id = json_data.get('images')[0].get('vid_id')
                 pose = defaultdict(list)
                 mask = defaultdict(list)
+                frame_ids = defaultdict(list)
                 data = []
                 for annotation in annotations:
                     frame_pose = []
                     frame_mask = []
                     keypoints = annotation.get('keypoints')
+                    image_id = annotation.get('image_id')
                     for i in range(1, len(keypoints) + 1):
                         if i % 3 == 0:
                             frame_mask.append(keypoints[i - 1])
                         else:
                             frame_pose.append(keypoints[i - 1])
                     pose[annotation.get('track_id')].append(frame_pose)
-
+                    frame_ids[annotation.get('track_id')].append(image_id)
                     mask[annotation.get('track_id')].append(frame_mask)
                 for i in range(section_range):
                     video_dict = {
                         'obs_pose': defaultdict(list),
                         'future_pose': defaultdict(list),
                         'obs_mask': defaultdict(list),
-                        'future_mask': defaultdict(list)
+                        'future_mask': defaultdict(list),
                     }
                     obs_pose = []
                     future_pose = []
@@ -86,12 +123,14 @@ class PoseTrackPreprocessor(Processor):
                             obs_mask.append(video_dict['obs_mask'][p_id])
                             future_pose.append(video_dict['future_pose'][p_id])
                             future_mask.append(video_dict['future_mask'][p_id])
+                    obs_frames, future_frames = self.__generate_image_path(json_data, frame_ids, total_frame_num)
                     if not self.is_interactive:
                         for p_id in range(len(obs_pose)):
                             data.append(['%s-%d' % (video_id, i), obs_pose[p_id], future_pose[p_id], obs_mask[p_id],
-                                         future_mask[p_id]])
+                                         future_mask[p_id], obs_frames[p_id], future_frames[p_id]])
                     else:
-                        data.append(['%s-%d' % (video_id, i), obs_pose, future_pose, obs_mask, future_mask])
+                        data.append(['%s-%d' % (video_id, i), obs_pose, future_pose, obs_mask, future_mask, obs_frames,
+                                     future_frames])
                 with open(os.path.join(self.output_dir, output_file_name), 'a') as f_object:
                     writer = csv.writer(f_object)
                     writer.writerows(data)
@@ -102,7 +141,8 @@ class PoseTrackPreprocessor(Processor):
         self.disentangle_local(data_type)
 
     def disentangle_global(self, data_type='train'):
-        header = ['video_section', 'observed_pose', 'future_pose', 'observed_mask', 'future_mask']
+        header = ['video_section', 'observed_pose', 'future_pose', 'observed_mask', 'future_mask',
+                  'obs_frames_related_path', 'future_frames_related_path']
         if self.custom_name:
             global_file_name = f'global_{data_type}_{self.obs_frame_num}_{self.pred_frame_num}_{self.skip_frame_num}_{self.custom_name}.csv'
         else:
@@ -126,11 +166,13 @@ class PoseTrackPreprocessor(Processor):
                 video_id = json_data.get('images')[0].get('vid_id')
                 frame_global_data = {
                     'pose': defaultdict(list),
-                    'mask': defaultdict(list)
+                    'mask': defaultdict(list),
+                    'frame_ids': defaultdict(list)
                 }
                 data = []
                 for annotation in annotations:
                     keypoints = annotation.get('keypoints')
+                    frame_global_data['frame_ids'][annotation.get('track_id')].append(annotation.get('image_id'))
                     frame_global_data['pose'][annotation.get('track_id')].append([keypoints[3], keypoints[4]])
                     frame_global_data['mask'][annotation.get('track_id')].append(keypoints[5])
                 for i in range(section_range):
@@ -165,20 +207,24 @@ class PoseTrackPreprocessor(Processor):
                             obs_mask_global.append(video_data['obs_mask'][p_id])
                             future_pose_global.append(video_data['future_pose'][p_id])
                             future_mask_global.append(video_data['future_mask'][p_id])
+                    obs_frames, future_frames = self.__generate_image_path(json_data, frame_global_data['frame_ids'],
+                                                                           total_frame_num)
                     if not self.is_interactive:
                         for p_id in range(len(obs_pose_global)):
                             data.append(['%s-%d' % (video_id, i), obs_pose_global[p_id], future_pose_global[p_id],
-                                         obs_mask_global[p_id], future_mask_global[p_id]])
+                                         obs_mask_global[p_id], future_mask_global[p_id],
+                                         obs_frames[p_id], future_frames[p_id]])
                     else:
                         data.append(
                             ['%s-%d' % (video_id, i), obs_pose_global, future_pose_global, obs_mask_global,
-                             future_mask_global])
+                             future_mask_global, obs_frames, future_frames])
                 with open(os.path.join(self.output_dir, 'PoseTrack_global_{}.csv'.format(data_type)), 'a') as f_object:
                     writer = csv.writer(f_object)
                     writer.writerows(data)
 
     def disentangle_local(self, data_type='train'):
-        header = ['video_section', 'observed_pose', 'future_pose', 'observed_mask', 'future_mask']
+        header = ['video_section', 'observed_pose', 'future_pose', 'observed_mask', 'future_mask',
+                  'obs_frames_related_path', 'future_frames_related_path']
         if self.custom_name:
             local_file_name = f'local_{data_type}_{self.obs_frame_num}_{self.pred_frame_num}_{self.skip_frame_num}_{self.custom_name}.csv'
         else:
@@ -202,7 +248,8 @@ class PoseTrackPreprocessor(Processor):
                 video_id = json_data.get('images')[0].get('vid_id')
                 frame_local_data = {
                     'pose': defaultdict(list),
-                    'mask': defaultdict(list)
+                    'mask': defaultdict(list),
+                    'frame_ids': defaultdict(list)
                 }
                 data = []
                 for annotation in annotations:
@@ -220,6 +267,7 @@ class PoseTrackPreprocessor(Processor):
                             frame_pose.append(keypoints[i - 1] - global_pose_y)
                     frame_local_data['pose'][annotation.get('track_id')].append(frame_pose)
                     frame_local_data['mask'][annotation.get('track_id')].append(frame_mask)
+                    frame_local_data['frame_ids'][annotation.get('track_id')].append(annotation.get('image_id'))
                 for i in range(section_range):
                     video_data = {
                         'obs_pose': defaultdict(list),
@@ -251,14 +299,17 @@ class PoseTrackPreprocessor(Processor):
                             obs_mask_local.append(video_data['obs_mask'][p_id])
                             future_pose_local.append(video_data['future_pose'][p_id])
                             future_mask_local.append(video_data['future_mask'][p_id])
+                    obs_frames, future_frames = self.__generate_image_path(json_data, frame_local_data['frame_ids'],
+                                                                           total_frame_num)
                     if not self.is_interactive:
                         for p_id in range(len(obs_pose_local)):
                             data.append(['%s-%d' % (video_id, i), obs_pose_local[p_id], future_pose_local[p_id],
-                                         obs_mask_local[p_id], future_mask_local[p_id]])
+                                         obs_mask_local[p_id], future_mask_local[p_id],
+                                         obs_frames[p_id], future_frames[p_id]])
                     else:
                         data.append(
                             ['%s%d' % (video_id, i), obs_pose_local, future_pose_local, obs_mask_local,
-                             future_mask_local])
+                             future_mask_local, obs_frames, future_frames])
                 with open(os.path.join(self.output_dir, local_file_name), 'a') as f_object:
                     writer = csv.writer(f_object)
                     writer.writerows(data)

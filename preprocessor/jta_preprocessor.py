@@ -35,9 +35,43 @@ class JTAPreprocessor(Processor):
         if not os.path.exists(self.output_dir):
             os.makedirs(self.output_dir)
 
+    def __generate_image_path(self, frame_num, file_name, input_matrix, total_frame_num):
+        image_relative_path = '/JTA_EXT/' + re.search("(seq_\d+).json", file_name).group(1)
+        video_data = {
+            'obs_frames': defaultdict(list),
+            'future_frames': defaultdict(list)
+        }
+        obs_frames = []
+        future_frames = []
+        for j in range(1, total_frame_num * self.skip_frame_num + 1, self.skip_frame_num):
+            frame_data = defaultdict(list)
+            frame = input_matrix[input_matrix[:, 0] == frame_num * total_frame_num * 2 + j]  # find frame data
+            for pose in frame:
+                frame_data[pose[1]] = pose[0]
+            for p_id in frame_data.keys():
+                if j <= self.obs_frame_num * self.skip_frame_num:
+                    video_data['obs_frames'][p_id].append(frame_data[p_id])
+                else:
+                    video_data['future_frames'][p_id].append(frame_data[p_id])
+        for p_id in video_data['obs_frames']:
+            if p_id in video_data['future_frames'].keys() and video_data['obs_frames'][
+                p_id].__len__() == self.obs_frame_num and \
+                    video_data['future_frames'][
+                        p_id].__len__() == self.pred_frame_num:
+                obs_frames.append(video_data['obs_frames'][p_id])
+                future_frames.append(video_data['future_frames'][p_id])
+        for p_id in range(len(obs_frames)):
+            for j in range(len(obs_frames[0])):
+                obs_frames[p_id][j] = f'{image_relative_path}/{int(obs_frames[p_id][j])}.json'
+        for p_id in range(len(future_frames)):
+            for j in range(len(future_frames[0])):
+                future_frames[p_id][j] = f'{image_relative_path}/{int(future_frames[p_id][j])}.json'
+        return obs_frames, future_frames
+
     def normal(self, data_type='train'):
         print('start creating JTA normal static data ... ')
-        header = ['video_section', 'observed_pose', 'future_pose', 'observed_mask', 'future_mask']
+        header = ['video_section', 'observed_pose', 'future_pose', 'observed_mask', 'future_mask',
+                  'obs_frames_related_path', 'future_frames_related_path']
         if self.custom_name:
             output_file_name = f'{data_type}_{self.obs_frame_num}_{self.pred_frame_num}_{self.skip_frame_num}_{self.custom_name}.csv'
         else:
@@ -101,19 +135,22 @@ class JTAPreprocessor(Processor):
                             obs_mask.append(video_data['obs_mask'][p_id])
                             future.append(video_data['future_pose'][p_id])
                             future_mask.append(video_data['future_mask'][p_id])
+                    obs_frames, future_frames = self.__generate_image_path(i, entry.name, matrix, total_frame_num)
                     if not self.is_interactive:
                         for p_id in range(len(obs)):
                             data.append(['%s-%d' % (video_number, i), obs[p_id], future[p_id], obs_mask[p_id],
-                                         future_mask[p_id]])
+                                         future_mask[p_id], obs_frames[p_id], future_frames[p_id]])
                     else:
-                        data.append(['%s-%d' % (video_number, i), obs, future, obs_mask, future_mask])
+                        data.append(['%s-%d' % (video_number, i), obs, future, obs_mask, future_mask,
+                                     obs_frames, future_frames])
                 with open(os.path.join(self.output_dir, output_file_name), 'a') as f_object:
                     writer = csv.writer(f_object)
                     writer.writerows(data)
 
     def disentangle(self, data_type='train'):
         print('start creating JTA disentangle static data ...')
-        header = ['video_section', 'observed_pose', 'future_pose', 'observed_mask', 'future_mask']
+        header = ['video_section', 'observed_pose', 'future_pose', 'observed_mask', 'future_mask',
+                  'obs_frames_related_path', 'future_frames_related_path']
         if self.custom_name:
             global_file_name = f'global_{data_type}_{self.obs_frame_num}_{self.pred_frame_num}_{self.skip_frame_num}_' \
                                f'{self.custom_name}.csv'
@@ -221,18 +258,22 @@ class JTAPreprocessor(Processor):
                             obs_mask_local.append(local_dict['obs_mask'][p_id])
                             future_local.append(local_dict['future_pose'][p_id])
                             future_mask_local.append(local_dict['future_mask'][p_id])
+                    obs_frames, future_frames = self.__generate_image_path(i, entry.name, matrix, total_frame_num)
                     if not self.is_interactive:
                         for p_id in range(len(obs_global)):
                             data_global.append(['%s-%d' % (video_number, i), obs_global[p_id], future_global[p_id],
-                                                obs_mask_global[p_id], future_mask_global[p_id]])
+                                                obs_mask_global[p_id], future_mask_global[p_id],
+                                                obs_frames[p_id], future_frames[p_id]])
                             data_local.append(['%s-%d' % (video_number, i), obs_global[p_id], future_global[p_id],
-                                               obs_mask_global[p_id], future_mask_global[p_id]])
+                                               obs_mask_global[p_id], future_mask_global[p_id],
+                                               obs_frames[p_id], future_frames[p_id]])
                     else:
                         data_global.append(
                             ['%s-%d' % (video_number, i), obs_global, future_global, obs_mask_global,
-                             future_mask_global])
+                             future_mask_global, obs_frames, future_frames])
                         data_local.append(
-                            ['%s-%d' % (video_number, i), obs_local, future_local, obs_mask_local, future_mask_local])
+                            ['%s-%d' % (video_number, i), obs_local, future_local, obs_mask_local,
+                             future_mask_local, obs_frames, future_frames])
                 with open(os.path.join(self.output_dir, global_file_name), 'a') as f_object:
                     writer = csv.writer(f_object)
                     writer.writerows(data_global)
