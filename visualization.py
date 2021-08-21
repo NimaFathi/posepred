@@ -2,6 +2,7 @@ from args.visual_args import VisualArgs
 from args.helper import DataloaderArgs, ModelArgs
 from data_loader.data_loader import get_dataloader
 from utils.save_load import get_model, load_snapshot
+from visualization.visualizer import Visualizer
 
 if __name__ == '__main__':
 
@@ -27,6 +28,7 @@ if __name__ == '__main__':
     model.zero_grad()
     data = dataloader.dataset.__getitem__(args.seq_index)
 
+    vis_inputs = dict()
     if args.is_testing:
         if model.args.use_mask:
             obs_pose, obs_vel, obs_mask = data
@@ -36,10 +38,19 @@ if __name__ == '__main__':
     else:
         if model.args.use_mask:
             obs_pose, obs_vel, obs_mask, target_pose, target_vel, target_mask = data
+            vis_inputs['target_mask'] = target_mask
         else:
             obs_pose, obs_vel, target_pose, target_vel = data
         outputs = model(data[:len(data) / 2])
+        vis_inputs['target_pose'] = target_pose
 
+    vis_inputs['obs_pose'] = obs_pose
+    vis_inputs['pred_pose'] = outputs[0]
+    if model.args.use_mask:
+        vis_inputs['obs_mask'] = obs_mask
+        vis_inputs['pred_mask'] = outputs[1]
 
+    visualizer = Visualizer(dataset_name=args.dataset_name)
+    visualizer.visualize_2D(vis_inputs, )
     # evaluator = Evaluator(model, dataloader, reporter, args.is_interactive, args.distance_loss)
     # evaluator.evaluate()
