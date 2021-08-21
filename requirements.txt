@@ -5,3 +5,4 @@ pillow
 jupyter
 sklearn
 pandas
+pygifsicle
