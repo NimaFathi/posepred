@@ -129,8 +129,8 @@ class PoseTrackPreprocessor(Processor):
                             data.append(['%s-%d' % (video_id, i), obs_pose[p_id], future_pose[p_id], obs_mask[p_id],
                                          future_mask[p_id], obs_frames[p_id], future_frames[p_id]])
                     else:
-                        data.append(['%s-%d' % (video_id, i), obs_pose, future_pose, obs_mask, future_mask, obs_frames,
-                                     future_frames])
+                        data.append(['%s-%d' % (video_id, i), obs_pose, future_pose, obs_mask, future_mask,
+                                     obs_frames[0], future_frames[0]])
                 with open(os.path.join(self.output_dir, output_file_name), 'a') as f_object:
                     writer = csv.writer(f_object)
                     writer.writerows(data)
@@ -217,7 +217,7 @@ class PoseTrackPreprocessor(Processor):
                     else:
                         data.append(
                             ['%s-%d' % (video_id, i), obs_pose_global, future_pose_global, obs_mask_global,
-                             future_mask_global, obs_frames, future_frames])
+                             future_mask_global, obs_frames[0], future_frames[0]])
                 with open(os.path.join(self.output_dir, 'PoseTrack_global_{}.csv'.format(data_type)), 'a') as f_object:
                     writer = csv.writer(f_object)
                     writer.writerows(data)
@@ -262,9 +262,15 @@ class PoseTrackPreprocessor(Processor):
                         if i % 3 == 0 and i != 6:
                             frame_mask.append(keypoints[i - 1])
                         elif i % 3 == 1 and i != 4:
-                            frame_pose.append(keypoints[i - 1] - global_pose_x)
+                            if keypoints != 0:
+                                frame_pose.append(keypoints[i - 1] - global_pose_x)
+                            else:
+                                frame_pose.append(keypoints[i - 1])
                         elif i % 3 == 2 and i != 5:
-                            frame_pose.append(keypoints[i - 1] - global_pose_y)
+                            if keypoints[i - 1] != 0:
+                                frame_pose.append(keypoints[i - 1] - global_pose_y)
+                            else:
+                                frame_pose.append(keypoints[i - 1])
                     frame_local_data['pose'][annotation.get('track_id')].append(frame_pose)
                     frame_local_data['mask'][annotation.get('track_id')].append(frame_mask)
                     frame_local_data['frame_ids'][annotation.get('track_id')].append(annotation.get('image_id'))
@@ -309,7 +315,7 @@ class PoseTrackPreprocessor(Processor):
                     else:
                         data.append(
                             ['%s%d' % (video_id, i), obs_pose_local, future_pose_local, obs_mask_local,
-                             future_mask_local, obs_frames, future_frames])
+                             future_mask_local, obs_frames[0], future_frames[0]])
                 with open(os.path.join(self.output_dir, local_file_name), 'a') as f_object:
                     writer = csv.writer(f_object)
                     writer.writerows(data)

@@ -142,7 +142,7 @@ class JTAPreprocessor(Processor):
                                          future_mask[p_id], obs_frames[p_id], future_frames[p_id]])
                     else:
                         data.append(['%s-%d' % (video_number, i), obs, future, obs_mask, future_mask,
-                                     obs_frames, future_frames])
+                                     obs_frames[0], future_frames[0]])
                 with open(os.path.join(self.output_dir, output_file_name), 'a') as f_object:
                     writer = csv.writer(f_object)
                     writer.writerows(data)
@@ -270,10 +270,10 @@ class JTAPreprocessor(Processor):
                     else:
                         data_global.append(
                             ['%s-%d' % (video_number, i), obs_global, future_global, obs_mask_global,
-                             future_mask_global, obs_frames, future_frames])
+                             future_mask_global, obs_frames[0], future_frames[0]])
                         data_local.append(
                             ['%s-%d' % (video_number, i), obs_local, future_local, obs_mask_local,
-                             future_mask_local, obs_frames, future_frames])
+                             future_mask_local, obs_frames[0], future_frames[0]])
                 with open(os.path.join(self.output_dir, global_file_name), 'a') as f_object:
                     writer = csv.writer(f_object)
                     writer.writerows(data_global)
