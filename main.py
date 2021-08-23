@@ -1,5 +1,5 @@
 from args.training_args import TrainingArgs
-from args.helper import TrainerArgs, DataloaderArgs
+from args.helper import DataloaderArgs
 from data_loader.data_loader import get_dataloader
 import numpy as np
 
@@ -9,9 +9,6 @@ if __name__ == '__main__':
                         valid_dataset_name='simple_interactive_dataset',
                         model_name='lstm_vel', keypoint_dim=2, epochs=6, load_path=None, is_interactive=True,
                         batch_size=1, shuffle=False)
-
-    trainer_args = TrainerArgs(args.epochs, args.is_interactive, args.start_epoch, args.lr, args.decay_factor,
-                               args.decay_patience, args.distance_loss, args.mask_loss_weight, args.snapshot_interval)
 
     train_dataloader_args = DataloaderArgs(args.train_dataset_name, args.keypoint_dim, args.is_interactive,
                                            args.use_mask, args.is_testing, args.skip_frame, args.batch_size,
