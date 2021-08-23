@@ -21,4 +21,5 @@ if __name__ == '__main__':
         obs_pose = data[0]
         persons.append(obs_pose.shape[1])
 
+    print(args.train_dataset_name)
     print('seq_num:', len(persons), '-->   mean:', np.mean(persons), ' std:', np.std(persons))
