@@ -25,11 +25,16 @@ class InteractiveDataset(Dataset):
         if not self.is_testing:
             self.future_frames_num = len(seq.future_pose[0])
 
+        self.seq = self.get_tensor(seq, 'observed_pose', self.obs_frames_num)
+
     def __len__(self):
         return len(self.data)
 
     def __getitem__(self, index):
         seq = self.data.iloc[index]
+
+        persons_num = len(seq['observed_pose'])
+        return persons_num
 
         obs_pose = self.get_tensor(seq, 'observed_pose', self.obs_frames_num)
         obs_vel = (obs_pose[:, 1:, :] - obs_pose[:, :-1, :])
@@ -54,7 +59,7 @@ class InteractiveDataset(Dataset):
 
     def get_tensor(self, seq, segment, frames_num):
         assert segment in seq, 'No segment named: ' + segment
-        persons_num = len(seq.observed_pose)
+        persons_num = len(seq[segment])
         return torch.tensor(
             [[seq[segment][person_idx][frame_idx]
               for frame_idx in range(0, frames_num, self.skip_frame + 1)]
