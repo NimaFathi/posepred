@@ -12,12 +12,12 @@ class Disentangle1(torch.nn.Module):
         # global
         global_args = args
         global_args.keypoints_num = 1
-        self.global_model = ZeroVelocity(global_args).to(torch.device('cuda'))
+        self.global_model = ZeroVelocity(global_args)
 
         # local
         local_args = args
         local_args.keypoints_num = args.keypoints_num - global_args.keypoints_num
-        self.local_model = LSTMVel(local_args).to(torch.device('cuda'))
+        self.local_model = LSTMVel(local_args)
 
     def forward(self, inputs):
         outputs = []
