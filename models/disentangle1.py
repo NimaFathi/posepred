@@ -20,38 +20,33 @@ class Disentangle1(torch.nn.Module):
         self.input_size = self.output_size = int(args.keypoints_num * args.keypoint_dim)
 
     def forward(self, inputs):
-
         outputs = []
         pose, vel = inputs[:2]
-
-        (hidden_vel, cell_vel) = self.vel_encoder(vel.permute(1, 0, 2))
-        hidden_vel = hidden_vel.squeeze(0)
-        cell_vel = cell_vel.squeeze(0)
-
-        (hidden_pose, cell_pose) = self.pose_encoder(pose.permute(1, 0, 2))
-        hidden_pose = hidden_pose.squeeze(0)
-        cell_pose = cell_pose.squeeze(0)
-
-        vel_dec_input = vel[:, -1, :]
-        hidden_dec = hidden_pose + hidden_vel
-        cell_dec = cell_pose + cell_vel
-        outputs.append(self.vel_decoder(vel_dec_input, hidden_dec, cell_dec))
+        # [global_pose, global_vel]
+        global_inputs = [pose[..., : self.args.keypoint_dim], vel[..., : self.args.keypoint_dim]]
+        # [local_pose, local_vel]
+        local_inputs = [pose[..., self.args.keypoint_dim:], vel[..., self.args.keypoint_dim:]]
 
         if self.args.use_mask:
             mask = inputs[2]
-            (hidden_mask, cell_mask) = self.mask_encoder(mask.permute(1, 0, 2))
-            hidden_mask = hidden_mask.squeeze(0)
-            cell_mask = cell_mask.squeeze(0)
+            global_inputs.append(mask[..., :1])
+            local_inputs.append(pose[..., 1:])
 
-            mask_dec_input = mask[:, -1, :]
-            outputs.append(self.mask_decoder(mask_dec_input, hidden_mask, cell_mask))
+        global_outputs = self.global_model(global_inputs)
+        local_inputs = self.local_model(local_inputs)
 
+        for i, global_output in enumerate(global_inputs):
+            local_output = local_inputs[i]
 
-        batch_size = inputs[0].shape[0]
-        outputs.append(torch.zeros(batch_size, self.args.pred_frames_num, self.output_size))
-        if self.args.use_mask:
-            mask = inputs[2]
-            last_frame = mask[..., -1, :].unsqueeze(-2)
-            outputs.append(last_frame.repeat([1 for _ in range(len(mask.shape[:-2]))] + [self.args.pred_frames_num, 1]))
+            local_output[...,]
 
         return tuple(outputs)
+
+
+local_ = torch.ones(32, 16, 12)
+
+global_ = torch.ones(32, 16, 3)
+
+global_r = global_.repeat(1, 1, 4)
+
+res = torch.cat((global_, local_ + global_r), dim=-1)
