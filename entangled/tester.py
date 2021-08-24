@@ -29,22 +29,19 @@ class Tester:
 
     def __test(self):
         for data in self.dataloader:
-            if self.is_interactive:
-                pass
+            for i, d in enumerate(data):
+                data[i] = d.to(self.device)
+            if self.model.args.use_mask:
+                obs_pose, obs_vel, obs_mask = data
             else:
-                for i, d in enumerate(data):
-                    data[i] = d.to(self.device)
-                if self.model.args.use_mask:
-                    obs_pose, obs_vel, obs_mask = data
-                else:
-                    obs_pose, obs_vel = data
+                obs_pose, obs_vel = data
 
-                with torch.no_grad():
-                    outputs = self.model(data)
-                    pred_vel = outputs[0]
-                    pred_pose = pose_from_vel(pred_vel, obs_pose[..., -1, :])
-                    pred_mask = outputs[1] if self.model.args.use_mask else None
-                    self.store_results(pred_pose, pred_vel, pred_mask)
+            with torch.no_grad():
+                outputs = self.model(data)
+                pred_vel = outputs[0]
+                pred_pose = pose_from_vel(pred_vel, obs_pose[..., -1, :])
+                pred_mask = outputs[1] if self.model.args.use_mask else None
+                self.store_results(pred_pose, pred_vel, pred_mask)
 
     def store_results(self, pred_pose, pred_vel, pred_mask):
         # update tensors
