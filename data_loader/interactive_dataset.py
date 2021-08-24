@@ -34,8 +34,8 @@ class InteractiveDataset(Dataset):
         seq = self.data.iloc[index]
         persons_in_seq = self.select_persons(seq)
 
-        obs_pose = self.get_tensor(seq, 'observed_pose', persons_in_seq, self.obs_frames_num)
         try:
+            obs_pose = self.get_tensor(seq, 'observed_pose', persons_in_seq, self.obs_frames_num)
             obs_vel = (obs_pose[:, 1:, :] - obs_pose[:, :-1, :])
             outputs = [obs_pose, obs_vel]
         except:
