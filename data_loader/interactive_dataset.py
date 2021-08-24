@@ -68,7 +68,13 @@ class InteractiveDataset(Dataset):
 
     def get_tensor(self, seq, segment, persons_in_seq, frames_num):
         assert segment in seq, 'No segment named: ' + segment
-        return torch.tensor(
+        result = torch.tensor(
             [[seq[segment][person_idx][frame_idx]
               for frame_idx in range(0, frames_num, self.skip_frame + 1)]
              for person_idx in persons_in_seq])
+
+        if len(persons_in_seq) < self.persons_num:
+            padding = torch.zeros(self.persons_num - len(persons_in_seq), result.shape[1], result.shape[2])
+            result = torch.cat((result, padding), dim=0)
+
+        return result
