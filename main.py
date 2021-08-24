@@ -6,7 +6,7 @@ import numpy as np
 
 if __name__ == '__main__':
 
-    args = TrainingArgs(train_dataset_name='PoseTrack_interactive/train_16_14_1_PoseTrack', valid_dataset_name='train_PoseTrack',
+    args = TrainingArgs(train_dataset_name='JTA_interactive/2D/train_16_14_2_JTA', valid_dataset_name='train_PoseTrack',
                         model_name='lstm_vel', keypoint_dim=2, epochs=6, load_path=None, is_interactive=True,
                         persons_num=5, use_mask=False, batch_size=3, shuffle=False)
 
