@@ -11,7 +11,7 @@ class InteractiveDataset(Dataset):
             try:
                 data.loc[:, col] = data.loc[:, col].apply(lambda x: literal_eval(x))
             except:
-                raise Exception("data must be convertable to valid data-scructures")
+                raise Exception("Each row must be convertable to python list")
 
         self.data = data.copy().reset_index(drop=True)
         self.is_testing = is_testing
@@ -33,12 +33,13 @@ class InteractiveDataset(Dataset):
     def __getitem__(self, index):
         seq = self.data.iloc[index]
 
-        persons_num = len(seq['observed_pose'])
-        return persons_num
-
         obs_pose = self.get_tensor(seq, 'observed_pose', self.obs_frames_num)
-        obs_vel = (obs_pose[:, 1:, :] - obs_pose[:, :-1, :])
-        outputs = [obs_pose, obs_vel]
+        try:
+            obs_vel = (obs_pose[:, 1:, :] - obs_pose[:, :-1, :])
+            outputs = [obs_pose, obs_vel]
+        except:
+            print('faulty row skipped.')
+            return self.__getitem__((index + 1) % self.__len__())
 
         if self.use_mask:
             obs_mask = self.get_tensor(seq, 'observed_mask', self.obs_frames_num)
