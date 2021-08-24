@@ -4,7 +4,7 @@ import argparse
 class TrainingArgs:
     def __init__(self, train_dataset_name, valid_dataset_name, model_name, keypoint_dim, epochs, start_epoch=0,
                  lr=0.001, decay_factor=0.95, decay_patience=20, distance_loss='L1', mask_loss_weight=0.25,
-                 snapshot_interval=20, is_interactive=False, use_mask=False, skip_frame=0,
+                 snapshot_interval=20, is_interactive=False, persons_num=1, use_mask=False, skip_frame=0,
                  batch_size=1, shuffle=True, pin_memory=False, num_workers=0, hidden_size=200, hardtanh_limit=10,
                  n_layers=1, dropout_enc=0, dropout_pose_dec=0, dropout_mask_dec=0, load_path=None):
         # trainer_args
@@ -22,6 +22,7 @@ class TrainingArgs:
         self.valid_dataset_name = valid_dataset_name
         self.keypoint_dim = keypoint_dim
         self.is_interactive = is_interactive
+        self.persons_num = persons_num
         self.use_mask = use_mask
         self.skip_frame = skip_frame
         self.batch_size = batch_size
@@ -60,6 +61,7 @@ def parse_training_args():
     parser.add_argument('--valid_dataset_name', type=str, help='valid_dataset_name')
     parser.add_argument('--keypoint_dim', type=int, help='dimension of each keypoint')
     parser.add_argument('--is_interactive', type=bool, default=False, help='support interaction of people')
+    parser.add_argument('--persons_num', type=bool, default=1, help='number of people in each sequence')
     parser.add_argument('--use_mask', type=bool, default=False, help='visibility mask')
     parser.add_argument('--skip_frame', type=int, default=0, help='skip frame in reading dataset')
     parser.add_argument('--batch_size', type=int, default=1, help='batch_size')

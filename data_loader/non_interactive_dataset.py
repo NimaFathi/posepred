@@ -31,19 +31,22 @@ class NonInteractiveDataset(Dataset):
     def __getitem__(self, index):
         seq = self.data.iloc[index]
 
-        obs_pose = self.get_tensor(seq, 'observed_pose')
-        obs_vel = (obs_pose[1:, :] - obs_pose[:-1, :])
-        outputs = [obs_pose, obs_vel]
+        try:
+            obs_pose = self.get_tensor(seq, 'observed_pose')
+            obs_vel = (obs_pose[1:, :] - obs_pose[:-1, :])
+            outputs = [obs_pose, obs_vel]
+        except:
+            print('faulty row skipped.')
+            return self.__getitem__((index + 1) % self.__len__())
 
         if self.use_mask:
             obs_mask = self.get_tensor(seq, 'observed_mask')
             outputs.append(obs_mask)
 
         if not self.is_testing:
-            assert len(seq.observed_pose) == len(seq.future_pose), "unequal persons in observed and future frames."
             future_pose = self.get_tensor(seq, 'future_pose')
             future_vel = torch.cat(
-                ((future_pose[0, :] - obs_pose[-1, :]).unsqueeze(1), future_pose[1:, :] - future_pose[:-1, :]), 1)
+                ((future_pose[0, :] - obs_pose[-1, :]).unsqueeze(0), future_pose[1:, :] - future_pose[:-1, :]), 0)
             outputs += [future_pose, future_vel]
 
             if self.use_mask:

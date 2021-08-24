@@ -1,4 +1,4 @@
-from consts import ROOT_DIR
+from path_definition import ROOT_DIR
 from args.testing_args import TestingArgs
 from args.helper import DataloaderArgs, ModelArgs
 from data_loader.data_loader import get_dataloader

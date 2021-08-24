@@ -3,12 +3,13 @@ import argparse
 
 class TestingArgs:
     def __init__(self, dataset_name, keypoint_dim, pred_frames_num=None, model_name=None, load_path=None,
-                 is_interactive=False, use_mask=False, skip_frame=0, batch_size=1, shuffle=True, pin_memory=False,
+                 is_interactive=False, persons_num=1, use_mask=False, skip_frame=0, batch_size=1, shuffle=True, pin_memory=False,
                  num_workers=0):
         # dataloader_args
         self.dataset_name = dataset_name
         self.keypoint_dim = keypoint_dim
         self.is_interactive = is_interactive
+        self.persons_num = persons_num
         self.use_mask = use_mask
         self.skip_frame = skip_frame
         self.batch_size = batch_size
@@ -29,6 +30,7 @@ def parse_testing_args():
     parser.add_argument('--dataset_name', type=str, help='test_dataset_name')
     parser.add_argument('--keypoint_dim', type=int, help='dimension of each keypoint')
     parser.add_argument('--is_interactive', type=bool, default=False, help='support interaction of people')
+    parser.add_argument('--persons_num', type=bool, default=1, help='number of people in each sequence')
     parser.add_argument('--use_mask', type=bool, default=False, help='visibility mask')
     parser.add_argument('--skip_frame', type=int, default=0, help='skip frame in reading dataset')
     parser.add_argument('--batch_size', type=int, default=1, help='batch_size')

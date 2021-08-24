@@ -244,3 +244,6 @@ venv/
 *.pyc
 exps/
 *.ipynb
+
+preprocessed_data/
+

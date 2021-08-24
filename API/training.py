@@ -1,6 +1,6 @@
 import torch.optim as optim
 
-from consts import ROOT_DIR
+from path_definition import ROOT_DIR
 from args.training_args import TrainingArgs
 from args.helper import TrainerArgs, DataloaderArgs, ModelArgs
 from data_loader.data_loader import get_dataloader
