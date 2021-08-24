@@ -17,11 +17,12 @@ class TrainerArgs:
 
 
 class DataloaderArgs:
-    def __init__(self, dataset_name, keypoint_dim, is_interactive=False, use_mask=False, is_testing=False, skip_frame=0,
-                 batch_size=1, shuffle=True, pin_memory=False, num_workers=0):
+    def __init__(self, dataset_name, keypoint_dim, is_interactive=False, num_persons=1, use_mask=False, is_testing=False, skip_frame=0,
+                 batch_size=1, shuffle=True, pin_memory=False, num_workers=0, ):
         self.dataset_name = dataset_name
         self.keypoint_dim = keypoint_dim
         self.is_interactive = is_interactive
+        self.num_persons = num_persons
         self.use_mask = use_mask
         self.is_testing = is_testing
         self.skip_frame = skip_frame

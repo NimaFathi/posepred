@@ -5,7 +5,7 @@ from ast import literal_eval
 
 
 class InteractiveDataset(Dataset):
-    def __init__(self, dataset_path, keypoint_dim, is_testing, use_mask, skip_frame):
+    def __init__(self, dataset_path, keypoint_dim, num_persons, is_testing, use_mask, skip_frame):
         data = pd.read_csv(dataset_path)
         for col in list(data.columns[1:].values):
             try:
@@ -14,6 +14,7 @@ class InteractiveDataset(Dataset):
                 raise Exception("Each row must be convertable to python list")
 
         self.data = data.copy().reset_index(drop=True)
+        self.num_persons = num_persons
         self.is_testing = is_testing
         self.use_mask = use_mask
         self.skip_frame = skip_frame

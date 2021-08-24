@@ -10,7 +10,8 @@ def get_dataloader(args):
     data_folder = os.path.join(ROOT_DIR, 'preprocessed_data/')
     dataset_path = data_folder + args.dataset_name + '.csv'
     if args.is_interactive:
-        dataset = InteractiveDataset(dataset_path, args.keypoint_dim, args.is_testing, args.use_mask, args.skip_frame)
+        dataset = InteractiveDataset(dataset_path, args.keypoint_dim, args.num_persons, args.is_testing, args.use_mask,
+                                     args.skip_frame)
     else:
         dataset = NonInteractiveDataset(dataset_path, args.keypoint_dim, args.is_testing, args.use_mask,
                                         args.skip_frame)
