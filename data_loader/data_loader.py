@@ -1,7 +1,7 @@
 import os
 from torch.utils.data import DataLoader
 
-from consts import ROOT_DIR
+from path_definition import ROOT_DIR
 from data_loader.interactive_dataset import InteractiveDataset
 from data_loader.non_interactive_dataset import NonInteractiveDataset
 

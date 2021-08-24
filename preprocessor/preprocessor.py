@@ -1,6 +1,6 @@
 import os
 
-from consts import ROOT_DIR
+from path_definition import ROOT_DIR
 
 OUTPUT_DIR = os.path.join(ROOT_DIR, 'preprocessed_data/')
 

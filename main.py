@@ -1,7 +1,6 @@
 from args.training_args import TrainingArgs
 from args.helper import DataloaderArgs
 from data_loader.data_loader import get_dataloader
-import numpy as np
 
 if __name__ == '__main__':
 
