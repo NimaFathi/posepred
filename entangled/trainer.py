@@ -1,9 +1,10 @@
 import time
 import torch
-import torch.nn as nn
+
 from utils.save_load import save_snapshot
 from utils.metrics import accuracy, ADE, FDE
 from utils.others import pose_from_vel
+from utils.losses import L1, MSE, BCE
 
 
 class Trainer:
@@ -17,8 +18,8 @@ class Trainer:
         self.scheduler = scheduler
         self.train_reporter = train_reporter
         self.valid_reporter = valid_reporter
-        self.distance_loss = nn.L1Loss() if self.args.distance_loss == 'L1' else nn.MSELoss()
-        self.mask_loss = nn.BCELoss()
+        self.distance_loss = L1() if self.args.distance_loss == 'L1' else MSE()
+        self.mask_loss = BCE()
         self.device = torch.device('cuda')
 
     def train(self):

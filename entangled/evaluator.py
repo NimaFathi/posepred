@@ -3,7 +3,7 @@ import torch
 
 from utils.metrics import accuracy, ADE, FDE
 from utils.others import pose_from_vel
-from utils.loss import L1, MSE, BCE
+from utils.losses import L1, MSE, BCE
 
 
 class Evaluator:

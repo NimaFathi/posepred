@@ -10,24 +10,24 @@ def accuracy(pred, target):
 
 
 def ADE(pred, target, dim):
-    b, n, p = pred.size()[0], pred.size()[1], pred.size()[2]
-    pred = torch.reshape(pred, (b, n, int(p / dim), dim))
-    target = torch.reshape(target, (b, n, int(p / dim), dim))
+    keypoints_num = int(pred.shape[-1] / dim)
+    pred = torch.reshape(pred, pred.shape[:-1] + (keypoints_num, dim))
+    target = torch.reshape(target, pred.shape[:-1] + (keypoints_num, dim))
     displacement = 0
     for d in range(dim):
-        displacement += (pred[:, :, :, d] - target[:, :, :, d]) ** 2
-    ade = torch.mean(torch.mean(torch.sqrt(displacement), dim=1))
+        displacement += (pred[..., d] - target[..., d]) ** 2
+    ade = torch.mean(torch.sqrt(displacement))
     return ade
 
 
 def FDE(pred, target, dim):
-    b, n, p = pred.size()[0], pred.size()[1], pred.size()[2]
-    pred = torch.reshape(pred, (b, n, int(p / dim), dim))
-    target = torch.reshape(target, (b, n, int(p / dim), dim))
+    keypoints_num = int(pred.shape[-1] / dim)
+    pred = torch.reshape(pred, pred.shape[:-1] + (keypoints_num, dim))
+    target = torch.reshape(target, pred.shape[:-1] + (keypoints_num, dim))
     displacement = 0
     for d in range(dim):
-        displacement += (pred[:, -1, :, d] - target[:, -1, :, d]) ** 2
-    fde = torch.mean(torch.mean(torch.sqrt(displacement), dim=1))
+        displacement += (pred[..., -1, :, d] - target[..., -1, :, d]) ** 2
+    fde = torch.mean(torch.sqrt(displacement))
     return fde
 
 
