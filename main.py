@@ -5,21 +5,21 @@ import numpy as np
 
 if __name__ == '__main__':
 
-    args = TrainingArgs(train_dataset_name='train_PoseTrack',valid_dataset_name='train_PoseTrack',
+    args = TrainingArgs(train_dataset_name='train_PoseTrack', valid_dataset_name='train_PoseTrack',
                         model_name='lstm_vel', keypoint_dim=2, epochs=6, load_path=None, is_interactive=True,
                         num_persons=5, use_mask=True, batch_size=1, shuffle=False)
 
     train_dataloader_args = DataloaderArgs(args.train_dataset_name, args.keypoint_dim, args.is_interactive,
-                                           args.use_mask, args.is_testing, args.skip_frame, args.batch_size,
-                                           args.shuffle, args.pin_memory, args.num_workers)
+                                           args.num_persons, args.use_mask, args.is_testing, args.skip_frame,
+                                           args.batch_size, args.shuffle, args.pin_memory, args.num_workers)
 
     train_dataloader = get_dataloader(train_dataloader_args)
 
     persons = []
 
     for data in train_dataloader:
-        obs_pose = data[0]
-        persons.append(obs_pose.shape[1])
+        for i in data:
+            print(i.shape[1], end=', ')
 
     print(args.train_dataset_name)
     print('seq_num:', len(persons), '-->   mean:', np.mean(persons), ' std:', np.std(persons))
