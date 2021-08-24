@@ -27,6 +27,8 @@ class InteractiveDataset(Dataset):
         if not self.is_testing:
             self.future_frames_num = len(seq.future_pose[0])
 
+        self.persons_stats = []
+
     def __len__(self):
         return len(self.data)
 
@@ -61,6 +63,7 @@ class InteractiveDataset(Dataset):
 
     def select_persons(self, seq):
         persons_in_seq = list(range(len(seq['observed_pose'])))
+        self.persons_stats.append(len(persons_in_seq))
         if self.persons_num < len(persons_in_seq):
             return random.choice(persons_in_seq, self.persons_num, replace=False)
         else:
