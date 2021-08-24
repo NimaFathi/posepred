@@ -23,31 +23,35 @@ class Disentangle1(torch.nn.Module):
         outputs = []
         pose, vel = inputs[:2]
 
-        # (global_pose, global_vel)
-        global_inputs = [pose[..., : self.args.keypoint_dim], vel[..., : self.args.keypoint_dim]]
+        # global
+        global_pose = pose[..., : self.args.keypoint_dim]
+        global_vel = vel[..., : self.args.keypoint_dim]
+        global_inputs = [global_pose, global_vel]
 
-        # (local_pose, local_vel)
-        local_inputs = [pose[..., self.args.keypoint_dim:], vel[..., self.args.keypoint_dim:]]
+        # local
+        repeat = torch.ones(len(global_pose.shape), dtype=int)
+        repeat[-1] = self.local_model.args.keypoints_num
+        local_pose = pose[..., self.args.keypoint_dim:] - global_pose.repeat(tuple(repeat))
+        local_vel = vel[..., self.args.keypoint_dim:] + global_vel.repeat(tuple(repeat))
+        local_inputs = [local_pose, local_vel]
 
         if self.args.use_mask:
             mask = inputs[2]
             global_inputs.append(mask[..., :1])
             local_inputs.append(pose[..., 1:])
 
+        # predict
         global_outputs = self.global_model(global_inputs)
         local_outputs = self.local_model(local_inputs)
 
-        # merge local and global outputs
-        global_vel = global_outputs[0]
-        local_vel = local_outputs[0]
-        repeat = torch.ones(len(global_vel.shape), dtype=int)
+        # merge local and global velocity
+        global_vel_out = global_outputs[0]
+        local_vel_out = local_outputs[0]
+        repeat = torch.ones(len(global_vel_out.shape), dtype=int)
         repeat[-1] = self.local_model.args.keypoints_num
-        outputs.append(torch.cat((global_vel, local_vel + global_vel.repeat(tuple(repeat))), dim=-1))
+        outputs.append(torch.cat((global_vel_out, local_vel_out + global_vel_out.repeat(tuple(repeat))), dim=-1))
+
+        if self.args.use_mask:
+            outputs.append(torch.cat((global_outputs[-1], local_outputs[-1]), dim=-1))
 
         return tuple(outputs)
-
-
-
-
-
-
