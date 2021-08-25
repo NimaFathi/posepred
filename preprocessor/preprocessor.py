@@ -17,4 +17,8 @@ class Processor:
         self.custom_name = custom_name
 
     def normal(self, data_type='train'):
+        """
+        :param data_type: specify what kind of static file you want to creat (options are: <train>, <test>, <validation>
+        :return: None: create static <.csv> file
+        """
         pass

@@ -37,20 +37,24 @@ class SoMoFPoseTrackPreprocessor(Processor):
                 output_name = f'{file_type}_{data_type}_16_14_1_SoMoF_PoseTrack.csv'
         data = []
         if data_type == 'test':
-            header = ['video_section', 'observed_pose', 'observed_mask', 'obs_frames']
+            header = ['video_section', 'observed_pose', 'observed_mask', 'obs_frames_related_path']
         else:
-            header = ['video_section', 'observed_pose', 'future_pose', 'observed_mask', 'future_mask', 'obs_frames']
+            header = [
+                'video_section', 'observed_pose', 'future_pose',
+                'observed_mask', 'future_mask', 'obs_frames_related_path'
+            ]
         with open(os.path.join(self.output_dir, output_name), 'w') as f_object:
             writer = csv.writer(f_object)
             writer.writerow(header)
         if data_type == 'test':
             if self.is_interactive:
                 for vid_id in range(len(processed_data['obs_pose'])):
-                    data.append(['%d-%d' % (vid_id, 0),
-                                 processed_data['obs_pose'][vid_id],
-                                 processed_data['obs_mask'][vid_id],
-                                 processed_data['obs_frames_path'][vid_id].tolist()
-                                 ])
+                    data.append([
+                            '%d-%d' % (vid_id, 0),
+                            processed_data['obs_pose'][vid_id],
+                            processed_data['obs_mask'][vid_id],
+                            processed_data['obs_frames_path'][vid_id].tolist()
+                        ])
             else:
                 for vid_id in range(len(processed_data['obs_pose'])):
                     for p_id in range(len(processed_data['future_pose'][vid_id])):

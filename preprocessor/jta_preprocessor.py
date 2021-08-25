@@ -70,8 +70,10 @@ class JTAPreprocessor(Processor):
 
     def normal(self, data_type='train'):
         print('start creating JTA normal static data ... ')
-        header = ['video_section', 'observed_pose', 'future_pose', 'observed_mask', 'future_mask',
-                  'obs_frames_related_path', 'future_frames_related_path']
+        header = [
+            'video_section', 'observed_pose', 'future_pose', 'observed_mask', 'future_mask',
+            'obs_frames_related_path', 'future_frames_related_path'
+        ]
         if self.custom_name:
             output_file_name = f'{data_type}_{self.obs_frame_num}_{self.pred_frame_num}_{self.skip_frame_num}_{self.custom_name}.csv'
         else:
@@ -119,6 +121,7 @@ class JTAPreprocessor(Processor):
                             for masking_state in range(8, 10):
                                 masked += pose[masking_state]
                             frame_data['mask'][pose[1]].append(1 if masked > 0 else 0)
+
                         for p_id in frame_data['pose'].keys():
                             if j <= self.obs_frame_num * self.skip_frame_num:
                                 video_data['obs_pose'][p_id].append(frame_data['pose'][p_id])
@@ -127,10 +130,9 @@ class JTAPreprocessor(Processor):
                                 video_data['future_pose'][p_id].append(frame_data['pose'][p_id])
                                 video_data['future_mask'][p_id].append(frame_data['mask'][p_id])
                     for p_id in video_data['obs_pose']:
-                        if p_id in video_data['future_pose'].keys() and video_data['obs_pose'][
-                            p_id].__len__() == self.obs_frame_num and \
-                                video_data['future_pose'][
-                                    p_id].__len__() == self.pred_frame_num:
+                        if p_id in video_data['future_pose'].keys() \
+                                and video_data['obs_pose'][p_id].__len__() == self.obs_frame_num \
+                                and video_data['future_pose'][p_id].__len__() == self.pred_frame_num:
                             obs.append(video_data['obs_pose'][p_id])
                             obs_mask.append(video_data['obs_mask'][p_id])
                             future.append(video_data['future_pose'][p_id])
@@ -138,11 +140,15 @@ class JTAPreprocessor(Processor):
                     obs_frames, future_frames = self.__generate_image_path(i, entry.name, matrix, total_frame_num)
                     if not self.is_interactive:
                         for p_id in range(len(obs)):
-                            data.append(['%s-%d' % (video_number, i), obs[p_id], future[p_id], obs_mask[p_id],
-                                         future_mask[p_id], obs_frames[p_id], future_frames[p_id]])
+                            data.append([
+                                    '%s-%d' % (video_number, i), obs[p_id], future[p_id], obs_mask[p_id],
+                                    future_mask[p_id], obs_frames[p_id], future_frames[p_id]
+                                ])
                     else:
-                        data.append(['%s-%d' % (video_number, i), obs, future, obs_mask, future_mask,
-                                     obs_frames[0], future_frames[0]])
+                        data.append([
+                                '%s-%d' % (video_number, i), obs, future, obs_mask, future_mask,
+                                obs_frames[0], future_frames[0]
+                            ])
                 with open(os.path.join(self.output_dir, output_file_name), 'a') as f_object:
                     writer = csv.writer(f_object)
                     writer.writerows(data)
