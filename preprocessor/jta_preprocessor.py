@@ -36,7 +36,7 @@ class JTAPreprocessor(Processor):
             os.makedirs(self.output_dir)
 
     def __generate_image_path(self, frame_num, file_name, input_matrix, total_frame_num):
-        image_relative_path = '/JTA_EXT/' + re.search("(seq_\d+).json", file_name).group(1)
+        image_relative_path = re.search("(seq_\d+).json", file_name).group(1)
         video_data = {
             'obs_frames': defaultdict(list),
             'future_frames': defaultdict(list)
