@@ -2,9 +2,11 @@ from args.training_args import TrainingArgs
 from args.helper import DataloaderArgs
 from data_loader.data_loader import get_dataloader
 
+import numpy as np
+
 if __name__ == '__main__':
 
-    args = TrainingArgs(train_dataset_name='sample_interactive', valid_dataset_name='train_PoseTrack',
+    args = TrainingArgs(train_dataset_name='JTA_interactive/2D/train_16_14_2_JTA', valid_dataset_name='train_PoseTrack',
                         model_name='lstm_vel', keypoint_dim=2, epochs=6, load_path=None, is_interactive=True,
                         persons_num=5, use_mask=False, batch_size=3, shuffle=False)
 
@@ -15,10 +17,8 @@ if __name__ == '__main__':
     train_dataloader = get_dataloader(train_dataloader_args)
 
     for data in train_dataloader:
-        obs_pose, future_vel, = data[0], data[-1]
-        print(obs_pose.shape, future_vel.shape)
+        pass
 
-    # persons = []
-    # persons.append(obs_pose.shape[1])
-    # print(args.train_dataset_name)
-    # print('seq_num:', len(persons), '-->   mean:', np.mean(persons), ' std:', np.std(persons))
+    persons = train_dataloader.dataset.persons_stats
+    print(args.train_dataset_name)
+    print('mean:', np.mean(persons), ' std:', np.std(persons))
