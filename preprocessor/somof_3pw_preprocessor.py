@@ -36,9 +36,9 @@ class SoMoF3DPWPreprocessor(Processor):
                 output_name = f'{file_type}_{data_type}_16_14_1_SoMoF_3dpw.csv'
         data = []
         if data_type == 'test':
-            header = ['video_section', 'observed_pose', 'obs_frames_related_path']
+            header = ['video_section', 'observed_pose', 'observed_frames_related_path']
         else:
-            header = ['video_section', 'observed_pose', 'future_pose', 'obs_frames_related_path']
+            header = ['video_section', 'observed_pose', 'future_pose', 'observed_frames_related_path']
         with open(os.path.join(self.output_dir, output_name), 'w') as f_object:
             writer = csv.writer(f_object)
             writer.writerow(header)

@@ -72,7 +72,7 @@ class JTAPreprocessor(Processor):
         print('start creating JTA normal static data ... ')
         header = [
             'video_section', 'observed_pose', 'future_pose', 'observed_mask', 'future_mask',
-            'obs_frames_related_path', 'future_frames_related_path'
+            'observed_frames_related_path', 'future_frames_related_path'
         ]
         if self.custom_name:
             output_file_name = f'{data_type}_{self.obs_frame_num}_{self.pred_frame_num}_{self.skip_frame_num}_{self.custom_name}.csv'

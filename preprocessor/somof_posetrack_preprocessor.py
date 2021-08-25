@@ -37,11 +37,11 @@ class SoMoFPoseTrackPreprocessor(Processor):
                 output_name = f'{file_type}_{data_type}_16_14_1_SoMoF_PoseTrack.csv'
         data = []
         if data_type == 'test':
-            header = ['video_section', 'observed_pose', 'observed_mask', 'obs_frames_related_path']
+            header = ['video_section', 'observed_pose', 'observed_mask', 'observed_frames_related_path']
         else:
             header = [
                 'video_section', 'observed_pose', 'future_pose',
-                'observed_mask', 'future_mask', 'obs_frames_related_path'
+                'observed_mask', 'future_mask', 'observed_frames_related_path'
             ]
         with open(os.path.join(self.output_dir, output_name), 'w') as f_object:
             writer = csv.writer(f_object)

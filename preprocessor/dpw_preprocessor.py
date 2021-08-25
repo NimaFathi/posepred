@@ -22,7 +22,8 @@ class Preprocessor3DPW(Processor):
     def normal(self, data_type='train'):
         print('start creating 3DPW normal static data ... ')
         header = [
-            'video_section', 'observed_pose', 'future_pose', 'obs_frames_related_path', 'future_frames_related_path'
+            'video_section', 'observed_pose', 'future_pose',
+            'observed_frames_related_path', 'future_frames_related_path'
         ]
         total_frame_num = self.obs_frame_num + self.pred_frame_num
 
