@@ -19,6 +19,8 @@ class Preprocessor3DPW(Processor):
             os.makedirs(self.output_dir)
 
     def normal(self, data_type='train'):
+        print('start creating 3DPW normal static data ... ')
+
         header = ['video_section', 'observed_pose', 'future_pose', 'obs_frames', 'future_frames']
         total_frame_num = self.obs_frame_num + self.pred_frame_num
         if self.custom_name:
@@ -75,6 +77,3 @@ class Preprocessor3DPW(Processor):
             with open(os.path.join(self.output_dir, output_file_name), 'a') as f_object:
                 writer = csv.writer(f_object)
                 writer.writerows(data)
-
-    def disentangle(self, data_type='train'):
-        pass
