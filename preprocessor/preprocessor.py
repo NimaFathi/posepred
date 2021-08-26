@@ -35,8 +35,9 @@ class Processor:
         """
         np_data = np.array(new_data)
         meta_data['avg_person'].append(np_data.shape[0])
-        meta_data['var_pose'].append([np.var(np_data[:, :, i::dim]) for i in range(dim)])
-        meta_data['mean_pose'].append([np.mean(np_data[:, :, i::dim]) for i in range(dim)])
+        meta_data['count'] += np_data.size // dim
+        meta_data['sum2_pose'] += np.array([np.sum(np.square(np_data[:, :, i::dim])) for i in range(dim)])
+        meta_data['sum_pose'] += np.array([np.sum(np_data[:, :, i::dim]) for i in range(dim)])
 
     @staticmethod
     def save_meta_data(meta_data, outputdir, is_3d):
