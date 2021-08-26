@@ -22,6 +22,7 @@ class SoMoF3DPWPreprocessor(Processor):
         print('start creating SoMoF-3DPW normal static data ... ')
         preprocessed_data = self.__clean_data(data_type)
         self.__save_csv(data_type, preprocessed_data)
+        self.save_meta_data(self.meta_data, self.output_dir, 3)
 
     def __save_csv(self, data_type, processed_data, file_type=None):
         if self.custom_name:
@@ -45,6 +46,7 @@ class SoMoF3DPWPreprocessor(Processor):
         if data_type == 'test':
             if self.is_interactive:
                 for vid_id in range(len(processed_data['obs_pose'])):
+                    self.update_meta_data(self.meta_data, processed_data['obs_pose'][vid_id], 2)
                     data.append(['%d-%d' % (vid_id, 0),
                                  processed_data['obs_pose'][vid_id].tolist(),
                                  processed_data['obs_frames_path'][vid_id].tolist()
@@ -60,6 +62,7 @@ class SoMoF3DPWPreprocessor(Processor):
         else:
             if self.is_interactive:
                 for vid_id in range(processed_data['obs_pose'].__len__()):
+                    self.update_meta_data(self.meta_data, processed_data['obs_pose'][vid_id], 3)
                     data.append([
                         '%d-%d' % (vid_id, 0), processed_data['obs_pose'][vid_id].tolist(),
                         processed_data['future_pose'][vid_id].tolist(),

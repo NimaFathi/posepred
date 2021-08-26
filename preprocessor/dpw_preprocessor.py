@@ -68,6 +68,7 @@ class Preprocessor3DPW(Processor):
                             video_data['future_frames'][p_id].append(
                                 f'{video_name}/image_{frame_ids_data[i * total_frame_num * self.skip_frame_num + j - 1]:05}.jpg'
                             )
+                self.update_meta_data(self.meta_data, list(video_data['obs_pose'].values()), 3)
                 if not self.is_interactive:
                     for p_id in range(len(pose_data)):
                         data.append([
@@ -84,3 +85,4 @@ class Preprocessor3DPW(Processor):
             with open(os.path.join(self.output_dir, output_file_name), 'a') as f_object:
                 writer = csv.writer(f_object)
                 writer.writerows(data)
+        self.save_meta_data(self.meta_data, self.output_dir, 3)

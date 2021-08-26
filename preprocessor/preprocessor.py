@@ -1,7 +1,7 @@
 import os
-
+import numpy as np
+from collections import defaultdict
 from path_definition import ROOT_DIR
-
 OUTPUT_DIR = os.path.join(ROOT_DIR, 'preprocessed_data/')
 
 
@@ -15,6 +15,8 @@ class Processor:
         self.use_video_once = use_video_once
         self.dataset_path = dataset_path
         self.custom_name = custom_name
+        self.meta_data = defaultdict(list)
+
 
     def normal(self, data_type='train'):
         """
@@ -22,3 +24,24 @@ class Processor:
         :return: None: create static <.csv> file
         """
         pass
+
+    @staticmethod
+    def update_meta_data(meta_data, new_data, dim):
+        np_data = np.array(new_data)
+        meta_data['avg_person'].append(np_data.shape[0])
+        meta_data['var_pose'].append([np.var(np_data[:, :, i::dim]) for i in range(dim)])
+        meta_data['mean_pose'].append([np.mean(np_data[:, :, i::dim]) for i in range(dim)])
+
+    @staticmethod
+    def save_meta_data(meta_data, outputdir, dim):
+        output_file_path = os.path.join(outputdir, f'3D_meta.txt' if dim == 3 else f'2D_meta.txt')
+        meta = {}
+        meta_pose = np.array(meta_data['mean_pose'])
+        meta_var_pose = np.array(meta_data['var_pose'])
+        meta['avg_person'] = np.mean(np.array(meta_data['avg_person']))
+        meta['std_person'] = np.std(np.array(meta_data['avg_person']))
+        meta['avg_pose'] = [np.mean(meta_pose[:, i::dim]) for i in range(dim)]
+        meta['std_pose'] = [np.sqrt(np.sum(meta_var_pose[:, i::dim])) for i in range(dim)]
+        with open(output_file_path, 'w') as f_object:
+            for key, value in meta.items():
+                f_object.write(f'{key}: {value}\n')
