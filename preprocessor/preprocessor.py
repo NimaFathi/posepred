@@ -3,6 +3,7 @@ import json
 import numpy as np
 from args.helper import NumpyEncoder
 from path_definition import ROOT_DIR
+
 OUTPUT_DIR = os.path.join(ROOT_DIR, 'preprocessed_data/')
 
 
@@ -17,8 +18,6 @@ class Processor:
         self.dataset_path = dataset_path
         self.custom_name = custom_name
 
-
-
     def normal(self, data_type='train'):
         """
         :param data_type: specify what kind of static file you want to creat (options are: <train>, <test>, <validation>
@@ -28,6 +27,12 @@ class Processor:
 
     @staticmethod
     def update_meta_data(meta_data, new_data, dim):
+        """
+        :param meta_data: pass existing meta_data
+        :param new_data: pass new data
+        :param dim: pass dimension of joint i.e. 2 for 2D or 3 for 3D
+        :return None: update meta_data
+        """
         np_data = np.array(new_data)
         meta_data['avg_person'].append(np_data.shape[0])
         meta_data['var_pose'].append([np.var(np_data[:, :, i::dim]) for i in range(dim)])
@@ -35,13 +40,19 @@ class Processor:
 
     @staticmethod
     def save_meta_data(meta_data, outputdir, is_3d):
+        """
+        :param meta_data: pass existing and also final meta data
+        :param outputdir: pass output directory in which you want to save meta data
+        :param is_3d: pass if your data is in 3D format or not (3D or 2D)
+        :return None: save meta data as json format
+        """
         output_file_path = os.path.join(outputdir, f'3D_meta.txt' if is_3d else f'2D_meta.txt')
         meta = {
             'avg_person': np.mean(np.array(meta_data['avg_person'])),
             'std_person': np.std(np.array(meta_data['avg_person'])),
             'avg_pose': meta_data['sum_pose'] / meta_data['count'],
-            'std_pose': np.sqrt(((meta_data['sum2_pose'] - (meta_data['sum_pose'] / meta_data['count'])) / meta_data['count']))
+            'std_pose': np.sqrt(
+                ((meta_data['sum2_pose'] - (meta_data['sum_pose'] / meta_data['count'])) / meta_data['count']))
         }
         with open(output_file_path, 'w') as f_object:
             json.dump(meta, f_object, cls=NumpyEncoder, indent=4)
-
