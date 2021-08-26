@@ -53,7 +53,8 @@ class Processor:
             'std_person': np.std(np.array(meta_data['avg_person'])),
             'avg_pose': meta_data['sum_pose'] / meta_data['count'],
             'std_pose': np.sqrt(
-                ((meta_data['sum2_pose'] - (meta_data['sum_pose'] / meta_data['count'])) / meta_data['count']))
+                ((meta_data['sum2_pose'] - (np.square(meta_data['sum_pose']) / meta_data['count'])) /
+                 meta_data['count']))
         }
         with open(output_file_path, 'w') as f_object:
             json.dump(meta, f_object, cls=NumpyEncoder, indent=4)
