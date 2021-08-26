@@ -133,22 +133,23 @@ class PoseTrackPreprocessor(Processor):
                             future_pose.append(video_dict['future_pose'][p_id])
                             future_mask.append(video_dict['future_mask'][p_id])
                     obs_frames, future_frames = self.__generate_image_path(json_data, frame_ids, total_frame_num)
-                    self.update_meta_data(self.meta_data, obs_pose, 2)
-                    if not self.is_interactive:
-                        for p_id in range(len(obs_pose)):
+                    if len(obs_pose) > 0:
+                        self.update_meta_data(self.meta_data, obs_pose, 2)
+                        if not self.is_interactive:
+                            for p_id in range(len(obs_pose)):
+                                data.append(
+                                    [
+                                        '%s-%d' % (video_id, i), obs_pose[p_id], future_pose[p_id], obs_mask[p_id],
+                                        future_mask[p_id], obs_frames[p_id], future_frames[p_id]
+                                    ]
+                                )
+                        else:
                             data.append(
                                 [
-                                    '%s-%d' % (video_id, i), obs_pose[p_id], future_pose[p_id], obs_mask[p_id],
-                                    future_mask[p_id], obs_frames[p_id], future_frames[p_id]
+                                    '%s-%d' % (video_id, i), obs_pose, future_pose, obs_mask, future_mask,
+                                    obs_frames[0], future_frames[0]
                                 ]
                             )
-                    else:
-                        data.append(
-                            [
-                                '%s-%d' % (video_id, i), obs_pose, future_pose, obs_mask, future_mask,
-                                obs_frames[0], future_frames[0]
-                            ]
-                        )
                 with open(os.path.join(self.output_dir, output_file_name), 'a') as f_object:
                     writer = csv.writer(f_object)
                     writer.writerows(data)
