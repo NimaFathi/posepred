@@ -1,6 +1,7 @@
 import csv
 import json
 import os
+import numpy as np
 from collections import defaultdict
 
 from preprocessor.preprocessor import Processor, OUTPUT_DIR
@@ -18,6 +19,12 @@ class PoseTrackPreprocessor(Processor):
             OUTPUT_DIR, 'PoseTrack')
         if not os.path.exists(self.output_dir):
             os.makedirs(self.output_dir)
+        self.meta_data = {
+            'avg_person': [],
+            'count': 0,
+            'sum2_pose': np.zeros(2),
+            'sum_pose': np.zeros(2)
+        }
 
     def __generate_image_path(self, json_data, frame_ids, total_frame_num):
         video_dict = {
@@ -145,3 +152,4 @@ class PoseTrackPreprocessor(Processor):
                 with open(os.path.join(self.output_dir, output_file_name), 'a') as f_object:
                     writer = csv.writer(f_object)
                     writer.writerows(data)
+        self.save_meta_data(self.meta_data, self.output_dir, 2)

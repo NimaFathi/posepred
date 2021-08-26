@@ -34,6 +34,12 @@ class JTAPreprocessor(Processor):
                 self.output_dir = os.path.join(OUTPUT_DIR, 'JTA', '2D')
         if not os.path.exists(self.output_dir):
             os.makedirs(self.output_dir)
+        self.meta_data = {
+            'avg_person': [],
+            'count': 0,
+            'sum2_pose': np.zeros(3) if self.is_3d else np.zeros(2),
+            'sum_pose': np.zeros(3) if self.is_3d else np.zeros(2)
+        }
 
     def __generate_image_path(self, frame_num, file_name, input_matrix, total_frame_num):
         image_relative_path = re.search("(seq_\d+).json", file_name).group(1)
@@ -153,4 +159,4 @@ class JTAPreprocessor(Processor):
                 with open(os.path.join(self.output_dir, output_file_name), 'a') as f_object:
                     writer = csv.writer(f_object)
                     writer.writerows(data)
-        self.save_meta_data(self.meta_data, self.output_dir, 3 if self.is_3d else 2)
+        self.save_meta_data(self.meta_data, self.output_dir, self.is_3d)

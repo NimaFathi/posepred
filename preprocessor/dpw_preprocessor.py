@@ -18,6 +18,12 @@ class Preprocessor3DPW(Processor):
             OUTPUT_DIR, '3DPW')
         if not os.path.exists(self.output_dir):
             os.makedirs(self.output_dir)
+        self.meta_data = {
+            'avg_person': [],
+            'count': 0,
+            'sum2_pose': np.zeros(3),
+            'sum_pose': np.zeros(3)
+        }
 
     def normal(self, data_type='train'):
         print('start creating 3DPW normal static data ... ')
@@ -85,4 +91,4 @@ class Preprocessor3DPW(Processor):
             with open(os.path.join(self.output_dir, output_file_name), 'a') as f_object:
                 writer = csv.writer(f_object)
                 writer.writerows(data)
-        self.save_meta_data(self.meta_data, self.output_dir, 3)
+        self.save_meta_data(self.meta_data, self.output_dir, True)

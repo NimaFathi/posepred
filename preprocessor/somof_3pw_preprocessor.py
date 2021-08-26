@@ -17,12 +17,18 @@ class SoMoF3DPWPreprocessor(Processor):
             OUTPUT_DIR, 'SoMoF_3DPW')
         if not os.path.exists(self.output_dir):
             os.makedirs(self.output_dir)
+        self.meta_data = {
+            'avg_person': [],
+            'count': 0,
+            'sum2_pose': np.zeros(3),
+            'sum_pose': np.zeros(3)
+        }
 
     def normal(self, data_type='train'):
         print('start creating SoMoF-3DPW normal static data ... ')
         preprocessed_data = self.__clean_data(data_type)
         self.__save_csv(data_type, preprocessed_data)
-        self.save_meta_data(self.meta_data, self.output_dir, 3)
+        self.save_meta_data(self.meta_data, self.output_dir, True)
 
     def __save_csv(self, data_type, processed_data, file_type=None):
         if self.custom_name:

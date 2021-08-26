@@ -18,12 +18,18 @@ class SoMoFPoseTrackPreprocessor(Processor):
             OUTPUT_DIR, 'SoMoF_PoseTrack')
         if not os.path.exists(self.output_dir):
             os.makedirs(self.output_dir)
+        self.meta_data = {
+            'avg_person': [],
+            'count': 0,
+            'sum2_pose': np.zeros(2),
+            'sum_pose': np.zeros(2)
+        }
 
     def normal(self, data_type='train'):
         print('start creating SoMoF-PoseTrack normal static data ... ')
         preprocessed_data = self.__clean_data(data_type)
         self.__save_csv(data_type, preprocessed_data)
-        self.save_meta_data(self.meta_data, self.output_dir, 2)
+        self.save_meta_data(self.meta_data, self.output_dir, False)
 
     def __save_csv(self, data_type, processed_data, file_type=None):
         if self.custom_name:

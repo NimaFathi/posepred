@@ -15,7 +15,7 @@ class Processor:
         self.use_video_once = use_video_once
         self.dataset_path = dataset_path
         self.custom_name = custom_name
-        self.meta_data = defaultdict(list)
+
 
 
     def normal(self, data_type='train'):
@@ -33,15 +33,14 @@ class Processor:
         meta_data['mean_pose'].append([np.mean(np_data[:, :, i::dim]) for i in range(dim)])
 
     @staticmethod
-    def save_meta_data(meta_data, outputdir, dim):
-        output_file_path = os.path.join(outputdir, f'3D_meta.txt' if dim == 3 else f'2D_meta.txt')
-        meta = {}
-        meta_pose = np.array(meta_data['mean_pose'])
-        meta_var_pose = np.array(meta_data['var_pose'])
-        meta['avg_person'] = np.mean(np.array(meta_data['avg_person']))
-        meta['std_person'] = np.std(np.array(meta_data['avg_person']))
-        meta['avg_pose'] = [np.mean(meta_pose[:, i::dim]) for i in range(dim)]
-        meta['std_pose'] = [np.sqrt(np.sum(meta_var_pose[:, i::dim])) for i in range(dim)]
+    def save_meta_data(meta_data, outputdir, is_3d):
+        output_file_path = os.path.join(outputdir, f'3D_meta.txt' if is_3d else f'2D_meta.txt')
+        meta = {
+            'avg_person': np.mean(np.array(meta_data['avg_person'])),
+            'std_person': np.std(np.array(meta_data['avg_person'])),
+            'avg_pose': meta_data['sum_pose'] / meta_data['count'],
+            'std_pose': np.sqrt(((meta_data['sum2_pose'] - (meta_data['sum_pose'] / meta_data['count'])) / meta_data['count']))
+        }
         with open(output_file_path, 'w') as f_object:
             for key, value in meta.items():
                 f_object.write(f'{key}: {value}\n')
