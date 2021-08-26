@@ -1,17 +1,17 @@
 import argparse
 
+from preprocessor.dpw_preprocessor import Preprocessor3DPW
 from preprocessor.jta_preprocessor import JTAPreprocessor
 from preprocessor.posetrack_preprocessor import PoseTrackPreprocessor
-from preprocessor.somof_posetrack_preprocessor import SoMoFPoseTrackPreprocessor
 from preprocessor.somof_3pw_preprocessor import SoMoF3DPWPreprocessor
-from preprocessor.dpw_preprocessor import Preprocessor3DPW
+from preprocessor.somof_posetrack_preprocessor import SoMoFPoseTrackPreprocessor
 
 
 def parse_option():
     parser = argparse.ArgumentParser('argument for predictions')
     parser.add_argument(
         '--dataset', type=str,
-        choices=['somof_posetrack', 'posetrack', 'somof_3dpw','3dpw', 'jta'],
+        choices=['somof_posetrack', 'posetrack', 'somof_3dpw', '3dpw', 'jta'],
         default='posetrack'
     )
     parser.add_argument('--dataset_path', type=str, default='./raw_data', help='path of dataset')
