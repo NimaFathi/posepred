@@ -34,6 +34,7 @@ class Processor:
         :return None: update meta_data
         """
         np_data = np.array(new_data)
+        print(np_data.shape)
         meta_data['avg_person'].append(np_data.shape[0])
         meta_data['count'] += np_data.size // dim
         meta_data['sum2_pose'] += np.array([np.sum(np.square(np_data[:, :, i::dim])) for i in range(dim)])

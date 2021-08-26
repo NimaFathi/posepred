@@ -152,4 +152,4 @@ class PoseTrackPreprocessor(Processor):
                 with open(os.path.join(self.output_dir, output_file_name), 'a') as f_object:
                     writer = csv.writer(f_object)
                     writer.writerows(data)
-        self.save_meta_data(self.meta_data, self.output_dir, 2)
+        self.save_meta_data(self.meta_data, self.output_dir, False)
