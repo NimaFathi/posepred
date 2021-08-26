@@ -15,6 +15,7 @@ def parse_option():
         default='posetrack'
     )
     parser.add_argument('--dataset_path', type=str, default='./raw_data', help='path of dataset')
+    parser.add_argument('--mask', default=False, action='store_true')
     parser.add_argument('--data_type', type=str, default='train', choices=['train', 'validation', 'test'])
     parser.add_argument('--custom_name', type=str)
     parser.add_argument('--is_interactive', default=False, action='store_true')
@@ -35,8 +36,8 @@ if __name__ == '__main__':
     if opt.dataset == 'posetrack':
         preprocessor = PoseTrackPreprocessor(
             mask=opt.mask, dataset_path=opt.dataset_path,
-            obs_frame_num=opt.obs_frame_num, custom_name=opt.custom_name, is_interactive=opt.is_interactive,
-            pred_frame_num=opt.pred_frame_num, skip_frame_num=opt.skip_frame_num, use_video_once=opt.use_video_once)
+            obs_frame_num=16, custom_name=opt.custom_name, is_interactive=opt.is_interactive,
+            pred_frame_num=14, skip_frame_num=1, use_video_once=True)
     elif opt.dataset == 'jta':
         preprocessor = JTAPreprocessor(
             is_3d=opt.is_3d, dataset_path=opt.dataset_path,
