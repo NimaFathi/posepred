@@ -145,7 +145,8 @@ class JTAPreprocessor(Processor):
                             future_mask.append(video_data['future_mask'][p_id])
                     obs_frames, future_frames = self.__generate_image_path(i, entry.name, matrix, total_frame_num)
                     if len(obs) > 0:
-                        self.update_meta_data(self.meta_data, obs, 3 if self.is_3d else 2)
+                        if data_type == 'train':
+                            self.update_meta_data(self.meta_data, obs, 3 if self.is_3d else 2)
                         if not self.is_interactive:
                             for p_id in range(len(obs)):
                                 data.append([
@@ -160,4 +161,4 @@ class JTAPreprocessor(Processor):
                 with open(os.path.join(self.output_dir, output_file_name), 'a') as f_object:
                     writer = csv.writer(f_object)
                     writer.writerows(data)
-        self.save_meta_data(self.meta_data, self.output_dir, self.is_3d)
+        self.save_meta_data(self.meta_data, self.output_dir, self.is_3d, data_type)

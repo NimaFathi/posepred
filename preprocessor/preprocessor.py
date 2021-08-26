@@ -40,13 +40,15 @@ class Processor:
         meta_data['sum_pose'] += np.array([np.sum(np_data[:, :, i::dim]) for i in range(dim)])
 
     @staticmethod
-    def save_meta_data(meta_data, outputdir, is_3d):
+    def save_meta_data(meta_data, outputdir, is_3d, data_type):
         """
         :param meta_data: pass existing and also final meta data
         :param outputdir: pass output directory in which you want to save meta data
         :param is_3d: pass if your data is in 3D format or not (3D or 2D)
         :return None: save meta data as json format
         """
+        if data_type != 'train':
+            return
         output_file_path = os.path.join(outputdir, f'3D_meta.json' if is_3d else f'2D_meta.json')
         meta = {
             'avg_person': np.mean(np.array(meta_data['avg_person'])),

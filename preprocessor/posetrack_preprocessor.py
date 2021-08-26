@@ -134,7 +134,8 @@ class PoseTrackPreprocessor(Processor):
                             future_mask.append(video_dict['future_mask'][p_id])
                     obs_frames, future_frames = self.__generate_image_path(json_data, frame_ids, total_frame_num)
                     if len(obs_pose) > 0:
-                        self.update_meta_data(self.meta_data, obs_pose, 2)
+                        if data_type == 'train':
+                            self.update_meta_data(self.meta_data, obs_pose, 2)
                         if not self.is_interactive:
                             for p_id in range(len(obs_pose)):
                                 data.append(
@@ -153,4 +154,4 @@ class PoseTrackPreprocessor(Processor):
                 with open(os.path.join(self.output_dir, output_file_name), 'a') as f_object:
                     writer = csv.writer(f_object)
                     writer.writerows(data)
-        self.save_meta_data(self.meta_data, self.output_dir, False)
+        self.save_meta_data(self.meta_data, self.output_dir, False, data_type)

@@ -29,7 +29,7 @@ class SoMoFPoseTrackPreprocessor(Processor):
         print('start creating SoMoF-PoseTrack normal static data ... ')
         preprocessed_data = self.__clean_data(data_type)
         self.__save_csv(data_type, preprocessed_data)
-        self.save_meta_data(self.meta_data, self.output_dir, False)
+        self.save_meta_data(self.meta_data, self.output_dir, False, data_type)
 
     def __save_csv(self, data_type, processed_data, file_type=None):
         if self.custom_name:
@@ -56,7 +56,6 @@ class SoMoFPoseTrackPreprocessor(Processor):
         if data_type == 'test':
             if self.is_interactive:
                 for vid_id in range(len(processed_data['obs_pose'])):
-                    self.update_meta_data(self.meta_data, processed_data['obs_pose'][vid_id], 2)
                     data.append([
                             '%d-%d' % (vid_id, 0),
                             processed_data['obs_pose'][vid_id],
