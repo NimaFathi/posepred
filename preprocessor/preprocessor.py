@@ -1,6 +1,7 @@
 import os
+import json
 import numpy as np
-from collections import defaultdict
+from args.helper import NumpyEncoder
 from path_definition import ROOT_DIR
 OUTPUT_DIR = os.path.join(ROOT_DIR, 'preprocessed_data/')
 
@@ -42,5 +43,5 @@ class Processor:
             'std_pose': np.sqrt(((meta_data['sum2_pose'] - (meta_data['sum_pose'] / meta_data['count'])) / meta_data['count']))
         }
         with open(output_file_path, 'w') as f_object:
-            for key, value in meta.items():
-                f_object.write(f'{key}: {value}\n')
+            json.dump(meta, f_object, cls=NumpyEncoder, indent=4)
+

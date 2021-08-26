@@ -1,4 +1,5 @@
 from json import JSONEncoder
+import numpy as np
 
 
 class TrainerArgs:
@@ -17,7 +18,8 @@ class TrainerArgs:
 
 
 class DataloaderArgs:
-    def __init__(self, dataset_name, keypoint_dim, is_interactive=False, persons_num=1, use_mask=False, is_testing=False, skip_frame=0,
+    def __init__(self, dataset_name, keypoint_dim, is_interactive=False, persons_num=1, use_mask=False,
+                 is_testing=False, skip_frame=0,
                  batch_size=1, shuffle=True, pin_memory=False, num_workers=0, ):
         self.dataset_name = dataset_name
         self.keypoint_dim = keypoint_dim
@@ -51,3 +53,10 @@ class ModelArgs:
 class JSONEncoder_(JSONEncoder):
     def default(self, o):
         return o.__dict__
+
+
+class NumpyEncoder(JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        return JSONEncoder.default(self, obj)
