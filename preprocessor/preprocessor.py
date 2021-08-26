@@ -47,7 +47,7 @@ class Processor:
         :param is_3d: pass if your data is in 3D format or not (3D or 2D)
         :return None: save meta data as json format
         """
-        output_file_path = os.path.join(outputdir, f'3D_meta.txt' if is_3d else f'2D_meta.txt')
+        output_file_path = os.path.join(outputdir, f'3D_meta.json' if is_3d else f'2D_meta.json')
         meta = {
             'avg_person': np.mean(np.array(meta_data['avg_person'])),
             'std_person': np.std(np.array(meta_data['avg_person'])),
