@@ -10,10 +10,10 @@ class ZeroVelocity(torch.nn.Module):
     def forward(self, inputs):
         outputs = []
         batch_size = inputs[0].shape[0]
-        outputs.append(torch.zeros(batch_size, self.args.pred_frames_num, self.output_size))
+        outputs.append(torch.zeros(batch_size, self.args.pred_frames_num, self.output_size).to('cuda'))
         if self.args.use_mask:
             mask = inputs[2]
             last_frame = mask[..., -1, :].unsqueeze(-2)
-            outputs.append(last_frame.repeat([1 for _ in range(len(mask.shape[:-2]))] + [self.args.pred_frames_num, 1]))
+            outputs.append(last_frame.repeat([1 for _ in range(len(mask.shape[:-2]))] + [self.args.pred_frames_num, 1]).to('cuda'))
 
         return tuple(outputs)
