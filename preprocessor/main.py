@@ -3,7 +3,7 @@ import argparse
 from preprocessor.dpw_preprocessor import Preprocessor3DPW
 from preprocessor.jta_preprocessor import JTAPreprocessor
 from preprocessor.posetrack_preprocessor import PoseTrackPreprocessor
-from preprocessor.somof_3pw_preprocessor import SoMoF3DPWPreprocessor
+from preprocessor.somof_3dpw_preprocessor import SoMoF3DPWPreprocessor
 from preprocessor.somof_posetrack_preprocessor import SoMoFPoseTrackPreprocessor
 
 

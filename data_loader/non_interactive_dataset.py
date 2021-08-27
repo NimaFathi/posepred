@@ -45,6 +45,8 @@ class NonInteractiveDataset(Dataset):
 
         if not self.is_testing:
             future_pose = self.get_tensor(seq, 'future_pose')
+            print(future_pose[0, :].shape)
+            print(obs_pose[-1, :].shape)
             future_vel = torch.cat(
                 ((future_pose[0, :] - obs_pose[-1, :]).unsqueeze(0), future_pose[1:, :] - future_pose[:-1, :]), 0)
             outputs += [future_pose, future_vel]
