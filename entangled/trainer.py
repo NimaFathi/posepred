@@ -51,7 +51,7 @@ class Trainer:
 
             # predict
             self.model.zero_grad()
-            outputs = self.model(data[:len(data) / 2])
+            outputs = self.model(data[:len(data) // 2])
 
             # calculate metrics
             pred_vel = outputs[0]
@@ -92,7 +92,7 @@ class Trainer:
 
             with torch.no_grad():
                 # predict
-                outputs = self.model(data[:len(data) / 2])
+                outputs = self.model(data[:len(data) // 2])
 
                 # calculate metrics
                 pred_vel = outputs[0]
