@@ -3,7 +3,8 @@ import argparse
 
 class VisualArgs:
     def __init__(self, dataset_name, keypoint_dim, pred_frames_num=None, model_name=None, load_path=None,
-                 seq_index=None, is_interactive=False, persons_num=1, is_testing=True, use_mask=False, skip_frame=0):
+                 gif_name=None, seq_index=None, is_interactive=False, persons_num=1, is_testing=True,
+                 use_mask=False, skip_frame=0):
         # dataloader_args
         self.dataset_name = dataset_name
         self.keypoint_dim = keypoint_dim
@@ -22,6 +23,7 @@ class VisualArgs:
 
         self.pred_frames_num = pred_frames_num
         self.seq_index = seq_index
+        self.gif_name = gif_name
 
 
 def parse_visualization_args():
@@ -38,6 +40,7 @@ def parse_visualization_args():
 
     parser.add_argument('--model_name', type=str, help='model_name')
     parser.add_argument('--load_path', type=str, default=None, help='load_path')
+    parser.add_argument('--gif_name', type=str, default=None, help='name of generated gif')
     parser.add_argument('--seq_index', type=int, default=None, help='index of a sequence in dataset.')
     parser.add_argument('--pred_frames_num', type=str, default=None, help='number of frames to predict')
 
