@@ -12,13 +12,13 @@ if __name__ == '__main__':
     if load_path:
         model, optimizer, epoch, train_reporter, valid_reporter = load_snapshot(load_path)
     elif model_args.model_name:
+        if pred_frames_num is None:
+            raise Exception("Specify number of frames to predict.")
         model_args.pred_frames_num = pred_frames_num
         model_args.keypoints_num = dataloader.dataset.keypoints_num
         model = get_model(model_args)
     else:
         raise Exception("Please provide either a model_name or a load_path to a trained model.")
-
-
 
     save_dir = setup_testing_dir(ROOT_DIR)
     save_args({'dataloader_args': dataloader_args, 'model_args': model.args}, save_dir)
