@@ -58,4 +58,4 @@ class NonInteractiveDataset(Dataset):
     def get_tensor(self, seq, segment):
         assert segment in seq, 'No segment named: ' + segment
         frames_num = len(seq[segment])
-        return torch.tensor([seq[segment][frame_idx] for frame_idx in range(0, frames_num, self.skip_frame + 1)])
+        return torch.tensor([seq[segment][frame_idx] for frame_idx in range(0, frames_num, self.skip_frame + 1)], dtype=torch.float32)
