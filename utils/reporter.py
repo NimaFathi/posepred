@@ -47,7 +47,8 @@ class Reporter:
         for key, value in self.history.items():
             if not use_mask and 'mask' in key:
                 continue
-            msg += '| ' + key + ': %.2f' % value[-1].detach().cpu().numpy()
+            val = value[-1].detach().cpu().numpy() if torch.is_tensor(value[-1]) else value[-1]
+            msg += '| ' + key + ': %.2f' % val
         print(msg)
         sys.stdout.flush()
 
