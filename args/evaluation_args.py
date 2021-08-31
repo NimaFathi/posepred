@@ -20,7 +20,6 @@ class EvaluationArgs:
         self.num_workers = num_workers
         self.is_testing = False
 
-        # model_args
         self.model_name = model_name
         self.load_path = load_path
         self.distance_loss = distance_loss

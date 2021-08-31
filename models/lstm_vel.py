@@ -19,6 +19,11 @@ class LSTMVel(nn.Module):
             self.mask_decoder = Decoder(args.pred_frames_num, args.keypoints_num, args.keypoints_num, args.hidden_size,
                                         args.n_layers, args.dropout_mask_dec, 'sigmoid')
 
+    def set_pred_frames_num(self, pred_frames_num):
+        self.vel_decoder.outputs_num = pred_frames_num
+        if self.args.use_mask:
+            self.mask_decoder.outputs_num = pred_frames_num
+
     def forward(self, inputs):
         outputs = []
         pose, vel = inputs[:2]
