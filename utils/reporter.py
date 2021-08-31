@@ -64,11 +64,9 @@ class Reporter:
             plt.savefig(save_dir + '/plots/' + key + '.png')
 
     def print_mean_std(self, use_mask):
-        msg = ''
         for key, value in self.history.items():
             if not use_mask and 'mask' in key:
                 continue
             if torch.is_tensor(value[0]):
                 value = [v.detach().cpu().numpy() for v in value]
-            msg += key + ': (mean=%.3f, std=%.3f)' % (np.mean(value), np.std(value)) + '\n'
-        print(msg)
+            print(key + ': (mean=%.3f, std=%.3f)' % (np.mean(value), np.std(value)))
