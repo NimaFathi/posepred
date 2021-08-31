@@ -112,4 +112,4 @@ class Trainer:
                 self.valid_reporter.update(report_metrics, batch_size)
 
         self.valid_reporter.epoch_finished()
-        self.valid_reporter.print_values()
+        self.valid_reporter.print_values(self.model.args.use_mask)
