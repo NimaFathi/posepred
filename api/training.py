@@ -10,7 +10,7 @@ from factory.trainer import Trainer
 
 if __name__ == '__main__':
 
-    args = TrainingArgs(train_dataset_name='sample', valid_dataset_name='simple',
+    args = TrainingArgs(train_dataset_name='sample', valid_dataset_name='sample',
                         model_name='lstm_vel', keypoint_dim=2, epochs=100, load_path=None)
 
     trainer_args = TrainerArgs(args.epochs, args.is_interactive, args.start_epoch, args.lr, args.decay_factor,
