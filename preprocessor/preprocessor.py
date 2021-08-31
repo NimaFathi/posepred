@@ -2,10 +2,6 @@ import os
 import json
 import numpy as np
 from args.helper import NumpyEncoder
-from path_definition import ROOT_DIR
-
-OUTPUT_DIR = os.path.join(ROOT_DIR, 'preprocessed_data/')
-
 
 class Processor:
     def __init__(self, dataset_path, is_interactive, obs_frame_num, pred_frame_num, skip_frame_num,

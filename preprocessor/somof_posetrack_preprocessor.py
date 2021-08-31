@@ -1,10 +1,12 @@
 import csv
 import json
 import os
-import numpy as np
 from collections import defaultdict
 
-from preprocessor.preprocessor import Processor, OUTPUT_DIR
+import numpy as np
+
+from path_definition import PREPROCESSED_DATA_DIR
+from preprocessor.preprocessor import Processor
 
 
 class SoMoFPoseTrackPreprocessor(Processor):
@@ -14,8 +16,10 @@ class SoMoFPoseTrackPreprocessor(Processor):
         super(SoMoFPoseTrackPreprocessor, self).__init__(dataset_path, is_interactive, obs_frame_num,
                                                          pred_frame_num, skip_frame_num, use_video_once, custom_name)
         self.mask = mask
-        self.output_dir = os.path.join(OUTPUT_DIR, 'SoMoF_PoseTrack_interactive') if self.is_interactive else os.path.join(
-            OUTPUT_DIR, 'SoMoF_PoseTrack')
+        self.output_dir = os.path.join(
+            PREPROCESSED_DATA_DIR, 'SoMoF_PoseTrack_interactive') if self.is_interactive else os.path.join(
+            PREPROCESSED_DATA_DIR, 'SoMoF_PoseTrack'
+        )
         if not os.path.exists(self.output_dir):
             os.makedirs(self.output_dir)
         self.meta_data = {
@@ -57,11 +61,11 @@ class SoMoFPoseTrackPreprocessor(Processor):
             if self.is_interactive:
                 for vid_id in range(len(processed_data['obs_pose'])):
                     data.append([
-                            '%d-%d' % (vid_id, 0),
-                            processed_data['obs_pose'][vid_id],
-                            processed_data['obs_mask'][vid_id],
-                            processed_data['obs_frames_path'][vid_id].tolist()
-                        ])
+                        '%d-%d' % (vid_id, 0),
+                        processed_data['obs_pose'][vid_id],
+                        processed_data['obs_mask'][vid_id],
+                        processed_data['obs_frames_path'][vid_id].tolist()
+                    ])
             else:
                 for vid_id in range(len(processed_data['obs_pose'])):
                     for p_id in range(len(processed_data['future_pose'][vid_id])):

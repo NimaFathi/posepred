@@ -1,10 +1,12 @@
 import csv
 import json
 import os
-import numpy as np
 from collections import defaultdict
 
-from preprocessor.preprocessor import Processor, OUTPUT_DIR
+import numpy as np
+
+from path_definition import PREPROCESSED_DATA_DIR
+from preprocessor.preprocessor import Processor
 
 
 class PoseTrackPreprocessor(Processor):
@@ -15,8 +17,10 @@ class PoseTrackPreprocessor(Processor):
                                                     pred_frame_num, skip_frame_num, use_video_once, custom_name)
         self.dataset_total_frame_num = 30
         self.mask = mask
-        self.output_dir = os.path.join(OUTPUT_DIR, 'PoseTrack_interactive') if self.is_interactive else os.path.join(
-            OUTPUT_DIR, 'PoseTrack')
+        self.output_dir = os.path.join(
+            PREPROCESSED_DATA_DIR, 'PoseTrack_interactive') if self.is_interactive else os.path.join(
+            PREPROCESSED_DATA_DIR, 'PoseTrack'
+        )
         if not os.path.exists(self.output_dir):
             os.makedirs(self.output_dir)
         self.meta_data = {

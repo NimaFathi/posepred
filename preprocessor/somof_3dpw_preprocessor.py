@@ -1,10 +1,12 @@
 import csv
 import json
 import os
-import numpy as np
 from collections import defaultdict
 
-from preprocessor.preprocessor import Processor, OUTPUT_DIR
+import numpy as np
+
+from path_definition import PREPROCESSED_DATA_DIR
+from preprocessor.preprocessor import Processor
 
 
 class SoMoF3DPWPreprocessor(Processor):
@@ -13,8 +15,10 @@ class SoMoF3DPWPreprocessor(Processor):
                  use_video_once, custom_name):
         super(SoMoF3DPWPreprocessor, self).__init__(dataset_path, is_interactive, obs_frame_num,
                                                     pred_frame_num, skip_frame_num, use_video_once, custom_name)
-        self.output_dir = os.path.join(OUTPUT_DIR, 'SoMoF_3DPW_interactive') if self.is_interactive else os.path.join(
-            OUTPUT_DIR, 'SoMoF_3DPW')
+        self.output_dir = os.path.join(
+            PREPROCESSED_DATA_DIR, 'SoMoF_3DPW_interactive') if self.is_interactive else os.path.join(
+            PREPROCESSED_DATA_DIR, 'SoMoF_3DPW'
+        )
         if not os.path.exists(self.output_dir):
             os.makedirs(self.output_dir)
         self.meta_data = {
