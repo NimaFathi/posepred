@@ -77,7 +77,7 @@ class Trainer:
             self.optimizer.step()
 
         self.train_reporter.epoch_finished()
-        self.train_reporter.print_values(self.model.args.use_mask)
+        self.train_reporter.print_values(self.model.args.use_mask, end='| ')
 
     def __validate(self):
         self.valid_reporter.start_time = time.time()
