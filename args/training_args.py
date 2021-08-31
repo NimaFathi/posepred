@@ -1,5 +1,7 @@
 import argparse
 
+from args.helper import TrainerArgs, DataloaderArgs, ModelArgs
+
 
 class TrainingArgs:
     def __init__(self, train_dataset_name, valid_dataset_name, model_name, keypoint_dim, epochs, start_epoch=0,
@@ -44,6 +46,22 @@ class TrainingArgs:
 
 
 def parse_training_args():
+    args = __parse_training_args()
+    trainer_args = TrainerArgs(args.epochs, args.is_interactive, args.start_epoch, args.lr, args.decay_factor,
+                               args.decay_patience, args.distance_loss, args.mask_loss_weight, args.snapshot_interval)
+    train_dataloader_args = DataloaderArgs(args.train_dataset_name, args.keypoint_dim, args.is_interactive,
+                                           args.persons_num, args.use_mask, args.is_testing, args.skip_frame,
+                                           args.batch_size, args.shuffle, args.pin_memory, args.num_workers)
+    valid_dataloader_args = DataloaderArgs(args.valid_dataset_name, args.keypoint_dim, args.is_interactive,
+                                           args.persons_num, args.use_mask, args.is_testing, args.skip_frame,
+                                           args.batch_size, args.shuffle, args.pin_memory, args.num_workers)
+    model_args = ModelArgs(args.model_name, args.use_mask, args.keypoint_dim, args.hidden_size, args.hardtanh_limit,
+                           args.n_layers, args.dropout_enc, args.dropout_pose_dec, args.dropout_mask_dec)
+
+    return trainer_args, train_dataloader_args, valid_dataloader_args, model_args, args.load_path
+
+
+def __parse_training_args():
     parser = argparse.ArgumentParser('Training Arguments')
 
     # trainer_args

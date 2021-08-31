@@ -1,8 +1,7 @@
 import torch.optim as optim
 
 from path_definition import ROOT_DIR
-from args.training_args import TrainingArgs, parse_training_args
-from args.helper import TrainerArgs, DataloaderArgs, ModelArgs
+from args.training_args import parse_training_args
 from data_loader.data_loader import get_dataloader
 from utils.save_load import load_snapshot, get_model, save_snapshot, save_args, setup_training_dir
 from utils.reporter import Reporter
@@ -10,32 +9,14 @@ from factory.trainer import Trainer
 
 if __name__ == '__main__':
 
-    # args = TrainingArgs(train_dataset_name='sample', valid_dataset_name='sample',
-    #                     model_name='lstm_vel', keypoint_dim=2, epochs=100, load_path=None)
-
-    args = parse_training_args()
-
-    trainer_args = TrainerArgs(args.epochs, args.is_interactive, args.start_epoch, args.lr, args.decay_factor,
-                               args.decay_patience, args.distance_loss, args.mask_loss_weight, args.snapshot_interval)
-
-    train_dataloader_args = DataloaderArgs(args.train_dataset_name, args.keypoint_dim, args.is_interactive,
-                                           args.persons_num, args.use_mask, args.is_testing, args.skip_frame,
-                                           args.batch_size, args.shuffle, args.pin_memory, args.num_workers)
-
-    valid_dataloader_args = DataloaderArgs(args.valid_dataset_name, args.keypoint_dim, args.is_interactive,
-                                           args.persons_num, args.use_mask, args.is_testing, args.skip_frame,
-                                           args.batch_size, args.shuffle, args.pin_memory, args.num_workers)
-
-    model_args = ModelArgs(args.model_name, args.use_mask, args.keypoint_dim, args.hidden_size, args.hardtanh_limit,
-                           args.n_layers, args.dropout_enc, args.dropout_pose_dec, args.dropout_mask_dec)
-
+    trainer_args, train_dataloader_args, valid_dataloader_args, model_args, load_path = parse_training_args()
     train_dataloader = get_dataloader(train_dataloader_args)
     valid_dataloader = get_dataloader(valid_dataloader_args)
 
-    if args.load_path:
-        model, optimizer, epoch, train_reporter, valid_reporter = load_snapshot(args.load_path)
+    if load_path:
+        model, optimizer, epoch, train_reporter, valid_reporter = load_snapshot(load_path)
         trainer_args.start_epoch = epoch
-        trainer_args.save_dir = args.load_path[:args.load_path.rindex('snapshots/')]
+        trainer_args.save_dir = load_path[:load_path.rindex('snapshots/')]
     else:
         model_args.pred_frames_num = train_dataloader.dataset.future_frames_num
         model_args.keypoints_num = train_dataloader.dataset.keypoints_num
