@@ -41,14 +41,12 @@ class Visualizer:
                     Ex: (8, 6)
                 :return None: generate a .gif file
         """
-        # print(cam_ext.shape)
-        # exit()
         new_pose = []
         for i, group_pose in enumerate(pose):
+            new_group_pose = []
             for j in range(len(group_pose)):
-                new_pose.append(self.__scene_to_image(group_pose, cam_ext[i], cam_int[i]).permute(1, 0, 2))
-        # print(new_pose[0].shape)
-        # exit()
+                new_group_pose.append(self.__scene_to_image(group_pose[j].unsqueeze(0), cam_ext[i], cam_int[i]).tolist())
+            new_pose.append(torch.tensor(new_group_pose).squeeze(1).transpose(0, 1))
         self.visualizer_2D(poses=new_pose, masks=[], images_paths=images_paths, fig_size=fig_size, name=name)
 
     def visualizer_3D(self, poses: list, fig_size=(8, 6), name='3D_visualize'):
@@ -238,9 +236,6 @@ class Visualizer:
                     new_joint_data = torch.matmul(cam_int, torch.matmul(cam_ext[frame_num][:3], joint_data))
                     new_data.append((new_joint_data[:2] / new_joint_data[-1]).tolist())
                 new_pose.append(new_data)
-        x = torch.tensor(new_pose).reshape(first_shape[0], first_shape[1], 2 * first_shape[-1] // 3)
-        # print(x[:, 10])
-        # exit()
         return torch.tensor(new_pose).reshape(first_shape[0], first_shape[1], 2 * first_shape[-1] // 3)
 
 if __name__ == '__main__':
@@ -2474,7 +2469,4 @@ if __name__ == '__main__':
     for i, obj in enumerate(m):
         m[i] = '/home/nima/EPFL/' + obj
     m = np.expand_dims(np.array(m), axis=0)
-    print(cam_int.unsqueeze(0).shape)
-    # print(dpw_poses.unsqueeze(0).shape)
-    # exit()
     vis.visualizer_3D_to_2D(dpw_poses.unsqueeze(0), cam_ext[:16].unsqueeze(0), cam_int.unsqueeze(0), m)
