@@ -10,18 +10,19 @@ from factory.trainer import Trainer
 
 if __name__ == '__main__':
 
-    args = TrainingArgs(train_dataset_name='simple_non_interactive_dataset', valid_dataset_name='simple_dataset',
-                        model_name='lstm_vel', keypoint_dim=2, epochs=6, load_path=None)
+    args = TrainingArgs(train_dataset_name='sample', valid_dataset_name='simple',
+                        model_name='lstm_vel', keypoint_dim=2, epochs=100, load_path=None)
 
     trainer_args = TrainerArgs(args.epochs, args.is_interactive, args.start_epoch, args.lr, args.decay_factor,
                                args.decay_patience, args.distance_loss, args.mask_loss_weight, args.snapshot_interval)
 
     train_dataloader_args = DataloaderArgs(args.train_dataset_name, args.keypoint_dim, args.is_interactive,
-                                           args.use_mask, args.is_testing, args.skip_frame, args.batch_size,
-                                           args.shuffle, args.pin_memory, args.num_workers)
+                                           args.persons_num, args.use_mask, args.is_testing, args.skip_frame,
+                                           args.batch_size, args.shuffle, args.pin_memory, args.num_workers)
+
     valid_dataloader_args = DataloaderArgs(args.valid_dataset_name, args.keypoint_dim, args.is_interactive,
-                                           args.use_mask, args.is_testing, args.skip_frame, args.batch_size,
-                                           args.shuffle, args.pin_memory, args.num_workers)
+                                           args.persons_num, args.use_mask, args.is_testing, args.skip_frame,
+                                           args.batch_size, args.shuffle, args.pin_memory, args.num_workers)
 
     model_args = ModelArgs(args.model_name, args.use_mask, args.keypoint_dim, args.hidden_size, args.hardtanh_limit,
                            args.n_layers, args.dropout_enc, args.dropout_pose_dec, args.dropout_mask_dec)
