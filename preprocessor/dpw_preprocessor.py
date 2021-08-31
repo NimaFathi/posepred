@@ -76,9 +76,10 @@ class Preprocessor3DPW(Processor):
                             video_data['obs_frames'][p_id].append(
                                 f'{video_name}/image_{frame_ids_data[i * total_frame_num * self.skip_frame_num + j - 1]:05}.jpg'
                             )
-                            video_data['obs_cam_ext'].append(
-                                cam_extrinsic[i * total_frame_num * self.skip_frame_num + j - 1].tolist()
-                            )
+                            if p_id == 0:
+                                video_data['obs_cam_ext'].append(
+                                    cam_extrinsic[i * total_frame_num * self.skip_frame_num + j - 1].tolist()
+                                )
                         else:
                             video_data['future_pose'][p_id].append(
                                 pose_data[p_id, i * total_frame_num * 2 + j - 1, :].tolist()
@@ -86,9 +87,10 @@ class Preprocessor3DPW(Processor):
                             video_data['future_frames'][p_id].append(
                                 f'{video_name}/image_{frame_ids_data[i * total_frame_num * self.skip_frame_num + j - 1]:05}.jpg'
                             )
-                            video_data['future_cam_ext'].append(
-                                cam_extrinsic[i * total_frame_num * self.skip_frame_num + j - 1].tolist()
-                            )
+                            if p_id == 0:
+                                video_data['future_cam_ext'].append(
+                                    cam_extrinsic[i * total_frame_num * self.skip_frame_num + j - 1].tolist()
+                                )
 
                 if len(list(video_data['obs_pose'].values())) > 0:
                     if data_type == 'train':
