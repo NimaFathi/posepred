@@ -4,9 +4,8 @@ from args.helper import DataloaderArgs, ModelArgs
 
 
 class VisualizationArgs:
-    def __init__(self, dataset_name, keypoint_dim, pred_frames_num=None, model_name=None, load_path=None,
-                 gif_name=None, seq_index=None, is_interactive=False, persons_num=1, is_testing=True,
-                 use_mask=False, skip_frame=0):
+    def __init__(self, dataset_name, keypoint_dim, model_name=None, load_path=None, gif_name=None, seq_index=None,
+                 is_interactive=False, persons_num=1, is_testing=True, use_mask=False, skip_frame=0):
         # dataloader_args
         self.dataset_name = dataset_name
         self.keypoint_dim = keypoint_dim
@@ -22,7 +21,6 @@ class VisualizationArgs:
 
         self.model_name = model_name
         self.load_path = load_path
-        self.pred_frames_num = pred_frames_num
         self.seq_index = seq_index
         self.gif_name = gif_name
 
@@ -51,7 +49,6 @@ def __parse_visualization_args():
 
     parser.add_argument('-model_name', type=str, help='model_name')
     parser.add_argument('-load_path', type=str, default=None, help='load_path')
-    parser.add_argument('-pred_frames_num', type=str, default=None, help='number of frames to predict')
     parser.add_argument('-seq_index', type=int, default=None, help='index of a sequence in dataset.')
     parser.add_argument('-gif_name', type=str, default=None, help='name of generated gif')
 
