@@ -33,7 +33,8 @@ class Preprocessor3DPW(Processor):
         print('start creating 3DPW normal static data ... ')
         header = [
             'video_section', 'observed_pose', 'future_pose',
-            'observed_frames_related_path', 'future_frames_related_path'
+            'observed_frames_related_path', 'future_frames_related_path',
+            'obs_cam_extrinsic', 'future_camera_extrinsic'
         ]
         total_frame_num = self.obs_frame_num + self.pred_frame_num
 
@@ -53,6 +54,8 @@ class Preprocessor3DPW(Processor):
             video_name = re.search('(\w+).pkl', entry.name).group(1)
             pose_data = np.array(pickle_obj['jointPositions'])
             frame_ids_data = pickle_obj['img_frame_ids']
+            cam_extrinsic = pickle_obj['cam_poses']
+            cam_intrinsic = pickle_obj['cam_intrinsics'].tolist()
             section_range = pose_data.shape[1] // (total_frame_num * 2) if self.use_video_once is False else 1
             data = []
             for i in range(section_range):
@@ -60,7 +63,9 @@ class Preprocessor3DPW(Processor):
                     'obs_pose': defaultdict(list),
                     'future_pose': defaultdict(list),
                     'obs_frames': defaultdict(list),
-                    'future_frames': defaultdict(list)
+                    'future_frames': defaultdict(list),
+                    'obs_cam_ext': list(),
+                    'future_cam_ext': list()
                 }
                 for j in range(1, total_frame_num * self.skip_frame_num + 1, self.skip_frame_num):
                     for p_id in range(pose_data.shape[0]):
@@ -71,6 +76,9 @@ class Preprocessor3DPW(Processor):
                             video_data['obs_frames'][p_id].append(
                                 f'{video_name}/image_{frame_ids_data[i * total_frame_num * self.skip_frame_num + j - 1]:05}.jpg'
                             )
+                            video_data['obs_cam_ext'].append(
+                                cam_extrinsic[i * total_frame_num * self.skip_frame_num + j - 1].tolist()
+                            )
                         else:
                             video_data['future_pose'][p_id].append(
                                 pose_data[p_id, i * total_frame_num * 2 + j - 1, :].tolist()
@@ -78,6 +86,10 @@ class Preprocessor3DPW(Processor):
                             video_data['future_frames'][p_id].append(
                                 f'{video_name}/image_{frame_ids_data[i * total_frame_num * self.skip_frame_num + j - 1]:05}.jpg'
                             )
+                            video_data['future_cam_ext'].append(
+                                cam_extrinsic[i * total_frame_num * self.skip_frame_num + j - 1].tolist()
+                            )
+
                 if len(list(video_data['obs_pose'].values())) > 0:
                     if data_type == 'train':
                         self.update_meta_data(self.meta_data, list(video_data['obs_pose'].values()), 3)
@@ -86,13 +98,15 @@ class Preprocessor3DPW(Processor):
                             data.append([
                                 '%s-%d' % (video_name, i),
                                 video_data['obs_pose'][p_id], video_data['future_pose'][p_id],
-                                video_data['obs_frames'][p_id], video_data['future_frames'][p_id]
+                                video_data['obs_frames'][p_id], video_data['future_frames'][p_id],
+                                video_data['obs_cam_ext'], video_data['future_cam_ext'], cam_intrinsic
                             ])
                     else:
                         data.append([
                             '%s-%d' % (video_name, i),
                             list(video_data['obs_pose'].values()), list(video_data['future_pose'].values()),
-                            video_data['obs_frames'][0], video_data['future_frames'][0]
+                            video_data['obs_frames'][0], video_data['future_frames'][0],
+                            video_data['obs_cam_ext'], video_data['future_cam_ext'], cam_intrinsic
                         ])
             with open(os.path.join(self.output_dir, output_file_name), 'a') as f_object:
                 writer = csv.writer(f_object)
