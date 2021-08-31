@@ -3,55 +3,55 @@ import argparse
 from args.helper import DataloaderArgs, ModelArgs
 
 
-class TestingArgs:
-    def __init__(self, dataset_name, keypoint_dim, model_name=None, load_path=None,
-                 is_interactive=False, persons_num=1, use_mask=False, skip_frame=0, batch_size=1, shuffle=True,
-                 pin_memory=False, num_workers=0):
+class VisualizationArgs:
+    def __init__(self, dataset_name, keypoint_dim, model_name=None, load_path=None, gif_name=None, seq_index=None,
+                 is_interactive=False, persons_num=1, is_testing=True, use_mask=False, skip_frame=0):
         # dataloader_args
         self.dataset_name = dataset_name
         self.keypoint_dim = keypoint_dim
         self.is_interactive = is_interactive
         self.persons_num = persons_num
+        self.is_testing = is_testing
         self.use_mask = use_mask
         self.skip_frame = skip_frame
-        self.batch_size = batch_size
-        self.shuffle = shuffle
-        self.pin_memory = pin_memory
-        self.num_workers = num_workers
-        self.is_testing = True
+        self.batch_size = 1
+        self.shuffle = False
+        self.pin_memory = False
+        self.num_workers = 0
 
         self.model_name = model_name
         self.load_path = load_path
+        self.seq_index = seq_index
+        self.gif_name = gif_name
 
 
-def parse_testing_args():
-    args = __parse_testing_args()
+def parse_visualization_args():
+    args = __parse_visualization_args()
     dataloader_args = DataloaderArgs(args.dataset_name, args.keypoint_dim, args.is_interactive, args.use_mask,
                                      args.is_testing, args.skip_frame, args.batch_size, args.shuffle, args.pin_memory,
                                      args.num_workers)
     model_args = ModelArgs(args.model_name, args.use_mask, args.keypoint_dim)
-    return dataloader_args, model_args, args.load_path, args.is_interactive
+
+    return dataloader_args, model_args, args.load_path, args.pred_frames_num, args.is_testing, args.seq_index
 
 
-def __parse_testing_args():
-    parser = argparse.ArgumentParser('Testing Arguments')
+def __parse_visualization_args():
+    parser = argparse.ArgumentParser('Visualization Arguments')
 
     # dataloader_args
     parser.add_argument('-dataset_name', type=str, help='test_dataset_name')
     parser.add_argument('-keypoint_dim', type=int, help='dimension of each keypoint')
     parser.add_argument('-is_interactive', type=bool, default=False, help='support interaction of people')
     parser.add_argument('-persons_num', type=bool, default=1, help='number of people in each sequence')
+    parser.add_argument('-is_testing', type=bool, default=True, help='provide ground truth if false')
     parser.add_argument('-use_mask', type=bool, default=False, help='visibility mask')
     parser.add_argument('-skip_frame', type=int, default=0, help='skip frame in reading dataset')
-    parser.add_argument('-batch_size', type=int, default=1, help='batch_size')
-    parser.add_argument('-shuffle', type=bool, default=True)
-    parser.add_argument('-pin_memory', type=bool, default=False)
-    parser.add_argument('-num_workers', type=int, default=0, help='num_workers')
 
     parser.add_argument('-model_name', type=str, help='model_name')
     parser.add_argument('-load_path', type=str, default=None, help='load_path')
+    parser.add_argument('-seq_index', type=int, default=None, help='index of a sequence in dataset.')
+    parser.add_argument('-gif_name', type=str, default=None, help='name of generated gif')
 
-    training_args = parser.parse_args()
-    training_args.is_testing = True
+    visualization_args = parser.parse_args()
 
-    return training_args
+    return visualization_args

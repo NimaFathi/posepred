@@ -35,7 +35,7 @@ class Trainer:
         self.train_reporter.save_plots(self.model.args.use_mask, self.args.save_dir)
         self.valid_reporter.save_plots(self.model.args.use_mask, self.args.save_dir)
         print("-" * 100)
-        print('Training is completed in: %.2f' % (time.time() - time0))
+        print('Training is completed in %.2f seconds.' % (time.time() - time0))
 
     def __train(self):
         self.train_reporter.start_time = time.time()

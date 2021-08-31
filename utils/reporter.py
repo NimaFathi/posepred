@@ -34,7 +34,9 @@ class Reporter:
     def epoch_finished(self):
         self.history.get('time').append(time.time() - self.start_time)
         for key, avg_meter in self.attrs.items():
-            self.history.get(key).append(avg_meter.get_average())
+            value = avg_meter.get_average()
+            value = value.detach().cpu().numpy() if torch.is_tensor(value) else value
+            self.history.get(key).append(float(value))
         self.reset_avr_meters()
 
     def reset_avr_meters(self):
@@ -47,8 +49,7 @@ class Reporter:
         for key, value in self.history.items():
             if not use_mask and 'mask' in key:
                 continue
-            val = value[-1].detach().cpu().numpy() if torch.is_tensor(value[-1]) else value[-1]
-            msg += key + ': %.2f, ' % val
+            msg += key + ': %.2f, ' % value[-1]
         print(msg, end=end)
         sys.stdout.flush()
 
@@ -56,7 +57,6 @@ class Reporter:
         for key, value in self.history.items():
             if not use_mask and 'mask' in key:
                 continue
-            value = [v.detach().cpu().numpy() for v in value]
             with open(save_dir + '/plots/' + key + '.json', "w") as f:
                 json.dump(value, f, indent=4)
             plt.plot(value)
@@ -68,6 +68,4 @@ class Reporter:
         for key, value in self.history.items():
             if not use_mask and 'mask' in key:
                 continue
-            if torch.is_tensor(value[0]):
-                value = [v.detach().cpu().numpy() for v in value]
             print(key + ': (mean=%.3f, std=%.3f)' % (np.mean(value), np.std(value)))
