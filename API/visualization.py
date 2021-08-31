@@ -7,7 +7,7 @@ from visualization.visualizer import Visualizer
 if __name__ == '__main__':
 
     args = VisualArgs(dataset_name='simple_non_interactive_dataset', model_name='zero_velocity', load_path=None,
-                      pred_frames_num=2, keypoint_dim=2, seq_index=5)
+                      pred_frames_num=2, keypoint_dim=2, seq_index=5, gif_name='gif-name')
 
     dataloader_args = DataloaderArgs(args.dataset_name, args.keypoint_dim, args.is_interactive, args.use_mask,
                                      args.is_testing, args.skip_frame, args.batch_size, args.shuffle, args.pin_memory,
@@ -28,22 +28,27 @@ if __name__ == '__main__':
     model.zero_grad()
     data = dataloader.dataset.__getitem__(args.seq_index)
 
-    vis_inputs = dict()
+    vis_poses = []
+    vis_masks = []
+
     if not args.is_testing:
         if model.args.use_mask:
-            vis_inputs['target_mask'] = data[-1]
+            vis_masks.append(data[-1])
         else:
             obs_pose, obs_vel, target_pose, target_vel = data
-        vis_inputs['target_pose'] = data[len(data) / 2]
+        vis_poses.append(data[len(data) / 2])
         outputs = model(data[:len(data) / 2])
     else:
         outputs = model(data)
 
-    vis_inputs['obs_pose'] = data[0]
-    vis_inputs['pred_pose'] = outputs[0]
+    vis_poses.append(data[0])
+    vis_poses.append(outputs[0])
     if model.args.use_mask:
-        vis_inputs['obs_mask'] = data[2]
-        vis_inputs['pred_mask'] = outputs[1]
+        vis_masks.append(data[2])
+        vis_masks.append(outputs[1])
 
-    visualizer = Visualizer(dataset_name=args.dataset_name)
-    visualizer.visualize_2D(vis_inputs, )
+    visualizer = Visualizer(dataset=args.dataset_name)
+    if args.keypoint_dim == 2:
+        visualizer.visualizer_2D(poses=vis_poses, masks=vis_masks)
+    else:
+        visualizer.visualizer_3D(poses=vis_poses)

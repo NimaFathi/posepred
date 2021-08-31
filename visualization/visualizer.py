@@ -1,6 +1,5 @@
 import math
 import os
-from mpl_toolkits.mplot3d import Axes3D
 import cv2
 import imageio
 import matplotlib.pyplot as plt
@@ -66,7 +65,7 @@ class Visualizer:
             os.remove(filename)
         optimize(f'./outputs/3D/{name}.gif')
 
-    def visualizer_2D(self, poses=None, masks=None, images_paths=None, fig_size=(8, 6), name='2D_visualize'):
+    def visualizer_2D(self, poses: list, masks=None, images_paths=None, fig_size=(8, 6), name='2D_visualize'):
         """
              visualizer_2D(poses, masks, images_paths, fig_size) -> gif
             .   @brief Draws a 2D figure with matplotlib (it can have multiple sub figures).
@@ -163,11 +162,9 @@ class Visualizer:
     def __create_plot(axe, axes_limit):
         axe.xaxis.set_major_locator(AutoLocator())
         axe.yaxis.set_major_locator(AutoLocator())
-        # axe.zaxis.set_major_locator(AutoLocator())
         axe.zaxis.set_major_locator(AutoLocator())
         axe.set_xlim(xmin=-math.fabs(axes_limit[0]), xmax=axes_limit[0])
         axe.set_ylim(ymin=-math.fabs(axes_limit[1]), ymax=axes_limit[1])
-        # axe.set_zlim(zmin=-math.fabs(axes_limit[2]), zmax=axes_limit[2])
         axe.set_zlim(zmin=-math.fabs(axes_limit[2]), zmax=axes_limit[2])
 
 
