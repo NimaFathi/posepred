@@ -5,7 +5,7 @@ import torch
 import torch.optim as optim
 
 from args.helper import JSONEncoder_
-from models.non_interactive import disentangle1, lstm_vel, zero_vel
+from models import disentangle1, lstm_vel, zero_vel
 
 
 def get_model(model_args):

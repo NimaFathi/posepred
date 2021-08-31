@@ -1,7 +1,7 @@
 import torch
 
-from models.non_interactive.lstm_vel import LSTMVel
-from models.non_interactive.zero_vel import ZeroVel
+from models.lstm_vel import LSTMVel
+from models.zero_vel import ZeroVel
 
 
 class Disentangle1(torch.nn.Module):

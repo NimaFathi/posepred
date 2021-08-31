@@ -9,8 +9,9 @@ class ZeroVel(torch.nn.Module):
 
     def forward(self, inputs):
         outputs = []
-        batch_size = inputs[0].shape[0]
-        pred_vel = torch.zeros(batch_size, self.args.pred_frames_num, self.output_size)
+        shape = inputs[0].shape
+        pred_shape = shape[:-2] + [self.args.pred_frames_num, self.output_size]
+        pred_vel = torch.zeros(pred_shape)
         outputs.append(pred_vel.to('cuda'))
 
         if self.args.use_mask:
