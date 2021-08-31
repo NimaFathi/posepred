@@ -33,6 +33,7 @@ class Reporter:
     def epoch_finished(self):
         self.history.get('time').append(time.time() - self.start_time)
         for key, avg_meter in self.attrs.items():
+            print(key)
             self.history.get(key).append(avg_meter.get_average())
         self.reset_avr_meters()
 
@@ -43,10 +44,10 @@ class Reporter:
 
     def print_values(self, use_mask):
         msg = 'epoch:' + str(len(self.history['time']))
-        for key, item in self.history.items():
+        for key, value in self.history.items():
             if not use_mask and 'mask' in key:
                 continue
-            msg += '| ' + key + ': %.2f' % item[-1]
+            msg += '| ' + key + ': %.2f' % value[-1].detach().cpu().numpy()
         print(msg)
         sys.stdout.flush()
 
@@ -54,6 +55,7 @@ class Reporter:
         for key, value in self.history.items():
             if not use_mask and 'mask' in key:
                 continue
+            value = [v.detach().cpu().numpy() for v in value]
             with open(save_dir + '/plots/' + key + '.json', "w") as f:
                 json.dump(value, f, indent=4)
             plt.plot(value)
@@ -63,8 +65,9 @@ class Reporter:
 
     def print_mean_std(self, use_mask):
         msg = ''
-        for key, item in self.history.items():
+        for key, value in self.history.items():
             if not use_mask and 'mask' in key:
                 continue
-            msg += key + ': (mean=%.3f, std=%.3f)' % (np.mean(item), np.std(item))
+            value = [v.detach().cpu().numpy() for v in value]
+            msg += key + ': (mean=%.3f, std=%.3f)' % (np.mean(value), np.std(value))
         print(msg)
