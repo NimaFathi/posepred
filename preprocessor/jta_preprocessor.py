@@ -6,7 +6,8 @@ from collections import defaultdict
 
 import numpy as np
 
-from preprocessor.preprocessor import Processor, OUTPUT_DIR
+from preprocessor.preprocessor import Processor
+from path_definition import PREPROCESSED_DATA_DIR
 
 
 class JTAPreprocessor(Processor):
@@ -24,14 +25,14 @@ class JTAPreprocessor(Processor):
             self.end_dim = 5
         if self.is_3d:
             if self.is_interactive:
-                self.output_dir = os.path.join(OUTPUT_DIR, 'JTA_interactive', '3D')
+                self.output_dir = os.path.join(PREPROCESSED_DATA_DIR, 'JTA_interactive', '3D')
             else:
-                self.output_dir = os.path.join(OUTPUT_DIR, 'JTA', '3D')
+                self.output_dir = os.path.join(PREPROCESSED_DATA_DIR, 'JTA', '3D')
         else:
             if self.is_interactive:
-                self.output_dir = os.path.join(OUTPUT_DIR, 'JTA_interactive', '2D')
+                self.output_dir = os.path.join(PREPROCESSED_DATA_DIR, 'JTA_interactive', '2D')
             else:
-                self.output_dir = os.path.join(OUTPUT_DIR, 'JTA', '2D')
+                self.output_dir = os.path.join(PREPROCESSED_DATA_DIR, 'JTA', '2D')
         if not os.path.exists(self.output_dir):
             os.makedirs(self.output_dir)
         self.meta_data = {
