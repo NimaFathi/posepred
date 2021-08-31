@@ -71,7 +71,7 @@ class InteractiveDataset(Dataset):
         result = torch.tensor(
             [[seq[segment][person_idx][frame_idx]
               for frame_idx in range(0, frames_num, self.skip_frame + 1)]
-             for person_idx in persons_in_seq])
+             for person_idx in persons_in_seq], dtype=torch.float32)
 
         if len(persons_in_seq) < self.persons_num:
             padding = torch.zeros(self.persons_num - len(persons_in_seq), result.shape[1], result.shape[2])
