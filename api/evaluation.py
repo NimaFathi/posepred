@@ -7,7 +7,7 @@ from factory.evaluator import Evaluator
 
 if __name__ == '__main__':
 
-    args = EvaluationArgs(dataset_name='sample_interactive', model_name='zero_velocity', load_path=None,
+    args = EvaluationArgs(dataset_name='sample_interactive', model_name='zero_vel', load_path=None,
                           keypoint_dim=2, is_interactive=True, persons_num=5, use_mask=False, batch_size=1)
 
     dataloader_args = DataloaderArgs(args.dataset_name, args.keypoint_dim, args.is_interactive, args.persons_num,
