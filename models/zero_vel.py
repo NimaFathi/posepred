@@ -10,7 +10,7 @@ class ZeroVel(torch.nn.Module):
     def forward(self, inputs):
         outputs = []
         shape = inputs[0].shape
-        pred_shape = shape[:-2] + [self.args.pred_frames_num, self.output_size]
+        pred_shape = shape[:-2] + (self.args.pred_frames_num, self.output_size)
         pred_vel = torch.zeros(pred_shape)
         outputs.append(pred_vel.to('cuda'))
 
