@@ -3,6 +3,7 @@ import time
 import matplotlib.pyplot as plt
 import json
 import numpy as np
+import torch
 
 from utils.average_meter import AverageMeter
 
@@ -33,7 +34,6 @@ class Reporter:
     def epoch_finished(self):
         self.history.get('time').append(time.time() - self.start_time)
         for key, avg_meter in self.attrs.items():
-            print(key)
             self.history.get(key).append(avg_meter.get_average())
         self.reset_avr_meters()
 
@@ -68,6 +68,7 @@ class Reporter:
         for key, value in self.history.items():
             if not use_mask and 'mask' in key:
                 continue
-            value = [v.detach().cpu().numpy() for v in value]
-            msg += key + ': (mean=%.3f, std=%.3f)' % (np.mean(value), np.std(value))
+            if torch.is_tensor(value[0]):
+                value = [v.detach().cpu().numpy() for v in value]
+            msg += key + ': (mean=%.3f, std=%.3f)' % (np.mean(value), np.std(value)) + '\n'
         print(msg)
