@@ -246,4 +246,5 @@ exps/
 *.ipynb
 
 preprocessed_data/
+raw_data/
 
