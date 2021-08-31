@@ -1,7 +1,7 @@
 import torch.optim as optim
 
 from path_definition import ROOT_DIR
-from args.training_args import TrainingArgs
+from args.training_args import TrainingArgs, parse_training_args
 from args.helper import TrainerArgs, DataloaderArgs, ModelArgs
 from data_loader.data_loader import get_dataloader
 from utils.save_load import load_snapshot, get_model, save_snapshot, save_args, setup_training_dir
@@ -10,8 +10,10 @@ from factory.trainer import Trainer
 
 if __name__ == '__main__':
 
-    args = TrainingArgs(train_dataset_name='sample', valid_dataset_name='sample',
-                        model_name='lstm_vel', keypoint_dim=2, epochs=100, load_path=None)
+    # args = TrainingArgs(train_dataset_name='sample', valid_dataset_name='sample',
+    #                     model_name='lstm_vel', keypoint_dim=2, epochs=100, load_path=None)
+
+    args = parse_training_args()
 
     trainer_args = TrainerArgs(args.epochs, args.is_interactive, args.start_epoch, args.lr, args.decay_factor,
                                args.decay_patience, args.distance_loss, args.mask_loss_weight, args.snapshot_interval)
