@@ -3,7 +3,7 @@ from args.testing_args import TestingArgs
 from args.helper import DataloaderArgs, ModelArgs
 from data_loader.data_loader import get_dataloader
 from utils.save_load import get_model, load_snapshot, save_args, setup_testing_dir
-from entangled.tester import Tester
+from factory.tester import Tester
 
 if __name__ == '__main__':
 

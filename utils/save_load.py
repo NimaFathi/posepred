@@ -5,14 +5,14 @@ import torch
 import torch.optim as optim
 
 from args.helper import JSONEncoder_
-from models import lstm_vel, zero_velocity, disentangle1
+from models.non_interactive import disentangle1, lstm_vel, zero_vel
 
 
 def get_model(model_args):
     if model_args.model_name == 'lstm_vel':
         return lstm_vel.LSTMVel(model_args).to(torch.device('cuda'))
     elif model_args.model_name == 'zero_velocity':
-        return zero_velocity.ZeroVelocity(model_args).to(torch.device('cuda'))
+        return zero_vel.ZeroVel(model_args).to(torch.device('cuda'))
     elif model_args.model_name == 'disentangle1':
         return disentangle1.Disentangle1(model_args).to(torch.device('cuda'))
 

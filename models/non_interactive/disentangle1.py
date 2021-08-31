@@ -1,7 +1,7 @@
 import torch
 
-from models.lstm_vel import LSTMVel
-from models.zero_velocity import ZeroVelocity
+from models.non_interactive.lstm_vel import LSTMVel
+from models.non_interactive.zero_vel import ZeroVel
 
 
 class Disentangle1(torch.nn.Module):
@@ -12,7 +12,7 @@ class Disentangle1(torch.nn.Module):
         # global
         global_args = args
         global_args.keypoints_num = 1
-        self.global_model = ZeroVelocity(global_args)
+        self.global_model = ZeroVel(global_args)
 
         # local
         local_args = args

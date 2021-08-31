@@ -1,7 +1,7 @@
 import torch.nn as nn
 
-from models.decoder import Decoder
-from models.encoder import Encoder
+from models.non_interactive.decoder import Decoder
+from models.non_interactive.encoder import Encoder
 
 
 class LSTMVel(nn.Module):

@@ -6,7 +6,7 @@ from args.helper import TrainerArgs, DataloaderArgs, ModelArgs
 from data_loader.data_loader import get_dataloader
 from utils.save_load import load_snapshot, get_model, save_snapshot, save_args, setup_training_dir
 from utils.reporter import Reporter
-from entangled.trainer import Trainer
+from factory.trainer import Trainer
 
 if __name__ == '__main__':
 

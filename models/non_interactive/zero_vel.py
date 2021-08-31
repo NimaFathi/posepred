@@ -1,9 +1,9 @@
 import torch
 
 
-class ZeroVelocity(torch.nn.Module):
+class ZeroVel(torch.nn.Module):
     def __init__(self, args):
-        super(ZeroVelocity, self).__init__()
+        super(ZeroVel, self).__init__()
         self.args = args
         self.input_size = self.output_size = int(args.keypoints_num * args.keypoint_dim)
 
