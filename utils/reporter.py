@@ -42,14 +42,14 @@ class Reporter:
         for i, avg_meter in enumerate(self.attrs.values()):
             avg_meter.reset()
 
-    def print_values(self, use_mask):
+    def print_values(self, use_mask, end='\n'):
         msg = 'epoch' + str(len(self.history['time'])) + ': '
         for key, value in self.history.items():
             if not use_mask and 'mask' in key:
                 continue
             val = value[-1].detach().cpu().numpy() if torch.is_tensor(value[-1]) else value[-1]
             msg += key + ': %.2f, ' % val
-        print(msg)
+        print(msg, end=end)
         sys.stdout.flush()
 
     def save_plots(self, use_mask, save_dir):
