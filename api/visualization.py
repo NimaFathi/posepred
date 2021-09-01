@@ -13,6 +13,7 @@ if __name__ == '__main__':
     if load_path:
         model, optimizer, epoch, train_reporter, valid_reporter = load_snapshot(load_path)
     elif model_args.model_name:
+        print(is_testing)
         model_args.pred_frames_num = pred_frames_num if is_testing else dataloader.dataset.future_frames_num
         assert model_args.pred_frames_num is not None, 'specify pred_frames_num'
         model_args.keypoints_num = dataloader.dataset.keypoints_num
