@@ -32,7 +32,7 @@ def parse_visualization_args():
                                      args.num_workers)
     model_args = ModelArgs(args.model_name, args.use_mask, args.keypoint_dim)
 
-    return dataloader_args, model_args, args.load_path, args.pred_frames_num, args.is_testing, args.seq_index
+    return dataloader_args, model_args, args.load_path, args.pred_frames_num, args.is_testing, args.seq_index, args.gif_name
 
 
 def __parse_visualization_args():
@@ -53,5 +53,9 @@ def __parse_visualization_args():
     parser.add_argument('-gif_name', type=str, default=None, help='name of generated gif')
 
     visualization_args = parser.parse_args()
+    visualization_args.batch_size = 1
+    visualization_args.shuffle = False
+    visualization_args.pin_memory = False
+    visualization_args.num_workers = 0
 
     return visualization_args

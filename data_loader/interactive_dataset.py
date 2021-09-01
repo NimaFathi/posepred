@@ -30,7 +30,7 @@ class InteractiveDataset(Dataset):
     def __len__(self):
         return len(self.data)
 
-    def __getitem__(self, index):
+    def __getitem__(self, index, visualize=False):
         seq = self.data.iloc[index]
         persons_in_seq = self.select_persons(seq)
 
@@ -56,6 +56,10 @@ class InteractiveDataset(Dataset):
             if self.use_mask:
                 future_mask = self.get_tensor(seq, 'future_mask', persons_in_seq, self.future_frames_num)
                 outputs.append(future_mask)
+
+        if visualize:
+            print(seq['observed_image_path'])
+            print(seq['observed_image_path'].shape)
 
         return tuple(outputs)
 

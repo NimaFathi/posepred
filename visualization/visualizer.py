@@ -45,7 +45,8 @@ class Visualizer:
         for i, group_pose in enumerate(pose):
             new_group_pose = []
             for j in range(len(group_pose)):
-                new_group_pose.append(self.__scene_to_image(group_pose[j].unsqueeze(0), cam_ext[i], cam_int[i]).tolist())
+                new_group_pose.append(
+                    self.__scene_to_image(group_pose[j].unsqueeze(0), cam_ext[i], cam_int[i]).tolist())
             new_pose.append(torch.tensor(new_group_pose).squeeze(1).transpose(0, 1))
         self.visualizer_2D(poses=new_pose, masks=[], images_paths=images_paths, fig_size=fig_size, name=name)
 
@@ -237,6 +238,7 @@ class Visualizer:
                     new_data.append((new_joint_data[:2] / new_joint_data[-1]).tolist())
                 new_pose.append(new_data)
         return torch.tensor(new_pose).reshape(first_shape[0], first_shape[1], 2 * first_shape[-1] // 3)
+
 
 if __name__ == '__main__':
     vis = Visualizer('3DPW')

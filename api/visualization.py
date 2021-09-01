@@ -1,11 +1,11 @@
 from args.visualization_args import parse_visualization_args
 from data_loader.data_loader import get_dataloader
 from utils.save_load import get_model, load_snapshot
-from visualization.visualizer import Visualizer
+# from visualization.visualizer import Visualizer
 
 if __name__ == '__main__':
 
-    dataloader_args, model_args, load_path, is_testing, seq_index = parse_visualization_args()
+    dataloader_args, model_args, load_path, is_testing, seq_index, gif_name = parse_visualization_args()
     dataloader = get_dataloader(dataloader_args)
 
     if load_path:
@@ -18,14 +18,20 @@ if __name__ == '__main__':
         raise Exception("Please provide either a model_name or a load_path to a trained model.")
 
     model.zero_grad()
-    data = dataloader.dataset.__getitem__(seq_index)
+    data = dataloader.dataset.__getitem__(seq_index, visualize=True)
 
-    vis_poses = []
-    vis_masks = []
+    exit()
+    obs_pose = None
+    obs_mask = None
+    obs_image_path = None
+
+    future_mask = None
+    future_pose = None
+    future_image_path = None
 
     if not is_testing:
         if model.args.use_mask:
-            vis_masks.append(data[-1])
+            future.append(data[-1])
         else:
             obs_pose, obs_vel, target_pose, target_vel = data
         vis_poses.append(data[len(data) / 2])
@@ -41,6 +47,6 @@ if __name__ == '__main__':
 
     visualizer = Visualizer(dataset=dataloader_args.dataset_name)
     if dataloader_args.keypoint_dim == 2:
-        visualizer.visualizer_2D(poses=vis_poses, masks=vis_masks)
+        visualizer.visualizer_2D(poses=vis_poses, masks=vis_masks, name=gif_name)
     else:
-        visualizer.visualizer_3D(poses=vis_poses)
+        visualizer.visualizer_3D(poses=vis_poses, name=gif_name)
