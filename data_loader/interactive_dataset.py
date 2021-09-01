@@ -6,7 +6,7 @@ from numpy import random
 
 
 class InteractiveDataset(Dataset):
-    def __init__(self, dataset_path, keypoint_dim, persons_num, is_testing, use_mask, skip_frame):
+    def __init__(self, dataset_path, keypoint_dim, persons_num, is_testing, use_mask, skip_frame, is_visualizing):
         data = pd.read_csv(dataset_path)
         for col in list(data.columns[1:].values):
             try:
@@ -19,6 +19,7 @@ class InteractiveDataset(Dataset):
         self.is_testing = is_testing
         self.use_mask = use_mask
         self.skip_frame = skip_frame
+        self.is_visualizing = is_visualizing
 
         seq = self.data.iloc[0]
         self.keypoint_dim = keypoint_dim
@@ -56,6 +57,11 @@ class InteractiveDataset(Dataset):
             if self.use_mask:
                 future_mask = self.get_tensor(seq, 'future_mask', persons_in_seq, self.future_frames_num)
                 outputs.append(future_mask)
+
+        if self.is_visualizing:
+            print(seq['observed_image_path'])
+            print(len(seq['observed_image_path']))
+            print('observed_image_path' in seq.keys())
 
         return tuple(outputs)
 

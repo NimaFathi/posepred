@@ -11,10 +11,10 @@ def get_dataloader(args):
     dataset_path = data_folder + args.dataset_name + '.csv'
     if args.is_interactive:
         dataset = InteractiveDataset(dataset_path, args.keypoint_dim, args.persons_num, args.is_testing, args.use_mask,
-                                     args.skip_frame)
+                                     args.skip_frame, args.is_visualizing)
     else:
         dataset = NonInteractiveDataset(dataset_path, args.keypoint_dim, args.is_testing, args.use_mask,
-                                        args.skip_frame)
+                                        args.skip_frame, args.is_visualizing)
     dataloader = DataLoader(dataset, batch_size=args.batch_size, shuffle=args.shuffle, pin_memory=args.pin_memory,
                             num_workers=args.num_workers)
 

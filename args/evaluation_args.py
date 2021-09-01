@@ -3,33 +3,11 @@ import argparse
 from args.helper import DataloaderArgs, ModelArgs
 
 
-class EvaluationArgs:
-    def __init__(self, dataset_name, keypoint_dim, model_name=None, load_path=None, is_interactive=False, persons_num=1,
-                 use_mask=False, distance_loss='L1', skip_frame=0, batch_size=1, shuffle=True, pin_memory=False,
-                 num_workers=0):
-        # dataloader_args
-        self.dataset_name = dataset_name
-        self.keypoint_dim = keypoint_dim
-        self.is_interactive = is_interactive
-        self.persons_num = persons_num
-        self.use_mask = use_mask
-        self.skip_frame = skip_frame
-        self.batch_size = batch_size
-        self.shuffle = shuffle
-        self.pin_memory = pin_memory
-        self.num_workers = num_workers
-        self.is_testing = False
-
-        self.model_name = model_name
-        self.load_path = load_path
-        self.distance_loss = distance_loss
-
-
 def parse_evaluation_args():
     args = __parse_evaluation_args()
     dataloader_args = DataloaderArgs(args.dataset_name, args.keypoint_dim, args.is_interactive, args.persons_num,
-                                     args.use_mask, args.is_testing, args.skip_frame, args.batch_size, args.shuffle,
-                                     args.pin_memory, args.num_workers)
+                                     args.use_mask, args.skip_frame, args.batch_size, args.shuffle, args.pin_memory,
+                                     args.num_workers)
     model_args = ModelArgs(args.model_name, args.use_mask, args.keypoint_dim)
 
     return dataloader_args, model_args, args.load_path, args.is_interactive, args.distance_loss
@@ -55,6 +33,5 @@ def __parse_evaluation_args():
     parser.add_argument('-distance_loss', type=str, default='L1', help='use L1 or L2 as distance loss.')
 
     evaluation_args = parser.parse_args()
-    evaluation_args.is_testing = False
 
     return evaluation_args

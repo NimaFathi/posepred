@@ -3,8 +3,8 @@ import numpy as np
 
 
 class TrainerArgs:
-    def __init__(self, epochs, is_interactive, start_epoch=0, lr=0.001, decay_factor=0.95, decay_patience=20,
-                 distance_loss='L1', mask_loss_weight=0.25, snapshot_interval=20):
+    def __init__(self, epochs, is_interactive, start_epoch, lr, decay_factor, decay_patience, distance_loss,
+                 mask_loss_weight, snapshot_interval):
         self.epochs = epochs
         self.is_interactive = is_interactive
         self.start_epoch = start_epoch
@@ -18,20 +18,20 @@ class TrainerArgs:
 
 
 class DataloaderArgs:
-    def __init__(self, dataset_name, keypoint_dim, is_interactive=False, persons_num=1, use_mask=False,
-                 is_testing=False, skip_frame=0,
-                 batch_size=1, shuffle=True, pin_memory=False, num_workers=0, ):
+    def __init__(self, dataset_name, keypoint_dim, is_interactive, persons_num, use_mask, skip_frame, batch_size,
+                 shuffle, pin_memory, num_workers, is_testing=False, is_visualizing=False):
         self.dataset_name = dataset_name
         self.keypoint_dim = keypoint_dim
         self.is_interactive = is_interactive
         self.persons_num = persons_num
         self.use_mask = use_mask
-        self.is_testing = is_testing
         self.skip_frame = skip_frame
         self.batch_size = batch_size
         self.shuffle = shuffle
         self.pin_memory = pin_memory
         self.num_workers = num_workers
+        self.is_testing = is_testing
+        self.is_visualizing = is_visualizing
 
 
 class ModelArgs:

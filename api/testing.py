@@ -6,13 +6,13 @@ from factory.tester import Tester
 
 if __name__ == '__main__':
 
-    dataloader_args, model_args, load_path, is_interactive = parse_testing_args()
+    dataloader_args, model_args, load_path, pred_frames_num, is_interactive = parse_testing_args()
     dataloader = get_dataloader(dataloader_args)
 
     if load_path:
         model, optimizer, epoch, train_reporter, valid_reporter = load_snapshot(load_path)
     elif model_args.model_name:
-        model_args.pred_frames_num = dataloader.dataset.future_frames_num
+        model_args.pred_frames_num = pred_frames_num
         model_args.keypoints_num = dataloader.dataset.keypoints_num
         model = get_model(model_args)
     else:
