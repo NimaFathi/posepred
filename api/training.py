@@ -22,8 +22,8 @@ if __name__ == '__main__':
         model_args.keypoints_num = train_dataloader.dataset.keypoints_num
         model = get_model(model_args)
         optimizer = optim.Adam(model.parameters(), lr=trainer_args.lr)
-        train_reporter = Reporter()
-        valid_reporter = Reporter()
+        train_reporter = Reporter(state='train')
+        valid_reporter = Reporter(state='valid')
         trainer_args.save_dir = setup_training_dir(ROOT_DIR)
         save_args({'trainer_args': trainer_args, 'model_args': model.args}, trainer_args.save_dir)
         save_snapshot(model, optimizer, trainer_args.lr, 0, train_reporter, valid_reporter, trainer_args.save_dir)
