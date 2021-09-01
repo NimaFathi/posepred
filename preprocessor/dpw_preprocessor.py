@@ -33,8 +33,8 @@ class Preprocessor3DPW(Processor):
         print('start creating 3DPW normal static data ... ')
         header = [
             'video_section', 'observed_pose', 'future_pose',
-            'observed_frames_related_path', 'future_frames_related_path',
-            'obs_cam_extrinsic', 'future_camera_extrinsic'
+            'observed_image_path', 'future_image_path',
+            'obs_cam_extrinsic', 'future_cam_extrinsic', 'cam_intrinsic'
         ]
         total_frame_num = self.obs_frame_num + self.pred_frame_num
 
