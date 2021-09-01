@@ -62,11 +62,6 @@ class Reporter:
                 continue
             with open(os.path.join(save_dir, 'data', '-'.join((self.state, key)) + '.json'), "w") as f:
                 json.dump(value, f, indent=4)
-            plt.plot(value)
-            plt.xlabel('epoch')
-            plt.ylabel(key)
-            plt.savefig(os.path.join(save_dir, 'plots', key + '.png'))
-            plt.show()
 
     def print_mean_std(self, use_mask):
         for key, value in self.history.items():
@@ -83,8 +78,8 @@ class Reporter:
             plt.plot(X, value, color='b', label='-'.join(('train', key)))
             if key in validiation_history.keys():
                 plt.plot(X, validiation_history.get(key), color='g', label='-'.join(('validation', key)))
-            plt.plot(value)
             plt.xlabel('epoch')
             plt.ylabel(key)
+            plt.legend()
             plt.savefig(os.path.join(save_dir, 'plots', key + '.png'))
             plt.show()

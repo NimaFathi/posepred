@@ -5,6 +5,7 @@ from utils.save_load import save_snapshot
 from utils.metrics import accuracy, ADE, FDE
 from utils.others import pose_from_vel
 from utils.losses import L1, MSE, BCE
+from utils.reporter import Reporter
 
 
 class Trainer:
@@ -34,6 +35,8 @@ class Trainer:
                               self.valid_reporter, self.args.save_dir)
         self.train_reporter.save_data(self.model.args.use_mask, self.args.save_dir)
         self.valid_reporter.save_data(self.model.args.use_mask, self.args.save_dir)
+        Reporter.save_plots(self.model.args.use_mask, self.args.save_dir, self.train_reporter.history,
+                            self.valid_reporter.history)
         print("-" * 100)
         print('Training is completed in %.2f seconds.' % (time.time() - time0))
 
