@@ -3,35 +3,11 @@ import argparse
 from args.helper import DataloaderArgs, ModelArgs
 
 
-class VisualizationArgs:
-    def __init__(self, dataset_name, keypoint_dim, model_name=None, load_path=None, gif_name=None, seq_index=None,
-                 is_interactive=False, persons_num=1, is_testing=True, pred_frames_num=None, use_mask=False,
-                 skip_frame=0):
-        # dataloader_args
-        self.dataset_name = dataset_name
-        self.keypoint_dim = keypoint_dim
-        self.is_interactive = is_interactive
-        self.persons_num = persons_num
-        self.is_testing = is_testing
-        self.pred_frames_num = pred_frames_num
-        self.use_mask = use_mask
-        self.skip_frame = skip_frame
-        self.batch_size = 1
-        self.shuffle = False
-        self.pin_memory = False
-        self.num_workers = 0
-
-        self.model_name = model_name
-        self.load_path = load_path
-        self.seq_index = seq_index
-        self.gif_name = gif_name
-
-
 def parse_visualization_args():
     args = __parse_visualization_args()
     dataloader_args = DataloaderArgs(args.dataset_name, args.keypoint_dim, args.is_interactive, args.persons_num,
-                                     args.use_mask, args.is_testing, args.skip_frame, args.batch_size, args.shuffle,
-                                     args.pin_memory, args.num_workers)
+                                     args.use_mask, args.skip_frame, args.batch_size, args.shuffle, args.pin_memory,
+                                     args.num_workers, is_visualizing=True)
     model_args = ModelArgs(args.model_name, args.use_mask, args.keypoint_dim)
 
     return dataloader_args, model_args, args.load_path, args.is_testing, args.pred_frames_num, args.seq_index, args.gif_name
