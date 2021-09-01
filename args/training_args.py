@@ -3,48 +3,6 @@ import argparse
 from args.helper import TrainerArgs, DataloaderArgs, ModelArgs
 
 
-class TrainingArgs:
-    def __init__(self, train_dataset_name, valid_dataset_name, model_name, keypoint_dim, epochs, start_epoch=0,
-                 lr=0.001, decay_factor=0.95, decay_patience=20, distance_loss='L1', mask_loss_weight=0.25,
-                 snapshot_interval=20, is_interactive=False, persons_num=1, use_mask=False, skip_frame=0,
-                 batch_size=1, shuffle=True, pin_memory=False, num_workers=0, hidden_size=200, hardtanh_limit=10,
-                 n_layers=1, dropout_enc=0, dropout_pose_dec=0, dropout_mask_dec=0, load_path=None):
-        # trainer_args
-        self.epochs = epochs
-        self.start_epoch = start_epoch
-        self.lr = lr
-        self.decay_factor = decay_factor
-        self.decay_patience = decay_patience
-        self.distance_loss = distance_loss
-        self.mask_loss_weight = mask_loss_weight
-        self.snapshot_interval = snapshot_interval
-
-        # dataloader_args
-        self.train_dataset_name = train_dataset_name
-        self.valid_dataset_name = valid_dataset_name
-        self.keypoint_dim = keypoint_dim
-        self.is_interactive = is_interactive
-        self.persons_num = persons_num
-        self.use_mask = use_mask
-        self.skip_frame = skip_frame
-        self.batch_size = batch_size
-        self.shuffle = shuffle
-        self.pin_memory = pin_memory
-        self.num_workers = num_workers
-        self.is_testing = False
-
-        # model_args
-        self.model_name = model_name
-        self.hidden_size = hidden_size
-        self.hardtanh_limit = hardtanh_limit
-        self.n_layers = n_layers
-        self.dropout_enc = dropout_enc
-        self.dropout_pose_dec = dropout_pose_dec
-        self.dropout_mask_dec = dropout_mask_dec
-
-        self.load_path = load_path
-
-
 def parse_training_args():
     args = __parse_training_args()
     trainer_args = TrainerArgs(args.epochs, args.is_interactive, args.start_epoch, args.lr, args.decay_factor,
