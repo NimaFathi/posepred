@@ -50,11 +50,11 @@ def parse_training_args():
     trainer_args = TrainerArgs(args.epochs, args.is_interactive, args.start_epoch, args.lr, args.decay_factor,
                                args.decay_patience, args.distance_loss, args.mask_loss_weight, args.snapshot_interval)
     train_dataloader_args = DataloaderArgs(args.train_dataset_name, args.keypoint_dim, args.is_interactive,
-                                           args.persons_num, args.use_mask, args.is_testing, args.skip_frame,
-                                           args.batch_size, args.shuffle, args.pin_memory, args.num_workers)
+                                           args.persons_num, args.use_mask, args.skip_frame, args.batch_size,
+                                           args.shuffle, args.pin_memory, args.num_workers)
     valid_dataloader_args = DataloaderArgs(args.valid_dataset_name, args.keypoint_dim, args.is_interactive,
-                                           args.persons_num, args.use_mask, args.is_testing, args.skip_frame,
-                                           args.batch_size, args.shuffle, args.pin_memory, args.num_workers)
+                                           args.persons_num, args.use_mask, args.skip_frame, args.batch_size,
+                                           args.shuffle, args.pin_memory, args.num_workers)
     model_args = ModelArgs(args.model_name, args.use_mask, args.keypoint_dim, args.hidden_size, args.hardtanh_limit,
                            args.n_layers, args.dropout_enc, args.dropout_pose_dec, args.dropout_mask_dec)
 
@@ -99,6 +99,5 @@ def __parse_training_args():
     parser.add_argument('-load_path', type=str, default=None, help='load_snapshot_path')
 
     training_args = parser.parse_args()
-    training_args.is_testing = False
 
     return training_args

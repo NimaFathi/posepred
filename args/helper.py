@@ -3,8 +3,8 @@ import numpy as np
 
 
 class TrainerArgs:
-    def __init__(self, epochs, is_interactive, start_epoch=0, lr=0.001, decay_factor=0.95, decay_patience=20,
-                 distance_loss='L1', mask_loss_weight=0.25, snapshot_interval=20):
+    def __init__(self, epochs, is_interactive, start_epoch, lr, decay_factor, decay_patience, distance_loss,
+                 mask_loss_weight, snapshot_interval):
         self.epochs = epochs
         self.is_interactive = is_interactive
         self.start_epoch = start_epoch
