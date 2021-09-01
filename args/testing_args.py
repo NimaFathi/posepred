@@ -3,34 +3,13 @@ import argparse
 from args.helper import DataloaderArgs, ModelArgs
 
 
-class TestingArgs:
-    def __init__(self, dataset_name, keypoint_dim, pred_frames_num, model_name=None, load_path=None,
-                 is_interactive=False, persons_num=1, use_mask=False, skip_frame=0, batch_size=1, shuffle=True,
-                 pin_memory=False, num_workers=0):
-        # dataloader_args
-        self.dataset_name = dataset_name
-        self.keypoint_dim = keypoint_dim
-        self.pred_frames_num = pred_frames_num
-        self.is_interactive = is_interactive
-        self.persons_num = persons_num
-        self.use_mask = use_mask
-        self.skip_frame = skip_frame
-        self.batch_size = batch_size
-        self.shuffle = shuffle
-        self.pin_memory = pin_memory
-        self.num_workers = num_workers
-        self.is_testing = True
-
-        self.model_name = model_name
-        self.load_path = load_path
-
-
 def parse_testing_args():
     args = __parse_testing_args()
-    dataloader_args = DataloaderArgs(args.dataset_name, args.keypoint_dim, args.is_interactive, args.use_mask,
-                                     args.is_testing, args.skip_frame, args.batch_size, args.shuffle, args.pin_memory,
-                                     args.num_workers)
+    dataloader_args = DataloaderArgs(args.dataset_name, args.keypoint_dim, args.is_interactive, args.persons_num,
+                                     args.use_mask, args.skip_frame, args.batch_size, args.shuffle, args.pin_memory,
+                                     args.num_workers, is_testing=True)
     model_args = ModelArgs(args.model_name, args.use_mask, args.keypoint_dim)
+
     return dataloader_args, model_args, args.load_path, args.pred_frames_num, args.is_interactive
 
 
@@ -54,6 +33,5 @@ def __parse_testing_args():
     parser.add_argument('-load_path', type=str, default=None, help='load_path')
 
     training_args = parser.parse_args()
-    training_args.is_testing = True
 
     return training_args
