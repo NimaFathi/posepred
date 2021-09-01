@@ -5,7 +5,7 @@ from ast import literal_eval
 
 
 class NonInteractiveDataset(Dataset):
-    def __init__(self, dataset_path, keypoint_dim, is_testing, use_mask, skip_frame):
+    def __init__(self, dataset_path, keypoint_dim, is_testing, use_mask, skip_frame, is_visualizing):
         data = pd.read_csv(dataset_path)
         for col in list(data.columns[1:].values):
             try:
@@ -17,6 +17,7 @@ class NonInteractiveDataset(Dataset):
         self.is_testing = is_testing
         self.use_mask = use_mask
         self.skip_frame = skip_frame
+        self.is_visualizing = is_visualizing
 
         seq = self.data.iloc[0]
         self.keypoint_dim = keypoint_dim

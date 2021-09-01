@@ -18,20 +18,20 @@ class TrainerArgs:
 
 
 class DataloaderArgs:
-    def __init__(self, dataset_name, keypoint_dim, is_interactive=False, persons_num=1, use_mask=False,
-                 is_testing=False, skip_frame=0,
-                 batch_size=1, shuffle=True, pin_memory=False, num_workers=0, ):
+    def __init__(self, dataset_name, keypoint_dim, is_interactive, persons_num, use_mask, skip_frame, batch_size,
+                 shuffle, pin_memory, num_workers, is_testing=False, is_visualizing=False):
         self.dataset_name = dataset_name
         self.keypoint_dim = keypoint_dim
         self.is_interactive = is_interactive
         self.persons_num = persons_num
         self.use_mask = use_mask
-        self.is_testing = is_testing
         self.skip_frame = skip_frame
         self.batch_size = batch_size
         self.shuffle = shuffle
         self.pin_memory = pin_memory
         self.num_workers = num_workers
+        self.is_testing = is_testing
+        self.is_visualizing = is_visualizing
 
 
 class ModelArgs:
