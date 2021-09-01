@@ -5,5 +5,6 @@ pillow
 jupyter
 sklearn
 pandas
-opencv-python
-pygifsicle
+opencv-python~=4.4.0.46
+pygifsicle~=1.0.4
+imageio~=2.9.0
