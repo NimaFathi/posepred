@@ -1,4 +1,5 @@
 import sys
+import os
 import time
 import matplotlib.pyplot as plt
 import json
@@ -10,7 +11,9 @@ from utils.average_meter import AverageMeter
 
 class Reporter:
 
-    def __init__(self):
+    def __init__(self, state=''):
+        self.state = state
+
         self.attrs = dict()
         self.attrs['ADE'] = AverageMeter()
         self.attrs['FDE'] = AverageMeter()
@@ -45,7 +48,7 @@ class Reporter:
             avg_meter.reset()
 
     def print_values(self, use_mask, end='\n'):
-        msg = 'epoch' + str(len(self.history['time'])) + ': '
+        msg = self.state + '-epoch' + str(len(self.history['time'])) + ': '
         for key, value in self.history.items():
             if not use_mask and 'mask' in key:
                 continue
@@ -53,19 +56,30 @@ class Reporter:
         print(msg, end=end)
         sys.stdout.flush()
 
-    def save_plots(self, use_mask, save_dir):
+    def save_data(self, use_mask, save_dir):
         for key, value in self.history.items():
             if not use_mask and 'mask' in key:
                 continue
-            with open(save_dir + '/plots/' + key + '.json', "w") as f:
+            with open(os.path.join(save_dir, 'data', '_'.join((self.state, key)) + '.json'), "w") as f:
                 json.dump(value, f, indent=4)
-            plt.plot(value)
-            plt.xlabel('epoch')
-            plt.ylabel(key)
-            plt.savefig(save_dir + '/plots/' + key + '.png')
 
     def print_mean_std(self, use_mask):
         for key, value in self.history.items():
             if not use_mask and 'mask' in key:
                 continue
             print(key + ': (mean=%.3f, std=%.3f)' % (np.mean(value), np.std(value)))
+
+    @staticmethod
+    def save_plots(use_mask, save_dir, train_history, validiation_history):
+        for key, value in train_history.items():
+            if not use_mask and 'mask' in key:
+                continue
+            X = list(range(1, len(value) + 1))
+            plt.plot(X, value, color='b', label='-'.join(('train', key)))
+            if key in validiation_history.keys():
+                plt.plot(X, validiation_history.get(key), color='g', label='_'.join(('validation', key)))
+            plt.xlabel('epoch')
+            plt.ylabel(key)
+            plt.legend()
+            plt.savefig(os.path.join(save_dir, 'plots', key + '.png'))
+            plt.show()

@@ -42,7 +42,7 @@ def __parse_evaluation_args():
     parser.add_argument('-dataset_name', type=str, help='test_dataset_name')
     parser.add_argument('-keypoint_dim', type=int, help='dimension of each keypoint')
     parser.add_argument('-is_interactive', type=bool, default=False, help='support interaction of people')
-    parser.add_argument('-persons_num', type=bool, default=1, help='number of people in each sequence')
+    parser.add_argument('-persons_num', type=int, default=1, help='number of people in each sequence')
     parser.add_argument('-use_mask', type=bool, default=False, help='visibility mask')
     parser.add_argument('-skip_frame', type=int, default=0, help='skip frame in reading dataset')
     parser.add_argument('-batch_size', type=int, default=1, help='batch_size')
