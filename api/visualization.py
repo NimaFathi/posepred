@@ -1,23 +1,28 @@
 from args.visualization_args import parse_visualization_args
 from data_loader.data_loader import get_dataloader
 from utils.save_load import get_model, load_snapshot
+import random
 # from visualization.visualizer import Visualizer
 
 if __name__ == '__main__':
 
-    dataloader_args, model_args, load_path, is_testing, seq_index, gif_name = parse_visualization_args()
+    dataloader_args, model_args, load_path, is_testing, pred_frames_num, seq_index, gif_name = parse_visualization_args()
     dataloader = get_dataloader(dataloader_args)
 
     if load_path:
         model, optimizer, epoch, train_reporter, valid_reporter = load_snapshot(load_path)
     elif model_args.model_name:
-        model_args.pred_frames_num = dataloader.dataset.future_frames_num
+        model_args.pred_frames_num = pred_frames_num if is_testing else dataloader.dataset.future_frames_num
         model_args.keypoints_num = dataloader.dataset.keypoints_num
         model = get_model(model_args)
     else:
         raise Exception("Please provide either a model_name or a load_path to a trained model.")
 
     model.zero_grad()
+
+    if seq_index is None:
+        seq_index = random.randint(0, dataloader.dataset.__len__())
+        print(seq_index)
     data = dataloader.dataset.__getitem__(seq_index, visualize=True)
 
     exit()

@@ -4,12 +4,13 @@ from args.helper import DataloaderArgs, ModelArgs
 
 
 class TestingArgs:
-    def __init__(self, dataset_name, keypoint_dim, model_name=None, load_path=None,
+    def __init__(self, dataset_name, keypoint_dim, pred_frames_num, model_name=None, load_path=None,
                  is_interactive=False, persons_num=1, use_mask=False, skip_frame=0, batch_size=1, shuffle=True,
                  pin_memory=False, num_workers=0):
         # dataloader_args
         self.dataset_name = dataset_name
         self.keypoint_dim = keypoint_dim
+        self.pred_frames_num = pred_frames_num
         self.is_interactive = is_interactive
         self.persons_num = persons_num
         self.use_mask = use_mask
@@ -30,7 +31,7 @@ def parse_testing_args():
                                      args.is_testing, args.skip_frame, args.batch_size, args.shuffle, args.pin_memory,
                                      args.num_workers)
     model_args = ModelArgs(args.model_name, args.use_mask, args.keypoint_dim)
-    return dataloader_args, model_args, args.load_path, args.is_interactive
+    return dataloader_args, model_args, args.load_path, args.pred_frames_num, args.is_interactive
 
 
 def __parse_testing_args():
@@ -39,8 +40,9 @@ def __parse_testing_args():
     # dataloader_args
     parser.add_argument('-dataset_name', type=str, help='test_dataset_name')
     parser.add_argument('-keypoint_dim', type=int, help='dimension of each keypoint')
+    parser.add_argument('-pred_frames_num', type=int, help='number of future frames to predict')
     parser.add_argument('-is_interactive', type=bool, default=False, help='support interaction of people')
-    parser.add_argument('-persons_num', type=bool, default=1, help='number of people in each sequence')
+    parser.add_argument('-persons_num', type=int, default=1, help='number of people in each sequence')
     parser.add_argument('-use_mask', type=bool, default=False, help='visibility mask')
     parser.add_argument('-skip_frame', type=int, default=0, help='skip frame in reading dataset')
     parser.add_argument('-batch_size', type=int, default=1, help='batch_size')

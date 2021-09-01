@@ -44,7 +44,7 @@ def __parse_visualization_args():
     parser.add_argument('-dataset_name', type=str, help='test_dataset_name')
     parser.add_argument('-keypoint_dim', type=int, help='dimension of each keypoint')
     parser.add_argument('-is_interactive', type=bool, default=False, help='support interaction of people')
-    parser.add_argument('-persons_num', type=bool, default=1, help='number of people in each sequence')
+    parser.add_argument('-persons_num', type=int, default=1, help='number of people in each sequence')
     parser.add_argument('-is_testing', type=bool, default=True, help='provide ground truth if false')
     parser.add_argument('-pred_frames_num', type=int, default=None, help='number of future frames to predict')
     parser.add_argument('-use_mask', type=bool, default=False, help='visibility mask')
