@@ -7,7 +7,7 @@ def parse_visualization_args():
     args = __parse_visualization_args()
     dataloader_args = DataloaderArgs(args.dataset_name, args.keypoint_dim, args.is_interactive, args.persons_num,
                                      args.use_mask, args.skip_frame, args.batch_size, args.shuffle, args.pin_memory,
-                                     args.num_workers, is_visualizing=True)
+                                     args.num_workers, is_testing=not args.ground_truth, is_visualizing=True)
     model_args = ModelArgs(args.model_name, args.use_mask, args.keypoint_dim)
 
     return dataloader_args, model_args, args.load_path, args.is_testing, args.pred_frames_num, args.seq_index, args.gif_name
@@ -30,6 +30,7 @@ def __parse_visualization_args():
     parser.add_argument('-load_path', type=str, default=None, help='load_path')
     parser.add_argument('-seq_index', type=int, default=None, help='index of a sequence in dataset.')
     parser.add_argument('-gif_name', type=str, default=None, help='name of generated gif')
+    parser.add_argument('-ground_truth', type=bool, help='wheter to show ground-truth future frames or not.')
 
     visualization_args = parser.parse_args()
     visualization_args.batch_size = 1

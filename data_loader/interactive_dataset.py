@@ -60,7 +60,8 @@ class InteractiveDataset(Dataset):
 
         if self.is_visualizing:
             print(seq['observed_image_path'])
-            print(seq['observed_image_path'].shape)
+            print(len(seq['observed_image_path']))
+            print('observed_image_path' in seq.keys())
 
         return tuple(outputs)
 
