@@ -53,7 +53,7 @@ if __name__ == '__main__':
 
     exit()
 
-    # visualizer = Visualizer(dataset=dataloader_args.dataset_name)
+    # visualizer = Visualizer(dataset_name=dataloader_args.dataset_name)
     # if dataloader_args.keypoint_dim == 2:
     #     visualizer.visualizer_2D(poses=vis_poses, masks=vis_masks, name=model.args.model_name)
     # else:

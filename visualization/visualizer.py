@@ -14,8 +14,8 @@ from visualization.keypoints_connection import keypoint_connections
 
 
 class Visualizer:
-    def __init__(self, dataset):
-        self.dataset = dataset
+    def __init__(self, dataset_name):
+        self.dataset_name = dataset_name
 
     def visualizer_3D(self, poses: list, cam_ext=None, cam_int=None, images_paths=None, fig_size=(16, 12),
                       name='3D_visualize'):
@@ -163,7 +163,7 @@ class Visualizer:
         num_keypoints = all_poses.shape[-1] // 3
         poses = all_poses.reshape(all_poses.shape[0], num_keypoints, 3)
         for i, keypoints in enumerate(poses):
-            for ie, edge in enumerate(keypoint_connections[self.dataset]):
+            for ie, edge in enumerate(keypoint_connections[self.dataset_name]):
                 pass
                 ax.plot(xs=[keypoints[edge, 0][0], keypoints[edge, 0][1]],
                         zs=[keypoints[edge, 1][0], keypoints[edge, 1][1]],
@@ -190,7 +190,7 @@ class Visualizer:
                     cv2.putText(image, f"{keypoint}",
                                 (int(keypoints[keypoint, 0] + 10), int(keypoints[keypoint, 1] - 5)),
                                 cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 0, 0), 1)
-            for ie, edge in enumerate(keypoint_connections[self.dataset]):
+            for ie, edge in enumerate(keypoint_connections[self.dataset_name]):
                 if not ((keypoints[edge, 0][0] <= 0 or keypoints[edge, 1][0] <= 0) or (
                         keypoints[edge, 0][1] <= 0 or keypoints[edge, 1][1] <= 0)) and (
                         all_masks[i][edge[0]] != 0) and (
