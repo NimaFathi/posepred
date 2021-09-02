@@ -65,7 +65,7 @@ Here
 
 ## Visualization
 You can Visualize both 3D and 2D data with visualization module.
-In order to generate .gif outputs you can run `visualize.py' like below:
+In order to generate .gif outputs you can run `visualize.py‍‍‍‍` like below:
 ```
 usage: python -m api.visualize [-h] [--dataset_name] [--keypoint_dim] [--interactive]
                             [--persons_num] [--pred_frames_num] [--skip_frame_num]
