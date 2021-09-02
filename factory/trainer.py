@@ -19,6 +19,7 @@ class Trainer:
         self.scheduler = scheduler
         self.train_reporter = train_reporter
         self.valid_reporter = valid_reporter
+        self.use_validation = False if valid_dataloader is None else True
         self.distance_loss = L1() if self.args.distance_loss == 'L1' else MSE()
         self.mask_loss = BCE()
         self.device = torch.device('cuda')
@@ -28,15 +29,19 @@ class Trainer:
         time0 = time.time()
         for epoch in range(self.args.start_epoch, self.args.epochs):
             self.__train()
-            self.__validate()
-            self.scheduler.step(self.valid_reporter.history['vel_loss'][-1])
+            if self.use_validation:
+                self.__validate()
+                self.scheduler.step(self.valid_reporter.history['vel_loss'][-1])
+            else:
+                print()
             if (epoch + 1) % self.args.snapshot_interval == 0 or (epoch + 1) == self.args.epochs:
                 save_snapshot(self.model, self.optimizer, self.args.lr, epoch + 1, self.train_reporter,
                               self.valid_reporter, self.args.save_dir)
                 self.train_reporter.save_data(self.model.args.use_mask, self.args.save_dir)
-                self.valid_reporter.save_data(self.model.args.use_mask, self.args.save_dir)
+                if self.use_validation:
+                    self.valid_reporter.save_data(self.model.args.use_mask, self.args.save_dir)
                 Reporter.save_plots(self.model.args.use_mask, self.args.save_dir, self.train_reporter.history,
-                                    self.valid_reporter.history)
+                                    self.valid_reporter.history, self.use_validation)
         print("-" * 100)
         print('Training is completed in %.2f seconds.' % (time.time() - time0))
 

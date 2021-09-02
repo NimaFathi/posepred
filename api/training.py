@@ -11,7 +11,7 @@ if __name__ == '__main__':
 
     trainer_args, train_dataloader_args, valid_dataloader_args, model_args, load_path = parse_training_args()
     train_dataloader = get_dataloader(train_dataloader_args)
-    valid_dataloader = get_dataloader(valid_dataloader_args)
+    valid_dataloader = get_dataloader(valid_dataloader_args) if valid_dataloader_args.dataset_name is not None else None
 
     if load_path:
         model, optimizer, epoch, train_reporter, valid_reporter = load_snapshot(load_path)

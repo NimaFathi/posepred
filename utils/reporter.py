@@ -70,13 +70,13 @@ class Reporter:
             print(key + ': (mean=%.3f, std=%.3f)' % (np.mean(value), np.std(value)))
 
     @staticmethod
-    def save_plots(use_mask, save_dir, train_history, validiation_history):
+    def save_plots(use_mask, save_dir, train_history, validiation_history, use_validation):
         for key, value in train_history.items():
             if not use_mask and 'mask' in key:
                 continue
             X = list(range(1, len(value) + 1))
             plt.plot(X, value, color='b', label='-'.join(('train', key)))
-            if key in validiation_history.keys():
+            if use_validation and key in validiation_history.keys():
                 plt.plot(X, validiation_history.get(key), color='g', label='_'.join(('validation', key)))
             plt.xlabel('epoch')
             plt.ylabel(key)
