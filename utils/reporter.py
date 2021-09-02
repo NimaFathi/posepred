@@ -82,4 +82,4 @@ class Reporter:
             plt.ylabel(key)
             plt.legend()
             plt.savefig(os.path.join(save_dir, 'plots', key + '.png'))
-            plt.show()
+            plt.close();
