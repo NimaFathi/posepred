@@ -1,5 +1,5 @@
 from path_definition import ROOT_DIR
-from args.testing_args import parse_testing_args
+from args.prediction_args import parse_testing_args
 from data_loader.data_loader import get_dataloader
 from utils.save_load import get_model, load_snapshot, save_args, setup_testing_dir
 from factory.tester import Tester

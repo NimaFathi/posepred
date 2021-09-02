@@ -1,4 +1,4 @@
-from args.preprocessor_args import parse_preprocessor_args
+from args.preprocessing_args import parse_preprocessor_args
 from preprocessor.dpw_preprocessor import Preprocessor3DPW
 from preprocessor.jta_preprocessor import JTAPreprocessor
 from preprocessor.posetrack_preprocessor import PoseTrackPreprocessor
