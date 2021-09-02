@@ -15,9 +15,9 @@ class Tester:
         self.device = torch.device('cuda')
 
         self.result = pd.DataFrame()
-        self.pred_pose = torch.Tensor()
-        self.pred_vel = torch.Tensor()
-        self.pred_mask = torch.Tensor()
+        self.pred_pose = torch.Tensor().to('cuda')
+        self.pred_vel = torch.Tensor().to('cuda')
+        self.pred_mask = torch.Tensor().to('cuda')
 
     def test(self):
         self.model.eval()
@@ -53,10 +53,10 @@ class Tester:
         # update dataframe
         for i in range(pred_pose.shape[0]):
             if self.model.args.use_mask:
-                single_data = {'pred_pose': str(pred_pose[i].numpy().tolist()),
-                               'pred_vel': str(pred_vel[i].numpy().tolist()),
-                               'pred_mask': str(pred_mask[i].numpy().round().tolist())}
+                single_data = {'pred_pose': str(pred_pose[i].detach().cpu().numpy().tolist()),
+                               'pred_vel': str(pred_vel[i].detach().cpu().numpy().tolist()),
+                               'pred_mask': str(pred_mask[i].detach().cpu().numpy().round().tolist())}
             else:
-                single_data = {'pred_pose': str(pred_pose[i].numpy().tolist()),
-                               'pred_vel': str(pred_vel[i].numpy().tolist())}
+                single_data = {'pred_pose': str(pred_pose[i].detach().cpu().numpy().tolist()),
+                               'pred_vel': str(pred_vel[i].detach().cpu().numpy().tolist())}
             self.result = self.result.append(single_data, ignore_index=True)
