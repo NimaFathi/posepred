@@ -39,7 +39,7 @@ if __name__ == '__main__':
     names = []
     poses = []
     masks = []
-    images = []
+    images_path = []
     cam_exs = []
 
     for key in ['obs_pose', 'future_pose', 'pred_pose']:
@@ -52,11 +52,11 @@ if __name__ == '__main__':
             masks.append(data.get(key))
 
     if 'obs_image' in data.keys():
-        images.append(data.get(key))
+        images_path.append(data.get(key))
     if 'future_image' in data.keys():
-        images.append(data.get(key))
+        images_path.append(data.get(key))
         if 'pred_pose' in data.keys():
-            images.append(data.get(key))
+            images_path.append(data.get(key))
 
     if 'obs_cam_ex' in data.keys():
         cam_exs.append(data.get(key))
@@ -69,6 +69,6 @@ if __name__ == '__main__':
 
     visualizer = Visualizer(dataset_name=dataloader_args.dataset_name)
     if dataloader_args.keypoint_dim == 2:
-        visualizer.visualizer_2D(names=names, poses=poses, masks=masks, images_paths=images, name=model.args.model_name)
+        visualizer.visualizer_2D(names, poses, masks, images_path, model.args.model_name)
     else:
-        visualizer.visualizer_3D(names=names, poses=poses, cam_ext=cam_exs, cam_int=cam_in, images_paths=images, name=model.args.model_name)
+        visualizer.visualizer_3D(names, poses, cam_exs, cam_in, images_path, model.args.model_name)

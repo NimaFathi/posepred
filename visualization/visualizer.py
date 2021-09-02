@@ -17,12 +17,12 @@ class Visualizer:
     def __init__(self, dataset_name):
         self.dataset_name = dataset_name
 
-    def visualizer_3D(self, poses: list, cam_ext=None, cam_int=None, images_paths=None, fig_size=(16, 12),
-                      name='3D_visualize'):
+    def visualizer_3D(self, names, poses, cam_ext, cam_int, images_paths, gif_name, fig_size=(16, 12)):
         """
             visualizer_3D(poses, images_paths, fig_size) -> None
                 @brief Draws a 3D figure with matplotlib (it can have multiple sub figures).
                     The function cv::This function draw multiple 3D poses alongside each other to make comparisons.
+                :param names: name of each subplot. should be a list of strings.
                 :param poses: torch.Tensor: should be a list of tensors of multiple outputs that you want to compare. (should have 4 dimensions)
                     shape of poses is like: [nun_comparisons, num_frames (which we create gif upon it), num_persons(in each frame), num_keypoints * dim]
                     Ex: poses.shape = [3, 16, 5, 51] means you want to compare 3 different groups of outputs each contain
@@ -41,7 +41,7 @@ class Visualizer:
                     16 images in it.
                 :param fig_size: tuple(size=2): size of matplotlib figure.
                     Ex: (8, 6)
-                :param name: str: name of generated output .gif file
+                :param gif_name: str: name of generated output .gif file
                 :return: None: generate a .gif file
         """
         poses = self.__clean_data(poses)
@@ -58,7 +58,7 @@ class Visualizer:
                         self.__scene_to_image(group_pose[j].unsqueeze(0), cam_ext[i], cam_int[i]).tolist())
                 new_pose.append(torch.tensor(new_group_pose).squeeze(1))
             self.visualizer_2D(poses=new_pose, masks=[], images_paths=images_paths, fig_size=fig_size,
-                               name=name + '_2D_overlay')
+                               name=gif_name + '_2D_overlay')
         max_axes = []
         min_axes = []
         limit_axes = []
@@ -87,21 +87,22 @@ class Visualizer:
                         filenames.append(f'./outputs/3D/{j}.png')
                 plt.savefig(f'./outputs/3D/{j}.png', dpi=100)
 
-        with imageio.get_writer(f'./outputs/3D/{name}.gif', mode='I') as writer:
+        with imageio.get_writer(f'./outputs/3D/{gif_name}.gif', mode='I') as writer:
             for filename in filenames:
                 image = imageio.imread(filename)
                 writer.append_data(image)
 
         for filename in set(filenames):
             os.remove(filename)
-        optimize(f'./outputs/3D/{name}.gif')
+        optimize(f'./outputs/3D/{gif_name}.gif')
 
-    def visualizer_2D(self, poses, masks=None, images_paths=None, fig_size=(8, 6), name='2D_visualize'):
+    def visualizer_2D(self, names, poses, masks, images_paths, gif_name, fig_size=(8, 6)):
         """
              visualizer_2D(poses, masks, images_paths, fig_size) -> gif
                 @brief Draws a 2D figure with matplotlib (it can have multiple sub figures).
                     The function cv:: This function draw multiple 2D poses alongside each other to make comparisons
                     (in different outputs) you can draw many different persons together in one sub figure (scene) .
+                :param names: name of each subplot. should be a list of strings.
                 :param poses: torch.Tensor or list of torch.Tensors: 3D input pose
                     shape of poses is like: [nun_comparisons, num_frames (which we create gif upon it), num_persons(in each frame), num_keypoints * dim]
                     Ex: poses.shape = [3, 16, 5, 34] means you want to compare 3 different groups of outputs each contain
@@ -113,7 +114,7 @@ class Visualizer:
                     Ex: images_paths.shape = [3, 16]
                 :param fig_size: tuple(size=2): size of matplotlib figure.
                     Ex: (8.6)
-                :param name: str: name of generated output .gif file
+                :param gif_name: str: name of generated output .gif file
                 :return None: generate a .gif file
         """
         poses = self.__clean_data(poses)
@@ -151,13 +152,13 @@ class Visualizer:
                     filenames.append(f'./outputs/2D/{plt_index}.png')
             # plt.show()
             plt.savefig(f'./outputs/2D/{plt_index}.png', dpi=100)
-        with imageio.get_writer(f'./outputs/2D/{name}.gif', mode='I') as writer:
+        with imageio.get_writer(f'./outputs/2D/{gif_name}.gif', mode='I') as writer:
             for filename in filenames:
                 image = imageio.imread(filename)
                 writer.append_data(image)
         for filename in set(filenames):
             os.remove(filename)
-        optimize(f'./outputs/2D/{name}.gif')
+        optimize(f'./outputs/2D/{gif_name}.gif')
 
     def __generate_3D_figure(self, all_poses, ax):
         num_keypoints = all_poses.shape[-1] // 3
