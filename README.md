@@ -1,11 +1,9 @@
 # Posepred  
-Pospred is an open-source toolbox for pose prediction based on PyTorch. It is a part of the VitaLab project.  
-  
-<br>  
-  
-<div align="center">  
+Pospred is an open-source toolbox for pose prediction based on PyTorch. It is a part of the VitaLab project.    
+    
+<!-- <div align="center">  
     <img src="visualization/outputs/2D/2D_visualize.gif" width="600px" alt><br>  
-</div>  
+</div> -->  
   
 ## Installation  
 To get started as quickly as possible, follow the instructions in this section. This should allow you train a model from scratch, evaluate your pretrained models, and produce basic visualizations.  
@@ -61,7 +59,7 @@ python -m api.preprocess --dataset_name='posetrack' --dataset_path=<path_to_data
 ```  
   
 ## Training
-Simple training script:
+Train models from scratch:
 ```bash  
 python -m api.train --train_dataset=<dataset_name> --model=<model_name> --keypoint_dim=2 --epochs=100
 ```  
