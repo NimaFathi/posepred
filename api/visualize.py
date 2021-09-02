@@ -44,12 +44,14 @@ if __name__ == '__main__':
 
     for key in ['obs_pose', 'future_pose', 'pred_pose']:
         if key in data.keys():
-            poses.append(data.get(key))
+            pose = data.get(key) if dataloader_args.is_interactive else data.get(key).unsqueeze(0)
+            poses.append(pose)
             names.append(key.split('_')[0])
 
     for key in ['obs_mask', 'future_mask', 'pred_mask']:
         if key in data.keys():
-            masks.append(data.get(key))
+            mask = data.get(key) if dataloader_args.is_interactive else data.get(key).unsqueeze(0)
+            masks.append(mask)
 
     if 'obs_image' in data.keys():
         images_path.append(data.get(key))
