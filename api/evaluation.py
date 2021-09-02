@@ -11,7 +11,7 @@ if __name__ == '__main__':
     reporter = Reporter()
 
     if load_path:
-        model, optimizer, epoch, train_reporter, valid_reporter = load_snapshot(load_path)
+        model, _, _, _, _ = load_snapshot(load_path)
     elif model_args.model_name:
         model_args.pred_frames_num = dataloader.dataset.future_frames_num
         model_args.keypoints_num = dataloader.dataset.keypoints_num
