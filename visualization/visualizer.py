@@ -57,8 +57,8 @@ class Visualizer:
                     new_group_pose.append(
                         self.__scene_to_image(group_pose[j].unsqueeze(0), cam_ext[i], cam_int[i]).tolist())
                 new_pose.append(torch.tensor(new_group_pose).squeeze(1))
-            self.visualizer_2D(poses=new_pose, masks=[], images_paths=images_paths, fig_size=fig_size,
-                               name=gif_name + '_2D_overlay')
+            self.visualizer_2D(names=names, poses=new_pose, masks=[], images_paths=images_paths, fig_size=fig_size,
+                               gif_name=gif_name + '_2D_overlay')
         max_axes = []
         min_axes = []
         limit_axes = []
@@ -85,6 +85,7 @@ class Visualizer:
                 if j == len(poses[0]) - 1:
                     for _ in range(3):
                         filenames.append(f'./outputs/3D/{j}.png')
+                plt.title(names[i])
                 plt.savefig(f'./outputs/3D/{j}.png', dpi=100)
 
         with imageio.get_writer(f'./outputs/3D/{gif_name}.gif', mode='I') as writer:
@@ -118,11 +119,11 @@ class Visualizer:
                 :return None: generate a .gif file
         """
         poses = self.__clean_data(poses)
-        if masks is None:
+        if masks is None or masks == []:
             masks = []
         else:
             masks = self.__clean_data(masks)
-        if images_paths is None:
+        if images_paths is None or images_paths == []:
             images_paths = []
         else:
             images_paths = self.__generate_images_path(images_paths)
@@ -144,13 +145,13 @@ class Visualizer:
             axarr = []
             for i in range(len(poses)):
                 axarr.append(fig.add_subplot(1, subfig_size, i + 1))
+                plt.title(names[i])
                 axarr[i].imshow(images[i][plt_index])
             for i in range(2):
                 filenames.append(f'./outputs/2D/{plt_index}.png')
             if plt_index == len(poses[0]) - 1:
                 for i in range(5):
                     filenames.append(f'./outputs/2D/{plt_index}.png')
-            # plt.show()
             plt.savefig(f'./outputs/2D/{plt_index}.png', dpi=100)
         with imageio.get_writer(f'./outputs/2D/{gif_name}.gif', mode='I') as writer:
             for filename in filenames:
@@ -170,7 +171,6 @@ class Visualizer:
                         zs=[keypoints[edge, 1][0], keypoints[edge, 1][1]],
                         ys=[keypoints[edge, 2][0], keypoints[edge, 2][1]], linewidth=1, label=r'$z=y=x$')
             ax.scatter(xs=keypoints[:, 0], zs=keypoints[:, 1], ys=keypoints[:, 2], s=1)
-            # ax.view_init(90, 5)
 
     def __generate_2D_figure(self, all_poses, all_masks=None, image_path=None):
         num_keypoints = all_poses.shape[-1] // 2
