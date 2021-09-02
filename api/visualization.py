@@ -25,7 +25,21 @@ if __name__ == '__main__':
     index = random.randint(0, dataloader.dataset.__len__()) if index is None else index
     data = dataloader.dataset.__getitem__(index)
 
-    print(len(data))
+    # ['obs_pose', 'future_pose', 'obs_image', 'future_image', 'obs_cam_ex', 'future_cam_ex', 'cam_in']
+
+    # for k, v in data.items():
+    #     print(k, v)
+    #     print('-' * 20)
+
+    print('obs_pose:', data['obs_pose'].shape)
+    print('future_pose:', data['future_pose'].shape)
+    print('obs_image:', len(data['obs_image']))
+    print('future_image:', len(data['future_image']))
+    print('obs_cam_ex:', type(data['obs_cam_ex']))
+    print('future_cam_ex:', type(data['future_cam_ex']))
+    print('cam_in:', type(data['cam_in']))
+    print(data.keys())
+
     exit()
 
     # obs_pose = None
