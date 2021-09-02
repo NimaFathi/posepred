@@ -10,34 +10,34 @@ if __name__ == '__main__':
 
     if args.dataset == 'posetrack':
         preprocessor = PoseTrackPreprocessor(
-            mask=args.mask, dataset_path=args.dataset_path,
-            obs_frame_num=16, custom_name=args.custom_name, is_interactive=args.is_interactive,
+            mask=args.use_mask, dataset_path=args.dataset_path,
+            obs_frame_num=16, custom_name=args.output_name, is_interactive=args.interactive,
             pred_frame_num=14, skip_frame_num=1, use_video_once=True)
     elif args.dataset == 'jta':
         preprocessor = JTAPreprocessor(
-            is_3d=args.is_3d, dataset_path=args.dataset_path,
-            obs_frame_num=args.obs_frame_num, custom_name=args.custom_name, is_interactive=args.is_interactive,
+            is_3d=args.is_3D, dataset_path=args.dataset_path,
+            obs_frame_num=args.obs_frame_num, custom_name=args.output_name, is_interactive=args.interactive,
             pred_frame_num=args.pred_frame_num, skip_frame_num=args.skip_frame_num, use_video_once=args.use_video_once
         )
     elif args.dataset == 'somof_posetrack':
         preprocessor = SoMoFPoseTrackPreprocessor(
-            mask=args.mask, dataset_path=args.dataset_path,
-            obs_frame_num=16, custom_name=args.custom_name, is_interactive=args.is_interactive,
+            mask=args.use_mask, dataset_path=args.dataset_path,
+            obs_frame_num=16, custom_name=args.output_name, is_interactive=args.interactive,
             pred_frame_num=14, skip_frame_num=1, use_video_once=True
         )
     elif args.dataset == 'somof_3dpw':
         preprocessor = SoMoF3DPWPreprocessor(
             dataset_path=args.dataset_path,
-            obs_frame_num=16, custom_name=args.custom_name, is_interactive=args.is_interactive,
+            obs_frame_num=16, custom_name=args.output_name, is_interactive=args.interactive,
             pred_frame_num=14, skip_frame_num=1, use_video_once=True
         )
     elif args.dataset == '3dpw':
         args.is_disentangle = False
         preprocessor = Preprocessor3DPW(
             dataset_path=args.dataset_path,
-            obs_frame_num=args.obs_frame_num, custom_name=args.custom_name, is_interactive=args.is_interactive,
+            obs_frame_num=args.obs_frame_num, custom_name=args.output_name, is_interactive=args.interactive,
             pred_frame_num=args.pred_frame_num, skip_frame_num=args.skip_frame_num, use_video_once=args.use_video_once
         )
     else:
-        preprocessor = None
+        raise Exception("Invalid preprocessor.")
     preprocessor.normal(data_type=args.data_type)
