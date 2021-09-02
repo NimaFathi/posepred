@@ -2,11 +2,10 @@ import random
 import torch
 
 from args.visualization_args import parse_visualization_args
+from visualization.visualizer import Visualizer
 from data_loader.data_loader import get_dataloader
 from utils.save_load import get_model, load_snapshot
 from utils.others import pose_from_vel
-
-# from visualization.visualizer import Visualizer
 
 if __name__ == '__main__':
 
@@ -37,24 +36,39 @@ if __name__ == '__main__':
         if len(outputs) > 1:
             data['pred_mask'] = outputs[1]
 
-    # ['obs_pose', 'obs_mask', 'obs_image', 'future_pose', 'future_mask', 'future_image', 'pred_pose', 'pred_mask', 'obs_cam_ex', 'future_cam_ex', 'cam_in']
+    names = []
+    poses = []
+    masks = []
+    images = []
+    cam_exs = []
 
-    print('obs_pose:', data['obs_pose'].shape)
-    print('future_pose:', data['future_pose'].shape)
-    print('pred_pose:', data['pred_pose'].shape)
+    for key in ['obs_pose', 'future_pose', 'pred_pose']:
+        if key in data.keys():
+            poses.append(data.get(key))
+            names.append(key.split('_')[0])
 
-    print('obs_image:', len(data['obs_image']))
-    print('future_image:', len(data['future_image']))
+    for key in ['obs_mask', 'future_mask', 'pred_mask']:
+        if key in data.keys():
+            masks.append(data.get(key))
 
-    print('obs_cam_ex:', torch.tensor(data['obs_cam_ex']).shape)
-    print('future_cam_ex:', torch.tensor(data['future_cam_ex']).shape)
+    if 'obs_image' in data.keys():
+        images.append(data.get(key))
+    if 'future_image' in data.keys():
+        images.append(data.get(key))
+        if 'pred_pose' in data.keys():
+            images.append(data.get(key))
 
-    print('cam_in:', torch.tensor(data['cam_in']).shape)
+    if 'obs_cam_ex' in data.keys():
+        cam_exs.append(data.get(key))
+    if 'future_cam_ex' in data.keys():
+        cam_exs.append(data.get(key))
+        if 'pred_pose' in data.keys():
+            cam_exs.append(data.get(key))
 
-    exit()
+    cam_in = data.get('cam_in') if 'cam_in' in data.keys() else None
 
-    # visualizer = Visualizer(dataset_name=dataloader_args.dataset_name)
-    # if dataloader_args.keypoint_dim == 2:
-    #     visualizer.visualizer_2D(poses=vis_poses, masks=vis_masks, name=model.args.model_name)
-    # else:
-    #     visualizer.visualizer_3D(poses=vis_poses, name=model.args.model_name)
+    visualizer = Visualizer(dataset_name=dataloader_args.dataset_name)
+    if dataloader_args.keypoint_dim == 2:
+        visualizer.visualizer_2D(names=names, poses=poses, masks=masks, images_paths=images, name=model.args.model_name)
+    else:
+        visualizer.visualizer_3D(names=names, poses=poses, cam_ext=cam_exs, cam_int=cam_in, images_paths=images, name=model.args.model_name)
