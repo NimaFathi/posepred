@@ -20,10 +20,10 @@ def get_model(model_args):
 # TODO map_location="cuda:0" ???
 def load_snapshot(load_snapshot_path):
     snapshot = torch.load(load_snapshot_path, map_location='cpu')
-    model = get_model(snapshot['model_args']).load_state_dict(snapshot['model_state_dict'])
+    model = get_model(snapshot['model_args'])
+    model.load_state_dict(snapshot['model_state_dict'])
     optimizer = optim.Adam(model.parameters(), lr=snapshot['optimizer_lr'])
-    reporters = (snapshot['train_reporter'], snapshot['valid_reporter'])
-    return model, optimizer, snapshot['epoch'], reporters
+    return model, optimizer, snapshot['epoch'], snapshot['train_reporter'], snapshot['valid_reporter']
 
 
 def save_snapshot(model, optimizer, optimizer_lr, epoch, train_reporter, valid_reporter, save_path):
