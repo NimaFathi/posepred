@@ -5,6 +5,8 @@ from args.helper import TrainerArgs, DataloaderArgs, ModelArgs
 
 def parse_training_args():
     args = __parse_training_args()
+    if args.snapshot_interval == -1:
+        args.snapshot_interval = args.epochs
     trainer_args = TrainerArgs(args.epochs, args.interactive, args.start_epoch, args.lr, args.decay_factor,
                                args.decay_patience, args.distance_loss, args.mask_loss_weight, args.snapshot_interval)
     train_dataloader_args = DataloaderArgs(args.train_dataset_name, args.keypoint_dim, args.interactive,
@@ -30,7 +32,7 @@ def __parse_training_args():
     parser.add_argument('--decay_patience', type=int, default=20, help='decay_patience for learning_rate')
     parser.add_argument('--distance_loss', type=str, default='L1', help='use L1 or L2 as distance loss.')
     parser.add_argument('--mask_loss_weight', type=int, default=0.25, help='weight of mask-loss')
-    parser.add_argument('--snapshot_interval', type=int, default=20, help='save snapshot every N epochs')
+    parser.add_argument('--snapshot_interval', type=int, default=-1, help='save snapshot every N epochs')
 
     # dataloader_args
     parser.add_argument('--train_dataset_name', type=str, help='train_dataset_name')
