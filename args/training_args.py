@@ -9,13 +9,13 @@ def parse_training_args():
         args.snapshot_interval = args.epochs
     trainer_args = TrainerArgs(args.epochs, args.interactive, args.start_epoch, args.lr, args.decay_factor,
                                args.decay_patience, args.distance_loss, args.mask_loss_weight, args.snapshot_interval)
-    train_dataloader_args = DataloaderArgs(args.train_dataset_name, args.keypoint_dim, args.interactive,
-                                           args.persons_num, args.use_mask, args.skip_num, args.batch_size,
-                                           args.shuffle, args.pin_memory, args.num_workers)
-    valid_dataloader_args = DataloaderArgs(args.valid_dataset_name, args.keypoint_dim, args.interactive,
-                                           args.persons_num, args.use_mask, args.skip_num, args.batch_size,
-                                           args.shuffle, args.pin_memory, args.num_workers)
-    model_args = ModelArgs(args.model_name, args.use_mask, args.keypoint_dim, args.hidden_size, args.hardtanh_limit,
+    train_dataloader_args = DataloaderArgs(args.train_dataset, args.keypoint_dim, args.interactive, args.persons_num,
+                                           args.use_mask, args.skip_num, args.batch_size, args.shuffle, args.pin_memory,
+                                           args.num_workers)
+    valid_dataloader_args = DataloaderArgs(args.valid_dataset, args.keypoint_dim, args.interactive, args.persons_num,
+                                           args.use_mask, args.skip_num, args.batch_size, args.shuffle, args.pin_memory,
+                                           args.num_workers)
+    model_args = ModelArgs(args.model, args.use_mask, args.keypoint_dim, args.hidden_size, args.hardtanh_limit,
                            args.n_layers, args.dropout_enc, args.dropout_pose_dec, args.dropout_mask_dec)
 
     return trainer_args, train_dataloader_args, valid_dataloader_args, model_args, args.load_path
@@ -35,8 +35,8 @@ def __parse_training_args():
     parser.add_argument('--snapshot_interval', type=int, default=-1, help='save snapshot every N epochs')
 
     # dataloader_args
-    parser.add_argument('--train_dataset_name', type=str, help='train_dataset_name')
-    parser.add_argument('--valid_dataset_name', type=str, help='valid_dataset_name')
+    parser.add_argument('--train_dataset', type=str, help='train_dataset_name')
+    parser.add_argument('--valid_dataset', type=str, help='validation_dataset_name')
     parser.add_argument('--keypoint_dim', type=int, help='dimension of each keypoint')
     parser.add_argument('--interactive', default=False, action='store_true', help='consider interaction')
     parser.add_argument('--persons_num', type=int, default=1, help='number of people in each sequence')
@@ -48,7 +48,7 @@ def __parse_training_args():
     parser.add_argument('--num_workers', type=int, default=0, help='num_workers')
 
     # model_args
-    parser.add_argument('--model_name', type=str, help='model_name')
+    parser.add_argument('--model', type=str, help='model_name')
     parser.add_argument('--hidden_size', type=int, default=200)
     parser.add_argument('--hardtanh_limit', type=float, default=10)
     parser.add_argument('--n_layers', type=int, default=1)
@@ -56,7 +56,7 @@ def __parse_training_args():
     parser.add_argument('--dropout_pose_dec', type=float, default=0)
     parser.add_argument('--dropout_mask_dec', type=float, default=0)
 
-    parser.add_argument('--load_path', type=str, default=None, help='load_snapshot_path')
+    parser.add_argument('--load_path', type=str, help='load_path to trained model')
 
     training_args = parser.parse_args()
 

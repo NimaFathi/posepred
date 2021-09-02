@@ -8,30 +8,30 @@ from preprocessor.somof_posetrack_preprocessor import SoMoFPoseTrackPreprocessor
 if __name__ == '__main__':
     args = parse_preprocessor_args()
 
-    if args.dataset == 'posetrack':
+    if args.dataset_name == 'posetrack':
         preprocessor = PoseTrackPreprocessor(
             mask=args.use_mask, dataset_path=args.dataset_path,
             obs_frame_num=16, custom_name=args.output_name, is_interactive=args.interactive,
             pred_frame_num=14, skip_frame_num=1, use_video_once=True)
-    elif args.dataset == 'jta':
+    elif args.dataset_name == 'jta':
         preprocessor = JTAPreprocessor(
             is_3d=args.is_3D, dataset_path=args.dataset_path,
             obs_frame_num=args.obs_frames_num, custom_name=args.output_name, is_interactive=args.interactive,
             pred_frame_num=args.pred_frames_num, skip_frame_num=args.skip_num, use_video_once=args.use_video_once
         )
-    elif args.dataset == 'somof_posetrack':
+    elif args.dataset_name == 'somof_posetrack':
         preprocessor = SoMoFPoseTrackPreprocessor(
             mask=args.use_mask, dataset_path=args.dataset_path,
             obs_frame_num=16, custom_name=args.output_name, is_interactive=args.interactive,
             pred_frame_num=14, skip_frame_num=1, use_video_once=True
         )
-    elif args.dataset == 'somof_3dpw':
+    elif args.dataset_name == 'somof_3dpw':
         preprocessor = SoMoF3DPWPreprocessor(
             dataset_path=args.dataset_path,
             obs_frame_num=16, custom_name=args.output_name, is_interactive=args.interactive,
             pred_frame_num=14, skip_frame_num=1, use_video_once=True
         )
-    elif args.dataset == '3dpw':
+    elif args.dataset_name == '3dpw':
         args.is_disentangle = False
         preprocessor = Preprocessor3DPW(
             dataset_path=args.dataset_path,
