@@ -65,24 +65,25 @@ Simple training script:
 ```bash  
 python -m api.train --train_dataset=<dataset_name> --model=<model_name> --keypoint_dim=2 --epochs=100
 ```  
-Provide validation_dataset to adjust learning-rate and report metrics on validation-dataset as well.
-```bash  
-python -m api.train --train_dataset=<dataset_name> --valid_dataset=<dataset_name> --model=<model_name> --keypoint_dim=2 --epochs=100
-``` 
+Provide **validation_dataset** to adjust learning-rate and report metrics on validation-dataset as well.
 See here for more details about training arguments.
 
 
 ## Evaluation
-Simple training script:
+Evaluate pretrained model:
 ```bash  
-python -m api.train --train_dataset=<dataset_name> --model=<model_name> --keypoint_dim=2 --epochs=100
+python -m api.evaluate --dataset=<dataset_name> --model=<model_name> --keypoint_dim=2 --load_path=<path_to_model> 
 ```  
-Provide validation_dataset to adjust learning-rate and report metrics on validation-dataset as well.
-```bash  
-python -m api.train --train_dataset=<dataset_name> --valid_dataset=<dataset_name> --model=<model_name> --keypoint_dim=2 --epochs=100
-``` 
-See here for more details about training arguments.
+See here for more details about evaluation arguments.
 
+
+## Prediction
+Generate and save predicted future pose:
+```bash  
+python -m api.predict --dataset=<dataset_name> --model=<model_name> --keypoint_dim=2 --load_path=<path_to_model> 
+```  
+See here for more details about prediction arguments.
+  
   
 ## Visualization  
 You can Visualize both 3D and 2D data with visualization module.  
