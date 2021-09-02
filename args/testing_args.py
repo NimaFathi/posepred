@@ -10,7 +10,7 @@ def parse_testing_args():
                                      args.num_workers, is_testing=True)
     model_args = ModelArgs(args.model_name, args.use_mask, args.keypoint_dim)
 
-    return dataloader_args, model_args, args.load_path, args.pred_frames_num, args.is_interactive
+    return dataloader_args, model_args, args.load_path, args.pred_frames_num, args.interactive
 
 
 def __parse_testing_args():
