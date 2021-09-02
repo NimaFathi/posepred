@@ -25,7 +25,7 @@ def __parse_preprocessor_args():
     parser.add_argument('--output_name', type=str, help='name of preprocessed csv file')
     parser.add_argument('--obs_frames_num', type=int, default=16)
     parser.add_argument('--pred_frames_num', type=int, default=14)
-    parser.add_argument('--skip_num', type=int, default=1, help='number of frames to skip in reading dataset')
+    parser.add_argument('--skip_num', type=int, default=1, help='number of frames to skip')
     parser.add_argument('--use_video_once', default=False, action='store_true')
 
     preprocessor_args = parser.parse_args()

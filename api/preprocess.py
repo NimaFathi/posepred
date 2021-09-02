@@ -17,7 +17,7 @@ if __name__ == '__main__':
         preprocessor = JTAPreprocessor(
             is_3d=args.is_3D, dataset_path=args.dataset_path,
             obs_frame_num=args.obs_frame_num, custom_name=args.output_name, is_interactive=args.interactive,
-            pred_frame_num=args.pred_frame_num, skip_frame_num=args.skip_frame_num, use_video_once=args.use_video_once
+            pred_frame_num=args.pred_frame_num, skip_frame_num=args.skip_num, use_video_once=args.use_video_once
         )
     elif args.dataset == 'somof_posetrack':
         preprocessor = SoMoFPoseTrackPreprocessor(
@@ -36,7 +36,7 @@ if __name__ == '__main__':
         preprocessor = Preprocessor3DPW(
             dataset_path=args.dataset_path,
             obs_frame_num=args.obs_frame_num, custom_name=args.output_name, is_interactive=args.interactive,
-            pred_frame_num=args.pred_frame_num, skip_frame_num=args.skip_frame_num, use_video_once=args.use_video_once
+            pred_frame_num=args.pred_frame_num, skip_frame_num=args.skip_num, use_video_once=args.use_video_once
         )
     else:
         raise Exception("Invalid preprocessor.")

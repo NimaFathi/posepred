@@ -6,7 +6,7 @@ from args.helper import DataloaderArgs, ModelArgs
 def parse_visualization_args():
     args = __parse_visualization_args()
     dataloader_args = DataloaderArgs(args.dataset_name, args.keypoint_dim, args.interactive, args.persons_num,
-                                     args.use_mask, args.skip_frame, args.batch_size, args.shuffle, args.pin_memory,
+                                     args.use_mask, args.skip_num, args.batch_size, args.shuffle, args.pin_memory,
                                      args.num_workers, is_testing=not args.ground_truth, is_visualizing=True)
     model_args = ModelArgs(args.model_name, args.use_mask, args.keypoint_dim)
 
