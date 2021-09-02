@@ -39,6 +39,7 @@ class InteractiveDataset(Dataset):
             obs_pose = self.get_tensor(seq, 'observed_pose', persons_in_seq, self.obs_frames_num)
             obs_vel = (obs_pose[:, 1:, :] - obs_pose[:, :-1, :])
             outputs = [obs_pose, obs_vel]
+            outputs_vis = {'obs_pose': obs_pose}
         except:
             print('faulty row skipped.')
             return self.__getitem__((index + 1) % self.__len__())
@@ -46,6 +47,7 @@ class InteractiveDataset(Dataset):
         if self.use_mask:
             obs_mask = self.get_tensor(seq, 'observed_mask', persons_in_seq, self.obs_frames_num)
             outputs.append(obs_mask)
+            outputs_vis['obs_mask'] = obs_mask
 
         if not self.is_testing:
             assert len(seq.observed_pose) == len(seq.future_pose), "unequal persons in observed and future frames."
@@ -53,15 +55,25 @@ class InteractiveDataset(Dataset):
             future_vel = torch.cat(((future_pose[:, 0, :] - obs_pose[:, -1, :]).unsqueeze(1),
                                     future_pose[:, 1:, :] - future_pose[:, :-1, :]), 1)
             outputs += [future_pose, future_vel]
+            outputs_vis['future_pose'] = future_pose
 
             if self.use_mask:
                 future_mask = self.get_tensor(seq, 'future_mask', persons_in_seq, self.future_frames_num)
                 outputs.append(future_mask)
+                outputs_vis['future_mask'] = future_mask
 
         if self.is_visualizing:
-
-            # print(seq['observed_image_path'])
-            # print('observed_image_path' in seq.keys())
+            if 'observed_image_path' in seq.keys():
+                outputs_vis['obs_image'] = seq['observed_image_path']
+            if 'future_image_path' in seq.keys():
+                outputs_vis['future_image'] = seq['future_image_path']
+            if 'observed_cam_extrinsic' in seq.keys():
+                outputs_vis['obs_cam_ex'] = seq['observed_cam_extrinsic']
+            if 'future_cam_extrinsic' in seq.keys():
+                outputs_vis['future_cam_ex'] = seq['future_cam_extrinsic']
+            if 'cam_intrinsic' in seq.keys():
+                outputs_vis['cam_in'] = seq['cam_intrinsic']
+            return outputs_vis
 
         return tuple(outputs)
 
