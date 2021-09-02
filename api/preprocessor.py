@@ -6,38 +6,38 @@ from preprocessor.somof_3dpw_preprocessor import SoMoF3DPWPreprocessor
 from preprocessor.somof_posetrack_preprocessor import SoMoFPoseTrackPreprocessor
 
 if __name__ == '__main__':
-    opt = parse_preprocessor_args()
+    args = parse_preprocessor_args()
 
-    if opt.dataset == 'posetrack':
+    if args.dataset == 'posetrack':
         preprocessor = PoseTrackPreprocessor(
-            mask=opt.mask, dataset_path=opt.dataset_path,
-            obs_frame_num=16, custom_name=opt.custom_name, is_interactive=opt.is_interactive,
+            mask=args.mask, dataset_path=args.dataset_path,
+            obs_frame_num=16, custom_name=args.custom_name, is_interactive=args.is_interactive,
             pred_frame_num=14, skip_frame_num=1, use_video_once=True)
-    elif opt.dataset == 'jta':
+    elif args.dataset == 'jta':
         preprocessor = JTAPreprocessor(
-            is_3d=opt.is_3d, dataset_path=opt.dataset_path,
-            obs_frame_num=opt.obs_frame_num, custom_name=opt.custom_name, is_interactive=opt.is_interactive,
-            pred_frame_num=opt.pred_frame_num, skip_frame_num=opt.skip_frame_num, use_video_once=opt.use_video_once
+            is_3d=args.is_3d, dataset_path=args.dataset_path,
+            obs_frame_num=args.obs_frame_num, custom_name=args.custom_name, is_interactive=args.is_interactive,
+            pred_frame_num=args.pred_frame_num, skip_frame_num=args.skip_frame_num, use_video_once=args.use_video_once
         )
-    elif opt.dataset == 'somof_posetrack':
+    elif args.dataset == 'somof_posetrack':
         preprocessor = SoMoFPoseTrackPreprocessor(
-            mask=opt.mask, dataset_path=opt.dataset_path,
-            obs_frame_num=16, custom_name=opt.custom_name, is_interactive=opt.is_interactive,
+            mask=args.mask, dataset_path=args.dataset_path,
+            obs_frame_num=16, custom_name=args.custom_name, is_interactive=args.is_interactive,
             pred_frame_num=14, skip_frame_num=1, use_video_once=True
         )
-    elif opt.dataset == 'somof_3dpw':
+    elif args.dataset == 'somof_3dpw':
         preprocessor = SoMoF3DPWPreprocessor(
-            dataset_path=opt.dataset_path,
-            obs_frame_num=16, custom_name=opt.custom_name, is_interactive=opt.is_interactive,
+            dataset_path=args.dataset_path,
+            obs_frame_num=16, custom_name=args.custom_name, is_interactive=args.is_interactive,
             pred_frame_num=14, skip_frame_num=1, use_video_once=True
         )
-    elif opt.dataset == '3dpw':
-        opt.is_disentangle = False
+    elif args.dataset == '3dpw':
+        args.is_disentangle = False
         preprocessor = Preprocessor3DPW(
-            dataset_path=opt.dataset_path,
-            obs_frame_num=opt.obs_frame_num, custom_name=opt.custom_name, is_interactive=opt.is_interactive,
-            pred_frame_num=opt.pred_frame_num, skip_frame_num=opt.skip_frame_num, use_video_once=opt.use_video_once
+            dataset_path=args.dataset_path,
+            obs_frame_num=args.obs_frame_num, custom_name=args.custom_name, is_interactive=args.is_interactive,
+            pred_frame_num=args.pred_frame_num, skip_frame_num=args.skip_frame_num, use_video_once=args.use_video_once
         )
     else:
         preprocessor = None
-    preprocessor.normal(data_type=opt.data_type)
+    preprocessor.normal(data_type=args.data_type)
