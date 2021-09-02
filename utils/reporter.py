@@ -75,11 +75,11 @@ class Reporter:
             if not use_mask and 'mask' in key:
                 continue
             X = list(range(1, len(value) + 1))
-            plt.plot(X, value, color='b', label='-'.join(('train', key)))
+            plt.plot(X, value, color='b', label='_'.join(('train', key)))
             if use_validation and key in validiation_history.keys():
                 plt.plot(X, validiation_history.get(key), color='g', label='_'.join(('validation', key)))
             plt.xlabel('epoch')
             plt.ylabel(key)
             plt.legend()
             plt.savefig(os.path.join(save_dir, 'plots', key + '.png'))
-            plt.close();
+            plt.close()
