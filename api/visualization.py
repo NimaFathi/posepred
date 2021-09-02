@@ -1,8 +1,10 @@
+import random
+import torch
+
 from args.visualization_args import parse_visualization_args
 from data_loader.data_loader import get_dataloader
 from utils.save_load import get_model, load_snapshot
-import random
-import torch
+from utils.others import pose_from_vel
 
 # from visualization.visualizer import Visualizer
 
@@ -21,25 +23,36 @@ if __name__ == '__main__':
     else:
         raise Exception("Please provide either a model_name or a load_path to a trained model.")
 
-    model.zero_grad()
-
     index = random.randint(0, dataloader.dataset.__len__()) if index is None else index
     data = dataloader.dataset.__getitem__(index)
 
-    # ['obs_pose', 'future_pose', 'obs_image', 'future_image', 'obs_cam_ex', 'future_cam_ex', 'cam_in']
+    model.eval()
+    with torch.no_grad():
+        if dataloader_args.use_mask:
+            outputs = model([data['obs_pose'], data['obs_vel'], data['obs_mask']])
+        else:
+            outputs = model([data['obs_pose'], data['obs_vel']])
+        pred_vel = outputs[0]
+        data['pred_pose'] = pose_from_vel(pred_vel, data['obs_pose'][..., -1, :])
+        if len(outputs) > 1:
+            data['pred_mask'] = outputs[1]
+
+    # ['obs_pose', 'obs_mask', 'obs_image', 'future_pose', 'future_mask', 'future_image', 'pred_pose', 'pred_mask', 'obs_cam_ex', 'future_cam_ex', 'cam_in']
 
     print('obs_pose:', data['obs_pose'].shape)
     print('future_pose:', data['future_pose'].shape)
+    print('pred_pose:', data['pred_pose'].shape)
+
     print('obs_image:', len(data['obs_image']))
     print('future_image:', len(data['future_image']))
+
     print('obs_cam_ex:', torch.tensor(data['obs_cam_ex']).shape)
     print('future_cam_ex:', torch.tensor(data['future_cam_ex']).shape)
+
     print('cam_in:', torch.tensor(data['cam_in']).shape)
 
     exit()
 
-    #
-    #
     # visualizer = Visualizer(dataset=dataloader_args.dataset_name)
     # if dataloader_args.keypoint_dim == 2:
     #     visualizer.visualizer_2D(poses=vis_poses, masks=vis_masks, name=model.args.model_name)

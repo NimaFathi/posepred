@@ -39,7 +39,7 @@ class InteractiveDataset(Dataset):
             obs_pose = self.get_tensor(seq, 'observed_pose', persons_in_seq, self.obs_frames_num)
             obs_vel = (obs_pose[:, 1:, :] - obs_pose[:, :-1, :])
             outputs = [obs_pose, obs_vel]
-            outputs_vis = {'obs_pose': obs_pose}
+            outputs_vis = {'obs_pose': obs_pose, 'obs_vel': obs_vel}
         except:
             print('faulty row skipped.')
             return self.__getitem__((index + 1) % self.__len__())
@@ -56,6 +56,7 @@ class InteractiveDataset(Dataset):
                                     future_pose[:, 1:, :] - future_pose[:, :-1, :]), 1)
             outputs += [future_pose, future_vel]
             outputs_vis['future_pose'] = future_pose
+            outputs_vis['future_vel'] = future_vel
 
             if self.use_mask:
                 future_mask = self.get_tensor(seq, 'future_mask', persons_in_seq, self.future_frames_num)
