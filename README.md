@@ -33,9 +33,9 @@ To fulfill mentioned purpose You should run preprocessing api called `preprocess
   
 ```  
 usage: python -m api.preprocess [-h] [--dataset_name] [--dataset_path] [--data_usage]                          	
-	                            [--obs_frames_num] [--pred_frames_num] [--keypoint_dim]
-                				[--interactive] [--use_mask] [--skip_num]  
-	                            [--use_video_once] [--output_name]
+	                             [--obs_frames_num] [--pred_frames_num] [--keypoint_dim]
+                		     [--interactive] [--use_mask] [--skip_num]  
+	                             [--use_video_once] [--output_name]
   
 mandatory arguments:  
   --dataset_name        Name of using dataset Ex: 'posetrack' or '3dpw' (str)  
