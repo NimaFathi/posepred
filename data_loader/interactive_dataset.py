@@ -59,9 +59,9 @@ class InteractiveDataset(Dataset):
                 outputs.append(future_mask)
 
         if self.is_visualizing:
-            print(seq['observed_image_path'])
-            print(len(seq['observed_image_path']))
-            print('observed_image_path' in seq.keys())
+            pass
+            # print(seq['observed_image_path'])
+            # print('observed_image_path' in seq.keys())
 
         return tuple(outputs)
 

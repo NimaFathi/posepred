@@ -7,14 +7,15 @@ import random
 
 if __name__ == '__main__':
 
-    dataloader_args, model_args, load_path, is_testing, pred_frames_num, seq_index, gif_name = parse_visualization_args()
+    dataloader_args, model_args, load_path, ground_truth, pred_frames_num, index = parse_visualization_args()
     dataloader = get_dataloader(dataloader_args)
 
     if load_path:
         model, optimizer, epoch, train_reporter, valid_reporter = load_snapshot(load_path)
     elif model_args.model_name:
-        print(is_testing)
-        model_args.pred_frames_num = pred_frames_num if is_testing else dataloader.dataset.future_frames_num
+        print(ground_truth)
+        print(pred_frames_num)
+        model_args.pred_frames_num = dataloader.dataset.future_frames_num if ground_truth else pred_frames_num
         assert model_args.pred_frames_num is not None, 'specify pred_frames_num'
         model_args.keypoints_num = dataloader.dataset.keypoints_num
         model = get_model(model_args)
@@ -23,11 +24,10 @@ if __name__ == '__main__':
 
     model.zero_grad()
 
-    if seq_index is None:
-        seq_index = random.randint(0, dataloader.dataset.__len__())
-    data = dataloader.dataset.__getitem__(seq_index)
+    index = random.randint(0, dataloader.dataset.__len__()) if index is None else index
+    data = dataloader.dataset.__getitem__(index)
+
     print(len(data))
-    print()
     exit()
 
     # obs_pose = None
@@ -56,6 +56,6 @@ if __name__ == '__main__':
     #
     # visualizer = Visualizer(dataset=dataloader_args.dataset_name)
     # if dataloader_args.keypoint_dim == 2:
-    #     visualizer.visualizer_2D(poses=vis_poses, masks=vis_masks, name=gif_name)
+    #     visualizer.visualizer_2D(poses=vis_poses, masks=vis_masks, name=model.args.model_name)
     # else:
-    #     visualizer.visualizer_3D(poses=vis_poses, name=gif_name)
+    #     visualizer.visualizer_3D(poses=vis_poses, name=model.args.model_name)
