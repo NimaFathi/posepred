@@ -60,8 +60,29 @@ Example:
 python -m api.preprocess --dataset_name='posetrack' --dataset_path=<path_to_dataset> --data_usage='train' --obs_frames_num=16 --pred_frames_num=14 --use_mask  
 ```  
   
-## Usage  
-Here  
+## Training
+Simple training script:
+```bash  
+python -m api.train --train_dataset=<dataset_name> --model=<model_name> --keypoint_dim=2 --epochs=100
+```  
+Provide validation_dataset to adjust learning-rate and report metrics on validation-dataset as well.
+```bash  
+python -m api.train --train_dataset=<dataset_name> --valid_dataset=<dataset_name> --model=<model_name> --keypoint_dim=2 --epochs=100
+``` 
+See here for more details about training arguments.
+
+
+## Evaluation
+Simple training script:
+```bash  
+python -m api.train --train_dataset=<dataset_name> --model=<model_name> --keypoint_dim=2 --epochs=100
+```  
+Provide validation_dataset to adjust learning-rate and report metrics on validation-dataset as well.
+```bash  
+python -m api.train --train_dataset=<dataset_name> --valid_dataset=<dataset_name> --model=<model_name> --keypoint_dim=2 --epochs=100
+``` 
+See here for more details about training arguments.
+
   
 ## Visualization  
 You can Visualize both 3D and 2D data with visualization module.  
