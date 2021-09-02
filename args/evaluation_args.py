@@ -6,7 +6,7 @@ from args.helper import DataloaderArgs, ModelArgs
 def parse_evaluation_args():
     args = __parse_evaluation_args()
     dataloader_args = DataloaderArgs(args.dataset_name, args.keypoint_dim, args.interactive, args.persons_num,
-                                     args.use_mask, args.skip_frame, args.batch_size, args.shuffle, args.pin_memory,
+                                     args.use_mask, args.skip_frames_num, args.batch_size, args.shuffle, args.pin_memory,
                                      args.num_workers)
     model_args = ModelArgs(args.model_name, args.use_mask, args.keypoint_dim)
 
@@ -22,7 +22,7 @@ def __parse_evaluation_args():
     parser.add_argument('--interactive', default=False, action='store_true', help='consider interaction')
     parser.add_argument('--persons_num', type=int, default=1, help='number of people in each sequence')
     parser.add_argument('--use_mask', default=False, action='store_true', help='use visibility mask')
-    parser.add_argument('--skip_frame', type=int, default=0, help='skip frame in reading dataset')
+    parser.add_argument('--skip_num', type=int, default=0, help='number of frames to skip in reading dataset')
     parser.add_argument('--batch_size', type=int, default=1, help='batch_size')
     parser.add_argument('--shuffle', default=False, action='store_true', help='shuffle dataset')
     parser.add_argument('--pin_memory', type=bool, default=False)

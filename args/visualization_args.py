@@ -23,7 +23,7 @@ def __parse_visualization_args():
     parser.add_argument('--persons_num', type=int, default=1, help='number of people in each sequence')
     parser.add_argument('--pred_frames_num', type=int, default=None, help='number of future frames to predict')
     parser.add_argument('--use_mask', default=False, action='store_true', help='use visibility mask')
-    parser.add_argument('--skip_frames_num', type=int, default=0, help='skip frame in reading dataset')
+    parser.add_argument('--skip_num', type=int, default=0, help='number of frames to skip in reading dataset')
 
     parser.add_argument('--model_name', type=str, help='model_name')
     parser.add_argument('--load_path', type=str, default=None, help='load_path')

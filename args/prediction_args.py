@@ -23,7 +23,7 @@ def __parse_testing_args():
     parser.add_argument('--interactive', default=False, action='store_true', help='consider interaction')
     parser.add_argument('--persons_num', type=int, default=1, help='number of people in each sequence')
     parser.add_argument('--use_mask', default=False, action='store_true', help='use visibility mask')
-    parser.add_argument('--skip_frame', type=int, default=0, help='skip frame in reading dataset')
+    parser.add_argument('--skip_frames_num', type=int, default=0, help='skip frame in reading dataset')
     parser.add_argument('--batch_size', type=int, default=1, help='batch_size')
     parser.add_argument('--shuffle', default=False, action='store_true', help='suffle dataset')
     parser.add_argument('--pin_memory', type=bool, default=False)
