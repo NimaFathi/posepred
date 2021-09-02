@@ -49,7 +49,7 @@ optional arguments:
   -h, --help            Show this help message and exit  
   --interactive         Use interactions between persons (bool)
   --use_mask            Use visibility mask for dataloader (bool)
-  --skip_num      		Number of frame to skip between each two used frames (int)
+  --skip_num      	Number of frame to skip between each two used frames (int)
   --use_video_once      Use whole video just once or use until last frame (bool)  
   --output_name         Name of generated csv file (str)
 ```  
@@ -88,12 +88,12 @@ You can Visualize both 3D and 2D data with visualization module.
 In order to generate .gif outputs you can run `visualize.py‍‍‍‍` like below:  
 ```  
 usage: python -m api.visualize [-h] [--dataset] [--model] [--keypoint_dim]
-							   [--persons_num] [--index] [--load_path] [--ground_truth]
-							   [--pred_frames_num] [--interactive] [--use_mask][--skip_num]  
+			       [--persons_num] [--index] [--load_path] [--ground_truth]
+			       [--pred_frames_num] [--interactive] [--use_mask][--skip_num]  
   
 mandatory arguments:  
   --dataset 	        Name of using dataset (str)  
-  --model          Name of desired model (str)  
+  --model          	Name of desired model (str)  
   --keypoint_dim        Number of dim data should have Ex: 2 for 2D and 3 for 3D (int)  
   --persons_num         Number of people in each sequence (int)
     
@@ -105,7 +105,7 @@ optional arguments:
   --pred_frames_num     Number of future frames to predict, mandatory when not using GT (int)  
   --interactive         To consider interaction or not (bool)  
   --use_mask            Use visibility mask if possible for dataloader (bool)  
-  --skip_num      		Number of frame to skip between each two used frames (int)
+  --skip_num      	Number of frame to skip between each two used frames (int)
         
 ```  
   
