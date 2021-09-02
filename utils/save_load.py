@@ -10,17 +10,17 @@ from models import disentangle1, lstm_vel, zero_vel
 
 def get_model(model_args):
     if model_args.model_name == 'lstm_vel':
-        return lstm_vel.LSTMVel(model_args).to(torch.device('cuda'))
+        return lstm_vel.LSTMVel(model_args).to('cuda')
     elif model_args.model_name == 'zero_vel':
-        return zero_vel.ZeroVel(model_args).to(torch.device('cuda'))
+        return zero_vel.ZeroVel(model_args).to('cuda')
     elif model_args.model_name == 'disentangle1':
-        return disentangle1.Disentangle1(model_args).to(torch.device('cuda'))
+        return disentangle1.Disentangle1(model_args).to('cuda')
 
 
 # TODO map_location="cuda:0" ???
 def load_snapshot(load_snapshot_path):
     snapshot = torch.load(load_snapshot_path, map_location='cpu')
-    model = get_model(snapshot['model_args']).load_state_dict(snapshot['model_state'])
+    model = get_model(snapshot['model_args']).load_state_dict(snapshot['model_state_dict'])
     optimizer = optim.Adam(model.parameters(), lr=snapshot['optimizer_lr'])
     reporters = (snapshot['train_reporter'], snapshot['valid_reporter'])
     return model, optimizer, snapshot['epoch'], reporters
