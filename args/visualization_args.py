@@ -18,7 +18,6 @@ def __parse_visualization_args():
 
     # dataloader_args
     parser.add_argument('--dataset_name', type=str, help='test_dataset_name')
-    parser.add_argument('--keypoint_dim', type=int, help='dimension of each keypoint')
     parser.add_argument('--interactive', default=False, action='store_true', help='consider interaction')
     parser.add_argument('--persons_num', type=int, default=1, help='number of people in each sequence')
     parser.add_argument('--pred_frames_num', type=int, default=None, help='number of future frames to predict')
