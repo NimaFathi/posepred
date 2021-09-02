@@ -54,7 +54,7 @@ class Preprocessor3DPW(Processor):
             video_name = re.search('(\w+).pkl', entry.name).group(1)
             pose_data = np.array(pickle_obj['jointPositions'])
             frame_ids_data = pickle_obj['img_frame_ids']
-            cam_extrinsic = pickle_obj['cam_poses']
+            cam_extrinsic = pickle_obj['cam_poses'][:, :3]
             cam_intrinsic = pickle_obj['cam_intrinsics'].tolist()
             section_range = pose_data.shape[1] // (total_frame_num * 2) if self.use_video_once is False else 1
             data = []
