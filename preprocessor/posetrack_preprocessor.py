@@ -37,11 +37,11 @@ class PoseTrackPreprocessor(Processor):
         }
         obs_frames = []
         future_frames = []
-        for j in range(1, total_frame_num * self.skip_frame_num + 1, self.skip_frame_num):
+        for j in range(1, total_frame_num * (self.skip_frame_num + 1) + 1, self.skip_frame_num + 1):
             for pedestrian in frame_ids.keys():
                 if frame_ids[pedestrian].__len__() < j:
                     continue
-                if j <= self.obs_frame_num * self.skip_frame_num:
+                if j <= self.obs_frame_num * (self.skip_frame_num + 1):
                     video_dict['obs_frames'][pedestrian].append(frame_ids[pedestrian][j - 1])
                 else:
                     video_dict['future_frames'][pedestrian].append(frame_ids[pedestrian][j - 1])
@@ -118,11 +118,11 @@ class PoseTrackPreprocessor(Processor):
                     future_pose = []
                     obs_mask = []
                     future_mask = []
-                    for j in range(1, total_frame_num * self.skip_frame_num + 1, self.skip_frame_num):
+                    for j in range(1, total_frame_num * (self.skip_frame_num + 1) + 1, self.skip_frame_num + 1):
                         for pedestrian in pose.keys():
                             if pose[pedestrian].__len__() < j:
                                 continue
-                            if j <= self.obs_frame_num * self.skip_frame_num:
+                            if j <= self.obs_frame_num * (self.skip_frame_num + 1):
                                 video_dict['obs_pose'][pedestrian].append(pose[pedestrian][j - 1])
                                 video_dict['obs_mask'][pedestrian].append(mask[pedestrian][j - 1])
                             else:

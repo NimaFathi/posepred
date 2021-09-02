@@ -6,14 +6,14 @@ from collections import defaultdict
 
 import numpy as np
 
-from preprocessor.preprocessor import Processor
 from path_definition import PREPROCESSED_DATA_DIR
+from preprocessor.preprocessor import Processor
 
 
 class JTAPreprocessor(Processor):
     def __init__(self, is_3d, dataset_path, obs_frame_num, pred_frame_num, skip_frame_num,
                  use_video_once, custom_name, is_interactive):
-        super(JTAPreprocessor, self).__init__(dataset_path,is_interactive, obs_frame_num,
+        super(JTAPreprocessor, self).__init__(dataset_path, is_interactive, obs_frame_num,
                                               pred_frame_num, skip_frame_num, use_video_once, custom_name)
         self.dataset_total_frame_num = 900
         self.is_3d = is_3d
@@ -50,13 +50,13 @@ class JTAPreprocessor(Processor):
         }
         obs_frames = []
         future_frames = []
-        for j in range(1, total_frame_num * self.skip_frame_num + 1, self.skip_frame_num):
+        for j in range(1, total_frame_num * (self.skip_frame_num + 1) + 1, self.skip_frame_num + 1):
             frame_data = defaultdict(list)
             frame = input_matrix[input_matrix[:, 0] == frame_num * total_frame_num * 2 + j]  # find frame data
             for pose in frame:
                 frame_data[pose[1]] = pose[0]
             for p_id in frame_data.keys():
-                if j <= self.obs_frame_num * self.skip_frame_num:
+                if j <= self.obs_frame_num * (self.skip_frame_num + 1):
                     video_data['obs_frames'][p_id].append(frame_data[p_id])
                 else:
                     video_data['future_frames'][p_id].append(frame_data[p_id])
@@ -91,7 +91,7 @@ class JTAPreprocessor(Processor):
 
         total_frame_num = self.obs_frame_num + self.pred_frame_num
         section_range = self.dataset_total_frame_num // (
-                total_frame_num * self.skip_frame_num) if not self.use_video_once else 1
+                total_frame_num * (self.skip_frame_num + 1)) if not self.use_video_once else 1
 
         for entry in os.scandir(self.dataset_path):
             if not entry.path.endswith('.json'):
@@ -113,12 +113,12 @@ class JTAPreprocessor(Processor):
                     obs_mask = []
                     future = []
                     future_mask = []
-                    for j in range(1, total_frame_num * self.skip_frame_num + 1, self.skip_frame_num):
+                    for j in range(1, total_frame_num * (self.skip_frame_num + 1) + 1, self.skip_frame_num + 1):
                         frame_data = {
                             'pose': defaultdict(list),
                             'mask': defaultdict(list)
                         }
-                        frame = matrix[matrix[:, 0] == i * total_frame_num * self.skip_frame_num + j]  # find frame data
+                        frame = matrix[matrix[:, 0] == i * total_frame_num * (self.skip_frame_num + 1) + j]  # find frame data
                         for pose in frame:
                             masked = 0
                             # pose data
@@ -130,7 +130,7 @@ class JTAPreprocessor(Processor):
                             frame_data['mask'][pose[1]].append(1 if masked > 0 else 0)
 
                         for p_id in frame_data['pose'].keys():
-                            if j <= self.obs_frame_num * self.skip_frame_num:
+                            if j <= self.obs_frame_num * (self.skip_frame_num + 1):
                                 video_data['obs_pose'][p_id].append(frame_data['pose'][p_id])
                                 video_data['obs_mask'][p_id].append(frame_data['mask'][p_id])
                             else:
