@@ -2,6 +2,7 @@ from args.visualization_args import parse_visualization_args
 from data_loader.data_loader import get_dataloader
 from utils.save_load import get_model, load_snapshot
 import random
+import torch
 
 # from visualization.visualizer import Visualizer
 
@@ -27,44 +28,17 @@ if __name__ == '__main__':
 
     # ['obs_pose', 'future_pose', 'obs_image', 'future_image', 'obs_cam_ex', 'future_cam_ex', 'cam_in']
 
-    # for k, v in data.items():
-    #     print(k, v)
-    #     print('-' * 20)
-
     print('obs_pose:', data['obs_pose'].shape)
     print('future_pose:', data['future_pose'].shape)
     print('obs_image:', len(data['obs_image']))
     print('future_image:', len(data['future_image']))
-    print('obs_cam_ex:', type(data['obs_cam_ex']))
-    print('future_cam_ex:', type(data['future_cam_ex']))
-    print('cam_in:', type(data['cam_in']))
-    print(data.keys())
+    print('obs_cam_ex:', torch.tensor(data['obs_cam_ex']).shape)
+    print('future_cam_ex:', torch.tensor(data['future_cam_ex']).shape)
+    print('cam_in:', torch.tensor(data['cam_in']).shape)
 
     exit()
 
-    # obs_pose = None
-    # obs_mask = None
-    # obs_image_path = None
     #
-    # future_mask = None
-    # future_pose = None
-    # future_image_path = None
-    #
-    # if not is_testing:
-    #     if model.args.use_mask:
-    #         future.append(data[-1])
-    #     else:
-    #         obs_pose, obs_vel, target_pose, target_vel = data
-    #     vis_poses.append(data[len(data) / 2])
-    #     outputs = model(data[:len(data) / 2])
-    # else:
-    #     outputs = model(data)
-    #
-    # vis_poses.append(data[0])
-    # vis_poses.append(outputs[0])
-    # if model.args.use_mask:
-    #     vis_masks.append(data[2])
-    #     vis_masks.append(outputs[1])
     #
     # visualizer = Visualizer(dataset=dataloader_args.dataset_name)
     # if dataloader_args.keypoint_dim == 2:
