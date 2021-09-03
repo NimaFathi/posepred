@@ -25,7 +25,7 @@ class DataloaderArgs:
         self.is_interactive = is_interactive
         self.persons_num = persons_num
         self.use_mask = use_mask
-        self.skip_num = skip_num
+        self.skip_frame = skip_num
         self.batch_size = batch_size
         self.shuffle = shuffle
         self.pin_memory = pin_memory

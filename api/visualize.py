@@ -22,7 +22,7 @@ if __name__ == '__main__':
     else:
         raise Exception("Please provide either a model_name or a load_path to a trained model.")
 
-    index = random.randint(0, dataloader.dataset.__len__()) if index is None else index
+    index = random.randint(0, dataloader.dataset.__len__() - 1) if index is None else index
     data = dataloader.dataset.__getitem__(index)
 
     model.eval()
@@ -45,13 +45,13 @@ if __name__ == '__main__':
     for key in ['obs_pose', 'future_pose', 'pred_pose']:
         if key in data.keys():
             pose = data.get(key) if dataloader_args.is_interactive else data.get(key).unsqueeze(0)
-            poses.append(pose.permute(0, 2, 1, 3))
+            poses.append(pose.permute(1, 0, 2))
             names.append(key.split('_')[0])
 
     for key in ['obs_mask', 'future_mask', 'pred_mask']:
         if key in data.keys():
             mask = data.get(key) if dataloader_args.is_interactive else data.get(key).unsqueeze(0)
-            masks.append(mask.permute(0, 2, 1, 3))
+            masks.append(mask.permute(1, 0, 2))
 
     if 'obs_image' in data.keys():
         images_path.append(data.get(key))
