@@ -6,9 +6,9 @@ Pospred is an open-source toolbox for pose prediction in PyTorch. It is a part o
 ## Preprocessing   
 ```  
 usage: python -m api.preprocess [-h] [--dataset_name] [--dataset_path] [--data_usage]                          	
-	                              [--obs_frames_num] [--pred_frames_num] [--keypoint_dim]
-                				        [--interactive] [--use_mask] [--skip_num]  
-	                              [--use_video_once] [--output_name]
+	                             [--obs_frames_num] [--pred_frames_num] [--keypoint_dim]
+				     [--interactive] [--use_mask] [--skip_num]  
+	                             [--use_video_once] [--output_name]
   
 mandatory arguments:  
   --dataset_name        Name of using dataset Ex: 'posetrack' or '3dpw' (str)  
@@ -22,7 +22,7 @@ optional arguments:
   -h, --help            Show this help message and exit  
   --interactive         Use interactions between persons (bool)
   --use_mask            Use visibility mask for dataloader (bool)
-  --skip_num        		Number of frame to skip between each two used frames (int)
+  --skip_num        	Number of frame to skip between each two used frames (int)
   --use_video_once      Use whole video just once or use until last frame (bool)  
   --output_name         Name of generated csv file (str)
 ```  
