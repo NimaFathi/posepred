@@ -65,7 +65,7 @@ See here for more details about prediction arguments.
   
 ## Visualization  
 You can Visualize both 3D and 2D data with visualization module.  
-See here for more details about prediction arguments. <br>
+See here for more details about visualization arguments. <br>
 In order to generate .gif outputs you can run `visualize.py‍‍‍‍` like below:  
   
 ### 2D Visualization  
