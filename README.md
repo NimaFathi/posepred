@@ -43,6 +43,7 @@ Train models from scratch:
 python -m api.train --train_dataset=<dataset_name> --model=<model_name> --keypoint_dim=2 --epochs=100
 ```  
 Provide **validation_dataset** to adjust learning-rate and report metrics on validation-dataset as well.
+
 See here for more details about training arguments.
 
 
