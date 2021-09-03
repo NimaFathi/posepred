@@ -10,7 +10,7 @@ def parse_visualization_args():
                                      args.num_workers, is_testing=not args.ground_truth, is_visualizing=True)
     model_args = ModelArgs(args.model, args.use_mask, args.keypoint_dim)
 
-    return dataloader_args, model_args, args.load_path, args.ground_truth, args.pred_frames_num, args.index
+    return dataloader_args, model_args, args.load_path, args.ground_truth, args.pred_frames_num, args.index, args.images_dir
 
 
 def __parse_visualization_args():
@@ -29,6 +29,8 @@ def __parse_visualization_args():
     parser.add_argument('--load_path', type=str, help='load_path to trained model')
     parser.add_argument('--index', type=int, help='index of a sequence in dataset')
     parser.add_argument('--ground_truth', default=False, action='store_true', help='use ground-truth future frames')
+
+    parser.add_argument('--images_dir', type=str, help='path to images directory')
 
     visualization_args = parser.parse_args()
     visualization_args.batch_size = 1

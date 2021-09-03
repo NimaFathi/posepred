@@ -31,8 +31,8 @@ if __name__ == '__main__':
             outputs = model([data['obs_pose'], data['obs_vel'], data['obs_mask']])
         else:
             outputs = model([data['obs_pose'], data['obs_vel']])
-        pred_vel = outputs[0].detach().cpu()
-        data['pred_pose'] = pose_from_vel(pred_vel, data['obs_pose'][..., -1, :])
+        pred_vel = outputs[0]
+        data['pred_pose'] = pose_from_vel(pred_vel, data['obs_pose'][..., -1, :].to('cuda')).detach().cpu()
         if len(outputs) > 1:
             data['pred_mask'] = outputs[1].detach().cpu()
 
