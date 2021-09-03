@@ -11,8 +11,7 @@ from preprocessor.preprocessor import Processor
 
 class PoseTrackPreprocessor(Processor):
     def __init__(self, mask, dataset_path, is_interactive, obs_frame_num, pred_frame_num,
-                 skip_frame_num,
-                 use_video_once, custom_name):
+                 skip_frame_num, use_video_once, custom_name):
         super(PoseTrackPreprocessor, self).__init__(dataset_path, is_interactive, obs_frame_num,
                                                     pred_frame_num, skip_frame_num, use_video_once, custom_name)
         self.dataset_total_frame_num = 30

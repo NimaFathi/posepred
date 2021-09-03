@@ -11,8 +11,8 @@ from preprocessor.preprocessor import Processor
 
 
 class Preprocessor3DPW(Processor):
-    def __init__(self, dataset_path, obs_frame_num, pred_frame_num, skip_frame_num,
-                 use_video_once, custom_name, is_interactive):
+    def __init__(self, dataset_path, is_interactive, obs_frame_num, pred_frame_num, skip_frame_num,
+                 use_video_once, custom_name):
         super(Preprocessor3DPW, self).__init__(dataset_path, is_interactive, obs_frame_num,
                                                pred_frame_num, skip_frame_num, use_video_once, custom_name)
 
