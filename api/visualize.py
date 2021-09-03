@@ -9,7 +9,7 @@ from utils.others import pose_from_vel
 
 if __name__ == '__main__':
 
-    dataloader_args, model_args, load_path, ground_truth, pred_frames_num, index = parse_visualization_args()
+    dataloader_args, model_args, load_path, ground_truth, pred_frames_num, index, images_dir = parse_visualization_args()
     dataloader = get_dataloader(dataloader_args)
 
     if load_path:
@@ -69,7 +69,7 @@ if __name__ == '__main__':
 
     cam_in = data.get('cam_in') if 'cam_in' in data.keys() else None
 
-    visualizer = Visualizer(dataset_name=dataloader_args.dataset_name)
+    visualizer = Visualizer(dataset_name=dataloader_args.dataset_name, images_dir= images_dir)
     if dataloader_args.keypoint_dim == 2:
         visualizer.visualizer_2D(names, poses, masks, images_path, model.args.model_name)
     else:
