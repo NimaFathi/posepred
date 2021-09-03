@@ -30,33 +30,12 @@ pip install -r requirements.txt
 ## Preprocessing  
 We need to create clean static file to enhance dataloader and speed-up other parts.  
 To fulfill mentioned purpose You should run preprocessing api called `preprocess.py` like below:  
-  
-```  
-usage: python -m api.preprocess [-h] [--dataset_name] [--dataset_path] [--data_usage]                          	
-	                             [--obs_frames_num] [--pred_frames_num] [--keypoint_dim]
-                		     [--interactive] [--use_mask] [--skip_num]  
-	                             [--use_video_once] [--output_name]
-  
-mandatory arguments:  
-  --dataset_name        Name of using dataset Ex: 'posetrack' or '3dpw' (str)  
-  --dataset_path        Path to dataset (str)  
-  --data_usage          Type of data to use Ex: 'train', 'validation' or 'test' (str)  
-  --obs_frames_num      Number of frames to observe (int)  
-  --pred_frames_num     Number of frames to predict (int)    
-  --keypoint_dim        Number of dim data should have Ex: 2 for 2D and 3 for 3D (int)  
-    
-optional arguments:  
-  -h, --help            Show this help message and exit  
-  --interactive         Use interactions between persons (bool)
-  --use_mask            Use visibility mask for dataloader (bool)
-  --skip_num      	Number of frame to skip between each two used frames (int)
-  --use_video_once      Use whole video just once or use until last frame (bool)  
-  --output_name         Name of generated csv file (str)
-```  
+
 Example:  
 ```bash  
 python -m api.preprocess --dataset_name=<dataset_name> --dataset_path=<path_to_dataset> --data_usage='train' --obs_frames_num=16 --pred_frames_num=14 --use_mask  
 ```  
+See here for more details about preprocessing arguments.
   
 ## Training
 Train models from scratch:
