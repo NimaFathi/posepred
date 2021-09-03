@@ -13,10 +13,10 @@ from preprocessor.preprocessor import Processor
 logger = logging.getLogger(__name__)
 
 
-class PreprocessorJAAD(Processor):
+class JAADPreprocessor(Processor):
     def __init__(self, dataset_path, is_interactive, obs_frame_num, pred_frame_num, skip_frame_num,
-                 use_video_once, custom_name):
-        super(PreprocessorJAAD, self).__init__(dataset_path, is_interactive, obs_frame_num,
+                 use_video_once, custom_name, annotation):
+        super(JAADPreprocessor, self).__init__(dataset_path, is_interactive, obs_frame_num,
                                                pred_frame_num, skip_frame_num, use_video_once, custom_name)
 
         self.output_dir = os.path.join(
@@ -31,9 +31,11 @@ class PreprocessorJAAD(Processor):
             'sum2_pose': np.zeros(3),
             'sum_pose': np.zeros(3)
         }
+        self.annotation = annotation
 
     def normal(self, data_type='train'):
-        self.create_annotations()
+        if not self.annotation:
+            self.create_annotations()
 
     def create_annotations(self):
         for subdir, dirs, files in os.walk(self.dataset_path):
@@ -54,8 +56,3 @@ class PreprocessorJAAD(Processor):
                     with open(json_out_name, 'w') as f:
                         json.dump([ann for ann in pred], f, indent=4)
         self.dataset_path = PREPROCESSED_DATA_DIR + "openpifpaf/JAAD/"
-
-
-if __name__ == '__main__':
-    s = PreprocessorJAAD('home/nima', 16, 14, 0, True, True, None)
-    s.create_annotations('/home/nima/EPFL/images')

@@ -4,6 +4,8 @@ from preprocessor.jta_preprocessor import JTAPreprocessor
 from preprocessor.posetrack_preprocessor import PoseTrackPreprocessor
 from preprocessor.somof_3dpw_preprocessor import SoMoF3DPWPreprocessor
 from preprocessor.somof_posetrack_preprocessor import SoMoFPoseTrackPreprocessor
+from preprocessor.jaad_preprocessor import JAADPreprocessor
+from preprocessor.pie_preprocessor import PIEPreprocessor
 
 if __name__ == '__main__':
     args = parse_preprocessor_args()
@@ -35,6 +37,18 @@ if __name__ == '__main__':
         args.is_disentangle = False
         preprocessor = Preprocessor3DPW(
             dataset_path=args.dataset_path,
+            obs_frame_num=args.obs_frames_num, custom_name=args.output_name, is_interactive=args.interactive,
+            pred_frame_num=args.pred_frames_num, skip_frame_num=args.skip_num, use_video_once=args.use_video_once
+        )
+    elif args.dataset_name == 'jaad':
+        preprocessor = JAADPreprocessor(
+            dataset_path=args.dataset_path, annotation=args.annotaion,
+            obs_frame_num=args.obs_frames_num, custom_name=args.output_name, is_interactive=args.interactive,
+            pred_frame_num=args.pred_frames_num, skip_frame_num=args.skip_num, use_video_once=args.use_video_once
+        )
+    elif args.dataset_name == 'pie':
+        preprocessor = PIEPreprocessor(
+            dataset_path=args.dataset_path, annotation=args.annotation,
             obs_frame_num=args.obs_frames_num, custom_name=args.output_name, is_interactive=args.interactive,
             pred_frame_num=args.pred_frames_num, skip_frame_num=args.skip_num, use_video_once=args.use_video_once
         )

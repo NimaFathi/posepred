@@ -15,8 +15,11 @@ def parse_preprocessor_args():
 
 def __parse_preprocessor_args():
     parser = argparse.ArgumentParser('Preprocessor Arguments')
-    parser.add_argument('--dataset_name', type=str,
-                        choices=['somof_posetrack', 'posetrack', 'somof_3dpw', '3dpw', 'jta'], help='dataset_name')
+    parser.add_argument(
+        '--dataset_name', type=str,
+        choices=['somof_posetrack', 'posetrack', 'somof_3dpw', '3dpw', 'jta', 'jaad', 'pie'],
+        help='dataset_name'
+    )
     parser.add_argument('--dataset_path', type=str, default='./raw_data', help='path of dataset')
     parser.add_argument('--keypoint_dim', type=int, choices=[2, 3], help='dimension of each keypoint')
     parser.add_argument('--data_usage', type=str, choices=['train', 'validation', 'test'])
@@ -27,6 +30,11 @@ def __parse_preprocessor_args():
     parser.add_argument('--pred_frames_num', type=int, help='number of frames to predict')
     parser.add_argument('--skip_num', type=int, default=0, help='number of frames to skip')
     parser.add_argument('--use_video_once', default=False, action='store_true')
+    parser.add_argument(
+        '--annotation', default=False, action='store_true',
+        help='implies if dataset contains annotations or we have to generate annotations with openpifpaf'
+        'if this is True dataset_path in path to annotations else that is path to images'
+    )
 
     preprocessor_args = parser.parse_args()
     preprocessor_args.device = 'cuda'
