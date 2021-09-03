@@ -74,7 +74,7 @@ class InteractiveDataset(Dataset):
             if 'future_cam_extrinsic' in seq.keys():
                 outputs_vis['future_cam_ex'] = torch.tensor(seq['future_cam_extrinsic'])
             if 'cam_intrinsic' in seq.keys():
-                outputs_vis['cam_in'] = seq['cam_intrinsic']
+                outputs_vis['cam_in'] = torch.tensor(seq['cam_intrinsic'])
             return outputs_vis
 
         return tuple(outputs)
