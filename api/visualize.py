@@ -69,8 +69,9 @@ if __name__ == '__main__':
 
     cam_in = data.get('cam_in') if 'cam_in' in data.keys() else None
 
-    visualizer = Visualizer(dataset_name=dataloader_args.dataset_name, images_dir= images_dir)
+    gif_name = '_'.join((model.args.model_name, dataloader_args.dataset_name, str(index)))
+    visualizer = Visualizer(dataset_name=dataloader_args.dataset_name, images_dir=images_dir)
     if dataloader_args.keypoint_dim == 2:
-        visualizer.visualizer_2D(names, poses, masks, images_path, model.args.model_name)
+        visualizer.visualizer_2D(names, poses, masks, images_path, gif_name)
     else:
-        visualizer.visualizer_3D(names, poses, cam_exs, cam_in, images_path, model.args.model_name)
+        visualizer.visualizer_3D(names, poses, cam_exs, cam_in, images_path, gif_name)
