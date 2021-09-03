@@ -182,6 +182,9 @@ Example:
 ```bash  
 python -m api.visualize --dataset=<dataset_name> --model=<model_name> --keypoint_dim=2 --load_path=<path_to_model> --images_dir=<images_dir>
 ```  
+
+### 2D Visualization  
+
 ```bash  
 python -m api.visualize --dataset=<dataset_name> --model=<model_name> --keypoint_dim=3 --load_path=<path_to_model> --images_dir=<images_dir>
 ```  
