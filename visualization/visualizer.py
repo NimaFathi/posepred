@@ -14,7 +14,8 @@ from visualization.keypoints_connection import keypoint_connections
 
 
 class Visualizer:
-    def __init__(self, dataset_name):
+    def __init__(self, dataset_name, images_dir):
+        self.images_dir = images_dir
         self.dataset_name = dataset_name
 
     def visualizer_3D(self, names, poses, cam_ext, cam_int, images_paths, gif_name, fig_size=(16, 12)):
@@ -33,7 +34,7 @@ class Visualizer:
                     16 frame and unspecified number of persons. (for each frame basically we have a (3,4) matrix)
                 :param cam_int: torch.Tensor or list of torch.Tensors: camera intrinsic parameters
                     shape of cam_int is like: [num_comparisons, 3, 3] which last two dimensions demonstrates (3, 3) matrix based on formal definitions
-                    Ex: cam_int.shape = [3, 3, 3] means you want to compare 3 different groups of poses each contain
+                    Ex: cam_int.shape = [3, 3] means you want to compare 3 different groups of poses each contain
                     (3, 3) matrix which demonstrate camera intrinsic parameters
                 :param images_paths: list of tensors or list of numpy arrays: paths to specified outputs (scenes).
                     shape of images_paths is like: [num_comparisons, num_frames]
@@ -45,17 +46,17 @@ class Visualizer:
                 :return: None: generate a .gif file
         """
         poses = self.__clean_data(poses)
-        if cam_ext is not None and cam_int is not None:
+        if cam_ext and cam_int is not None:
             cam_ext = self.__clean_data(cam_ext)
-            cam_int = self.__clean_data(cam_int)
-            if images_paths is not None:
+            if images_paths:
                 images_paths = self.__generate_images_path(images_paths)
             new_pose = []
             for i, group_pose in enumerate(poses):
                 new_group_pose = []
                 for j in range(len(group_pose)):
+
                     new_group_pose.append(
-                        self.__scene_to_image(group_pose[j].unsqueeze(0), cam_ext[i], cam_int[i]).tolist())
+                        self.__scene_to_image(group_pose[j].unsqueeze(0), cam_ext[i], cam_int).tolist())
                 new_pose.append(torch.tensor(new_group_pose).squeeze(1))
             self.visualizer_2D(names=names, poses=new_pose, masks=[], images_paths=images_paths, fig_size=fig_size,
                                gif_name=gif_name + '_2D_overlay')
@@ -86,16 +87,18 @@ class Visualizer:
                     for _ in range(3):
                         filenames.append(f'./outputs/3D/{j}.png')
                 plt.title(names[i])
-                plt.savefig(f'./outputs/3D/{j}.png', dpi=100)
+                # plt.show()
+                plt.savefig(f'/home/nima/EPFL/posepred/visualization/outputs/3D/{j}.png', dpi=100)
+                # plt.savefig(f'./outputs/3D/{j}.png', dpi=100)
 
-        with imageio.get_writer(f'./outputs/3D/{gif_name}.gif', mode='I') as writer:
+        with imageio.get_writer(f'/home/nima/EPFL/posepred/visualization/outputs/3D/{gif_name}.gif', mode='I') as writer:
             for filename in filenames:
                 image = imageio.imread(filename)
                 writer.append_data(image)
 
         for filename in set(filenames):
             os.remove(filename)
-        optimize(f'./outputs/3D/{gif_name}.gif')
+        optimize(f'/home/nima/EPFL/posepred/visualization/outputs/3D/{gif_name}.gif')
 
     def visualizer_2D(self, names, poses, masks, images_paths, gif_name, fig_size=(8, 6)):
         """
@@ -148,18 +151,20 @@ class Visualizer:
                 plt.title(names[i])
                 axarr[i].imshow(images[i][plt_index])
             for i in range(2):
-                filenames.append(f'./outputs/2D/{plt_index}.png')
+                filenames.append(f'/home/nima/EPFL/posepred/visualization/outputs/2D/{plt_index}.png')
+                # filenames.append(f'./outputs/2D/{plt_index}.png')
             if plt_index == len(poses[0]) - 1:
                 for i in range(5):
-                    filenames.append(f'./outputs/2D/{plt_index}.png')
-            plt.savefig(f'./outputs/2D/{plt_index}.png', dpi=100)
-        with imageio.get_writer(f'./outputs/2D/{gif_name}.gif', mode='I') as writer:
+                    filenames.append(f'/home/nima/EPFL/posepred/visualization/outputs/2D/{plt_index}.png')
+                    # filenames.append(f'./outputs/2D/{plt_index}.png')
+            plt.savefig(f'/home/nima/EPFL/posepred/visualization/outputs/2D/{plt_index}.png', dpi=100)
+        with imageio.get_writer(f'/home/nima/EPFL/posepred/visualization/outputs/2D/{gif_name}.gif', mode='I') as writer:
             for filename in filenames:
                 image = imageio.imread(filename)
                 writer.append_data(image)
         for filename in set(filenames):
             os.remove(filename)
-        optimize(f'./outputs/2D/{gif_name}.gif')
+        optimize(f'/home/nima/EPFL/posepred/visualization/outputs/2D/{gif_name}.gif')
 
     def __generate_3D_figure(self, all_poses, ax):
         num_keypoints = all_poses.shape[-1] // 3
@@ -170,11 +175,12 @@ class Visualizer:
                 ax.plot(xs=[keypoints[edge, 0][0], keypoints[edge, 0][1]],
                         zs=[keypoints[edge, 1][0], keypoints[edge, 1][1]],
                         ys=[keypoints[edge, 2][0], keypoints[edge, 2][1]], linewidth=1, label=r'$z=y=x$')
-            ax.scatter(xs=keypoints[:, 0], zs=keypoints[:, 1], ys=keypoints[:, 2], s=1)
+            ax.scatter(xs=keypoints[:, 0].detach().cpu().numpy(), zs=keypoints[:, 1].detach().cpu().numpy(), ys=keypoints[:, 2].detach().cpu().numpy(), s=1)
 
     def __generate_2D_figure(self, all_poses, all_masks=None, image_path=None):
         num_keypoints = all_poses.shape[-1] // 2
         poses = all_poses.reshape(all_poses.shape[0], num_keypoints, 2)
+        image_path = None
         if image_path is None:
             image = np.zeros((1080, 1920, 3))
         else:
@@ -228,6 +234,7 @@ class Visualizer:
         first_shape = pose.shape
         poses = pose.reshape(pose.shape[0], pose.shape[1], pose.shape[-1] // 3, 3)
         one_padding = torch.ones(poses.shape[0], poses.shape[1], pose.shape[-1] // 3, 1)
+
         poses = torch.cat((poses, one_padding), 3)
         poses = poses.transpose(1, 0)
         new_pose = []
@@ -244,6 +251,7 @@ class Visualizer:
     def __clean_data(input_data: list):
         new_data = []
         max_len = len(input_data[0])
+
         for i in range(len(input_data)):
             if len(input_data[i]) > max_len:
                 max_len = len(input_data[i])
@@ -259,15 +267,19 @@ class Visualizer:
             new_data.append(expanded_data)
         return new_data
 
-    @staticmethod
-    def __generate_images_path(images_paths):
+    def __generate_images_path(self, images_paths):
+        new_images_path = []
         max_len = len(images_paths[0])
         for i in range(len(images_paths)):
             if len(images_paths[i]) > max_len:
                 max_len = len(images_paths[i])
         for i, image_path in enumerate(images_paths):
+            group_images_path = []
+            for img in image_path:
+                group_images_path.append(os.path.join(self.images_dir, img))
             if len(image_path) < max_len:
                 last_path = image_path[-1]
                 for i in range(max_len - len(image_path)):
-                    image_path.append(last_path)
-        return images_paths
+                    group_images_path.append(os.path.join(self.images_dir, last_path))
+            new_images_path.append(group_images_path)
+        return new_images_path
