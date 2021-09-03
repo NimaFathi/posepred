@@ -24,7 +24,6 @@ if __name__ == '__main__':
 
     index = random.randint(0, dataloader.dataset.__len__() - 1) if index is None else index
     data = dataloader.dataset.__getitem__(index)
-
     model.eval()
     with torch.no_grad():
         if dataloader_args.use_mask:
@@ -32,7 +31,7 @@ if __name__ == '__main__':
         else:
             outputs = model([data['obs_pose'], data['obs_vel']])
         pred_vel = outputs[0]
-        data['pred_pose'] = pose_from_vel(pred_vel, data['obs_pose'][..., -1, :])
+        data['pred_pose'] = pose_from_vel(pred_vel, data['obs_pose'][..., -1, :].to('cuda'))
         if len(outputs) > 1:
             data['pred_mask'] = outputs[1]
 
