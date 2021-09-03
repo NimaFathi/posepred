@@ -11,7 +11,7 @@ from pygifsicle import optimize
 
 from visualization.color_generator import color_generator
 from visualization.keypoints_connection import keypoint_connections
-
+from path_definition import VISUALIZER_DIR
 
 class Visualizer:
     def __init__(self, dataset_name, images_dir):
@@ -82,23 +82,21 @@ class Visualizer:
                     ax=axarr[j][i]
                 )
                 for _ in range(2):
-                    filenames.append(f'./outputs/3D/{j}.png')
+                    filenames.append(os.path.join(VISUALIZER_DIR, "outputs/3D/", f'{j}.png'))
                 if j == len(poses[0]) - 1:
                     for _ in range(3):
-                        filenames.append(f'./outputs/3D/{j}.png')
+                        filenames.append(os.path.join(VISUALIZER_DIR, "outputs/3D/", f'{j}.png'))
                 plt.title(names[i])
-                # plt.show()
-                plt.savefig(f'/home/nima/EPFL/posepred/visualization/outputs/3D/{j}.png', dpi=100)
-                # plt.savefig(f'./outputs/3D/{j}.png', dpi=100)
-
-        with imageio.get_writer(f'/home/nima/EPFL/posepred/visualization/outputs/3D/{gif_name}.gif', mode='I') as writer:
+                plt.savefig(os.path.join(VISUALIZER_DIR, "outputs/3D/", f'{j}.png'), dpi=100)
+            plt.close(fig)
+        with imageio.get_writer(os.path.join(VISUALIZER_DIR, "outputs/3D/", f'{gif_name}.gif'), mode='I') as writer:
             for filename in filenames:
                 image = imageio.imread(filename)
                 writer.append_data(image)
 
         for filename in set(filenames):
             os.remove(filename)
-        optimize(f'/home/nima/EPFL/posepred/visualization/outputs/3D/{gif_name}.gif')
+        optimize(os.path.join(VISUALIZER_DIR, "outputs/3D/", f'{gif_name}.gif'))
 
     def visualizer_2D(self, names, poses, masks, images_paths, gif_name, fig_size=(8, 6)):
         """
@@ -151,20 +149,19 @@ class Visualizer:
                 plt.title(names[i])
                 axarr[i].imshow(images[i][plt_index])
             for i in range(2):
-                filenames.append(f'/home/nima/EPFL/posepred/visualization/outputs/2D/{plt_index}.png')
-                # filenames.append(f'./outputs/2D/{plt_index}.png')
+                filenames.append(os.path.join(VISUALIZER_DIR, 'outputs/2D', f'{plt_index}.png'))
             if plt_index == len(poses[0]) - 1:
                 for i in range(5):
-                    filenames.append(f'/home/nima/EPFL/posepred/visualization/outputs/2D/{plt_index}.png')
-                    # filenames.append(f'./outputs/2D/{plt_index}.png')
-            plt.savefig(f'/home/nima/EPFL/posepred/visualization/outputs/2D/{plt_index}.png', dpi=100)
-        with imageio.get_writer(f'/home/nima/EPFL/posepred/visualization/outputs/2D/{gif_name}.gif', mode='I') as writer:
+                    filenames.append(os.path.join(VISUALIZER_DIR, 'outputs/2D', f'{plt_index}.png'))
+            plt.savefig(os.path.join(VISUALIZER_DIR, 'outputs/2D', f'{plt_index}.png'), dpi=100)
+            plt.close(fig)
+        with imageio.get_writer(os.path.join(VISUALIZER_DIR, 'outputs/2D', f'{gif_name}.gif'), mode='I') as writer:
             for filename in filenames:
                 image = imageio.imread(filename)
                 writer.append_data(image)
         for filename in set(filenames):
             os.remove(filename)
-        optimize(f'/home/nima/EPFL/posepred/visualization/outputs/2D/{gif_name}.gif')
+        optimize(os.path.join(VISUALIZER_DIR, 'outputs/2D', f'{gif_name}.gif'))
 
     def __generate_3D_figure(self, all_poses, ax):
         num_keypoints = all_poses.shape[-1] // 3
@@ -180,11 +177,9 @@ class Visualizer:
     def __generate_2D_figure(self, all_poses, all_masks=None, image_path=None):
         num_keypoints = all_poses.shape[-1] // 2
         poses = all_poses.reshape(all_poses.shape[0], num_keypoints, 2)
-        image_path = None
         if image_path is None:
             image = np.zeros((1080, 1920, 3))
         else:
-
             image = cv2.imread(image_path)
         if all_masks is None:
             all_masks = torch.ones(all_poses.shape[0], all_poses.shape[1] // 2)
