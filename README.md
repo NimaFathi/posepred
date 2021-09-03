@@ -35,7 +35,7 @@ Example:
 ```bash  
 python -m api.preprocess --dataset_name=<dataset_name> --dataset_path=<path_to_dataset> --data_usage='train' --obs_frames_num=16 --pred_frames_num=14 --use_mask  
 ```  
-See [[here](https://github.com/vita-epfl/posepred/blob/master/ARGS_README.md#preprocessing)] for more details about preprocessing arguments.
+See [here](https://github.com/vita-epfl/posepred/blob/master/ARGS_README.md#preprocessing) for more details about preprocessing arguments.
   
 ## Training
 Train models from scratch:
@@ -44,7 +44,7 @@ python -m api.train --train_dataset=<dataset_name> --model=<model_name> --keypoi
 ```  
 Provide **validation_dataset** to adjust learning-rate and report metrics on validation-dataset as well.
 
-See [[here](https://github.com/vita-epfl/posepred/blob/master/ARGS_README.md#training)] for more details about training arguments.
+See [here](https://github.com/vita-epfl/posepred/blob/master/ARGS_README.md#training) for more details about training arguments.
 
 
 ## Evaluation
@@ -52,7 +52,7 @@ Evaluate pretrained model:
 ```bash  
 python -m api.evaluate --dataset=<dataset_name> --model=<model_name> --keypoint_dim=2 --load_path=<path_to_model> 
 ```  
-See [[here](https://github.com/vita-epfl/posepred/blob/master/ARGS_README.md#evaluation)] for more details about evaluation arguments.
+See [here](https://github.com/vita-epfl/posepred/blob/master/ARGS_README.md#evaluation) for more details about evaluation arguments.
 
 
 ## Prediction
@@ -60,7 +60,7 @@ Generate and save predicted future pose:
 ```bash  
 python -m api.predict --dataset=<dataset_name> --model=<model_name> --keypoint_dim=2 --load_path=<path_to_model> 
 ```  
-See [[here](https://github.com/vita-epfl/posepred/blob/master/ARGS_README.md#prediction)] for more details about prediction arguments.
+See [here](https://github.com/vita-epfl/posepred/blob/master/ARGS_README.md#prediction) for more details about prediction arguments.
   
   
 ## Visualization  
@@ -97,4 +97,5 @@ Sample outputs:
     <img src="visualization/outputs/2D/3D_visualize_2D_overlay.gif" width="600px" alt><br>  
     <img src="visualization/outputs/3D/3D_visualize.gif" width="600px" alt>  
 </div>
-see [[here](https://github.com/vita-epfl/posepred/blob/master/ARGS_README.md#visualization)] for more details about visualization arguments.
+
+see [here](https://github.com/vita-epfl/posepred/blob/master/ARGS_README.md#visualization) for more details about visualization arguments.
