@@ -154,8 +154,8 @@ python -m api.predict --dataset=<dataset_name> --model=<model_name> --keypoint_d
 ## Visualization  
 ```  
 usage: python -m api.visualize [-h] [--dataset] [--model] [--keypoint_dim]
-                               [--persons_num] [--index] [--load_path] [--ground_truth]
-                               [--pred_frames_num] [--interactive] [--use_mask][--skip_num]  
+                               	    [--persons_num] [--index] [--load_path] [--ground_truth]
+                              	    [--pred_frames_num] [--interactive] [--use_mask][--skip_num]  
   
 mandatory arguments:  
   --dataset 	    	Name of using dataset (str)  
