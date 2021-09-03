@@ -1,9 +1,9 @@
 # Arguments
 This is a description to provide details about arguments of Posepred API.
 Pospred is an open-source toolbox for pose prediction in PyTorch. It is a part of the VitaLab project.  
-
   
 ## Preprocessing   
+
 ```  
 usage: python -m api.preprocess [-h] [--dataset_name] [--dataset_path] [--data_usage]                          	
 	                             [--obs_frames_num] [--pred_frames_num] [--keypoint_dim]
@@ -32,6 +32,7 @@ python -m api.preprocess --dataset_name=<dataset_name> --dataset_path=<path_to_d
 ```  
   
 ## Training
+
 ```  
 usage: python -m api.train [-h] [--train_dataset] [--valid_dataset] [--model] 
                            	[--keypoint_dim] [--epochs] [--start_epoch] 
@@ -85,6 +86,7 @@ python -m api.train --train_dataset=<dataset_name> --valid_dataset=<dataset_name
 ```  
 
 ## Evaluation
+
 ``` 
 usage: python -m api.evaluate [-h] [--dataset] [--model] [--keypoint_dim] [--load_path]
                               	   [--use_mask] [--interactive] [--persons_num]
@@ -115,8 +117,8 @@ Example:
 python -m api.evaluate --dataset=<dataset_name> --model=<model_name> --keypoint_dim=2 --load_path=<path_to_model>
 ```  
 
-
 ## Prediction
+
 ```  
 usage: python -m api.predict [-h] [--dataset] [--model] [--keypoint_dim] [--load_path]
                              	  [--use_mask] [--interactive] [--persons_num]
@@ -149,9 +151,9 @@ python -m api.predict --dataset=<dataset_name> --keypoint_dim=2 --load_path=<pat
 ```bash  
 python -m api.predict --dataset=<dataset_name> --model=<model_name> --keypoint_dim=2 --pred_frames_num=<pred_frames_num>
 ```  
-  
-  
+    
 ## Visualization  
+
 ```  
 usage: python -m api.visualize [-h] [--dataset] [--model] [--keypoint_dim]
                                	    [--persons_num] [--index] [--load_path] [--ground_truth]
@@ -183,7 +185,7 @@ Example:
 python -m api.visualize --dataset=<dataset_name> --model=<model_name> --keypoint_dim=2 --load_path=<path_to_model> --images_dir=<images_dir>
 ```  
 
-### 2D Visualization  
+### 3D Visualization  
 
 ```bash  
 python -m api.visualize --dataset=<dataset_name> --model=<model_name> --keypoint_dim=3 --load_path=<path_to_model> --images_dir=<images_dir>
