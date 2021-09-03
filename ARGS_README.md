@@ -92,22 +92,22 @@ usage: python -m api.evaluate [-h] [--dataset] [--model] [--keypoint_dim] [--loa
                               [--shuffle] [--pin_memory] [--num_workers] 
 
 mandatory arguments:
-  --dataset    		      Name of dataset Ex: 'posetrack' or '3dpw' (str)  
-  --model          		  Name of model (str)  
+  --dataset    		Name of dataset Ex: 'posetrack' or '3dpw' (str)  
+  --model          	Name of model (str)  
   --keypoint_dim        Number of dim data should have Ex: 2 for 2D and 3 for 3D (int)  
-  --load_path  			    Path to load a model (str)
+  --load_path  		Path to load a model (str)
 						   
 optional arguments:
--h, --help              Show this help message and exit  
---use_mask 			      	Consider visibility mask (bool)
---interactive 			    Consider interaction between persons (bool)
---persons_num 		    	Number of persons in each sequence (int)
---batch_size 			      Batch_size (int)
---distance_loss 	    	Name of distance loss. (str)
---skip_num 			      	Number of frames to skip in reading dataset (int)
---shuffle 			      	Shuffle dataset (bool)
---pin_memory		      	Pin memory (bool)
---num_workers  		    	Number of workers (int)
+  -h, --help            Show this help message and exit  
+  --use_mask 		Consider visibility mask (bool)
+  --interactive 	Consider interaction between persons (bool)
+  --persons_num 	Number of persons in each sequence (int)
+  --batch_size 		Batch_size (int)
+  --distance_loss 	Name of distance loss. (str)
+  --skip_num 		Number of frames to skip in reading dataset (int)
+  --shuffle 		Shuffle dataset (bool)
+  --pin_memory		Pin memory (bool)
+  --num_workers  	Number of workers (int)
 ```  
 
 Example:
@@ -124,22 +124,22 @@ usage: python -m api.predict [-h] [--dataset] [--model] [--keypoint_dim] [--load
                              [--shuffle] [--pin_memory] [--num_workers]
 							 
 mandatory arguments:
-  --dataset        		  Name of dataset eg: 'posetrack' or '3dpw' (str)  
-  --model          		  Name of desired model. Mandatory if load_path is None. (str)  
+  --dataset        	Name of dataset eg: 'posetrack' or '3dpw' (str)  
+  --model         	Name of desired model. Mandatory if load_path is None. (str)  
   --keypoint_dim        Number of dim data should have eg: 2 for 2D and 3 for 3D (int)  
-  --load_path  			    Path to load a model (str)
-  --pred_frames_num 	  Number of frames to predict. Mandatory if load_path is None. (int)
+  --load_path  		Path to load a model (str)
+  --pred_frames_num 	Number of frames to predict. Mandatory if load_path is None. (int)
 						   
 optional arguments:
--h, --help            	Show this help message and exit  
---use_mask 			  	    Consider visibility mask (bool)
---interactive 	    		Consider interaction between persons (bool)
---persons_num 	    		Number of persons in each sequence (int)
---batch_size 			      Batch_size (int)
---skip_num    			  	Number of frames to skip in reading dataset (int)
---shuffle 		       		Shuffle dataset (bool)
---pin_memory		      	Pin memory (bool)
---num_workers  		    	Number of workers (int)
+  -h, --help            Show this help message and exit  
+  --use_mask 		Consider visibility mask (bool)
+  --interactive 	Consider interaction between persons (bool)
+  --persons_num 	Number of persons in each sequence (int)
+  --batch_size 		Batch_size (int)
+  --skip_num    	Number of frames to skip in reading dataset (int)
+  --shuffle 		Shuffle dataset (bool)
+  --pin_memory		Pin memory (bool)
+  --num_workers  	Number of workers (int)
 ```  
 
 Example:
@@ -158,9 +158,9 @@ usage: python -m api.visualize [-h] [--dataset] [--model] [--keypoint_dim]
                                [--pred_frames_num] [--interactive] [--use_mask][--skip_num]  
   
 mandatory arguments:  
-  --dataset 	          Name of using dataset (str)  
-  --model        	      Name of desired model (str)  
-  --keypoint_dim        Number of dim data should have Ex: 2 for 2D and 3 for 3D (int)  
+  --dataset 	    	Name of using dataset (str)  
+  --model        	Name of desired model (str)  
+  --keypoint_dim      	Number of dim data should have Ex: 2 for 2D and 3 for 3D (int)  
   --persons_num         Number of people in each sequence (int)
     
 optional arguments:  
@@ -171,7 +171,7 @@ optional arguments:
   --pred_frames_num     Number of future frames to predict, mandatory when not using GT (int)  
   --interactive         To consider interaction or not (bool)  
   --use_mask            Use visibility mask if possible for dataloader (bool)  
-  --skip_num      		  Number of frame to skip between each two used frames (int)
+  --skip_num     	Number of frame to skip between each two used frames (int)
 ```  
   
 ### 2D Visualization  
