@@ -55,7 +55,7 @@ optional arguments:
 ```  
 Example:  
 ```bash  
-python -m api.preprocess --dataset_name='posetrack' --dataset_path=<path_to_dataset> --data_usage='train' --obs_frames_num=16 --pred_frames_num=14 --use_mask  
+python -m api.preprocess --dataset_name=<dataset_name> --dataset_path=<path_to_dataset> --data_usage='train' --obs_frames_num=16 --pred_frames_num=14 --use_mask  
 ```  
   
 ## Training
@@ -113,7 +113,7 @@ optional arguments:
   
 Example:  
 ```bash  
-python -m api.visualize --dataset='sample' --model='lstm_vel' --keypoint_dim=2 --load_path=<path_to_model>
+python -m api.visualize --dataset=<dataset_name> --model=<model_name> --keypoint_dim=2 --load_path=<path_to_model>
 ```  
   
 Sample output:  
@@ -130,7 +130,7 @@ If we have camera extrinsic and intrinsic parameters and image paths, we would c
   
 Example:  
 ```bash  
-python -m api.visualize --dataset='sample' --model='lstm_vel' --keypoint_dim=3 --load_path=<path_to_model>
+python -m api.visualize --dataset=<dataset_name> --model=<model_name> --keypoint_dim=3 --load_path=<path_to_model>
 ```  
   
 Sample outputs:  
