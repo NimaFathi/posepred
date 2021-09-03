@@ -119,9 +119,9 @@ python -m api.evaluate --dataset=<dataset_name> --model=<model_name> --keypoint_
 ## Prediction
 ```  
 usage: python -m api.predict [-h] [--dataset] [--model] [--keypoint_dim] [--load_path]
-                             [--use_mask] [--interactive] [--persons_num]
-                             [--pred_frames_num] [--batch_size] [--skip_num]
-                             [--shuffle] [--pin_memory] [--num_workers]
+                             	  [--use_mask] [--interactive] [--persons_num]
+                             	  [--pred_frames_num] [--batch_size] [--skip_num]
+                             	  [--shuffle] [--pin_memory] [--num_workers]
 							 
 mandatory arguments:
   --dataset        	Name of dataset eg: 'posetrack' or '3dpw' (str)  
