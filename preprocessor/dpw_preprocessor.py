@@ -34,7 +34,7 @@ class Preprocessor3DPW(Processor):
         header = [
             'video_section', 'observed_pose', 'future_pose',
             'observed_image_path', 'future_image_path',
-            'obs_cam_extrinsic', 'future_cam_extrinsic', 'cam_intrinsic'
+            'observed_cam_extrinsic', 'future_cam_extrinsic', 'cam_intrinsic'
         ]
         total_frame_num = self.obs_frame_num + self.pred_frame_num
 
