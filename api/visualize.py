@@ -24,16 +24,17 @@ if __name__ == '__main__':
 
     index = random.randint(0, dataloader.dataset.__len__() - 1) if index is None else index
     data = dataloader.dataset.__getitem__(index)
+
     model.eval()
     with torch.no_grad():
         if dataloader_args.use_mask:
             outputs = model([data['obs_pose'], data['obs_vel'], data['obs_mask']])
         else:
             outputs = model([data['obs_pose'], data['obs_vel']])
-        pred_vel = outputs[0]
-        data['pred_pose'] = pose_from_vel(pred_vel, data['obs_pose'][..., -1, :].to('cuda'))
+        pred_vel = outputs[0].detach().cpu()
+        data['pred_pose'] = pose_from_vel(pred_vel, data['obs_pose'][..., -1, :])
         if len(outputs) > 1:
-            data['pred_mask'] = outputs[1]
+            data['pred_mask'] = outputs[1].detach().cpu()
 
     names = []
     poses = []
@@ -67,10 +68,7 @@ if __name__ == '__main__':
             cam_exs.append(data.get('future_cam_ex'))
 
     cam_in = data.get('cam_in') if 'cam_in' in data.keys() else None
-    for i, p in enumerate(poses):
-        poses[i] = p.detach().cpu()
-    for i, m in enumerate(masks):
-        masks[i] = m.dedath().cpu()
+
     visualizer = Visualizer(dataset_name=dataloader_args.dataset_name)
     if dataloader_args.keypoint_dim == 2:
         visualizer.visualizer_2D(names, poses, masks, images_path, model.args.model_name)
