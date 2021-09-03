@@ -158,20 +158,20 @@ usage: python -m api.visualize [-h] [--dataset] [--model] [--keypoint_dim]
                               	    [--pred_frames_num] [--interactive] [--use_mask][--skip_num]  
   
 mandatory arguments:  
-  --dataset 	    	Name of using dataset (str)  
-  --model        	Name of desired model (str)  
+  --dataset 	    	Name of using dataset. (str)  
+  --model        	Name of desired model. (str)  
   --keypoint_dim      	Number of dim data should have Ex: 2 for 2D and 3 for 3D (int)  
-  --persons_num         Number of people in each sequence (int)
     
 optional arguments:  
-  -h, --help            Show this help message and exit  
-  --index               Index of a sequence in dataset to visualize (int)  
-  --load_path           Path to pretrained model (str)  
-  --ground_truth        Visualize ground-truth future frames as well (bool)  
-  --pred_frames_num     Number of future frames to predict, mandatory when not using GT (int)  
-  --interactive         To consider interaction or not (bool)  
-  --use_mask            Use visibility mask if possible for dataloader (bool)  
-  --skip_num     	Number of frame to skip between each two used frames (int)
+  -h, --help            Show this help message and exit.  
+  --index               Index of a sequence in dataset to visualize. (int)  
+  --ground_truth        Visualize ground-truth future frames as well. (bool)  
+  --load_path           Path to pretrained model. (str)  
+  --pred_frames_num 	Number of frames to predict. Mandatory if load_path is None. (int)
+  --interactive         To consider interaction or not. (bool)  
+  --persons_num         Number of people in each sequence. Mandatory if interactive is selected. (int)
+  --use_mask            Use visibility mask if possible for dataloader. (bool)  
+  --skip_num     	Number of frame to skip between each two used frames. (int)
 ```  
   
 ### 2D Visualization  
