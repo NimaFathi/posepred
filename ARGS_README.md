@@ -161,6 +161,8 @@ mandatory arguments:
   --dataset 	    	Name of using dataset. (str)  
   --model        	Name of desired model. (str)  
   --keypoint_dim      	Number of dim data should have Ex: 2 for 2D and 3 for 3D (int)  
+  --images_dir 		Path to existing images on your local computer (str)
+
     
 optional arguments:  
   -h, --help            Show this help message and exit.  
@@ -178,8 +180,8 @@ optional arguments:
   
 Example:  
 ```bash  
-python -m api.visualize --dataset=<dataset_name> --model=<model_name> --keypoint_dim=2 --load_path=<path_to_model>
+python -m api.visualize --dataset=<dataset_name> --model=<model_name> --keypoint_dim=2 --load_path=<path_to_model> --images_dir=<images_dir>
 ```  
 ```bash  
-python -m api.visualize --dataset=<dataset_name> --model=<model_name> --keypoint_dim=3 --load_path=<path_to_model>
+python -m api.visualize --dataset=<dataset_name> --model=<model_name> --keypoint_dim=3 --load_path=<path_to_model> --images_dir=<images_dir>
 ```  
