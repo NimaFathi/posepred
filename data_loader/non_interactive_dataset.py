@@ -65,11 +65,11 @@ class NonInteractiveDataset(Dataset):
             if 'future_image_path' in seq.keys():
                 outputs_vis['future_image'] = seq['future_image_path']
             if 'observed_cam_extrinsic' in seq.keys():
-                outputs_vis['obs_cam_ex'] = seq['observed_cam_extrinsic']
+                outputs_vis['obs_cam_ex'] = torch.tensor(seq['observed_cam_extrinsic'])
             if 'future_cam_extrinsic' in seq.keys():
-                outputs_vis['future_cam_ex'] = seq['future_cam_extrinsic']
+                outputs_vis['future_cam_ex'] = torch.tensor(seq['future_cam_extrinsic'])
             if 'cam_intrinsic' in seq.keys():
-                outputs_vis['cam_in'] = seq['cam_intrinsic']
+                outputs_vis['cam_in'] = torch.tensor(seq['cam_intrinsic'])
             return outputs_vis
 
         return tuple(outputs)
