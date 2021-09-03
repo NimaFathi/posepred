@@ -34,14 +34,14 @@ python -m api.preprocess --dataset_name=<dataset_name> --dataset_path=<path_to_d
 ## Training
 ```  
 usage: python -m api.train [-h] [--train_dataset] [--valid_dataset] [--model] 
-                           [--keypoint_dim] [--epochs] [--start_epoch] [--skip_num]
-                           [--use_mask] [--interactive] [--persons_num]
-                           [--distance_loss] [--mask_loss_weight]
-                           [--lr] [--decay_factor] [--decay_patience]
-                           [--snapshot_interval] [--load_path]
-                           [--batch_size] [--num_workers] [--shuffle] [--pin_memory]
-                           [--hidden_size] [--n_layers] [--hardtanh_limit] 
-                           [--dropout_enc] [--dropout_pose_dec] [--dropout_mask_dec]
+                           	[--keypoint_dim] [--epochs] [--start_epoch] 
+                           	[--use_mask] [--interactive] [--persons_num]
+                           	[--distance_loss] [--mask_loss_weight] [--skip_num]
+                           	[--lr] [--decay_factor] [--decay_patience]
+                           	[--snapshot_interval] [--load_path]
+                           	[--batch_size] [--num_workers] [--shuffle] [--pin_memory]
+                           	[--hidden_size] [--n_layers] [--hardtanh_limit] 
+                           	[--dropout_enc] [--dropout_pose_dec] [--dropout_mask_dec]
 
 mandatory arguments:
   --train_dataset       Name of train dataset Ex: 'posetrack' or '3dpw' (str)  
@@ -87,9 +87,9 @@ python -m api.train --train_dataset=<dataset_name> --valid_dataset=<dataset_name
 ## Evaluation
 ``` 
 usage: python -m api.evaluate [-h] [--dataset] [--model] [--keypoint_dim] [--load_path]
-                              [--use_mask] [--interactive] [--persons_num]
-                              [--batch_size] [--distance_loss] [--skip_num]
-                              [--shuffle] [--pin_memory] [--num_workers] 
+                              	   [--use_mask] [--interactive] [--persons_num]
+                              	   [--batch_size] [--distance_loss] [--skip_num]
+                                   [--shuffle] [--pin_memory] [--num_workers] 
 
 mandatory arguments:
   --dataset    		Name of dataset Ex: 'posetrack' or '3dpw' (str)  
