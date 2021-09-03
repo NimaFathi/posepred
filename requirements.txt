@@ -8,4 +8,4 @@ pandas
 opencv-python~=4.4.0.46
 pygifsicle~=1.0.4
 imageio~=2.9.0
-opencv-python
+openpifpaf
