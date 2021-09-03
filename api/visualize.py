@@ -53,21 +53,24 @@ if __name__ == '__main__':
             masks.append(mask.permute(1, 0, 2))
 
     if 'obs_image' in data.keys():
-        images_path.append(data.get(key))
+        images_path.append(data.get('obs_image'))
     if 'future_image' in data.keys():
-        images_path.append(data.get(key))
+        images_path.append(data.get('future_image'))
         if 'pred_pose' in data.keys():
-            images_path.append(data.get(key))
+            images_path.append(data.get('future_image'))
 
     if 'obs_cam_ex' in data.keys():
-        cam_exs.append(data.get(key))
+        cam_exs.append(data.get('obs_cam_ex'))
     if 'future_cam_ex' in data.keys():
-        cam_exs.append(data.get(key))
+        cam_exs.append(data.get('future_cam_ex'))
         if 'pred_pose' in data.keys():
-            cam_exs.append(data.get(key))
+            cam_exs.append(data.get('future_cam_ex'))
 
     cam_in = data.get('cam_in') if 'cam_in' in data.keys() else None
-
+    for i, p in enumerate(poses):
+        poses[i] = p.detach().cpu()
+    for i, m in enumerate(masks):
+        masks[i] = m.dedath().cpu()
     visualizer = Visualizer(dataset_name=dataloader_args.dataset_name)
     if dataloader_args.keypoint_dim == 2:
         visualizer.visualizer_2D(names, poses, masks, images_path, model.args.model_name)
