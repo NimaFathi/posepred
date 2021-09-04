@@ -31,7 +31,7 @@ def __parse_preprocessor_args():
     parser.add_argument('--skip_num', type=int, default=0, help='number of frames to skip')
     parser.add_argument('--use_video_once', default=False, action='store_true')
     parser.add_argument(
-        '--annotation', default=False, action='store_true',
+        '--annotation', default=True, action='store_false',
         help='implies if dataset contains annotations or we have to generate annotations with openpifpaf'
         'if this is True dataset_path in path to annotations else that is path to images'
     )
