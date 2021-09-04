@@ -3,7 +3,7 @@ import argparse
 
 def parse_preprocessor_args():
     args = __parse_preprocessor_args()
-    if args.dim == 2:
+    if args.keypoint_dim == 2:
         args.is_3D = False
     elif args.dim == 3:
         args.is_3D = True
