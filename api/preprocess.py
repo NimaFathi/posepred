@@ -54,4 +54,4 @@ if __name__ == '__main__':
         )
     else:
         raise Exception("Invalid preprocessor.")
-    preprocessor.normal(data_type=args.data_type)
+    preprocessor.normal(data_type=args.data_usage)
