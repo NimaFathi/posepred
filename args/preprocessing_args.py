@@ -5,7 +5,7 @@ def parse_preprocessor_args():
     args = __parse_preprocessor_args()
     if args.keypoint_dim == 2:
         args.is_3D = False
-    elif args.dim == 3:
+    elif args.keypoint_dim == 3:
         args.is_3D = True
     else:
         raise Exception("Dimension of data must be either 2 or 3")
