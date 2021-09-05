@@ -31,10 +31,11 @@ def __parse_preprocessor_args():
     parser.add_argument('--skip_num', type=int, default=0, help='number of frames to skip')
     parser.add_argument('--use_video_once', default=False, action='store_true')
     parser.add_argument(
-        '--annotation', default=True, action='store_false',
+        '--annotate', default=True, action='store_false',
         help='implies if dataset contains annotations or we have to generate annotations with openpifpaf'
-        'if this is True dataset_path in path to annotations else that is path to images'
+        'if this is True we will annotate data upon <image_dir> with openpifpaf library'
     )
+    parser.add_argument('--image_dir', help='use images to annotate with openpifpaf if <annotate> is True')
 
     preprocessor_args = parser.parse_args()
     preprocessor_args.device = 'cuda'

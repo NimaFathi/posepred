@@ -48,7 +48,7 @@ if __name__ == '__main__':
         )
     elif args.dataset_name == 'pie':
         preprocessor = PIEPreprocessor(
-            dataset_path=args.dataset_path, annotation=args.annotation,
+            dataset_path=args.dataset_path, annotate=args.annotate, image_dir=args.image_dir,
             obs_frame_num=args.obs_frames_num, custom_name=args.output_name, is_interactive=args.interactive,
             pred_frame_num=args.pred_frames_num, skip_frame_num=args.skip_num, use_video_once=args.use_video_once
         )
