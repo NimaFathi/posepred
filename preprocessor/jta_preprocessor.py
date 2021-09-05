@@ -149,6 +149,12 @@ class JTAPreprocessor(Processor):
                         if data_type == 'train':
                             self.update_meta_data(self.meta_data, obs, 3 if self.is_3d else 2)
                         if not self.is_interactive:
+                            print(len(obs))
+                            print(len(future))
+                            print(len(obs_mask))
+                            print(len(future_mask))
+                            print(len(obs_frames))
+                            print(len(future_frames)K)
                             for p_id in range(len(obs)):
                                 data.append([
                                         '%s-%d' % (video_number, i), obs[p_id], future[p_id], obs_mask[p_id],
