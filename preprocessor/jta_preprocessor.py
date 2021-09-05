@@ -52,7 +52,7 @@ class JTAPreprocessor(Processor):
         future_frames = []
         for j in range(1, total_frame_num * (self.skip_frame_num + 1) + 1, self.skip_frame_num + 1):
             frame_data = defaultdict(list)
-            frame = input_matrix[input_matrix[:, 0] == frame_num * total_frame_num * 2 + j]  # find frame data
+            frame = input_matrix[input_matrix[:, 0] == frame_num * total_frame_num * (self.skip_frame_num + 1) + j]  # find frame data
             for pose in frame:
                 frame_data[pose[1]] = pose[0]
             for p_id in frame_data.keys():
@@ -67,6 +67,8 @@ class JTAPreprocessor(Processor):
                         p_id].__len__() == self.pred_frame_num:
                 obs_frames.append(video_data['obs_frames'][p_id])
                 future_frames.append(video_data['future_frames'][p_id])
+            else:
+                print('here')
         for p_id in range(len(obs_frames)):
             for j in range(len(obs_frames[0])):
                 obs_frames[p_id][j] = f'{image_relative_path}/{int(obs_frames[p_id][j])}.json'
