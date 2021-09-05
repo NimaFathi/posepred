@@ -67,8 +67,6 @@ class JTAPreprocessor(Processor):
                         p_id].__len__() == self.pred_frame_num:
                 obs_frames.append(video_data['obs_frames'][p_id])
                 future_frames.append(video_data['future_frames'][p_id])
-            else:
-                print('here')
         for p_id in range(len(obs_frames)):
             for j in range(len(obs_frames[0])):
                 obs_frames[p_id][j] = f'{image_relative_path}/{int(obs_frames[p_id][j])}.json'
@@ -152,7 +150,6 @@ class JTAPreprocessor(Processor):
                         if data_type == 'train':
                             self.update_meta_data(self.meta_data, obs, 3 if self.is_3d else 2)
                         if not self.is_interactive:
-                            print(len(obs), len(future), len(obs_mask), len(future_mask), len(obs_frames), len(future_frames))
                             for p_id in range(len(obs)):
                                 data.append([
                                         '%s-%d' % (video_number, i), obs[p_id], future[p_id], obs_mask[p_id],
