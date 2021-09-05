@@ -26,8 +26,8 @@ def __parse_preprocessor_args():
     parser.add_argument('--use_mask', default=False, action='store_true', help='use visibility mask')
     parser.add_argument('--interactive', default=False, action='store_true', help='consider interaction')
     parser.add_argument('--output_name', type=str, help='name of preprocessed csv file')
-    parser.add_argument('--obs_frames_num', type=int, help='number of frames to observe')
-    parser.add_argument('--pred_frames_num', type=int, help='number of frames to predict')
+    parser.add_argument('--obs_frames_num', type=int, help='number of frames to observe', default=16)
+    parser.add_argument('--pred_frames_num', type=int, help='number of frames to predict', default=14)
     parser.add_argument('--skip_num', type=int, default=0, help='number of frames to skip')
     parser.add_argument('--use_video_once', default=False, action='store_true')
     parser.add_argument(
