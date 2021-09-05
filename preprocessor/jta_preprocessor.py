@@ -154,7 +154,7 @@ class JTAPreprocessor(Processor):
                             print(len(obs_mask))
                             print(len(future_mask))
                             print(len(obs_frames))
-                            print(len(future_frames)K)
+                            print(len(future_frames))
                             for p_id in range(len(obs)):
                                 data.append([
                                         '%s-%d' % (video_number, i), obs[p_id], future[p_id], obs_mask[p_id],
