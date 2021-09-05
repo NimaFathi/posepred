@@ -65,10 +65,10 @@ class PIEPreprocessor(Processor):
                             if bbox.get('occluded') == "1":
                                 continue
                             bbox_rec = Rectangle(
-                                float(bbox.get('xtl')),
-                                float(bbox.get('ytl')),
-                                float(bbox.get('xbr')),
-                                float(bbox.get('ybr'))
+                                xtl=float(bbox.get('xtl')),
+                                ytl=float(bbox.get('ytl')),
+                                xbr=float(bbox.get('xbr')),
+                                ybr=float(bbox.get('ybr'))
                             )
                             frame = bbox.get('frame')
                             ground_truth[frame][p_id] = bbox_rec
@@ -119,7 +119,7 @@ class PIEPreprocessor(Processor):
                                     (
                                             calculate_are(ground_truth[frame][bbox_matrix[i][0]]) +
                                             calculate_are(rectangles[max_index]) -
-                                            2 * bbox_matrix[i][1][max_index]
+                                            bbox_matrix[i][1][max_index]
                                     )
                                 )
                                 correspondence_dict[bbox_matrix[i][0]] = data[max_index]['keypoints']
