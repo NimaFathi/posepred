@@ -69,10 +69,10 @@ class JTAPreprocessor(Processor):
                 future_frames.append(video_data['future_frames'][p_id])
         for p_id in range(len(obs_frames)):
             for j in range(len(obs_frames[0])):
-                obs_frames[p_id][j] = f'{image_relative_path}/{int(obs_frames[p_id][j])}.json'
+                obs_frames[p_id][j] = f'{image_relative_path}/{int(obs_frames[p_id][j])}.jpg'
         for p_id in range(len(future_frames)):
             for j in range(len(future_frames[0])):
-                future_frames[p_id][j] = f'{image_relative_path}/{int(future_frames[p_id][j])}.json'
+                future_frames[p_id][j] = f'{image_relative_path}/{int(future_frames[p_id][j])}.jpg'
         return obs_frames, future_frames
 
     def normal(self, data_type='train'):
