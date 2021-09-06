@@ -20,7 +20,7 @@ def __parse_preprocessor_args():
         choices=['somof_posetrack', 'posetrack', 'somof_3dpw', '3dpw', 'jta', 'jaad', 'pie'],
         help='dataset_name'
     )
-    parser.add_argument('--dataset_path', type=str, default='./raw_data', help='path of dataset')
+    parser.add_argument('--official_annotation_path', type=str, default='./raw_data', help='path of dataset')
     parser.add_argument('--keypoint_dim', type=int, choices=[2, 3], help='dimension of each keypoint')
     parser.add_argument('--data_usage', type=str, choices=['train', 'validation', 'test'])
     parser.add_argument('--use_mask', default=False, action='store_true', help='use visibility mask')
@@ -31,12 +31,20 @@ def __parse_preprocessor_args():
     parser.add_argument('--skip_num', type=int, default=0, help='number of frames to skip')
     parser.add_argument('--use_video_once', default=False, action='store_true')
     parser.add_argument(
-        '--annotate', default=True, action='store_false',
+        '--annotate', default=False, action='store_true',
         help='implies if dataset contains annotations or we have to generate annotations with openpifpaf'
         'if this is True we will annotate data upon <image_dir> with openpifpaf library'
     )
-    parser.add_argument('--image_dir', help='use images to annotate with openpifpaf if <annotate> is True')
-
+    parser.add_argument(
+        '--image_dir',
+        type=str,
+        help='use images to annotate with openpifpaf if <annotate> is True'
+    )
+    parser.add_argument(
+        '--joints_annotation_path',
+        type=str,
+        help='joints annotation path if necessary for dataset its mandatory for datasets like, JAAD and PIE'
+    )
     preprocessor_args = parser.parse_args()
     preprocessor_args.device = 'cuda'
 

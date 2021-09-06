@@ -12,45 +12,46 @@ if __name__ == '__main__':
 
     if args.dataset_name == 'posetrack':
         preprocessor = PoseTrackPreprocessor(
-            mask=args.use_mask, dataset_path=args.dataset_path,
+            mask=args.use_mask, dataset_path=args.official_annotation_path,
             obs_frame_num=16, custom_name=args.output_name, is_interactive=args.interactive,
             pred_frame_num=14, skip_frame_num=0, use_video_once=True)
     elif args.dataset_name == 'jta':
         preprocessor = JTAPreprocessor(
-            is_3d=args.is_3D, dataset_path=args.dataset_path,
+            is_3d=args.is_3D, dataset_path=args.official_annotation_path,
             obs_frame_num=args.obs_frames_num, custom_name=args.output_name, is_interactive=args.interactive,
             pred_frame_num=args.pred_frames_num, skip_frame_num=args.skip_num, use_video_once=args.use_video_once
         )
     elif args.dataset_name == 'somof_posetrack':
         preprocessor = SoMoFPoseTrackPreprocessor(
-            mask=args.use_mask, dataset_path=args.dataset_path,
+            mask=args.use_mask, dataset_path=args.official_annotation_path,
             obs_frame_num=16, custom_name=args.output_name, is_interactive=args.interactive,
             pred_frame_num=14, skip_frame_num=1, use_video_once=True
         )
     elif args.dataset_name == 'somof_3dpw':
         preprocessor = SoMoF3DPWPreprocessor(
-            dataset_path=args.dataset_path,
+            dataset_path=args.official_annotation_path,
             obs_frame_num=16, custom_name=args.output_name, is_interactive=args.interactive,
             pred_frame_num=14, skip_frame_num=0, use_video_once=True
         )
     elif args.dataset_name == '3dpw':
         args.is_disentangle = False
         preprocessor = Preprocessor3DPW(
-            dataset_path=args.dataset_path,
+            dataset_path=args.official_annotation_path,
             obs_frame_num=args.obs_frames_num, custom_name=args.output_name, is_interactive=args.interactive,
             pred_frame_num=args.pred_frames_num, skip_frame_num=args.skip_num, use_video_once=args.use_video_once
         )
     elif args.dataset_name == 'jaad':
         preprocessor = JAADPreprocessor(
-            dataset_path=args.dataset_path, annotation=args.annotaion,
+            dataset_path=args.official_annotation_path, annotation=args.annotaion,
             obs_frame_num=args.obs_frames_num, custom_name=args.output_name, is_interactive=args.interactive,
             pred_frame_num=args.pred_frames_num, skip_frame_num=args.skip_num, use_video_once=args.use_video_once
         )
     elif args.dataset_name == 'pie':
         preprocessor = PIEPreprocessor(
-            dataset_path=args.dataset_path, annotate=args.annotate, image_dir=args.image_dir,
+            dataset_path=args.official_annotation_path, annotate=args.annotate, image_dir=args.image_dir,
             obs_frame_num=args.obs_frames_num, custom_name=args.output_name, is_interactive=args.interactive,
-            pred_frame_num=args.pred_frames_num, skip_frame_num=args.skip_num, use_video_once=args.use_video_once
+            pred_frame_num=args.pred_frames_num, skip_frame_num=args.skip_num, use_video_once=args.use_video_once,
+            annotation_path=args.joints_annotaion_path
         )
     else:
         raise Exception("Invalid preprocessor.")

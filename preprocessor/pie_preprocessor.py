@@ -1,13 +1,13 @@
 import json
 import logging
 import os
-import numpy as np
-import openpifpaf
-
-from openpifpaf.predict import out_name
-from bs4 import BeautifulSoup
 from collections import namedtuple, defaultdict
 from pathlib import Path
+
+import numpy as np
+import openpifpaf
+from bs4 import BeautifulSoup
+from openpifpaf.predict import out_name
 
 from path_definition import PREPROCESSED_DATA_DIR
 from preprocessor.preprocessor import Processor
@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 class PIEPreprocessor(Processor):
     def __init__(self, dataset_path, is_interactive, obs_frame_num, pred_frame_num, skip_frame_num,
-                 use_video_once, custom_name, annotate, image_dir):
+                 use_video_once, custom_name, annotate, image_dir, annotation_path):
         super(PIEPreprocessor, self).__init__(dataset_path, is_interactive, obs_frame_num,
                                               pred_frame_num, skip_frame_num, use_video_once, custom_name)
 
@@ -37,19 +37,23 @@ class PIEPreprocessor(Processor):
         }
         self.image_dir = image_dir
         self.annotate = annotate
-        self.annotation_path = None
+        self.annotation_path = annotation_path
 
     def normal(self, data_type='train'):
+        assert self.obs_frame_num > 0 and self.obs_frame_num is not None
+        assert self.pred_frame_num > 0 and self.pred_frame_num is not None
+        assert self.skip_frame_num >= 0 and self.skip_frame_num is not None
+        assert self.dataset_path is not None
+        correspondence_dict = defaultdict(dict)
+        counter = 0
         ground_truth_ped_count = 0
         pred_ped_count = 0
-        IOUS = []
-        if self.annotate is not None:
+        ious = []
+        if self.annotate is not False:
             assert self.image_dir is not None
-            assert self.obs_frame_num > 0 and self.obs_frame_num is not None
-            assert self.pred_frame_num > 0 and self.pred_frame_num is not None
-            assert self.skip_frame_num >= 0 and self.skip_frame_num is not None
             self.annotation_path = self.create_annotations()
-        assert self.dataset_path is not None
+        else:
+            assert self.annotation_path is not None
         for subdir, dirs, files in os.walk(self.dataset_path):
             for file in files:
                 if not file.endswith(".xml"):
@@ -75,15 +79,15 @@ class PIEPreprocessor(Processor):
 
                     for frame in ground_truth.keys():
                         json_file_path = os.path.join(
-                            self.annotation_path, subdir.split('/')[-1],
-                            file.split('_annt')[0],
+                            self.annotation_path,
                             str(frame) + ".png.predictions.json"
                         )
                         ground_truth_ped_count += ground_truth[frame].__len__()
                         if not os.path.exists(json_file_path):
                             continue
                         with open(json_file_path, 'r') as json_file:
-                            bbox_matrix = []
+                            score_matrix = []
+                            intersection_matrix = []
                             rectangles = []
                             data = json.load(json_file)
                             if not data:
@@ -99,43 +103,61 @@ class PIEPreprocessor(Processor):
 
                             for ped_id, ped_bbox in ground_truth[frame].items():
                                 row_matrix = []
-                                for rectangle in rectangles:
-                                    row_matrix.append(intersect_area(rectangle, ped_bbox))
-                                bbox_matrix.append((ped_id, row_matrix))
+                                row_intersection = []
+                                for i, rectangle in enumerate(rectangles):
+                                    row_intersection.append(intersect_area(rectangle, ped_bbox))
+                                    row_matrix.append(
+                                        intersect_area(rectangle, ped_bbox) +
+                                        keypoints_overlap_score(data[i]['keypoints'], ped_bbox)
+                                    )
+                                intersection_matrix.append(row_intersection)
+                                score_matrix.append((ped_id, row_matrix))
 
-                            correspondence_dict = defaultdict(list)
-                            for i in range(len(bbox_matrix)):
+                            for i in range(len(score_matrix)):
                                 max_val = float('-inf')
                                 max_index = 0
-                                for j in range(len(bbox_matrix[i][1])):
-                                    if bbox_matrix[i][1][j] > max_val:
-                                        max_val = bbox_matrix[i][1][j]
+                                for j in range(len(score_matrix[i][1])):
+                                    if score_matrix[i][1][j] > max_val:
+                                        max_val = score_matrix[i][1][j]
                                         max_index = j
-                                for k in range(len(bbox_matrix)):
-                                    if len(bbox_matrix[k][1]) < max_index:
-                                        bbox_matrix[k][1][max_index] = float('-inf')
-                                IOUS.append(
-                                    bbox_matrix[i][1][max_index] /
-                                    (
-                                            calculate_are(ground_truth[frame][bbox_matrix[i][0]]) +
-                                            calculate_are(rectangles[max_index]) -
-                                            bbox_matrix[i][1][max_index]
+                                for k in range(len(score_matrix)):
+                                    if len(score_matrix[k][1]) < max_index:
+                                        score_matrix[k][1][max_index] = float('-inf')
+                                if score_matrix[i][1][max_index] > 1:
+                                    ious.append(
+                                        intersection_matrix[i][max_index] /
+                                        (
+                                                calculate_are(ground_truth[frame][score_matrix[i][0]]) +
+                                                calculate_are(rectangles[max_index]) -
+                                                intersection_matrix[i][max_index]
+                                        )
                                     )
-                                )
-                                correspondence_dict[bbox_matrix[i][0]] = data[max_index]['keypoints']
+                                    correspondence_dict[score_matrix[i][0]][frame] = data[max_index]['keypoints']
+                                else:
+                                    counter += 1
         print(
-            f'IOU percentage: {sum(IOUS) / len(IOUS)}\n'
+            f'IOU percentage: {sum(ious) / len(ious)}\n'
             f'openpifpaf pred pedestrian count: {pred_ped_count}\n'
-            f'ground truth pedestrian count: {ground_truth_ped_count}'
+            f'ground truth pedestrian count: {ground_truth_ped_count}\n'
+            f'number of matched ious: {len(ious)}\n'
+            f'number of unmatched ious: {counter}'
         )
+        sorted_cor_dict = defaultdict(dict)
+        for i in sorted(correspondence_dict.keys()):
+            for j in sorted(correspondence_dict[i].keys()):
+                sorted_cor_dict[i][j] = correspondence_dict[i][j]
+
+        with open(f'{PREPROCESSED_DATA_DIR}/PIE.json', 'w') as json_file:
+            json.dump(sorted_cor_dict, json_file, indent=4)
 
     def create_annotations(self):
+
         if os.path.exists(os.path.join(PREPROCESSED_DATA_DIR, 'openpifpaf/PIE')):
             return PREPROCESSED_DATA_DIR + "openpifpaf/PIE/"
+        annotation_dir = PREPROCESSED_DATA_DIR + 'openpifpaf/PIE'
+        path = Path(annotation_dir)
+        path.mkdir(parents=True, exist_ok=True)
         for subdir, dirs, files in os.walk(self.image_dir):
-            annotation_dir = PREPROCESSED_DATA_DIR + 'openpifpaf/PIE' + subdir.split(self.image_dir)[1]
-            path = Path(annotation_dir)
-            path.mkdir(parents=True, exist_ok=True)
             predictor = openpifpaf.Predictor(json_data=True)
             if files:
                 new_files = []
@@ -151,7 +173,7 @@ class PIEPreprocessor(Processor):
         return PREPROCESSED_DATA_DIR + "openpifpaf/PIE/"
 
 
-def intersect_area(a, b):
+def intersect_area(a: Rectangle, b: Rectangle):
     dx = min(a.xbr, b.xbr) - max(a.xtl, b.xtl)
     dy = min(a.ybr, b.ybr) - max(a.ytl, b.ytl)
     if (dx > 0) and (dy > 0):
@@ -160,5 +182,15 @@ def intersect_area(a, b):
         return 0
 
 
-def calculate_are(a):
+def calculate_are(a: Rectangle):
     return (a.xbr - a.xtl) * (a.ybr - a.ytl)
+
+
+def keypoints_overlap_score(keypoints, bbox: Rectangle):
+    assert len(keypoints) == 51
+    overlap_num = 0
+    for i in range(len(keypoints) // 3):
+        x, y = keypoints[3 * i], keypoints[3 * i + 1]
+        if bbox.xtl <= x <= bbox.xbr and bbox.ytl <= y <= bbox.ybr:
+            overlap_num += 1
+    return overlap_num / len(keypoints)
