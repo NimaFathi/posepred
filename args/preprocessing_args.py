@@ -22,7 +22,7 @@ def __parse_preprocessor_args():
     )
     parser.add_argument('--official_annotation_path', type=str, default='./raw_data', help='path of dataset')
     parser.add_argument('--keypoint_dim', type=int, choices=[2, 3], help='dimension of each keypoint')
-    parser.add_argument('--data_usage', type=str, choices=['train', 'validation', 'test'])
+    parser.add_argument('--data_usage', type=str, choices=['train', 'validation', 'test'], default='train')
     parser.add_argument('--use_mask', default=False, action='store_true', help='use visibility mask')
     parser.add_argument('--interactive', default=False, action='store_true', help='consider interaction')
     parser.add_argument('--output_name', type=str, help='name of preprocessed csv file')

@@ -1,6 +1,9 @@
+import csv
 import json
 import logging
 import os
+import re
+import shutil
 from collections import namedtuple, defaultdict
 from pathlib import Path
 
@@ -8,6 +11,7 @@ import numpy as np
 import openpifpaf
 from bs4 import BeautifulSoup
 from openpifpaf.predict import out_name
+from scipy.interpolate import interp1d
 
 from path_definition import PREPROCESSED_DATA_DIR
 from preprocessor.preprocessor import Processor
@@ -44,14 +48,100 @@ class PIEPreprocessor(Processor):
         assert self.pred_frame_num > 0 and self.pred_frame_num is not None
         assert self.skip_frame_num >= 0 and self.skip_frame_num is not None
         assert self.dataset_path is not None
-        correspondence_dict = defaultdict(dict)
-        counter = 0
-        ground_truth_ped_count = 0
-        pred_ped_count = 0
-        ious = []
+        print('start creating PIE normal static data ... ')
+        header = [
+            'video_section', 'observed_pose', 'future_pose',
+            'observed_image_path', 'future_image_path'
+        ]
+        if self.custom_name:
+            output_file_name = f'{data_type}_{self.obs_frame_num}_{self.pred_frame_num}_{self.skip_frame_num}_{self.custom_name}.csv'
+        else:
+            output_file_name = f'{data_type}_{self.obs_frame_num}_{self.pred_frame_num}_{self.skip_frame_num}_PIE.csv'
+        with open(os.path.join(self.output_dir, output_file_name), 'w') as f_object:
+            writer = csv.writer(f_object)
+            writer.writerow(header)
+        total_frame_num = (self.obs_frame_num + self.pred_frame_num) * (self.skip_frame_num + 1)
+        frame_range = []
+        joints_dir = self.__create_frame_poses()
+        for entry in os.scandir(joints_dir):
+            if not entry.name.endswith(".json"):
+                continue
+            with open(entry.path, 'r') as json_file:
+                print(f'file name: {entry.name}')
+                video_name = re.search('(\w+).json', entry.name).group(1)
+                data = json.load(json_file)
+                for ped_id, value in data.items():
+                    for frame_number, pose in value.items():
+                        frame_range.append(int(frame_number))
+                min_frame = min(frame_range)
+                max_frame = max(frame_range)
+                section_range = (max_frame - min_frame + 1) // (
+                        total_frame_num * (self.skip_frame_num + 1)
+                ) if not self.use_video_once else 1
+                for i in range(section_range):
+                    obs_frame_range = [
+                        i for i in range(
+                            min_frame + i * total_frame_num,
+                            min_frame + (i + 1) * total_frame_num - self.pred_frame_num * (self.skip_frame_num + 1),
+                            self.skip_frame_num + 1
+                        )
+                    ]
+                    pred_frame_range = [
+                        i for i in range(
+                            min_frame + (i + 1) * total_frame_num - self.pred_frame_num * (self.skip_frame_num + 1),
+                            min_frame + (i + 1) * total_frame_num,
+                            self.skip_frame_num + 1
+                        )
+                    ]
+                    self.__create_data(data, obs_frame_range, pred_frame_range, video_name, output_file_name)
+        shutil.rmtree(joints_dir)
+
+    def __create_data(self, data, obs_frame_range, pred_frame_range, video_name, output_file_name):
+        raw_data_obs = defaultdict(dict)
+        raw_data_pred = defaultdict(dict)
+        for ped_id, value in data.items():
+            for frame_number, pose in value.items():
+                if int(frame_number) in obs_frame_range:
+                    raw_data_obs[ped_id][int(frame_number)] = pose
+                elif int(frame_number) in pred_frame_range:
+                    raw_data_pred[ped_id][int(frame_number)] = pose
+        obs_poses = list()
+        pred_poses = list()
+        obs_image_path = list()
+        pred_image_path = list()
+        for ped_id in raw_data_obs.keys():
+            if ped_id in raw_data_pred.keys() and len(raw_data_pred[ped_id]) > 0.25 * len(pred_frame_range) and len(
+                    raw_data_obs[ped_id]) > 0.25 * len(obs_frame_range):
+                obs_x = list(raw_data_obs[ped_id].keys())
+                obs_y = np.array(list(raw_data_obs[ped_id].values()))
+                obs_image_path.append(
+                    [os.path.join(*re.search("(\w+)_(\w+_\w+)", video_name).groups(), str(frame_number) + ".png") for
+                     frame_number in obs_frame_range]
+                )
+                pred_image_path.append(
+                    [os.path.join(*re.search("(\w+)_(\w+_\w+)", video_name).groups(), str(frame_number) + ".png") for
+                     frame_number in pred_frame_range]
+                )
+                obs_interp = interp1d(obs_x, obs_y, axis=0, fill_value="extrapolate")
+                obs_poses.append(obs_interp(obs_frame_range).tolist())
+                pred_x = list(raw_data_pred[ped_id].keys())
+                pred_y = np.array(list(raw_data_pred[ped_id].values()))
+                pred_interp = interp1d(pred_x, pred_y, axis=0, fill_value="extrapolate")
+                pred_poses.append(pred_interp(pred_frame_range).tolist())
+        with open(os.path.join(self.output_dir, output_file_name), 'a') as f_object:
+            writer = csv.writer(f_object)
+            if len(obs_poses) > 0:
+                if self.is_interactive:
+                    writer.writerow([video_name, obs_poses, pred_poses, obs_image_path, pred_image_path])
+                else:
+                    for i in range(len(obs_poses)):
+                        writer.writerow(
+                            [video_name, obs_poses[i], pred_poses[i], obs_image_path[i], pred_image_path[i]])
+
+    def __create_frame_poses(self):
         if self.annotate is not False:
             assert self.image_dir is not None
-            self.annotation_path = self.create_annotations()
+            self.annotation_path = self.__create_annotations()
         else:
             assert self.annotation_path is not None
         for subdir, dirs, files in os.walk(self.dataset_path):
@@ -59,6 +149,8 @@ class PIEPreprocessor(Processor):
                 if not file.endswith(".xml"):
                     continue
                 with open(os.path.join(subdir, file), 'r') as xml_file:
+                    video_name = "_".join(re.search('[\\/](\w+)[\\/](\w+)_annt.xml', xml_file.name).groups())
+                    correspondence_dict = defaultdict(dict)
                     xml_data = BeautifulSoup(xml_file.read(), 'lxml')
                     tracks = xml_data.find_all('track', {'label': 'pedestrian'})
                     ground_truth = defaultdict(dict)
@@ -78,21 +170,21 @@ class PIEPreprocessor(Processor):
                             ground_truth[frame][p_id] = bbox_rec
 
                     for frame in ground_truth.keys():
-                        json_file_path = os.path.join(
-                            self.annotation_path,
-                            str(frame) + ".png.predictions.json"
-                        )
-                        ground_truth_ped_count += ground_truth[frame].__len__()
+                        for ann_subdir, _, _ in os.walk(self.annotation_path):
+                            json_file_path = os.path.join(
+                                ann_subdir,
+                                str(frame) + ".png.predictions.json"
+                            )
+                            if os.path.exists(json_file_path):
+                                break
                         if not os.path.exists(json_file_path):
                             continue
                         with open(json_file_path, 'r') as json_file:
                             score_matrix = []
-                            intersection_matrix = []
                             rectangles = []
                             data = json.load(json_file)
                             if not data:
                                 continue
-                            pred_ped_count += len(data)
                             for pedestrian_data in data:
                                 rectangles.append(Rectangle(
                                     xtl=pedestrian_data['bbox'][0],
@@ -103,14 +195,10 @@ class PIEPreprocessor(Processor):
 
                             for ped_id, ped_bbox in ground_truth[frame].items():
                                 row_matrix = []
-                                row_intersection = []
                                 for i, rectangle in enumerate(rectangles):
-                                    row_intersection.append(intersect_area(rectangle, ped_bbox))
                                     row_matrix.append(
-                                        intersect_area(rectangle, ped_bbox) +
-                                        keypoints_overlap_score(data[i]['keypoints'], ped_bbox)
+                                        intersect_area(rectangle, ped_bbox)
                                     )
-                                intersection_matrix.append(row_intersection)
                                 score_matrix.append((ped_id, row_matrix))
 
                             for i in range(len(score_matrix)):
@@ -124,34 +212,21 @@ class PIEPreprocessor(Processor):
                                     if len(score_matrix[k][1]) < max_index:
                                         score_matrix[k][1][max_index] = float('-inf')
                                 if score_matrix[i][1][max_index] > 1:
-                                    ious.append(
-                                        intersection_matrix[i][max_index] /
-                                        (
-                                                calculate_are(ground_truth[frame][score_matrix[i][0]]) +
-                                                calculate_are(rectangles[max_index]) -
-                                                intersection_matrix[i][max_index]
-                                        )
-                                    )
-                                    correspondence_dict[score_matrix[i][0]][frame] = data[max_index]['keypoints']
-                                else:
-                                    counter += 1
-        print(
-            f'IOU percentage: {sum(ious) / len(ious)}\n'
-            f'openpifpaf pred pedestrian count: {pred_ped_count}\n'
-            f'ground truth pedestrian count: {ground_truth_ped_count}\n'
-            f'number of matched ious: {len(ious)}\n'
-            f'number of unmatched ious: {counter}'
-        )
-        sorted_cor_dict = defaultdict(dict)
-        for i in sorted(correspondence_dict.keys()):
-            for j in sorted(correspondence_dict[i].keys()):
-                sorted_cor_dict[i][j] = correspondence_dict[i][j]
+                                    correspondence_dict[score_matrix[i][0]][frame] = [data[max_index]['keypoints'][v]
+                                                                                      for v in range(
+                                            len(data[max_index]['keypoints'])) if v % 3 != 2]
+                    sorted_cor_dict = defaultdict(dict)
+                    for i in sorted(correspondence_dict.keys()):
+                        for j in sorted(correspondence_dict[i].keys()):
+                            sorted_cor_dict[i][j] = correspondence_dict[i][j]
+                    json_keypoints_dir = os.path.join(PREPROCESSED_DATA_DIR, 'PIE', 'jsons')
+                    path = Path(json_keypoints_dir)
+                    path.mkdir(parents=True, exist_ok=True)
+                    with open(os.path.join(json_keypoints_dir, f'{video_name}.json'), 'w') as writer:
+                        json.dump(sorted_cor_dict, writer, indent=4)
+        return json_keypoints_dir
 
-        with open(f'{PREPROCESSED_DATA_DIR}/PIE.json', 'w') as json_file:
-            json.dump(sorted_cor_dict, json_file, indent=4)
-
-    def create_annotations(self):
-
+    def __create_annotations(self):
         if os.path.exists(os.path.join(PREPROCESSED_DATA_DIR, 'openpifpaf/PIE')):
             return PREPROCESSED_DATA_DIR + "openpifpaf/PIE/"
         annotation_dir = PREPROCESSED_DATA_DIR + 'openpifpaf/PIE'
@@ -180,17 +255,3 @@ def intersect_area(a: Rectangle, b: Rectangle):
         return dx * dy
     else:
         return 0
-
-
-def calculate_are(a: Rectangle):
-    return (a.xbr - a.xtl) * (a.ybr - a.ytl)
-
-
-def keypoints_overlap_score(keypoints, bbox: Rectangle):
-    assert len(keypoints) == 51
-    overlap_num = 0
-    for i in range(len(keypoints) // 3):
-        x, y = keypoints[3 * i], keypoints[3 * i + 1]
-        if bbox.xtl <= x <= bbox.xbr and bbox.ytl <= y <= bbox.ybr:
-            overlap_num += 1
-    return overlap_num / len(keypoints)
