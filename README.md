@@ -79,7 +79,7 @@ To fulfill mentioned purpose You should run preprocessing api called `preprocess
 
 Example:  
 ```bash  
-python -m api.preprocess --dataset_name=<dataset_name> --dataset_path=<path_to_dataset> --data_usage='train' --obs_frames_num=16 --pred_frames_num=14 --use_mask  
+python -m api.preprocess --dataset_name=<dataset_name> --official_annotation_path=<path_to_dataset> --data_usage='train' --obs_frames_num=16 --pred_frames_num=14 --use_mask  
 ```  
 See [here](https://github.com/vita-epfl/posepred/blob/master/ARGS_README.md#preprocessing) for more details about preprocessing arguments.
   
