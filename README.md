@@ -1,10 +1,62 @@
 # Posepred  
 Pospred is an open-source toolbox for pose prediction based on PyTorch. It is a part of the VitaLab project.    
-    
+
 <!-- <div align="center">  
     <img src="visualization/outputs/2D/2D_visualize.gif" width="600px" alt><br>  
 </div> -->  
-  
+
+## Project Tree
+
+```bash
+posepred
+├── api
+│   ├── evaluate.py                     -- script to evaluate
+|   ├── predict.py                      -- script to predict 
+|   ├── preprocess.py                   -- script to run preprocessor module
+|   ├── train.py                        -- script to train models
+|   ├── visualize.py                    -- script to run visualization module
+├── args
+|   ├── evaluations_args                -- argument handler for evaluation
+|   └── ...                             -- argument handler for other modules
+├── dataloader
+|   ├── data_loader.py                  -- simply returns appropriate dataloader
+|   ├── interactive_dataset.py          -- handles dataloader for interactive data
+|   └── non_interactive_dataset.py      -- handles dataloader for non-interactive data
+├── factory
+│   ├── evaluator.py                    -- base code for evaluation 
+|   ├── tester.py                       -- base code for testing
+|   └── trainer.py                      -- base code for training
+├── models
+│   ├── decoder.py                      -- base code for decoder
+|   ├── encoder.py                      -- base code for encoder
+│   ├── disentangle1.py                 -- first disentangle model using pv_lstm structure
+│   ├── neareset_neighbor.py            -- nearest neighbor model
+|   ├── pv_lstml.py                     -- basic pv_lstm model
+|   └── zero_vel.py                     -- basic zero velocity model
+├── preprocessor
+|   ├── preprocessor.py                 -- base class for preprocessor module
+|   ├── dpw_preprocessor.py             -- preprocessing 3DPW dataset class
+    └── ...                             -- other datasets preprocessor class
+├── utils
+|   ├── average_meter                   -- base class to measure many features of different metrics over time
+|   ├── losses.py                       -- base code for specified using loss functions
+|   ├── metrics.py                      -- base code for specified usings metrics
+|   ├── reporter.py                     -- reporter class
+|   ├── save_load.py                    -- base code for saving and loading models
+|   └── others.py                       -- other useful utils
+|── visualization.py
+|   ├── outputs
+|   |   ├── 2D                          -- saving directory for 2D generated gifs
+|   |   └── 3D                          -- saving directory for 3D generated gifs
+|   ├── color_generator.py              -- code for generating miscellanoeus colors for visualization
+|   ├── keypoints_connection.py         -- dictionary for creating joints connection graphs
+|   └── visualizer.py                   -- base code for visualization
+├── README.md
+├── ARGS_README.md
+├── path_definition.py
+└── .gitignore
+```
+
 ## Installation  
 To get started as quickly as possible, follow the instructions in this section. This should allow you train a model from scratch, evaluate your pretrained models, and produce basic visualizations.  
   
