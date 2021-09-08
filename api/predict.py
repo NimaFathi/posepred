@@ -12,13 +12,18 @@ if __name__ == '__main__':
     if load_path:
         model, _, _, _, _ = load_snapshot(load_path)
     elif model_args.model_name:
-        model_args.pred_frames_num = pred_frames_num
-        assert model_args.pred_frames_num is not None, 'specify pred_frames_num'
-        model_args.keypoints_num = dataloader.dataset.keypoints_num
-        model = get_model(model_args)
         if model_args.model_name == 'nearest_neighbor':
             assert train_dataloader_args is not None
-            model.train_dataloader = get_dataloader(train_dataloader_args)
+            train_dataloader = get_dataloader(train_dataloader_args)
+            model_args.pred_frames_num = train_dataloader.dataset.future_frames_num
+            model_args.keypoints_num = dataloader.dataset.keypoints_num
+            model = get_model(model_args)
+            model.train_dataloader = train_dataloader
+        else:
+            model_args.pred_frames_num = pred_frames_num
+            assert model_args.pred_frames_num is not None, 'specify pred_frames_num'
+            model_args.keypoints_num = dataloader.dataset.keypoints_num
+            model = get_model(model_args)
     else:
         raise Exception("Please provide either a model_name or a load_path to a trained model.")
 
