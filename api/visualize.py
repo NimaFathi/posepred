@@ -24,8 +24,10 @@ if __name__ == '__main__':
 
     index = random.randint(0, dataloader.dataset.__len__() - 1) if index is None else index
     data = dataloader.dataset.__getitem__(index)
-    for key in data.keys():
-        data[key] = data.get(key).unsqueeze(0)
+
+    for key in ['obs_pose', 'future_pose', 'obs_vel', 'future_vel', 'obs_mask', 'future_mask']:
+        if key in data.keys():
+            data[key] = data.get(key).unsqueeze(0)
 
     model.eval()
     with torch.no_grad():
