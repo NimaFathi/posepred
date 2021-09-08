@@ -56,7 +56,7 @@ class Preprocessor3DPW(Processor):
             frame_ids_data = pickle_obj['img_frame_ids']
             cam_extrinsic = pickle_obj['cam_poses'][:, :3]
             cam_intrinsic = pickle_obj['cam_intrinsics'].tolist()
-            section_range = pose_data.shape[1] // (total_frame_num * 2) if self.use_video_once is False else 1
+            section_range = pose_data.shape[1] // (total_frame_num * (self.skip_frame_num + 1)) if self.use_video_once is False else 1
             data = []
             for i in range(section_range):
                 video_data = {
@@ -82,7 +82,7 @@ class Preprocessor3DPW(Processor):
                                 )
                         else:
                             video_data['future_pose'][p_id].append(
-                                pose_data[p_id, i * total_frame_num * 2 + j - 1, :].tolist()
+                                pose_data[p_id, i * total_frame_num * (self.skip_frame_num + 1) + j - 1, :].tolist()
                             )
                             video_data['future_frames'][p_id].append(
                                 f'{video_name}/image_{frame_ids_data[i * total_frame_num * (self.skip_frame_num + 1) + j - 1]:05}.jpg'
