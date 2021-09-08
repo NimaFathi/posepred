@@ -30,9 +30,9 @@ if __name__ == '__main__':
     model.eval()
     with torch.no_grad():
         if dataloader_args.use_mask:
-            outputs = model([data['obs_pose'], data['obs_vel'], data['obs_mask']])
+            outputs = model([data.get('obs_pose').to('cuda'), data.get('obs_vel').to('cuda'), data.get('obs_mask').to('cuda')])
         else:
-            outputs = model([data['obs_pose'], data['obs_vel']])
+            outputs = model([data.get('obs_pose').to('cuda'), data.get('obs_vel').to('cuda')])
         pred_vel = outputs[0]
         data['pred_pose'] = pose_from_vel(pred_vel, data['obs_pose'][..., -1, :].to('cuda')).detach().cpu()
         if len(outputs) > 1:
