@@ -70,6 +70,8 @@ class PIEPreprocessor(Processor):
                 print(f'file name: {entry.name}')
                 video_name = re.search('(\w+).json', entry.name).group(1)
                 data = json.load(json_file)
+                if data == {}:
+                    continue
                 for ped_id, value in data.items():
                     for frame_number, pose in value.items():
                         frame_range.append(int(frame_number))
@@ -110,24 +112,25 @@ class PIEPreprocessor(Processor):
         obs_image_path = list()
         pred_image_path = list()
         for ped_id in raw_data_obs.keys():
-            if ped_id in raw_data_pred.keys() and len(raw_data_pred[ped_id]) > 0.25 * len(pred_frame_range) and len(
-                    raw_data_obs[ped_id]) > 0.25 * len(obs_frame_range):
-                obs_x = list(raw_data_obs[ped_id].keys())
-                obs_y = np.array(list(raw_data_obs[ped_id].values()))
-                obs_image_path.append(
-                    [os.path.join(*re.search("(\w+)_(\w+_\w+)", video_name).groups(), str(frame_number) + ".png") for
-                     frame_number in obs_frame_range]
-                )
-                pred_image_path.append(
-                    [os.path.join(*re.search("(\w+)_(\w+_\w+)", video_name).groups(), str(frame_number) + ".png") for
-                     frame_number in pred_frame_range]
-                )
-                obs_interp = interp1d(obs_x, obs_y, axis=0, fill_value="extrapolate")
-                obs_poses.append(obs_interp(obs_frame_range).tolist())
-                pred_x = list(raw_data_pred[ped_id].keys())
-                pred_y = np.array(list(raw_data_pred[ped_id].values()))
-                pred_interp = interp1d(pred_x, pred_y, axis=0, fill_value="extrapolate")
-                pred_poses.append(pred_interp(pred_frame_range).tolist())
+            pass
+        if ped_id in raw_data_pred.keys() and len(raw_data_pred[ped_id]) > 0.2 * len(pred_frame_range) and len(
+                raw_data_obs[ped_id]) > 0.2 * len(obs_frame_range):
+            obs_x = list(raw_data_obs[ped_id].keys())
+            obs_y = np.array(list(raw_data_obs[ped_id].values()))
+            obs_image_path.append(
+                [os.path.join(*re.search("(\w+)_(\w+_\w+)", video_name).groups(), str(frame_number) + ".png") for
+                 frame_number in obs_frame_range]
+            )
+            pred_image_path.append(
+                [os.path.join(*re.search("(\w+)_(\w+_\w+)", video_name).groups(), str(frame_number) + ".png") for
+                 frame_number in pred_frame_range]
+            )
+            obs_interp = interp1d(obs_x, obs_y, axis=0, fill_value="extrapolate")
+            obs_poses.append(obs_interp(obs_frame_range).tolist())
+            pred_x = list(raw_data_pred[ped_id].keys())
+            pred_y = np.array(list(raw_data_pred[ped_id].values()))
+            pred_interp = interp1d(pred_x, pred_y, axis=0, fill_value="extrapolate")
+            pred_poses.append(pred_interp(pred_frame_range).tolist())
         with open(os.path.join(self.output_dir, output_file_name), 'a') as f_object:
             writer = csv.writer(f_object)
             if len(obs_poses) > 0:
@@ -168,7 +171,6 @@ class PIEPreprocessor(Processor):
                             )
                             frame = bbox.get('frame')
                             ground_truth[frame][p_id] = bbox_rec
-
                     for frame in ground_truth.keys():
                         for ann_subdir, _, _ in os.walk(self.annotation_path):
                             json_file_path = os.path.join(
@@ -197,7 +199,10 @@ class PIEPreprocessor(Processor):
                                 row_matrix = []
                                 for i, rectangle in enumerate(rectangles):
                                     row_matrix.append(
-                                        intersect_area(rectangle, ped_bbox)
+                                        intersect_area(rectangle, ped_bbox) / (
+                                                intersect_area(rectangle, rectangle) + intersect_area(
+                                                    ped_bbox, ped_bbox) - intersect_area(rectangle, ped_bbox)
+                                        )
                                     )
                                 score_matrix.append((ped_id, row_matrix))
 
@@ -211,7 +216,7 @@ class PIEPreprocessor(Processor):
                                 for k in range(len(score_matrix)):
                                     if len(score_matrix[k][1]) < max_index:
                                         score_matrix[k][1][max_index] = float('-inf')
-                                if score_matrix[i][1][max_index] > 1:
+                                if score_matrix[i][1][max_index] > 0.3:
                                     correspondence_dict[score_matrix[i][0]][frame] = [data[max_index]['keypoints'][v]
                                                                                       for v in range(
                                             len(data[max_index]['keypoints'])) if v % 3 != 2]
@@ -229,10 +234,11 @@ class PIEPreprocessor(Processor):
     def __create_annotations(self):
         if os.path.exists(os.path.join(PREPROCESSED_DATA_DIR, 'openpifpaf/PIE')):
             return PREPROCESSED_DATA_DIR + "openpifpaf/PIE/"
-        annotation_dir = PREPROCESSED_DATA_DIR + 'openpifpaf/PIE'
-        path = Path(annotation_dir)
-        path.mkdir(parents=True, exist_ok=True)
         for subdir, dirs, files in os.walk(self.image_dir):
+            annotation_dir = PREPROCESSED_DATA_DIR + 'openpifpaf/PIE' + subdir.split(self.image_dir)[1]
+            path = Path(annotation_dir)
+            path.mkdir(parents=True, exist_ok=True)
+
             predictor = openpifpaf.Predictor(json_data=True)
             if files:
                 new_files = []

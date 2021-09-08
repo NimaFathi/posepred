@@ -42,16 +42,17 @@ if __name__ == '__main__':
         )
     elif args.dataset_name == 'jaad':
         preprocessor = JAADPreprocessor(
-            dataset_path=args.official_annotation_path, annotation=args.annotaion,
+            dataset_path=args.official_annotation_path, annotate=args.annotate, image_dir=args.image_dir,
             obs_frame_num=args.obs_frames_num, custom_name=args.output_name, is_interactive=args.interactive,
-            pred_frame_num=args.pred_frames_num, skip_frame_num=args.skip_num, use_video_once=args.use_video_once
+            pred_frame_num=args.pred_frames_num, skip_frame_num=args.skip_num, use_video_once=args.use_video_once,
+            annotation_path=args.joints_annotation_path
         )
     elif args.dataset_name == 'pie':
         preprocessor = PIEPreprocessor(
             dataset_path=args.official_annotation_path, annotate=args.annotate, image_dir=args.image_dir,
             obs_frame_num=args.obs_frames_num, custom_name=args.output_name, is_interactive=args.interactive,
             pred_frame_num=args.pred_frames_num, skip_frame_num=args.skip_num, use_video_once=args.use_video_once,
-            annotation_path=args.joints_annotaion_path
+            annotation_path=args.joints_annotation_path
         )
     else:
         raise Exception("Invalid preprocessor.")
