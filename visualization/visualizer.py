@@ -9,9 +9,10 @@ import torch
 from matplotlib.pyplot import AutoLocator
 from pygifsicle import optimize
 
+from path_definition import VISUALIZER_DIR
 from visualization.color_generator import color_generator
 from visualization.keypoints_connection import keypoint_connections
-from path_definition import VISUALIZER_DIR
+
 
 class Visualizer:
     def __init__(self, dataset_name, images_dir):
@@ -54,7 +55,6 @@ class Visualizer:
             for i, group_pose in enumerate(poses):
                 new_group_pose = []
                 for j in range(len(group_pose)):
-
                     new_group_pose.append(
                         self.__scene_to_image(group_pose[j].unsqueeze(0), cam_ext[i], cam_int).tolist())
                 new_pose.append(torch.tensor(new_group_pose).squeeze(1))
@@ -81,10 +81,10 @@ class Visualizer:
                     all_poses=poses[i][j],
                     ax=axarr[j][i]
                 )
-                for _ in range(2):
+                for _ in range(4):
                     filenames.append(os.path.join(VISUALIZER_DIR, "outputs/3D/", f'{j}.png'))
                 if j == len(poses[0]) - 1:
-                    for _ in range(3):
+                    for _ in range(5):
                         filenames.append(os.path.join(VISUALIZER_DIR, "outputs/3D/", f'{j}.png'))
                 plt.title(names[i])
                 plt.savefig(os.path.join(VISUALIZER_DIR, "outputs/3D/", f'{j}.png'), dpi=100)
@@ -148,7 +148,7 @@ class Visualizer:
                 axarr.append(fig.add_subplot(1, subfig_size, i + 1))
                 plt.title(names[i])
                 axarr[i].imshow(images[i][plt_index])
-            for i in range(2):
+            for i in range(4):
                 filenames.append(os.path.join(VISUALIZER_DIR, 'outputs/2D', f'{plt_index}.png'))
             if plt_index == len(poses[0]) - 1:
                 for i in range(5):
@@ -172,7 +172,8 @@ class Visualizer:
                 ax.plot(xs=[keypoints[edge, 0][0], keypoints[edge, 0][1]],
                         zs=[keypoints[edge, 1][0], keypoints[edge, 1][1]],
                         ys=[keypoints[edge, 2][0], keypoints[edge, 2][1]], linewidth=1, label=r'$z=y=x$')
-            ax.scatter(xs=keypoints[:, 0].detach().cpu().numpy(), zs=keypoints[:, 1].detach().cpu().numpy(), ys=keypoints[:, 2].detach().cpu().numpy(), s=1)
+            ax.scatter(xs=keypoints[:, 0].detach().cpu().numpy(), zs=keypoints[:, 1].detach().cpu().numpy(),
+                       ys=keypoints[:, 2].detach().cpu().numpy(), s=1)
 
     def __generate_2D_figure(self, all_poses, all_masks=None, image_path=None):
         num_keypoints = all_poses.shape[-1] // 2
