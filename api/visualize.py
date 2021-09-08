@@ -24,6 +24,8 @@ if __name__ == '__main__':
 
     index = random.randint(0, dataloader.dataset.__len__() - 1) if index is None else index
     data = dataloader.dataset.__getitem__(index)
+    for key in data.keys():
+        data[key] = data.get(key).unsqueeze(0)
 
     model.eval()
     with torch.no_grad():
@@ -44,13 +46,13 @@ if __name__ == '__main__':
 
     for key in ['obs_pose', 'future_pose', 'pred_pose']:
         if key in data.keys():
-            pose = data.get(key) if dataloader_args.is_interactive else data.get(key).unsqueeze(0)
+            pose = data.get(key).squeeze(0) if dataloader_args.is_interactive else data.get(key)
             poses.append(pose.permute(1, 0, 2))
             names.append(key.split('_')[0])
 
     for key in ['obs_mask', 'future_mask', 'pred_mask']:
         if key in data.keys():
-            mask = data.get(key) if dataloader_args.is_interactive else data.get(key).unsqueeze(0)
+            mask = data.get(key).squeeze(0) if dataloader_args.is_interactive else data.get(key)
             masks.append(mask.permute(1, 0, 2))
 
     if 'obs_image' in data.keys():
