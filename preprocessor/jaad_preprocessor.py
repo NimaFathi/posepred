@@ -223,7 +223,6 @@ class JAADPreprocessor(Processor):
                     path.mkdir(parents=True, exist_ok=True)
                     with open(os.path.join(json_keypoints_dir, f'{video_name}.json'), 'w') as writer:
                         json.dump(sorted_cor_dict, writer, indent=4)
-            print('end for create frame poses')
         return json_keypoints_dir
 
     def __create_annotations(self):
