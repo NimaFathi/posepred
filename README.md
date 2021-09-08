@@ -8,7 +8,7 @@ posepred
 |   ├── predict.py                      -- script to predict 
 |   ├── preprocess.py                   -- script to run preprocessor module
 |   ├── train.py                        -- script to train models
-|   ├── visualize.py                    -- script to run visualization module
+|   └── visualize.py                    -- script to run visualization module
 ├── args
 |   ├── evaluations_args                -- argument handler for evaluation
 |   └── ...                             -- argument handler for other modules
