@@ -38,13 +38,15 @@ posepred
 |   ├── reporter.py                     -- to calcualte and report losses and metrics
 |   ├── save_load.py                    -- base code for saving and loading models
 |   └── others.py                       -- other useful utils
-|── visualization.py
-|   ├── outputs
-|   |   ├── 2D                          -- saving directory for 2D generated gifs
-|   |   └── 3D                          -- saving directory for 3D generated gifs
+|── visualization
 |   ├── color_generator.py              -- code for generating miscellanoeus colors
 |   ├── keypoints_connection.py         -- dictionary for creating joints connection graphs
 |   └── visualizer.py                   -- base code for visualization
+|── exps  
+|   ├── train                           -- outputs of train time
+|   ├── test                            -- outputs of test time (prediction)
+|   └── visualize                       -- outputs for visualization
+|
 └── path_definition.py                  -- base code for constant useful paths 
 
 ```
