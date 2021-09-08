@@ -10,7 +10,14 @@ def parse_testing_args():
                                      args.num_workers, is_testing=True)
     model_args = ModelArgs(args.model, args.use_mask, args.keypoint_dim)
 
-    return dataloader_args, model_args, args.load_path, args.pred_frames_num, args.interactive
+    if args.train_dataset is not None:
+        train_dataloader_args = DataloaderArgs(args.train_dataset, args.keypoint_dim, args.interactive,
+                                               args.persons_num, args.use_mask, args.skip_num, 1, False,
+                                               args.pin_memory, args.num_workers)
+    else:
+        train_dataloader_args = None
+
+    return dataloader_args, model_args, args.load_path, args.pred_frames_num, args.interactive, train_dataloader_args
 
 
 def __parse_testing_args():
@@ -31,6 +38,8 @@ def __parse_testing_args():
 
     parser.add_argument('--model', type=str, help='model_name')
     parser.add_argument('--load_path', type=str, help='load_path to trained model')
+
+    parser.add_argument('--train_dataset', type=str, default=None, help='train dataset for nearest_neighbor model.')
 
     training_args = parser.parse_args()
 

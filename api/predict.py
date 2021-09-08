@@ -6,7 +6,7 @@ from factory.tester import Tester
 
 if __name__ == '__main__':
 
-    dataloader_args, model_args, load_path, pred_frames_num, is_interactive = parse_testing_args()
+    dataloader_args, model_args, load_path, pred_frames_num, is_interactive, train_dataloader_args = parse_testing_args()
     dataloader = get_dataloader(dataloader_args)
 
     if load_path:
@@ -16,6 +16,9 @@ if __name__ == '__main__':
         assert model_args.pred_frames_num is not None, 'specify pred_frames_num'
         model_args.keypoints_num = dataloader.dataset.keypoints_num
         model = get_model(model_args)
+        if model_args.model_name == 'nearest_neighbor':
+            assert train_dataloader_args is not None
+            model.train_dataloader = get_dataloader(train_dataloader_args)
     else:
         raise Exception("Please provide either a model_name or a load_path to a trained model.")
 

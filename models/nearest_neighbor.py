@@ -7,19 +7,20 @@ class NearestNeighbor(torch.nn.Module):
     def __init__(self, args):
         super(NearestNeighbor, self).__init__()
         self.args = args
-        self.input_size = self.output_size = int(args.keypoints_num * args.keypoint_dim)
         self.distance = MSE()
         self.train_dataloader = None
 
     def forward(self, inputs):
 
-        in_pose = inputs[0]
         min_distance = None
         best_index = None
 
+        in_vel = inputs[1]
+        assert in_vel.shape[0] == 1, "only support batch_size 1 in nearest neighbor"
+
         for i, data in enumerate(self.train_dataloader):
-            obs_pose = data[0].to('cuda')
-            dis = self.distance(in_pose, obs_pose)
+            obs_vel = data[1].to('cuda')
+            dis = self.distance(in_vel, obs_vel)
             if min_distance is None or dis < min_distance:
                 min_distance = dis
                 best_index = i
