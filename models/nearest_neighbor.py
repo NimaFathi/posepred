@@ -26,10 +26,10 @@ class NearestNeighbor(torch.nn.Module):
                 best_index = i
 
         if self.args.use_mask:
-            obs_pose, obs_vel, obs_mask, target_pose, target_vel, target_mask = self.train_dataloader[best_index]
-            outputs = [target_vel.to('cuda'), target_mask.to('cuda')]
+            obs_pose, obs_vel, obs_mask, target_pose, target_vel, target_mask = self.train_dataloader.dataset.__getitem__(best_index)
+            outputs = [target_vel.unsqueeze(0).to('cuda'), target_mask.unsqueeze(0).to('cuda')]
         else:
-            obs_pose, obs_vel, target_pose, target_vel = self.train_dataloader[best_index]
-            outputs = [target_vel.to('cuda')]
+            obs_pose, obs_vel, target_pose, target_vel = self.train_dataloader.dataset.__getitem__(best_index)
+            outputs = [target_vel.unsqueeze(0).to('cuda')]
 
         return tuple(outputs)
