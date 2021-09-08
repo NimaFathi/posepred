@@ -48,7 +48,6 @@ posepred
 ├── path_definition.py                  -- base code for constant useful paths 
 ├── ARGS_README.md
 ├── README.md
-└── .gitignore
 ```
 
 ## Installation  
