@@ -45,9 +45,8 @@ posepred
 |   ├── color_generator.py              -- code for generating miscellanoeus colors
 |   ├── keypoints_connection.py         -- dictionary for creating joints connection graphs
 |   └── visualizer.py                   -- base code for visualization
-├── path_definition.py                  -- base code for constant useful paths 
-├── ARGS_README.md
-└── README.md
+└── path_definition.py                  -- base code for constant useful paths 
+
 ```
 
 ## Installation  
