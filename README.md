@@ -140,7 +140,7 @@ python -m api.visualize --dataset=<dataset_name> --model=<model_name> --keypoint
   
 Sample outputs:  
 <div align="center">  
-    <img src="visualization/outputs/2D/3D_visualize_2D_overlay.gif" width="600px" alt><br>  
+   <!--  <img src="visualization/outputs/2D/3D_visualize_2D_overlay.gif" width="600px" alt><br>  -->
     <img src="visualization/outputs/3D/3D_visualize.gif" width="600px" alt>  
 </div>
 
