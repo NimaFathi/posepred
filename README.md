@@ -32,23 +32,21 @@ posepred
 |   ├── dpw_preprocessor.py             -- preprocessing 3DPW dataset class
     └── ...                             -- other datasets preprocessor class
 ├── utils
-|   ├── average_meter                   -- base class to measure many features of different metrics over time
-|   ├── losses.py                       -- base code for specified using loss functions
-|   ├── metrics.py                      -- base code for specified usings metrics
-|   ├── reporter.py                     -- reporter class
+|   ├── average_meter                   -- updating average for metrics each epoch
+|   ├── losses.py                       -- available loss functions
+|   ├── metrics.py                      -- available metrics
+|   ├── reporter.py                     -- to calcualte and report losses and metrics
 |   ├── save_load.py                    -- base code for saving and loading models
 |   └── others.py                       -- other useful utils
 |── visualization.py
 |   ├── outputs
 |   |   ├── 2D                          -- saving directory for 2D generated gifs
 |   |   └── 3D                          -- saving directory for 3D generated gifs
-|   ├── color_generator.py              -- code for generating miscellanoeus colors for visualization
+|   ├── color_generator.py              -- code for generating miscellanoeus colors
 |   ├── keypoints_connection.py         -- dictionary for creating joints connection graphs
 |   └── visualizer.py                   -- base code for visualization
-├── path_definition.py                  -- base code for constant useful paths 
-├── ARGS_README.md
-├── README.md
-└── .gitignore
+└── path_definition.py                  -- base code for constant useful paths 
+
 ```
 
 ## Installation  
@@ -79,7 +77,7 @@ To fulfill mentioned purpose You should run preprocessing api called `preprocess
 
 Example:  
 ```bash  
-python -m api.preprocess --dataset_name=<dataset_name> --dataset_path=<path_to_dataset> --data_usage='train' --obs_frames_num=16 --pred_frames_num=14 --use_mask  
+python -m api.preprocess --dataset_name=<dataset_name> --official_annotation_path=<path_to_dataset> --data_usage='train' --obs_frames_num=16 --pred_frames_num=14 --use_mask  
 ```  
 See [here](https://github.com/vita-epfl/posepred/blob/master/ARGS_README.md#preprocessing) for more details about preprocessing arguments.
   

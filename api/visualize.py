@@ -9,7 +9,7 @@ from utils.others import pose_from_vel
 
 if __name__ == '__main__':
 
-    dataloader_args, model_args, load_path, ground_truth, pred_frames_num, index, images_dir = parse_visualization_args()
+    dataloader_args, model_args, load_path, ground_truth, pred_frames_num, index, images_dir, dataset_name = parse_visualization_args()
     dataloader = get_dataloader(dataloader_args)
 
     if load_path:
@@ -24,8 +24,10 @@ if __name__ == '__main__':
 
     index = random.randint(0, dataloader.dataset.__len__() - 1) if index is None else index
     data = dataloader.dataset.__getitem__(index)
-    for key in data.keys():
-        data[key] = data.get(key).unsqueeze(0)
+
+    for key in ['obs_pose', 'future_pose', 'obs_vel', 'future_vel', 'obs_mask', 'future_mask']:
+        if key in data.keys():
+            data[key] = data.get(key).unsqueeze(0)
 
     model.eval()
     with torch.no_grad():
@@ -72,7 +74,7 @@ if __name__ == '__main__':
     cam_in = data.get('cam_in') if 'cam_in' in data.keys() else None
 
     gif_name = '_'.join((model.args.model_name, dataloader_args.dataset_name, str(index)))
-    visualizer = Visualizer(dataset_name=dataloader_args.dataset_name, images_dir=images_dir)
+    visualizer = Visualizer(dataset_name=dataset_name, images_dir=images_dir)
     if dataloader_args.keypoint_dim == 2:
         visualizer.visualizer_2D(names, poses, masks, images_path, gif_name)
     else:
