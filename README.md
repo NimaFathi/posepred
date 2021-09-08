@@ -47,7 +47,7 @@ posepred
 |   └── visualizer.py                   -- base code for visualization
 ├── path_definition.py                  -- base code for constant useful paths 
 ├── ARGS_README.md
-├── README.md
+└── README.md
 ```
 
 ## Installation  
