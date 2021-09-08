@@ -5,18 +5,20 @@ import torch
 import torch.optim as optim
 
 from args.helper import JSONEncoder_
-from models import disentangle1, lstm_vel, zero_vel, nearest_neighbor
+from models import disentangle1, pv_lstm, zero_vel, nearest_neighbor
 
 
 def get_model(model_args):
-    if model_args.model_name == 'lstm_vel':
-        return lstm_vel.LSTMVel(model_args).to('cuda')
+    if model_args.model_name == 'pv_lstm':
+        return pv_lstm.PVLSTM(model_args).to('cuda')
     elif model_args.model_name == 'zero_vel':
         return zero_vel.ZeroVel(model_args).to('cuda')
     elif model_args.model_name == 'disentangle1':
         return disentangle1.Disentangle1(model_args).to('cuda')
     elif model_args.model_name == 'nearest_neighbor':
         return nearest_neighbor.NearestNeighbor(model_args).to('cuda')
+    else:
+        raise Exception("Invalid model")
 
 
 # TODO map_location="cuda:0" ???
