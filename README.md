@@ -7,7 +7,7 @@ Pospred is an open-source toolbox for pose prediction based on PyTorch. It is a 
 
 ## Project Tree
 
-```bash
+```
 posepred
 ├── api
 │   ├── evaluate.py                     -- script to evaluate
