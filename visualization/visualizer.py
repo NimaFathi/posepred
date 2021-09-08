@@ -179,7 +179,7 @@ class Visualizer:
         num_keypoints = all_poses.shape[-1] // 2
         poses = all_poses.reshape(all_poses.shape[0], num_keypoints, 2)
         if image_path is None:
-            image = np.zeros((1080, 1920, 3))
+            image = np.zeros((1080, 1920, 3)).astype(np.uint8)
         else:
             image = cv2.imread(image_path)
         if all_masks is None:
