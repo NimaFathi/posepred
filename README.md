@@ -32,17 +32,17 @@ posepred
 |   ├── dpw_preprocessor.py             -- preprocessing 3DPW dataset class
     └── ...                             -- other datasets preprocessor class
 ├── utils
-|   ├── average_meter                   -- base class to measure many features of different metrics over time
-|   ├── losses.py                       -- base code for specified using loss functions
-|   ├── metrics.py                      -- base code for specified usings metrics
-|   ├── reporter.py                     -- reporter class
+|   ├── average_meter                   -- updating average for metrics each epoch
+|   ├── losses.py                       -- available loss functions
+|   ├── metrics.py                      -- available metrics
+|   ├── reporter.py                     -- to calcualte and report losses and metrics
 |   ├── save_load.py                    -- base code for saving and loading models
 |   └── others.py                       -- other useful utils
 |── visualization.py
 |   ├── outputs
 |   |   ├── 2D                          -- saving directory for 2D generated gifs
 |   |   └── 3D                          -- saving directory for 3D generated gifs
-|   ├── color_generator.py              -- code for generating miscellanoeus colors for visualization
+|   ├── color_generator.py              -- code for generating miscellanoeus colors
 |   ├── keypoints_connection.py         -- dictionary for creating joints connection graphs
 |   └── visualizer.py                   -- base code for visualization
 ├── path_definition.py                  -- base code for constant useful paths 
