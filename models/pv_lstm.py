@@ -4,9 +4,9 @@ from models.decoder import Decoder
 from models.encoder import Encoder
 
 
-class LSTMVel(nn.Module):
+class PVLSTM(nn.Module):
     def __init__(self, args):
-        super(LSTMVel, self).__init__()
+        super(PVLSTM, self).__init__()
         self.args = args
         input_size = output_size = int(args.keypoints_num * args.keypoint_dim)
         self.pose_encoder = Encoder(input_size, args.hidden_size, args.n_layers, args.dropout_enc)

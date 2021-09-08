@@ -1,6 +1,6 @@
 import torch
 
-from models.lstm_vel import LSTMVel
+from models.pv_lstm import PVLSTM
 from models.zero_vel import ZeroVel
 
 
@@ -17,7 +17,7 @@ class Disentangle1(torch.nn.Module):
         # local
         local_args = args
         local_args.keypoints_num = args.keypoints_num - global_args.keypoints_num
-        self.local_model = LSTMVel(local_args)
+        self.local_model = PVLSTM(local_args)
 
     def forward(self, inputs):
         outputs = []
