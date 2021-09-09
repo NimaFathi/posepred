@@ -38,6 +38,3 @@ class NearestNeighbor(nn.Module):
             outputs = [best_pred_vel.unsqueeze(0).to('cuda')]
 
         return tuple(outputs)
-
-# a = torch.tensor([[1, 2, 3], [0, 0, 1], [1, 0, -1], [0, 0, 0]], dtype=torch.float)
-# b = torch.tensor([1, 0, -1], dtype=torch.float)
