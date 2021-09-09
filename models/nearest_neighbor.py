@@ -1,35 +1,43 @@
 import torch
+from torch import nn
 
-from utils.losses import MSE
 
-
-class NearestNeighbor(torch.nn.Module):
+class NearestNeighbor(nn.Module):
     def __init__(self, args):
         super(NearestNeighbor, self).__init__()
         self.args = args
-        self.distance = MSE()
+        self.distance = nn.MSELoss(reduction='none')
         self.train_dataloader = None
 
     def forward(self, inputs):
 
         min_distance = None
-        best_index = None
+        best_pred_vel = None
+        best_pred_mask = None
 
         in_vel = inputs[1]
         assert in_vel.shape[0] == 1, "only support batch_size 1 in nearest neighbor"
 
-        for i, data in enumerate(self.train_dataloader):
+        for data in self.train_dataloader:
             obs_vel = data[1].to('cuda')
-            dis = self.distance(in_vel, obs_vel)
-            if min_distance is None or dis < min_distance:
-                min_distance = dis
-                best_index = i
+            bs = obs_vel.shape[0]
+            in_vel = in_vel.view(1, -1).repeat(bs, 1)
+            dis = self.distance(in_vel, obs_vel.view(bs, -1)).sum(1)
+            value, ind = torch.min(dis, 0, out=None)
+            if min_distance is None or value < min_distance:
+                min_distance = value
+                if self.args.use_mask:
+                    best_pred_vel = data[4][ind]
+                    best_pred_mask = data[5][ind]
+                else:
+                    best_pred_vel = data[3][ind]
 
         if self.args.use_mask:
-            obs_pose, obs_vel, obs_mask, target_pose, target_vel, target_mask = self.train_dataloader.dataset.__getitem__(best_index)
-            outputs = [target_vel.unsqueeze(0).to('cuda'), target_mask.unsqueeze(0).to('cuda')]
+            outputs = [best_pred_vel.unsqueeze(0).to('cuda'), best_pred_mask.unsqueeze(0).to('cuda')]
         else:
-            obs_pose, obs_vel, target_pose, target_vel = self.train_dataloader.dataset.__getitem__(best_index)
-            outputs = [target_vel.unsqueeze(0).to('cuda')]
+            outputs = [best_pred_vel.unsqueeze(0).to('cuda')]
 
         return tuple(outputs)
+
+# a = torch.tensor([[1, 2, 3], [0, 0, 1], [1, 0, -1], [0, 0, 0]], dtype=torch.float)
+# b = torch.tensor([1, 0, -1], dtype=torch.float)
