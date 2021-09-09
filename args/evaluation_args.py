@@ -12,7 +12,7 @@ def parse_evaluation_args():
 
     if args.train_dataset is not None:
         train_dataloader_args = DataloaderArgs(args.train_dataset, args.keypoint_dim, args.interactive,
-                                               args.persons_num, args.use_mask, args.skip_num, 1, False,
+                                               args.persons_num, args.use_mask, args.skip_num, 1024, False,
                                                args.pin_memory, args.num_workers)
     else:
         train_dataloader_args = None
