@@ -81,3 +81,14 @@ def setup_testing_dir(root_dir):
             os.makedirs(os.path.join(new_dir, 'outputs'), exist_ok=False)
             return new_dir
     assert "Too many folders exist."
+
+
+def setup_visualization_dir(root_dir):
+    vis_dir = os.path.join(root_dir, 'exps', 'visualization')
+    os.makedirs(vis_dir, exist_ok=True)
+    for i in range(1, 1000000):
+        new_dir = os.path.join(vis_dir, str(i))
+        if not os.path.isdir(new_dir):
+            os.makedirs(new_dir, exist_ok=False)
+            return new_dir
+    assert "Too many folders exist."
