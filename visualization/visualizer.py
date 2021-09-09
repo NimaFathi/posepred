@@ -72,7 +72,6 @@ class Visualizer:
         comparison_number = len(poses)
         axarr = []
         filenames = []
-
         save_dir = setup_visualization_dir(ROOT_DIR)
         for j in range(len(poses[0])):
             fig = plt.figure(figsize=fig_size, dpi=100)
@@ -144,6 +143,7 @@ class Visualizer:
                     )
                 )
         filenames = []
+        save_dir = setup_visualization_dir(ROOT_DIR)
         for plt_index in range(len(poses[0])):
             fig = plt.figure(figsize=fig_size, dpi=100)
             axarr = []
@@ -152,19 +152,19 @@ class Visualizer:
                 plt.title(names[i])
                 axarr[i].imshow(images[i][plt_index])
             for i in range(4):
-                filenames.append(os.path.join(VISUALIZER_DIR, 'outputs/2D', f'{plt_index}.png'))
+                filenames.append(os.path.join(save_dir, f'{plt_index}.png'))
             if plt_index == len(poses[0]) - 1:
                 for i in range(5):
-                    filenames.append(os.path.join(VISUALIZER_DIR, 'outputs/2D', f'{plt_index}.png'))
-            plt.savefig(os.path.join(VISUALIZER_DIR, 'outputs/2D', f'{plt_index}.png'), dpi=100)
+                    filenames.append(os.path.join(save_dir, f'{plt_index}.png'))
+            plt.savefig(os.path.join(save_dir, f'{plt_index}.png'), dpi=100)
             plt.close(fig)
-        with imageio.get_writer(os.path.join(VISUALIZER_DIR, 'outputs/2D', f'{gif_name}.gif'), mode='I') as writer:
+        with imageio.get_writer(os.path.join(save_dir, f'{gif_name}.gif'), mode='I') as writer:
             for filename in filenames:
                 image = imageio.imread(filename)
                 writer.append_data(image)
         for filename in set(filenames):
             os.remove(filename)
-        optimize(os.path.join(VISUALIZER_DIR, 'outputs/2D', f'{gif_name}.gif'))
+        optimize(os.path.join(save_dir, f'{gif_name}.gif'))
 
     def __generate_3D_figure(self, all_poses, ax):
         num_keypoints = all_poses.shape[-1] // 3
