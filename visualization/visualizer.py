@@ -9,7 +9,8 @@ import torch
 from matplotlib.pyplot import AutoLocator
 from pygifsicle import optimize
 
-from path_definition import VISUALIZER_DIR
+from path_definition import ROOT_DIR
+from utils.save_load import setup_visualization_dir
 from visualization.color_generator import color_generator
 from visualization.keypoints_connection import keypoint_connections
 
@@ -71,6 +72,8 @@ class Visualizer:
         comparison_number = len(poses)
         axarr = []
         filenames = []
+
+        save_dir = setup_visualization_dir(ROOT_DIR)
         for j in range(len(poses[0])):
             fig = plt.figure(figsize=fig_size, dpi=100)
             axarr.append([])
@@ -82,21 +85,21 @@ class Visualizer:
                     ax=axarr[j][i]
                 )
                 for _ in range(4):
-                    filenames.append(os.path.join(VISUALIZER_DIR, "outputs/3D/", f'{j}.png'))
+                    filenames.append(os.path.join(save_dir, f'{j}.png'))
                 if j == len(poses[0]) - 1:
                     for _ in range(5):
-                        filenames.append(os.path.join(VISUALIZER_DIR, "outputs/3D/", f'{j}.png'))
+                        filenames.append(os.path.join(save_dir, f'{j}.png'))
                 plt.title(names[i])
-                plt.savefig(os.path.join(VISUALIZER_DIR, "outputs/3D/", f'{j}.png'), dpi=100)
+                plt.savefig(os.path.join(save_dir, f'{j}.png'), dpi=100)
             plt.close(fig)
-        with imageio.get_writer(os.path.join(VISUALIZER_DIR, "outputs/3D/", f'{gif_name}.gif'), mode='I') as writer:
+        with imageio.get_writer(os.path.join(save_dir, f'{gif_name}.gif'), mode='I') as writer:
             for filename in filenames:
                 image = imageio.imread(filename)
                 writer.append_data(image)
 
         for filename in set(filenames):
             os.remove(filename)
-        optimize(os.path.join(VISUALIZER_DIR, "outputs/3D/", f'{gif_name}.gif'))
+        optimize(os.path.join(save_dir, f'{gif_name}.gif'))
 
     def visualizer_2D(self, names, poses, masks, images_paths, gif_name, fig_size=(8, 6)):
         """
