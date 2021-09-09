@@ -7,19 +7,20 @@ from utils.losses import L1, MSE, BCE
 
 
 class Evaluator:
-    def __init__(self, model, dataloader, reporter, is_interactive, distance_loss):
+    def __init__(self, model, dataloader, reporter, is_interactive, distance_loss, rounds_num):
         self.model = model
         self.dataloader = dataloader
         self.reporter = reporter
         self.is_interactive = is_interactive
         self.distance_loss = L1() if distance_loss == 'L1' else MSE()
+        self.rounds_num = rounds_num
         self.mask_loss = BCE()
         self.device = torch.device('cuda')
 
     def evaluate(self):
         self.model.eval()
         print('Start evaluation.')
-        for i in range(5):
+        for i in range(self.rounds_num):
             print('round', i + 1)
             self.__evaluate()
         print('-' * 100)

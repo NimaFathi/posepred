@@ -6,7 +6,7 @@ from factory.evaluator import Evaluator
 
 if __name__ == '__main__':
 
-    dataloader_args, model_args, load_path, is_interactive, distance_loss, train_dataloader_args = parse_evaluation_args()
+    dataloader_args, model_args, load_path, is_interactive, distance_loss, rounds_num, train_dataloader_args = parse_evaluation_args()
     dataloader = get_dataloader(dataloader_args)
     reporter = Reporter()
 
@@ -22,5 +22,5 @@ if __name__ == '__main__':
     else:
         raise Exception("Please provide either a model_name or a load_path to a trained model.")
 
-    evaluator = Evaluator(model, dataloader, reporter, is_interactive, distance_loss)
+    evaluator = Evaluator(model, dataloader, reporter, is_interactive, distance_loss, rounds_num)
     evaluator.evaluate()

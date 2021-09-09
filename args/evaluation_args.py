@@ -17,7 +17,7 @@ def parse_evaluation_args():
     else:
         train_dataloader_args = None
 
-    return dataloader_args, model_args, args.load_path, args.interactive, args.distance_loss, train_dataloader_args
+    return dataloader_args, model_args, args.load_path, args.interactive, args.distance_loss, args.rounds_num, train_dataloader_args
 
 
 def __parse_evaluation_args():
@@ -38,6 +38,7 @@ def __parse_evaluation_args():
     parser.add_argument('--model', type=str, help='model_name')
     parser.add_argument('--load_path', type=str, help='load_path to trained model')
     parser.add_argument('--distance_loss', type=str, default='L1', help='use L1 or L2 as distance loss.')
+    parser.add_argument('--rounds_num', type=int, default=1, help='number of rounds to evaluate.')
 
     parser.add_argument('--train_dataset', type=str, default=None, help='train dataset for nearest_neighbor model.')
 
