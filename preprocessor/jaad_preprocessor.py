@@ -116,11 +116,11 @@ class JAADPreprocessor(Processor):
                 obs_x = list(raw_data_obs[ped_id].keys())
                 obs_y = np.array(list(raw_data_obs[ped_id].values()))
                 obs_image_path.append(
-                    [os.path.join(video_name, str(frame_number) + ".png") for
+                    [os.path.join(video_name, str(frame_number).zfill(5) + ".png") for
                      frame_number in obs_frame_range]
                 )
                 pred_image_path.append(
-                    [os.path.join(video_name, str(frame_number) + ".png") for
+                    [os.path.join(video_name, str(frame_number).zfill(5) + ".png") for
                      frame_number in pred_frame_range]
                 )
                 obs_interp = interp1d(obs_x, obs_y, axis=0, fill_value="extrapolate")
