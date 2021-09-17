@@ -243,7 +243,6 @@ venv/
 *__pycache__*
 *.pyc
 exps/
-*.ipynb
 
 preprocessed_data/
 raw_data/
