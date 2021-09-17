@@ -18,7 +18,7 @@ def get_model(model_args):
     elif model_args.model_name == 'nearest_neighbor':
         return nearest_neighbor.NearestNeighbor(model_args).to('cuda')
     else:
-        raise Exception("Invalid model")
+        raise Exception("Invalid model.")
 
 
 # TODO map_location="cuda:0" ???
@@ -68,7 +68,7 @@ def setup_training_dir(root_dir):
             os.makedirs(os.path.join(new_dir, 'plots'), exist_ok=False)
             os.makedirs(os.path.join(new_dir, 'data'), exist_ok=False)
             return new_dir
-    assert "Too many folders exist."
+    raise Exception("Too many folders exist.")
 
 
 def setup_testing_dir(root_dir):
@@ -80,7 +80,7 @@ def setup_testing_dir(root_dir):
             os.makedirs(new_dir, exist_ok=False)
             os.makedirs(os.path.join(new_dir, 'outputs'), exist_ok=False)
             return new_dir
-    assert "Too many folders exist."
+    raise Exception("Too many folders exist.")
 
 
 def setup_visualization_dir(root_dir):
@@ -91,4 +91,4 @@ def setup_visualization_dir(root_dir):
         if not os.path.isdir(new_dir):
             os.makedirs(new_dir, exist_ok=False)
             return new_dir
-    assert "Too many folders exist."
+    raise Exception("Too many folders exist.")

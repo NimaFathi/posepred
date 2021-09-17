@@ -6,7 +6,7 @@ from utils.others import pose_from_vel
 from utils.save_load import save_test_results
 
 
-class Tester:
+class Predictor:
     def __init__(self, model, dataloader, is_interactive, save_dir):
         self.model = model
         self.dataloader = dataloader
@@ -19,15 +19,15 @@ class Tester:
         self.pred_vel = torch.Tensor().to('cuda')
         self.pred_mask = torch.Tensor().to('cuda')
 
-    def test(self):
+    def predict(self):
         self.model.eval()
         time0 = time.time()
-        self.__test()
+        self.__predict()
         save_test_results(self.result, [self.pred_pose, self.pred_vel, self.pred_mask], self.save_dir)
         print("-" * 100)
         print('Testing is completed in: %.2f' % (time.time() - time0))
 
-    def __test(self):
+    def __predict(self):
         for data in self.dataloader:
             for i, d in enumerate(data):
                 data[i] = d.to(self.device)

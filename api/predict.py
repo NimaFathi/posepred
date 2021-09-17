@@ -2,7 +2,7 @@ from path_definition import ROOT_DIR
 from args.prediction_args import parse_testing_args
 from data_loader.data_loader import get_dataloader
 from utils.save_load import get_model, load_snapshot, save_args, setup_testing_dir
-from factory.tester import Tester
+from factory.predictor import Predictor
 
 if __name__ == '__main__':
 
@@ -30,5 +30,5 @@ if __name__ == '__main__':
     save_dir = setup_testing_dir(ROOT_DIR)
     save_args({'dataloader_args': dataloader_args, 'model_args': model.args}, save_dir)
 
-    tester = Tester(model, dataloader, is_interactive, save_dir)
-    tester.test()
+    predictor = Predictor(model, dataloader, is_interactive, save_dir)
+    predictor.predict()
