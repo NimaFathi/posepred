@@ -1,12 +1,12 @@
 from path_definition import ROOT_DIR
-from args.prediction_args import parse_testing_args
+from args.prediction_args import parse_prediction_args
 from data_loader.data_loader import get_dataloader
 from utils.save_load import get_model, load_snapshot, save_args, setup_testing_dir
 from factory.predictor import Predictor
 
 if __name__ == '__main__':
 
-    dataloader_args, model_args, load_path, pred_frames_num, is_interactive, train_dataloader_args = parse_testing_args()
+    dataloader_args, model_args, load_path, pred_frames_num, is_interactive, train_dataloader_args = parse_prediction_args()
     dataloader = get_dataloader(dataloader_args)
 
     if load_path:

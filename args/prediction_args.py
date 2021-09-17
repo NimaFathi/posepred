@@ -3,8 +3,8 @@ import argparse
 from args.helper import DataloaderArgs, ModelArgs
 
 
-def parse_testing_args():
-    args = __parse_testing_args()
+def parse_prediction_args():
+    args = __parse_prediction_args()
     dataloader_args = DataloaderArgs(args.dataset, args.keypoint_dim, args.interactive, args.persons_num,
                                      args.use_mask, args.skip_num, args.batch_size, args.shuffle, args.pin_memory,
                                      args.num_workers, is_testing=True)
@@ -20,7 +20,7 @@ def parse_testing_args():
     return dataloader_args, model_args, args.load_path, args.pred_frames_num, args.interactive, train_dataloader_args
 
 
-def __parse_testing_args():
+def __parse_prediction_args():
     parser = argparse.ArgumentParser('Testing Arguments')
 
     # dataloader_args
