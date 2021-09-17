@@ -13,7 +13,7 @@ if __name__ == '__main__':
         model, _, _, _, _ = load_snapshot(load_path)
     elif model_args.model_name:
         if model_args.model_name == 'nearest_neighbor':
-            assert train_dataloader_args is not None
+            assert train_dataloader_args is not None, 'Please provide a train_dataset for nearest_neighbor model.'
             train_dataloader = get_dataloader(train_dataloader_args)
             model_args.pred_frames_num = train_dataloader.dataset.future_frames_num
             model_args.keypoints_num = dataloader.dataset.keypoints_num

@@ -17,7 +17,7 @@ if __name__ == '__main__':
         model_args.keypoints_num = dataloader.dataset.keypoints_num
         model = get_model(model_args)
         if model_args.model_name == 'nearest_neighbor':
-            assert train_dataloader_args is not None
+            assert train_dataloader_args is not None, 'Please provide a train_dataset for nearest_neighbor model.'
             model.train_dataloader = get_dataloader(train_dataloader_args)
     else:
         raise Exception("Please provide either a model_name or a load_path to a trained model.")
