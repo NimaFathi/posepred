@@ -2,6 +2,7 @@ import torch
 from torch.utils.data import Dataset
 import pandas as pd
 from ast import literal_eval
+import logging
 
 
 class NonInteractiveDataset(Dataset):
@@ -38,7 +39,7 @@ class NonInteractiveDataset(Dataset):
             outputs = [obs_pose, obs_vel]
             outputs_vis = {'obs_pose': obs_pose, 'obs_vel': obs_vel}
         except:
-            print('faulty row skipped.')
+            logging.warning('faulty row skipped.')
             return self.__getitem__((index + 1) % self.__len__())
 
         if self.use_mask:
