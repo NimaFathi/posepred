@@ -18,7 +18,7 @@ posepred
 |   └── non_interactive_dataset.py      -- handles dataloader for non-interactive data
 ├── factory
 │   ├── evaluator.py                    -- base code for evaluation 
-|   ├── tester.py                       -- base code for testing
+|   ├── predictor.py                    -- base code for testing
 |   └── trainer.py                      -- base code for training
 ├── models
 │   ├── decoder.py                      -- base code for decoder
