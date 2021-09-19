@@ -1,5 +1,5 @@
 from utils import h36motion3d as datasets
-from models.his_rep_itself import AttModel
+from models.his_rep_itself import HisRepItself
 from utils import util
 from utils import log
 
@@ -15,12 +15,12 @@ def main(opt):
     lr_now = opt.lr_now
 
     print('>>> create models')
-    in_features = opt.in_features  # 66
-    d_model = opt.d_model
-    kernel_size = opt.kernel_size
-    net_pred = AttModel.AttModel(in_features=in_features, kernel_size=kernel_size, d_model=d_model,
-                                 num_stage=opt.num_stage, dct_n=opt.dct_n)
-    net_pred.cuda()
+    in_features = 66  # 3 * 22
+    d_model = 256
+    kernel_size = 10
+    net_pred = HisRepItself(in_features=in_features, kernel_size=kernel_size, d_model=d_model,
+                            num_stage=opt.num_stage, dct_n=opt.dct_n).cuda()
+
 
     optimizer = optim.Adam(filter(lambda x: x.requires_grad, net_pred.parameters()), lr=opt.lr_now)
     print(">>> total params: {:.2f}M".format(sum(p.numel() for p in net_pred.parameters()) / 1000000.0))

@@ -1,10 +1,9 @@
-from torch.nn.parameter import Parameter
-from torch.nn import Module
-from torch import nn
 import torch
-import math
+from torch import nn
+from torch.nn.parameter import Parameter
 import numpy as np
-    
+import math
+
 from utils.others import get_dct_matrix
 
 
@@ -127,33 +126,34 @@ class GCN(nn.Module):
         return y
 
 
-class AttModel(Module):
+class HisRepItself(nn.Module):
 
-    def __init__(self, in_features=48, kernel_size=5, d_model=512, num_stage=2, dct_n=10):
-        super(AttModel, self).__init__()
+    def __init__(self, args):
+        super(HisRepItself, self).__init__()
 
-        self.kernel_size = kernel_size
-        self.d_model = d_model
-        self.dct_n = dct_n
-        assert kernel_size == 10
+        self.args = args
+        self.in_features = int(args.keypoints_num * args.keypoint_dim)
+        self.kernel_size = 10
+        self.d_model = 256
+        self.num_stage = 12
+        self.dct_n = 10
 
-        self.convQ = nn.Sequential(nn.Conv1d(in_channels=in_features, out_channels=d_model, kernel_size=6,
+        self.convQ = nn.Sequential(nn.Conv1d(in_channels=self.in_features, out_channels=self.d_model, kernel_size=6,
                                              bias=False),
                                    nn.ReLU(),
-                                   nn.Conv1d(in_channels=d_model, out_channels=d_model, kernel_size=5,
+                                   nn.Conv1d(in_channels=self.d_model, out_channels=self.d_model, kernel_size=5,
                                              bias=False),
                                    nn.ReLU())
 
-        self.convK = nn.Sequential(nn.Conv1d(in_channels=in_features, out_channels=d_model, kernel_size=6,
+        self.convK = nn.Sequential(nn.Conv1d(in_channels=self.in_features, out_channels=self.d_model, kernel_size=6,
                                              bias=False),
                                    nn.ReLU(),
-                                   nn.Conv1d(in_channels=d_model, out_channels=d_model, kernel_size=5,
+                                   nn.Conv1d(in_channels=self.d_model, out_channels=self.d_model, kernel_size=5,
                                              bias=False),
                                    nn.ReLU())
 
-        self.gcn = GCN.GCN(input_feature=dct_n * 2, hidden_feature=d_model, p_dropout=0.3,
-                           num_stage=num_stage,
-                           node_n=in_features)
+        self.gcn = GCN.GCN(input_feature=2 * self.dct_n, hidden_feature=self.d_model, p_dropout=0.3,
+                           num_stage=self.num_stage, node_n=self.in_features)
 
     def forward(self, src, output_n=25, input_n=50, itera=1):
         """
