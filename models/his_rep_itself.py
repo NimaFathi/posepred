@@ -4,7 +4,7 @@ from torch import nn
 import torch
 import math
 import numpy as np
-
+    
 from utils.others import get_dct_matrix
 
 
@@ -157,16 +157,14 @@ class AttModel(Module):
 
     def forward(self, src, output_n=25, input_n=50, itera=1):
         """
-        :param src: [batch_size,seq_len,feat_dim]
+        :param src: [batch_size, seq_len, feat_dim]
         :param output_n:
         :param input_n:
-        :param frame_n:
-        :param dct_n:
         :param itera:
         :return:
         """
         dct_n = self.dct_n
-        src = src[:, :input_n]  # [bs,in_n,dim]
+        src = src[:, :input_n]  # [bs, in_n, dim]
         src_tmp = src.clone()
         bs = src.shape[0]
         src_key_tmp = src_tmp.transpose(1, 2)[:, :, :(input_n - output_n)].clone()
@@ -183,7 +181,7 @@ class AttModel(Module):
             [bs * vn, vl, -1])
         src_value_tmp = torch.matmul(dct_m[:dct_n].unsqueeze(dim=0), src_value_tmp).reshape(
             [bs, vn, dct_n, -1]).transpose(2, 3).reshape(
-            [bs, vn, -1])  # [32,40,66*11]
+            [bs, vn, -1])  # [32, 40, 66*11]
 
         idx = list(range(-self.kernel_size, 0, 1)) + [-1] * output_n
         outputs = []
