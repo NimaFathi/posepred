@@ -1,6 +1,3 @@
-from utils import util
-from utils import log
-
 import torch
 import torch.nn as nn
 import numpy as np
@@ -8,45 +5,13 @@ import time
 
 
 def main(opt):
-    # evaluation
-    if opt.is_eval:
-        ret_test = run_model(net_pred, is_train=3, data_loader=test_loader, opt=opt)
-        ret_log = np.array([])
-        head = np.array([])
-        for k in ret_test.keys():
-            ret_log = np.append(ret_log, [ret_test[k]])
-            head = np.append(head, [k])
-        log.save_csv_log(opt, head, ret_log, is_create=True, file_name='test_walking')
-
     # training
-    if not opt.is_eval:
-        err_best = 1000
-        for epo in range(start_epoch, opt.epoch + 1):
-            is_best = False
-            # if epo % opt.lr_decay == 0:
-            lr_now = util.lr_decay_mine(optimizer, lr_now, 0.1 ** (1 / opt.epoch))
-            print('>>> training epoch: {:d}'.format(epo))
-            ret_train = run_model(net_pred, optimizer, is_train=0, data_loader=data_loader, epo=epo, opt=opt)
-            print('train error: {:.3f}'.format(ret_train['m_p3d_h36']))
-            ret_valid = run_model(net_pred, is_train=1, data_loader=valid_loader, opt=opt, epo=epo)
-            print('validation error: {:.3f}'.format(ret_valid['m_p3d_h36']))
-            ret_test = run_model(net_pred, is_train=3, data_loader=test_loader, opt=opt, epo=epo)
-            print('testing error: {:.3f}'.format(ret_test['#1']))
-            ret_log = np.array([epo, lr_now])
-            head = np.array(['epoch', 'lr'])
-            for k in ret_train.keys():
-                ret_log = np.append(ret_log, [ret_train[k]])
-                head = np.append(head, [k])
-            for k in ret_valid.keys():
-                ret_log = np.append(ret_log, [ret_valid[k]])
-                head = np.append(head, ['valid_' + k])
-            for k in ret_test.keys():
-                ret_log = np.append(ret_log, [ret_test[k]])
-                head = np.append(head, ['test_' + k])
-            log.save_csv_log(opt, head, ret_log, is_create=(epo == 1))
-            if ret_valid['m_p3d_h36'] < err_best:
-                err_best = ret_valid['m_p3d_h36']
-                is_best = True
+    for epo in range(start_epoch, opt.epoch + 1):
+        ret_train = run_model(net_pred, optimizer, is_train=0, data_loader=data_loader, epo=epo, opt=opt)
+
+        ret_valid = run_model(net_pred, is_train=1, data_loader=valid_loader, opt=opt, epo=epo)
+
+        ret_test = run_model(net_pred, is_train=3, data_loader=test_loader, opt=opt, epo=epo)
 
 
 def run_model(net_pred, optimizer=None, is_train=0, data_loader=None, epo=1, opt=None):
