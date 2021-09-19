@@ -190,8 +190,8 @@ class Visualizer:
         for i, keypoints in enumerate(poses):
             for keypoint in range(keypoints.shape[0]):
                 if all_masks[i][keypoint // 2] != 0:
-                    cv2.circle(image, (int(keypoints[keypoint, 0]), int(keypoints[keypoint, 1])), 5,
-                               color_generator.get_color(2000), thickness=-1,
+                    cv2.circle(image, (int(keypoints[keypoint, 0]), int(keypoints[keypoint, 1])), 3,
+                               (0, 255, 255), thickness=-1,
                                lineType=cv2.FILLED)
                     cv2.putText(image, f"{keypoint}",
                                 (int(keypoints[keypoint, 0] + 10), int(keypoints[keypoint, 1] - 5)),
