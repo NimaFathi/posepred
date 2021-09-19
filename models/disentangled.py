@@ -4,9 +4,9 @@ from models.pv_lstm import PVLSTM
 from models.zero_vel import ZeroVel
 
 
-class Disentangle1(torch.nn.Module):
+class Disentangled(torch.nn.Module):
     def __init__(self, args):
-        super(Disentangle1, self).__init__()
+        super(Disentangled, self).__init__()
         self.args = args
 
         # global
