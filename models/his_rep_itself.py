@@ -5,7 +5,7 @@ import torch
 import math
 import numpy as np
 
-import utils.util as util
+from utils.others import get_dct_matrix
 
 
 class GraphConvolution(nn.Module):
@@ -134,9 +134,7 @@ class AttModel(Module):
 
         self.kernel_size = kernel_size
         self.d_model = d_model
-        # self.seq_in = seq_in
         self.dct_n = dct_n
-        # ks = int((kernel_size + 1) / 2)
         assert kernel_size == 10
 
         self.convQ = nn.Sequential(nn.Conv1d(in_channels=in_features, out_channels=d_model, kernel_size=6,
@@ -153,7 +151,7 @@ class AttModel(Module):
                                              bias=False),
                                    nn.ReLU())
 
-        self.gcn = GCN.GCN(input_feature=(dct_n) * 2, hidden_feature=d_model, p_dropout=0.3,
+        self.gcn = GCN.GCN(input_feature=dct_n * 2, hidden_feature=d_model, p_dropout=0.3,
                            num_stage=num_stage,
                            node_n=in_features)
 
@@ -174,7 +172,7 @@ class AttModel(Module):
         src_key_tmp = src_tmp.transpose(1, 2)[:, :, :(input_n - output_n)].clone()
         src_query_tmp = src_tmp.transpose(1, 2)[:, :, -self.kernel_size:].clone()
 
-        dct_m, idct_m = util.get_dct_matrix(self.kernel_size + output_n)
+        dct_m, idct_m = get_dct_matrix(self.kernel_size + output_n)
         dct_m = torch.from_numpy(dct_m).float().cuda()
         idct_m = torch.from_numpy(idct_m).float().cuda()
 
@@ -212,8 +210,8 @@ class AttModel(Module):
 
                 vn = 1 - 2 * self.kernel_size - output_n
                 vl = self.kernel_size + output_n
-                idx_dct = np.expand_dims(np.arange(vl), axis=0) + \
-                          np.expand_dims(np.arange(vn, -self.kernel_size - output_n + 1), axis=1)
+                idx_dct = np.expand_dims(np.arange(vl), axis=0) + np.expand_dims(
+                    np.arange(vn, -self.kernel_size - output_n + 1), axis=1)
 
                 src_key_tmp = src_tmp[:, idx_dct[0, :-1]].transpose(1, 2)
                 key_new = self.convK(src_key_tmp / 1000.0)
