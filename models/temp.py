@@ -1,5 +1,4 @@
 from utils import h36motion3d as datasets
-from models.his_rep_itself import HisRepItself
 from utils import util
 from utils import log
 
@@ -12,42 +11,7 @@ import torch.optim as optim
 
 
 def main(opt):
-    lr_now = opt.lr_now
-
-    print('>>> create models')
-    in_features = 66  # 3 * 22
-    d_model = 256
-    kernel_size = 10
-    net_pred = HisRepItself(in_features=in_features, kernel_size=kernel_size, d_model=d_model,
-                            num_stage=opt.num_stage, dct_n=opt.dct_n).cuda()
-
-
-    optimizer = optim.Adam(filter(lambda x: x.requires_grad, net_pred.parameters()), lr=opt.lr_now)
-    print(">>> total params: {:.2f}M".format(sum(p.numel() for p in net_pred.parameters()) / 1000000.0))
-
-    if opt.is_load or opt.is_eval:
-        model_path_len = './{}/ckpt_best.pth.tar'.format(opt.ckpt)
-        print(">>> loading ckpt len from '{}'".format(model_path_len))
-        ckpt = torch.load(model_path_len)
-        start_epoch = ckpt['epoch'] + 1
-        err_best = ckpt['err']
-        lr_now = ckpt['lr']
-        net_pred.load_state_dict(ckpt['state_dict'])
-        # net.load_state_dict(ckpt)
-        # optimizer.load_state_dict(ckpt['optimizer'])
-        # lr_now = util.lr_decay_mine(optimizer, lr_now, 0.2)
-        print(">>> ckpt len loaded (epoch: {} | err: {})".format(ckpt['epoch'], ckpt['err']))
-
-    print('>>> loading datasets')
-
     if not opt.is_eval:
-        # dataset = datasets.Datasets(opt, split=0)
-        # actions = ["walking", "eating", "smoking", "discussion", "directions",
-        #            "greeting", "phoning", "posing", "purchases", "sitting",
-        #            "sittingdown", "takingphoto", "waiting", "walkingdog",
-        #            "walkingtogether"]
-        dataset = datasets.Datasets(opt, split=0)
-        print('>>> Training dataset length: {:d}'.format(dataset.__len__()))
         data_loader = DataLoader(dataset, batch_size=opt.batch_size, shuffle=True, num_workers=0, pin_memory=True)
         valid_dataset = datasets.Datasets(opt, split=1)
         print('>>> Validation dataset length: {:d}'.format(valid_dataset.__len__()))
