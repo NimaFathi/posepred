@@ -1,28 +1,13 @@
-from utils import h36motion3d as datasets
 from utils import util
 from utils import log
 
-from torch.utils.data import DataLoader
 import torch
 import torch.nn as nn
 import numpy as np
 import time
-import torch.optim as optim
 
 
 def main(opt):
-    if not opt.is_eval:
-        data_loader = DataLoader(dataset, batch_size=opt.batch_size, shuffle=True, num_workers=0, pin_memory=True)
-        valid_dataset = datasets.Datasets(opt, split=1)
-        print('>>> Validation dataset length: {:d}'.format(valid_dataset.__len__()))
-        valid_loader = DataLoader(valid_dataset, batch_size=opt.test_batch_size, shuffle=True, num_workers=0,
-                                  pin_memory=True)
-
-    test_dataset = datasets.Datasets(opt, split=2)
-    print('>>> Testing dataset length: {:d}'.format(test_dataset.__len__()))
-    test_loader = DataLoader(test_dataset, batch_size=opt.test_batch_size, shuffle=False, num_workers=0,
-                             pin_memory=True)
-
     # evaluation
     if opt.is_eval:
         ret_test = run_model(net_pred, is_train=3, data_loader=test_loader, opt=opt)
@@ -32,7 +17,7 @@ def main(opt):
             ret_log = np.append(ret_log, [ret_test[k]])
             head = np.append(head, [k])
         log.save_csv_log(opt, head, ret_log, is_create=True, file_name='test_walking')
-        # print('testing error: {:.3f}'.format(ret_test['m_p3d_h36']))
+
     # training
     if not opt.is_eval:
         err_best = 1000
@@ -62,12 +47,6 @@ def main(opt):
             if ret_valid['m_p3d_h36'] < err_best:
                 err_best = ret_valid['m_p3d_h36']
                 is_best = True
-            log.save_ckpt({'epoch': epo,
-                           'lr': lr_now,
-                           'err': ret_valid['m_p3d_h36'],
-                           'state_dict': net_pred.state_dict(),
-                           'optimizer': optimizer.state_dict()},
-                          is_best=is_best, opt=opt)
 
 
 def run_model(net_pred, optimizer=None, is_train=0, data_loader=None, epo=1, opt=None):
