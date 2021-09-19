@@ -156,12 +156,14 @@ class HisRepItself(nn.Module):
         self.gcn = GCN.GCN(input_feature=2 * self.dct_n, hidden_feature=self.d_model, p_dropout=0.3,
                            num_stage=self.num_stage, node_n=self.in_features)
 
-    def forward(self, inputs, output_n=25, input_n=50):
+    def forward(self, inputs):
 
         src = inputs[0]
-
-        src_tmp = src.clone()
+        input_n = src.shape[1]
         bs = src.shape[0]
+        output_n = self.args.pred_frames_num
+        src_tmp = src.clone()
+
         src_key_tmp = src_tmp.transpose(1, 2)[:, :, :(input_n - output_n)].clone()
         src_query_tmp = src_tmp.transpose(1, 2)[:, :, -self.kernel_size:].clone()
 
