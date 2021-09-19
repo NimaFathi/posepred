@@ -66,9 +66,9 @@ class Visualizer:
         limit_axes = []
         for i in range(3):
             max_axes.append(int(max(map(lambda sub_fig_pose: torch.max(sub_fig_pose[:, :, i::3]), poses))))
-            min_axes.append(int(max(map(lambda sub_fig_pose: torch.min(sub_fig_pose[:, :, i::3]), poses))))
+            min_axes.append(int(min(map(lambda sub_fig_pose: torch.min(sub_fig_pose[:, :, i::3]), poses))))
         for i in range(3):
-            limit_axes.append(max(math.fabs(min_axes[i]) + 1, math.fabs(max_axes[i]) + 1))
+            limit_axes.append([-1 * math.fabs(min_axes[i]) - 1, math.fabs(max_axes[i]) + 1])
         comparison_number = len(poses)
         axarr = []
         filenames = []
@@ -211,9 +211,14 @@ class Visualizer:
         axe.xaxis.set_major_locator(AutoLocator())
         axe.yaxis.set_major_locator(AutoLocator())
         axe.zaxis.set_major_locator(AutoLocator())
-        axe.set_xlim(xmin=-math.fabs(axes_limit[0]), xmax=axes_limit[0])
-        axe.set_ylim(ymin=-math.fabs(axes_limit[1]), ymax=axes_limit[1])
-        axe.set_zlim(zmin=-math.fabs(axes_limit[2]), zmax=axes_limit[2])
+        axe.set_aspect('auto')
+        max_range = np.array([max(axes_limit[i]) - min(axes_limit[i]) for i in range(len(axes_limit))]).max() / 2.0
+        x_mean = (max(axes_limit[0]) + min(axes_limit[0])) * 0.5
+        y_mean = (max(axes_limit[1]) + min(axes_limit[1])) * 0.5
+        z_mean = (max(axes_limit[2]) + min(axes_limit[2])) * 0.5
+        axe.set_xlim(xmin=x_mean - max_range, xmax=x_mean + max_range)
+        axe.set_ylim(ymin=y_mean - max_range, ymax=y_mean + max_range)
+        axe.set_zlim(zmin=z_mean - max_range, zmax=z_mean + max_range)
 
     @staticmethod
     def __scene_to_image(pose, cam_ext, cam_int):
