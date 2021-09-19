@@ -157,14 +157,14 @@ class HisRepItself(nn.Module):
                            num_stage=self.num_stage, node_n=self.in_features)
 
     def forward(self, inputs):
-
+        outputs = []
         src = inputs[0]
         input_n = src.shape[1]
         bs = src.shape[0]
         output_n = self.args.pred_frames_num
-        src_tmp = src.clone()
 
-        src_key_tmp = src_tmp.transpose(1, 2)[:, :, :(input_n - output_n)].clone()
+        src_tmp = src.clone()
+        src_key_tmp = src_tmp.transpose(1, 2)[:, :, :input_n - output_n].clone()
         src_query_tmp = src_tmp.transpose(1, 2)[:, :, -self.kernel_size:].clone()
 
         dct_m, idct_m = get_dct_matrix(self.kernel_size + output_n)
@@ -174,15 +174,12 @@ class HisRepItself(nn.Module):
         vn = input_n - self.kernel_size - output_n + 1
         vl = self.kernel_size + output_n
         idx = np.expand_dims(np.arange(vl), axis=0) + np.expand_dims(np.arange(vn), axis=1)
-        src_value_tmp = src_tmp[:, idx].clone().reshape(
-            [bs * vn, vl, -1])
+        src_value_tmp = src_tmp[:, idx].clone().reshape([bs * vn, vl, -1])
         src_value_tmp = torch.matmul(dct_m[:self.dct_n].unsqueeze(dim=0), src_value_tmp).reshape(
             [bs, vn, self.dct_n, -1]).transpose(2, 3).reshape([bs, vn, -1])
-
         idx = list(range(-self.kernel_size, 0, 1)) + [-1] * output_n
-        outputs = []
-
         key_tmp = self.convK(src_key_tmp / 1000.0)
+
         for i in range(self.itera):
             query_tmp = self.convQ(src_query_tmp / 1000.0)
             score_tmp = torch.matmul(query_tmp.transpose(1, 2), key_tmp) + 1e-15
