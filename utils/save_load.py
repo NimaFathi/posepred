@@ -5,7 +5,7 @@ import torch
 import torch.optim as optim
 
 from args.helper import JSONEncoder_
-from models import disentangled, pv_lstm, zero_vel, nearest_neighbor, his_rep_itself
+from models import disentangled, pv_lstm, zero_vel, nearest_neighbor, his_rep_itself, derpof
 
 
 def get_model(model_args):
@@ -20,7 +20,7 @@ def get_model(model_args):
     elif model_args.model_name == 'his_rep_itself':
         return his_rep_itself.HisRepItself(model_args).to('cuda')
     elif model_args.model_name == 'derpof':
-        return his_rep_itself.HisRepItself(model_args).to('cuda')
+        return derpof.DeRPoF(model_args).to('cuda')
     else:
         raise Exception("Invalid model.")
 
