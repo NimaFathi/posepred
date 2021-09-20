@@ -178,8 +178,6 @@ class VAE(nn.Module):
 
 
 def vae_loss_function(x, x_hat, mean, log_var):
-    # BCE_loss = nn.BCELoss()
-    # reproduction_loss = nn.functional.binary_cross_entropy(x_hat, x, reduction='sum')
     assert x_hat.shape == x.shape
     reconstruction_loss = torch.mean(torch.norm(x - x_hat, dim=len(x.shape) - 1))
     KLD = - 0.5 * torch.sum(1 + log_var - mean.pow(2) - log_var.exp())
