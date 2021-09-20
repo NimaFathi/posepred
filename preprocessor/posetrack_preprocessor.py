@@ -1,12 +1,17 @@
 import csv
 import json
+import logging
 import os
 from collections import defaultdict
+from logging import config
 
 import numpy as np
 
 from path_definition import PREPROCESSED_DATA_DIR
 from preprocessor.preprocessor import Processor
+
+config.fileConfig('configs/logging.conf')
+logger = logging.getLogger('root')
 
 
 class PoseTrackPreprocessor(Processor):
@@ -64,7 +69,7 @@ class PoseTrackPreprocessor(Processor):
         return obs_frames, future_frames
 
     def normal(self, data_type='train'):
-        print('start creating PoseTrack normal static data ... ')
+        logger.info('start creating PoseTrack normal static data ... ')
         header = [
             'video_section', 'observed_pose', 'future_pose', 'observed_mask', 'future_mask',
             'observed_image_path', 'future_image_path'
@@ -87,7 +92,7 @@ class PoseTrackPreprocessor(Processor):
                 annotations = json_data.get('annotations')
                 if not annotations:
                     continue
-                print(f'file name: {entry.name}')
+                logger.info(f'file name: {entry.name}')
                 video_id = json_data.get('images')[0].get('vid_id')
                 pose = defaultdict(list)
                 mask = defaultdict(list)

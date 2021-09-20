@@ -1,13 +1,18 @@
 import csv
+import logging
 import os
 import re
 from collections import defaultdict
+from logging import config
 
 import numpy as np
 import pandas as pd
 
 from path_definition import PREPROCESSED_DATA_DIR
 from preprocessor.preprocessor import Processor
+
+config.fileConfig('configs/logging.conf')
+logger = logging.getLogger('root')
 
 
 class Preprocessor3DPW(Processor):
@@ -30,7 +35,7 @@ class Preprocessor3DPW(Processor):
         }
 
     def normal(self, data_type='train'):
-        print('start creating 3DPW normal static data ... ')
+        logger.info('start creating 3DPW normal static data ... ')
         header = [
             'video_section', 'observed_pose', 'future_pose',
             'observed_image_path', 'future_image_path',
@@ -49,14 +54,15 @@ class Preprocessor3DPW(Processor):
         for entry in os.scandir(self.dataset_path):
             if not entry.name.endswith('.pkl'):
                 continue
-            print(f'file name: {entry.name}')
+            logger.info(f'file name: {entry.name}')
             pickle_obj = pd.read_pickle(entry.path)
             video_name = re.search('(\w+).pkl', entry.name).group(1)
             pose_data = np.array(pickle_obj['jointPositions'])
             frame_ids_data = pickle_obj['img_frame_ids']
             cam_extrinsic = pickle_obj['cam_poses'][:, :3]
             cam_intrinsic = pickle_obj['cam_intrinsics'].tolist()
-            section_range = pose_data.shape[1] // (total_frame_num * (self.skip_frame_num + 1)) if self.use_video_once is False else 1
+            section_range = pose_data.shape[1] // (
+                        total_frame_num * (self.skip_frame_num + 1)) if self.use_video_once is False else 1
             data = []
             for i in range(section_range):
                 video_data = {

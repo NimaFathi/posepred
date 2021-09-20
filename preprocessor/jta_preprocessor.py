@@ -1,13 +1,18 @@
 import csv
 import json
+import logging
 import os
 import re
 from collections import defaultdict
+from logging import config
 
 import numpy as np
 
 from path_definition import PREPROCESSED_DATA_DIR
 from preprocessor.preprocessor import Processor
+
+config.fileConfig('configs/logging.conf')
+logger = logging.getLogger('root')
 
 
 class JTAPreprocessor(Processor):
@@ -52,7 +57,8 @@ class JTAPreprocessor(Processor):
         future_frames = []
         for j in range(1, total_frame_num * (self.skip_frame_num + 1) + 1, self.skip_frame_num + 1):
             frame_data = defaultdict(list)
-            frame = input_matrix[input_matrix[:, 0] == frame_num * total_frame_num * (self.skip_frame_num + 1) + j]  # find frame data
+            frame = input_matrix[
+                input_matrix[:, 0] == frame_num * total_frame_num * (self.skip_frame_num + 1) + j]  # find frame data
             for pose in frame:
                 frame_data[pose[1]] = pose[0]
             for p_id in frame_data.keys():
@@ -76,7 +82,7 @@ class JTAPreprocessor(Processor):
         return obs_frames, future_frames
 
     def normal(self, data_type='train'):
-        print('start creating JTA normal static data ... ')
+        logger.info('start creating JTA normal static data ... ')
         header = [
             'video_section', 'observed_pose', 'future_pose', 'observed_mask', 'future_mask',
             'observed_image_path', 'future_image_path'
@@ -97,7 +103,7 @@ class JTAPreprocessor(Processor):
             if not entry.path.endswith('.json'):
                 continue
             with open(entry.path, 'r') as json_file:
-                print(f'file name: {entry.name}')
+                logger.info(f'file name: {entry.name}')
                 video_number = re.search('seq_(\d+)', entry.name).group(1)
                 data = []
                 matrix = json.load(json_file)
@@ -118,7 +124,8 @@ class JTAPreprocessor(Processor):
                             'pose': defaultdict(list),
                             'mask': defaultdict(list)
                         }
-                        frame = matrix[matrix[:, 0] == i * total_frame_num * (self.skip_frame_num + 1) + j]  # find frame data
+                        frame = matrix[
+                            matrix[:, 0] == i * total_frame_num * (self.skip_frame_num + 1) + j]  # find frame data
                         for pose in frame:
                             masked = 0
                             # pose data
@@ -152,14 +159,14 @@ class JTAPreprocessor(Processor):
                         if not self.is_interactive:
                             for p_id in range(len(obs)):
                                 data.append([
-                                        '%s-%d' % (video_number, i), obs[p_id], future[p_id], obs_mask[p_id],
-                                        future_mask[p_id], obs_frames[p_id], future_frames[p_id]
-                                    ])
+                                    '%s-%d' % (video_number, i), obs[p_id], future[p_id], obs_mask[p_id],
+                                    future_mask[p_id], obs_frames[p_id], future_frames[p_id]
+                                ])
                         else:
                             data.append([
-                                    '%s-%d' % (video_number, i), obs, future, obs_mask, future_mask,
-                                    obs_frames[0], future_frames[0]
-                                ])
+                                '%s-%d' % (video_number, i), obs, future, obs_mask, future_mask,
+                                obs_frames[0], future_frames[0]
+                            ])
                 with open(os.path.join(self.output_dir, output_file_name), 'a') as f_object:
                     writer = csv.writer(f_object)
                     writer.writerows(data)

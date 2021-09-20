@@ -1,12 +1,17 @@
 import csv
 import json
+import logging
 import os
 from collections import defaultdict
+from logging import config
 
 import numpy as np
 
 from path_definition import PREPROCESSED_DATA_DIR
 from preprocessor.preprocessor import Processor
+
+config.fileConfig('configs/logging.conf')
+logger = logging.getLogger('root')
 
 
 class SoMoF3DPWPreprocessor(Processor):
@@ -28,7 +33,7 @@ class SoMoF3DPWPreprocessor(Processor):
         }
 
     def normal(self, data_type='train'):
-        print('start creating SoMoF-3DPW normal static data ... ')
+        logger.info('start creating SoMoF-3DPW normal static data ... ')
         preprocessed_data = self.__clean_data(data_type)
         self.__save_csv(data_type, preprocessed_data)
         self.save_meta_data(self.meta_data, self.output_dir, True, data_type)

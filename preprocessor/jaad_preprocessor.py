@@ -5,6 +5,7 @@ import os
 import re
 import shutil
 from collections import namedtuple, defaultdict
+from logging import config
 from pathlib import Path
 
 import numpy as np
@@ -17,7 +18,8 @@ from preprocessor.preprocessor import Processor
 
 Rectangle = namedtuple('Rectangle', 'xtl ytl xbr ybr')
 
-logger = logging.getLogger(__name__)
+config.fileConfig('configs/logging.conf')
+logger = logging.getLogger('root')
 
 
 class JAADPreprocessor(Processor):
@@ -47,7 +49,7 @@ class JAADPreprocessor(Processor):
         assert self.pred_frame_num > 0 and self.pred_frame_num is not None
         assert self.skip_frame_num >= 0 and self.skip_frame_num is not None
         assert self.dataset_path is not None
-        print('start creating JAAD normal static data ... ')
+        logger.info('start creating JAAD normal static data ... ')
         header = [
             'video_section', 'observed_pose', 'future_pose',
             'observed_image_path', 'future_image_path'
@@ -66,7 +68,7 @@ class JAADPreprocessor(Processor):
             if not entry.name.endswith(".json"):
                 continue
             with open(entry.path, 'r') as json_file:
-                print(f'file name: {entry.name}')
+                logger.info(f'file name: {entry.name}')
                 video_name = re.search('(\w+).json', entry.name).group(1)
                 data = json.load(json_file)
                 if data == {}:
@@ -142,6 +144,8 @@ class JAADPreprocessor(Processor):
     def __create_frame_poses(self):
         if self.annotate is not False:
             assert self.image_dir is not None
+            logger.warning(
+                "It is better to create annotations yourself using openpifpaf with with desired methods and parameters")
             self.annotation_path = self.__create_annotations()
         else:
             assert self.annotation_path is not None
@@ -226,6 +230,7 @@ class JAADPreprocessor(Processor):
         return json_keypoints_dir
 
     def __create_annotations(self):
+        logger.info("Create annotations using openpifpaf for JAAD in posepred")
         if os.path.exists(os.path.join(PREPROCESSED_DATA_DIR, 'openpifpaf/JAAD')):
             return PREPROCESSED_DATA_DIR + "openpifpaf/JAAD/"
         for subdir, dirs, files in os.walk(self.image_dir):
