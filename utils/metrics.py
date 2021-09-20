@@ -1,5 +1,11 @@
-import torch
+import logging
+from logging import config
+
 import numpy as np
+import torch
+
+config.fileConfig('configs/logging.conf')
+logger = logging.getLogger('root')
 
 
 def accuracy(pred, target):
@@ -56,7 +62,9 @@ def VIM(pred, target, mask, dim):
         errorPose = np.sum(errorPose, 1)
         errorPose = np.sqrt(errorPose)
     else:
-        raise Exception("Dimension of data must be either 2D or 3D.")
+        msg = "Dimension of data must be either 2D or 3D."
+        logger.error(msg=msg)
+        raise Exception(msg)
     return errorPose
 
 
@@ -95,7 +103,9 @@ def VAM(target, pred, occ_cutoff, pred_mask):
                     d = np.sum(np.sqrt(d))
                     dist = min(occ_cutoff, d)
             else:
-                raise Exception("Target mask must be positive values.")
+                msg = "Target mask must be positive values."
+                logger.error(msg)
+                raise Exception(msg)
             f_err += dist
         if N > 0:
             seq_err.append(f_err / N)

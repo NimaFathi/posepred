@@ -1,4 +1,9 @@
 import argparse
+import logging
+from logging import config
+
+config.fileConfig('configs/logging.conf')
+logger = logging.getLogger('root')
 
 
 def parse_preprocessor_args():
@@ -8,7 +13,9 @@ def parse_preprocessor_args():
     elif args.keypoint_dim == 3:
         args.is_3D = True
     else:
-        raise Exception("Dimension of data must be either 2 or 3")
+        msg = "Dimension of data must be either 2 or 3"
+        logger.error(msg=msg)
+        raise Exception(msg)
 
     return args
 
@@ -33,7 +40,7 @@ def __parse_preprocessor_args():
     parser.add_argument(
         '--annotate', default=False, action='store_true',
         help='implies if dataset contains annotations or we have to generate annotations with openpifpaf'
-        'if this is True we will annotate data upon <image_dir> with openpifpaf library'
+             'if this is True we will annotate data upon <image_dir> with openpifpaf library'
     )
     parser.add_argument(
         '--image_dir',

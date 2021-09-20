@@ -47,13 +47,13 @@ class Reporter:
         for i, avg_meter in enumerate(self.attrs.values()):
             avg_meter.reset()
 
-    def print_values(self, use_mask, end='\n'):
+    def print_values(self, logger, use_mask):
         msg = self.state + '-epoch' + str(len(self.history['time'])) + ': '
         for key, value in self.history.items():
             if not use_mask and 'mask' in key:
                 continue
             msg += key + ': %.3f, ' % value[-1]
-        print(msg, end=end)
+        logger.info(str(msg))
         sys.stdout.flush()
 
     def save_data(self, use_mask, save_dir):
@@ -63,11 +63,11 @@ class Reporter:
             with open(os.path.join(save_dir, 'data', '_'.join((self.state, key)) + '.json'), "w") as f:
                 json.dump(value, f, indent=4)
 
-    def print_mean_std(self, use_mask):
+    def print_mean_std(self, logger, use_mask):
         for key, value in self.history.items():
             if not use_mask and 'mask' in key:
                 continue
-            print(key + ': (mean=%.3f, std=%.3f)' % (np.mean(value), np.std(value)))
+            logger.info(str(key) + ': (mean=%.3f, std=%.3f)' % (np.mean(value), np.std(value)))
 
     @staticmethod
     def save_plots(use_mask, save_dir, train_history, validiation_history, use_validation):
