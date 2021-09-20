@@ -6,45 +6,46 @@ class DeRPoF(nn.Module):
     def __init__(self, args):
         super(DeRPoF, self).__init__()
         self.args = args
-        self.input_size = int(args.keypoints_num * args.keypoint_dim)
+        self.keypoints_num = self.args.keypoints_num
+        self.keypoint_dim = self.args.keypoint_dim
+        self.features_num = int(args.keypoints_num * args.keypoint_dim)
 
         # global
-        self.global_model = LSTM_g(pose_dim=self.input_size, embedding_dim=args.embedding_dim, h_dim=args.hidden_dim,
+        self.global_model = LSTM_g(pose_dim=self.features_num, embedding_dim=args.embedding_dim, h_dim=args.hidden_dim,
                                    dropout=args.dropout).cuda().double()
 
         # local
-        encoder = Encoder(pose_dim=self.input_size, h_dim=args.hidden_dim, latent_dim=args.latent_dim,
+        encoder = Encoder(pose_dim=self.features_num, h_dim=args.hidden_dim, latent_dim=args.latent_dim,
                           dropout=args.dropout)
-        decoder = Decoder(pose_dim=self.input_size, h_dim=args.hidden_dim, latent_dim=args.latent_dim,
+        decoder = Decoder(pose_dim=self.features_num, h_dim=args.hidden_dim, latent_dim=args.latent_dim,
                           dropout=args.dropout)
         self.local_model = VAE(Encoder=encoder, Decoder=decoder).cuda().double()
 
     def forward(self, inputs):
         outputs = []
         vel = inputs[1].permute(1, 0, 2)
-        obs_frames_num, bs, _ = vel.shape
+        frames_num, bs, _ = vel.shape
 
         # global
-        global_vel = 0.5 * (vel.view(obs_frames_num, bs, self.args.keypoints_num, self.args.keypoint_dim)[:, :, 0]
-                            + vel.view(obs_frames_num, bs, self.args.keypoints_num, self.args.keypoint_dim)[:, :, 1])
+        global_vel = 0.5 * (vel.view(frames_num, bs, self.keypoints_num, self.keypoint_dim)[:, :, 0]
+                            + vel.view(frames_num, bs, self.keypoints_num, self.keypoint_dim)[:, :, 1])
 
         # local
-        local_vel = (vel.view(-1, self.args.keypoints_num, self.args.keypoint_dim)
-                     - global_vel.view(-1, 1, self.args.keypoint_dim)).view(-1, self.input_size)
+        local_vel = (vel.view(frames_num, bs, self.keypoints_num, self.keypoint_dim)
+                     - global_vel.view(frames_num, bs, 1, self.keypoint_dim)).view(frames_num, bs, self.features_num)
 
         # predict
         global_vel_out = self.global_model(global_vel, self.args.pred_frames_num)
         local_vel_out, _, _ = self.local_model(local_vel, self.args.pred_frames_num)
 
         # merge local and global velocity
-        vel_out = (global_vel_out.view(-1, 1, self.args.keypoint_dim)
-                   + local_vel_out.view(-1, self.args.keypoints_num, self.args.keypoint_dim)).view(-1, self.input_size)
-        outputs.append(vel_out)
+        vel_out = (global_vel_out.view(frames_num, bs, 1, self.keypoint_dim)
+                   + local_vel_out.view(frames_num, bs, self.keypoints_num, self.keypoint_dim))
+        outputs.append(vel_out.view(frames_num, bs, self.features_num).permute(1, 0, 2))
 
         if self.args.use_mask:
             mask = inputs[2]
-            obs_m[-1].unsqueeze(0).repeat(14, 1, 1)
-            outputs.append()
+            outputs.append(mask[:, -1, :].repeat(1, self.args.pred_frames_num, 1))
 
         return tuple(outputs)
 
@@ -52,7 +53,6 @@ class DeRPoF(nn.Module):
 class LSTM_g(nn.Module):
     def __init__(self, pose_dim, embedding_dim=8, h_dim=16, num_layers=1, dropout=0.2):
         super(LSTM_g, self).__init__()
-        self.doc = "LSTM_local_global"
         self.pose_dim = pose_dim
         self.embedding_dim = embedding_dim
         self.h_dim = h_dim
