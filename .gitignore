@@ -247,5 +247,5 @@ exps/
 logs/
 preprocessed_data/
 raw_data/
-/visualization/outputs/
+/visualization/outputs/*D
 /visualization/example.py
