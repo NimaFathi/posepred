@@ -1,10 +1,11 @@
 import torch
+import torch.nn as nn
 
 from models.pv_lstm import PVLSTM
 from models.zero_vel import ZeroVel
 
 
-class Disentangled(torch.nn.Module):
+class Disentangled(nn.Module):
     def __init__(self, args):
         super(Disentangled, self).__init__()
         self.args = args

@@ -1,12 +1,25 @@
 import torch
 import torch.nn as nn
-import numpy as np
 
 
-class DeRPoF(torch.nn.Module):
+class DeRPoF(nn.Module):
     def __init__(self, args):
         super(DeRPoF, self).__init__()
         self.args = args
+
+        input_size = int(args.keypoints_num * args.keypoint_dim)
+        net_g = LSTM_g(pose_dim=input_size, embedding_dim=args.embedding_dim, h_dim=args.hidden_dim, dropout=args.dropout)
+        encoder = Encoder(pose_dim=input_size, h_dim=args.hidden_dim, latent_dim=args.latent_dim, dropout=args.dropout)
+        decoder = Decoder(pose_dim=input_size, h_dim=args.hidden_dim, latent_dim=args.latent_dim, dropout=args.dropout)
+        net_l = VAE(Encoder=encoder, Decoder=decoder)
+        if torch.cuda.is_available():
+            net_l.cuda()
+            net_g.cuda()
+        net_l.double()
+        net_g.double()
+        net_params = list(net_l.parameters()) + list(net_g.parameters())
+
+
 
         # global
         global_args = args
@@ -57,7 +70,7 @@ class DeRPoF(torch.nn.Module):
 
 
 class LSTM_g(nn.Module):
-    def __init__(self, pose_dim=39, embedding_dim=8, h_dim=16, num_layers=1, dropout=0.2):
+    def __init__(self, pose_dim, embedding_dim=8, h_dim=16, num_layers=1, dropout=0.2):
         super(LSTM_g, self).__init__()
         self.doc = "LSTM_local_global"
         self.pose_dim = pose_dim
@@ -92,7 +105,7 @@ class LSTM_g(nn.Module):
 
 
 class Encoder(nn.Module):
-    def __init__(self, pose_dim=39, h_dim=32, latent_dim=16, num_layers=2, dropout=0.3):
+    def __init__(self, pose_dim, h_dim=32, latent_dim=16, num_layers=2, dropout=0.3):
         super(Encoder, self).__init__()
 
         self.pose_dim = pose_dim
@@ -116,7 +129,7 @@ class Encoder(nn.Module):
 
 
 class Decoder(nn.Module):
-    def __init__(self, pose_dim=39, h_dim=32, latent_dim=16, num_layers=1, dropout=0.3):
+    def __init__(self, pose_dim, h_dim=32, latent_dim=16, num_layers=1, dropout=0.3):
         super(Decoder, self).__init__()
         self.pose_dim = pose_dim
         self.h_dim = h_dim
@@ -132,7 +145,7 @@ class Decoder(nn.Module):
         decoder_c = torch.zeros(self.num_layers, batch, self.h_dim, device='cpu', dtype=torch.float64)
         last_s = obs_s[-1].unsqueeze(0)
         decoder_h = self.FC(latent).unsqueeze(0)
-        decoedr_h = decoder_h.repeat(self.num_layers, 1, 1)
+        decoder_h = decoder_h.repeat(self.num_layers, 1, 1)
         state_tuple = (decoder_h, decoder_c)
 
         preds_s = torch.tensor([], device='cpu')
