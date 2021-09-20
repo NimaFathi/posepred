@@ -6,65 +6,45 @@ class DeRPoF(nn.Module):
     def __init__(self, args):
         super(DeRPoF, self).__init__()
         self.args = args
-
-        input_size = int(args.keypoints_num * args.keypoint_dim)
-        net_g = LSTM_g(pose_dim=input_size, embedding_dim=args.embedding_dim, h_dim=args.hidden_dim, dropout=args.dropout)
-        encoder = Encoder(pose_dim=input_size, h_dim=args.hidden_dim, latent_dim=args.latent_dim, dropout=args.dropout)
-        decoder = Decoder(pose_dim=input_size, h_dim=args.hidden_dim, latent_dim=args.latent_dim, dropout=args.dropout)
-        net_l = VAE(Encoder=encoder, Decoder=decoder)
-        if torch.cuda.is_available():
-            net_l.cuda()
-            net_g.cuda()
-        net_l.double()
-        net_g.double()
-        net_params = list(net_l.parameters()) + list(net_g.parameters())
-
-
+        self.input_size = int(args.keypoints_num * args.keypoint_dim)
 
         # global
-        global_args = args
-        global_args.keypoints_num = 1
-        self.global_model = ZeroVel(global_args)
+        self.global_model = LSTM_g(pose_dim=self.input_size, embedding_dim=args.embedding_dim, h_dim=args.hidden_dim,
+                                   dropout=args.dropout).cuda().double()
 
         # local
-        local_args = args
-        local_args.keypoints_num = args.keypoints_num - global_args.keypoints_num
-        self.local_model = PVLSTM(local_args)
+        encoder = Encoder(pose_dim=self.input_size, h_dim=args.hidden_dim, latent_dim=args.latent_dim,
+                          dropout=args.dropout)
+        decoder = Decoder(pose_dim=self.input_size, h_dim=args.hidden_dim, latent_dim=args.latent_dim,
+                          dropout=args.dropout)
+        self.local_model = VAE(Encoder=encoder, Decoder=decoder).cuda().double()
 
     def forward(self, inputs):
         outputs = []
-        pose, vel = inputs[:2]
+        vel = inputs[1].permute(1, 0, 2)
+        obs_frames_num, bs, _ = vel.shape
 
         # global
-        global_pose = pose[..., : self.args.keypoint_dim]
-        global_vel = vel[..., : self.args.keypoint_dim]
-        global_inputs = [global_pose, global_vel]
+        global_vel = 0.5 * (vel.view(obs_frames_num, bs, self.args.keypoints_num, self.args.keypoint_dim)[:, :, 0]
+                            + vel.view(obs_frames_num, bs, self.args.keypoints_num, self.args.keypoint_dim)[:, :, 1])
 
         # local
-        repeat = torch.ones(len(global_pose.shape), dtype=int)
-        repeat[-1] = self.local_model.args.keypoints_num
-        local_pose = pose[..., self.args.keypoint_dim:] - global_pose.repeat(tuple(repeat))
-        local_vel = vel[..., self.args.keypoint_dim:] + global_vel.repeat(tuple(repeat))
-        local_inputs = [local_pose, local_vel]
+        local_vel = (vel.view(-1, self.args.keypoints_num, self.args.keypoint_dim)
+                     - global_vel.view(-1, 1, self.args.keypoint_dim)).view(-1, self.input_size)
+
+        # predict
+        global_vel_out = self.global_model(global_vel, self.args.pred_frames_num)
+        local_vel_out, _, _ = self.local_model(local_vel, self.args.pred_frames_num)
+
+        # merge local and global velocity
+        vel_out = (global_vel_out.view(-1, 1, self.args.keypoint_dim)
+                   + local_vel_out.view(-1, self.args.keypoints_num, self.args.keypoint_dim)).view(-1, self.input_size)
+        outputs.append(vel_out)
 
         if self.args.use_mask:
             mask = inputs[2]
-            global_inputs.append(mask[..., :1])
-            local_inputs.append(pose[..., 1:])
-
-        # predict
-        global_outputs = self.global_model(global_inputs)
-        local_outputs = self.local_model(local_inputs)
-
-        # merge local and global velocity
-        global_vel_out = global_outputs[0]
-        local_vel_out = local_outputs[0]
-        repeat = torch.ones(len(global_vel_out.shape), dtype=int)
-        repeat[-1] = self.local_model.args.keypoints_num
-        outputs.append(torch.cat((global_vel_out, local_vel_out + global_vel_out.repeat(tuple(repeat))), dim=-1))
-
-        if self.args.use_mask:
-            outputs.append(torch.cat((global_outputs[-1], local_outputs[-1]), dim=-1))
+            obs_m[-1].unsqueeze(0).repeat(14, 1, 1)
+            outputs.append()
 
         return tuple(outputs)
 
@@ -83,7 +63,7 @@ class LSTM_g(nn.Module):
         self.decoder_g = nn.LSTM(embedding_dim, h_dim, num_layers, dropout=dropout)
         self.hidden2g = nn.Sequential(nn.Linear(h_dim, 3))
 
-    def forward(self, global_s=None, pred_len=14):
+    def forward(self, global_s, pred_len):
         seq_len, batch, l = global_s.shape
         state_tuple_g = (torch.zeros(self.num_layers, batch, self.h_dim, device='cpu', dtype=torch.float64),
                          torch.zeros(self.num_layers, batch, self.h_dim, device='cpu', dtype=torch.float64))
@@ -117,7 +97,7 @@ class Encoder(nn.Module):
         self.FC_mean = nn.Linear(h_dim, latent_dim)
         self.FC_var = nn.Linear(h_dim, latent_dim)
 
-    def forward(self, obs_s=None):
+    def forward(self, obs_s):
         batch = obs_s.size(1)
         state_tuple = (torch.zeros(self.num_layers, batch, self.h_dim, device='cpu', dtype=torch.float64),
                        torch.zeros(self.num_layers, batch, self.h_dim, device='cpu', dtype=torch.float64))
@@ -140,7 +120,7 @@ class Decoder(nn.Module):
         self.FC = nn.Sequential(nn.Linear(latent_dim, h_dim))
         self.mlp = nn.Sequential(nn.Linear(h_dim, pose_dim))
 
-    def forward(self, obs_s=None, latent=None, pred_len=14):
+    def forward(self, obs_s, latent, pred_len):
         batch = obs_s.size(1)
         decoder_c = torch.zeros(self.num_layers, batch, self.h_dim, device='cpu', dtype=torch.float64)
         last_s = obs_s[-1].unsqueeze(0)
@@ -169,10 +149,10 @@ class VAE(nn.Module):
         z = mean + var * epsilon  # reparameterization trick
         return z
 
-    def forward(self, obs_s=None):
+    def forward(self, obs_s, pred_len):
         mean, log_var = self.Encoder(obs_s=obs_s)
         z = self.reparameterization(mean, torch.exp(0.5 * log_var))  # takes exponential function (log var -> var)
-        preds_s = self.Decoder(obs_s=obs_s, latent=z)
+        preds_s = self.Decoder(obs_s=obs_s, latent=z, pred_len=pred_len)
 
         return preds_s, mean, log_var
 
