@@ -1,11 +1,17 @@
+import logging
+from logging import config
+
 import torch.optim as optim
 
-from path_definition import ROOT_DIR
 from args.training_args import parse_training_args
 from data_loader.data_loader import get_dataloader
-from utils.save_load import load_snapshot, get_model, save_snapshot, save_args, setup_training_dir
-from utils.reporter import Reporter
 from factory.trainer import Trainer
+from path_definition import ROOT_DIR
+from utils.reporter import Reporter
+from utils.save_load import load_snapshot, get_model, save_snapshot, save_args, setup_training_dir
+
+config.fileConfig('configs/logging.conf')
+logger = logging.getLogger('root')
 
 if __name__ == '__main__':
 

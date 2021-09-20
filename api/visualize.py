@@ -8,6 +8,10 @@ from visualization.visualizer import Visualizer
 from data_loader.data_loader import get_dataloader
 from utils.save_load import get_model, load_snapshot
 from utils.others import pose_from_vel
+import logging
+from logging import config
+config.fileConfig('configs/logging.conf')
+logger = logging.getLogger('root')
 
 if __name__ == '__main__':
 
@@ -22,7 +26,9 @@ if __name__ == '__main__':
         model_args.keypoints_num = dataloader.dataset.keypoints_num
         model = get_model(model_args)
     else:
-        raise Exception("Please provide either a model_name or a load_path to a trained model.")
+        msg = "Please provide either a model_name or a load_path to a trained model."
+        logger.error(msg)
+        raise Exception(msg)
 
     index = random.randint(0, dataloader.dataset.__len__() - 1) if index is None else index
     data = dataloader.dataset.__getitem__(index)

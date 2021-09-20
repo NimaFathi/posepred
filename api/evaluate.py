@@ -1,15 +1,20 @@
+import logging
+from logging import config
+
 from args.evaluation_args import parse_evaluation_args
 from data_loader.data_loader import get_dataloader
-from utils.save_load import get_model, load_snapshot
-from utils.reporter import Reporter
 from factory.evaluator import Evaluator
+from utils.reporter import Reporter
+from utils.save_load import get_model, load_snapshot
+
+config.fileConfig('configs/logging.conf')
+logger = logging.getLogger('root')
 
 if __name__ == '__main__':
 
     dataloader_args, model_args, load_path, is_interactive, distance_loss, rounds_num, train_dataloader_args = parse_evaluation_args()
     dataloader = get_dataloader(dataloader_args)
     reporter = Reporter()
-
     if load_path:
         model, _, _, _, _ = load_snapshot(load_path)
     elif model_args.model_name:
@@ -20,7 +25,8 @@ if __name__ == '__main__':
             assert train_dataloader_args is not None, 'Please provide a train_dataset for nearest_neighbor model.'
             model.train_dataloader = get_dataloader(train_dataloader_args)
     else:
-        raise Exception("Please provide either a model_name or a load_path to a trained model.")
-
+        msg = "Please provide either a model_name or a load_path to a trained model."
+        logger.error(msg)
+        raise Exception(msg)
     evaluator = Evaluator(model, dataloader, reporter, is_interactive, distance_loss, rounds_num)
     evaluator.evaluate()

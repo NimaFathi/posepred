@@ -1,11 +1,17 @@
+import logging
+from logging import config
+
 from args.preprocessing_args import parse_preprocessor_args
 from preprocessor.dpw_preprocessor import Preprocessor3DPW
+from preprocessor.jaad_preprocessor import JAADPreprocessor
 from preprocessor.jta_preprocessor import JTAPreprocessor
+from preprocessor.pie_preprocessor import PIEPreprocessor
 from preprocessor.posetrack_preprocessor import PoseTrackPreprocessor
 from preprocessor.somof_3dpw_preprocessor import SoMoF3DPWPreprocessor
 from preprocessor.somof_posetrack_preprocessor import SoMoFPoseTrackPreprocessor
-from preprocessor.jaad_preprocessor import JAADPreprocessor
-from preprocessor.pie_preprocessor import PIEPreprocessor
+
+config.fileConfig('configs/logging.conf')
+logger = logging.getLogger('root')
 
 if __name__ == '__main__':
     args = parse_preprocessor_args()
@@ -55,5 +61,7 @@ if __name__ == '__main__':
             annotation_path=args.joints_annotation_path
         )
     else:
-        raise Exception("Invalid preprocessor.")
+        msg = "Invalid preprocessor."
+        logger.error(msg)
+        raise Exception(msg)
     preprocessor.normal(data_type=args.data_usage)
