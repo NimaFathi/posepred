@@ -244,6 +244,7 @@ venv/
 *.pyc
 exps/
 
+logs/
 preprocessed_data/
 raw_data/
 /visualization/outputs/
