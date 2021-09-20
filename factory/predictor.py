@@ -1,9 +1,15 @@
+import logging
 import time
-import torch
+from logging import config
+
 import pandas as pd
+import torch
 
 from utils.others import pose_from_vel
 from utils.save_load import save_test_results
+
+config.fileConfig('configs/logging.conf')
+logger = logging.getLogger('predLogger')
 
 
 class Predictor:
@@ -20,12 +26,13 @@ class Predictor:
         self.pred_mask = torch.Tensor().to('cuda')
 
     def predict(self):
+        logger.info("Prediction started ...")
         self.model.eval()
         time0 = time.time()
         self.__predict()
         save_test_results(self.result, [self.pred_pose, self.pred_vel, self.pred_mask], self.save_dir)
-        print("-" * 100)
-        print('Testing is completed in: %.2f' % (time.time() - time0))
+        logger.info("-" * 100)
+        logger.info('Testing is completed in: %.2f' % (time.time() - time0))
 
     def __predict(self):
         for data in self.dataloader:

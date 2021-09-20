@@ -1,11 +1,17 @@
+import logging
 import time
+from logging import config
+
 import torch
 
-from utils.save_load import save_snapshot
+from utils.losses import L1, MSE, BCE
 from utils.metrics import accuracy, ADE, FDE
 from utils.others import pose_from_vel
-from utils.losses import L1, MSE, BCE
 from utils.reporter import Reporter
+from utils.save_load import save_snapshot
+
+config.fileConfig('configs/logging.conf')
+logger = logging.getLogger('trainLogger')
 
 
 class Trainer:
@@ -25,15 +31,17 @@ class Trainer:
         self.device = torch.device('cuda')
 
     def train(self):
+        logger.info("Training started ...")
         self.model.train()
         time0 = time.time()
         for epoch in range(self.args.start_epoch, self.args.epochs):
             self.__train()
             if self.use_validation:
+                logger.info("USE VALIDATION")
                 self.__validate()
                 self.scheduler.step(self.valid_reporter.history['vel_loss'][-1])
             else:
-                print()
+                logger.info("DO NOT USE VALIDATION")
             if (epoch + 1) % self.args.snapshot_interval == 0 or (epoch + 1) == self.args.epochs:
                 save_snapshot(self.model, self.optimizer, self.args.lr, epoch + 1, self.train_reporter,
                               self.valid_reporter, self.args.save_dir)
@@ -42,8 +50,8 @@ class Trainer:
                     self.valid_reporter.save_data(self.model.args.use_mask, self.args.save_dir)
                 Reporter.save_plots(self.model.args.use_mask, self.args.save_dir, self.train_reporter.history,
                                     self.valid_reporter.history, self.use_validation)
-        print("-" * 100)
-        print('Training is completed in %.2f seconds.' % (time.time() - time0))
+        logger.info("-" * 100)
+        logger.info('Training is completed in %.2f seconds.' % (time.time() - time0))
 
     def __train(self):
         self.train_reporter.start_time = time.time()
@@ -85,7 +93,7 @@ class Trainer:
             self.optimizer.step()
 
         self.train_reporter.epoch_finished()
-        self.train_reporter.print_values(self.model.args.use_mask, end='| ')
+        self.train_reporter.print_values(logger, self.model.args.use_mask)
 
     def __validate(self):
         self.valid_reporter.start_time = time.time()
@@ -120,4 +128,4 @@ class Trainer:
                 self.valid_reporter.update(report_metrics, batch_size)
 
         self.valid_reporter.epoch_finished()
-        self.valid_reporter.print_values(self.model.args.use_mask)
+        self.valid_reporter.print_values(logger, self.model.args.use_mask)

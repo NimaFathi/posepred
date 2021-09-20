@@ -1,9 +1,15 @@
+import logging
 import time
+from logging import config
+
 import torch
 
+from utils.losses import L1, MSE, BCE
 from utils.metrics import accuracy, ADE, FDE
 from utils.others import pose_from_vel
-from utils.losses import L1, MSE, BCE
+
+config.fileConfig('configs/logging.conf')
+logger = logging.getLogger('evalLogger')
 
 
 class Evaluator:
@@ -19,12 +25,13 @@ class Evaluator:
 
     def evaluate(self):
         self.model.eval()
-        print('Start evaluation.')
+        logger.info('Evaluation started ...')
         for i in range(self.rounds_num):
-            print('round', i + 1)
+            logger.info('round', i + 1)
             self.__evaluate()
-        print('-' * 100)
-        self.reporter.print_mean_std(self.model.args.use_mask)
+        logger.info('-' * 100)
+        self.reporter.print_mean_std(logger, self.model.args.use_mask)
+        logger.info("Evaluation has been completed")
 
     def __evaluate(self):
         self.reporter.start_time = time.time()
