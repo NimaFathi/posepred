@@ -1,9 +1,14 @@
-import torch
-from torch.utils.data import Dataset
-import pandas as pd
-from ast import literal_eval
-from numpy import random
 import logging
+from ast import literal_eval
+from logging import config
+
+import pandas as pd
+import torch
+from numpy import random
+from torch.utils.data import Dataset
+
+config.fileConfig('configs/logging.conf')
+logger = logging.getLogger('root')
 
 
 class InteractiveDataset(Dataset):
@@ -12,8 +17,10 @@ class InteractiveDataset(Dataset):
         for col in list(data.columns[1:].values):
             try:
                 data.loc[:, col] = data.loc[:, col].apply(lambda x: literal_eval(x))
-            except:
-                raise Exception("Each row must be convertable to python list")
+            except Exception:
+                msg = "Each row must be convertible to python list"
+                logger.exception(msg=msg)
+                raise Exception(msg)
 
         self.data = data.copy().reset_index(drop=True)
         self.persons_num = persons_num
@@ -42,7 +49,7 @@ class InteractiveDataset(Dataset):
             outputs = [obs_pose, obs_vel]
             outputs_vis = {'obs_pose': obs_pose, 'obs_vel': obs_vel}
         except:
-            logging.warning('faulty row skipped.')
+            logger.warning('faulty row skipped.')
             return self.__getitem__((index + 1) % self.__len__())
 
         if self.use_mask:

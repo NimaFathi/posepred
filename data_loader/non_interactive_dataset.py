@@ -3,6 +3,10 @@ from torch.utils.data import Dataset
 import pandas as pd
 from ast import literal_eval
 import logging
+from logging import config
+
+config.fileConfig('configs/logging.conf')
+logger = logging.getLogger('root')
 
 
 class NonInteractiveDataset(Dataset):
@@ -11,8 +15,10 @@ class NonInteractiveDataset(Dataset):
         for col in list(data.columns[1:].values):
             try:
                 data.loc[:, col] = data.loc[:, col].apply(lambda x: literal_eval(x))
-            except:
-                raise Exception("data must be convertable to valid data-scructures")
+            except Exception:
+                msg = "data must be convertible to valid data-structures"
+                logger.exception(msg=msg)
+                raise Exception(msg)
 
         self.data = data.copy().reset_index(drop=True)
         self.is_testing = is_testing
@@ -39,7 +45,7 @@ class NonInteractiveDataset(Dataset):
             outputs = [obs_pose, obs_vel]
             outputs_vis = {'obs_pose': obs_pose, 'obs_vel': obs_vel}
         except:
-            logging.warning('faulty row skipped.')
+            logger.warning('faulty row skipped.')
             return self.__getitem__((index + 1) % self.__len__())
 
         if self.use_mask:
