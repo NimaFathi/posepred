@@ -8,7 +8,7 @@ from numpy import random
 from torch.utils.data import Dataset
 
 config.fileConfig('configs/logging.conf')
-logger = logging.getLogger('root')
+logger = logging.getLogger('consoleLogger')
 
 
 class InteractiveDataset(Dataset):

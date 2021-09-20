@@ -20,7 +20,7 @@ from preprocessor.preprocessor import Processor
 Rectangle = namedtuple('Rectangle', 'xtl ytl xbr ybr')
 
 config.fileConfig('configs/logging.conf')
-logger = logging.getLogger('root')
+logger = logging.getLogger('consoleLogger')
 
 
 class PIEPreprocessor(Processor):

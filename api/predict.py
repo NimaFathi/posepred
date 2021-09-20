@@ -8,7 +8,7 @@ from path_definition import ROOT_DIR
 from utils.save_load import get_model, load_snapshot, save_args, setup_testing_dir
 
 config.fileConfig('configs/logging.conf')
-logger = logging.getLogger('root')
+logger = logging.getLogger('consoleLogger')
 
 if __name__ == '__main__':
 

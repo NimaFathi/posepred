@@ -11,7 +11,7 @@ from utils.reporter import Reporter
 from utils.save_load import load_snapshot, get_model, save_snapshot, save_args, setup_training_dir
 
 config.fileConfig('configs/logging.conf')
-logger = logging.getLogger('root')
+logger = logging.getLogger('consoleLogger')
 
 if __name__ == '__main__':
 

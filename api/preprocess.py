@@ -11,7 +11,7 @@ from preprocessor.somof_3dpw_preprocessor import SoMoF3DPWPreprocessor
 from preprocessor.somof_posetrack_preprocessor import SoMoFPoseTrackPreprocessor
 
 config.fileConfig('configs/logging.conf')
-logger = logging.getLogger('root')
+logger = logging.getLogger('consoleLogger')
 
 if __name__ == '__main__':
     args = parse_preprocessor_args()

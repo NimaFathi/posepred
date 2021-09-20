@@ -11,7 +11,7 @@ from args.helper import JSONEncoder_
 from models import disentangled, pv_lstm, zero_vel, nearest_neighbor, his_rep_itself, derpof
 
 config.fileConfig('configs/logging.conf')
-logger = logging.getLogger('root')
+logger = logging.getLogger('consoleLogger')
 
 
 def get_model(model_args):

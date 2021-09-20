@@ -5,7 +5,7 @@ import numpy as np
 import torch
 
 config.fileConfig('configs/logging.conf')
-logger = logging.getLogger('root')
+logger = logging.getLogger('consoleLogger')
 
 
 def accuracy(pred, target):

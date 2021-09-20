@@ -3,7 +3,7 @@ import logging
 from logging import config
 
 config.fileConfig('configs/logging.conf')
-logger = logging.getLogger('root')
+logger = logging.getLogger('consoleLogger')
 
 
 def parse_preprocessor_args():

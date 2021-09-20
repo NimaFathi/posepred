@@ -8,7 +8,7 @@ from utils.reporter import Reporter
 from utils.save_load import get_model, load_snapshot
 
 config.fileConfig('configs/logging.conf')
-logger = logging.getLogger('root')
+logger = logging.getLogger('consoleLogger')
 
 if __name__ == '__main__':
 

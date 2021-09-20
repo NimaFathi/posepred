@@ -11,7 +11,7 @@ from utils.others import pose_from_vel
 import logging
 from logging import config
 config.fileConfig('configs/logging.conf')
-logger = logging.getLogger('root')
+logger = logging.getLogger('consoleLogger')
 
 if __name__ == '__main__':
 

@@ -12,7 +12,7 @@ from path_definition import PREPROCESSED_DATA_DIR
 from preprocessor.preprocessor import Processor
 
 config.fileConfig('configs/logging.conf')
-logger = logging.getLogger('root')
+logger = logging.getLogger('consoleLogger')
 
 
 class JTAPreprocessor(Processor):
