@@ -3,10 +3,10 @@ Pospred is an open-source toolbox for pose prediction based on PyTorch. It is a 
 
 <div class="row">
   <div class="column">
-    <img src="visualization/outputs/presentation/obs/obs.gif" alt="Forest" style="width:100%">
+    <img src="visualization/outputs/presentation/obs/obs.gif" alt="observation" style="width:50%">
   </div>
   <div class="column">
-    <img src="visualization/outputs/presentation/pred/pred.gif" alt="Mountains" style="width:100%">
+    <img src="visualization/outputs/presentation/pred/pred.gif" alt="prediction" style="width:50%">
   </div>
 </div>
 
