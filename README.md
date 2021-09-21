@@ -3,7 +3,9 @@ Pospred is an open-source toolbox for pose prediction based on PyTorch. It is a 
 
 <p float="left">
   <img src="visualization/outputs/presentation/obs/obs.gif" alt="observation" width="500">
+  <figcaption>Fig.1 - Observed frames</figcaption>
   <img src="visualization/outputs/presentation/pred/pred.gif" alt="prediction" width="500">
+  <figcaption>Fig.2 - Predicted frames</figcaption>
 </p>
 
 
