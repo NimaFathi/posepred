@@ -7,21 +7,13 @@ import torch
 from numpy import random
 from torch.utils.data import Dataset
 
-config.fileConfig('configs/logging.conf')
-logger = logging.getLogger('consoleLogger')
+# config.fileConfig('configs/logging.conf')
+# logger = logging.getLogger('consoleLogger')
 
 
 class InteractiveDataset(Dataset):
     def __init__(self, dataset_path, keypoint_dim, persons_num, is_testing, use_mask, skip_frame, is_visualizing):
         data = pd.read_csv(dataset_path)
-        for col in list(data.columns[1:].values):
-            try:
-                data.loc[:, col] = data.loc[:, col].apply(lambda x: literal_eval(x))
-            except Exception:
-                msg = "Each row must be convertible to python list"
-                logger.exception(msg=msg)
-                raise Exception(msg)
-
         self.data = data.copy().reset_index(drop=True)
         self.persons_num = persons_num
         self.is_testing = is_testing
@@ -40,7 +32,14 @@ class InteractiveDataset(Dataset):
         return len(self.data)
 
     def __getitem__(self, index):
-        seq = self.data.iloc[index]
+
+        try:
+            seq = self.data.iloc[index][1:].apply(lambda x: literal_eval(x))
+        except Exception:
+            msg = "Each row must be convertible to python list"
+            # logger.exception(msg=msg)
+            raise Exception(msg)
+
         persons_in_seq = self.select_persons(seq)
 
         try:
@@ -49,7 +48,7 @@ class InteractiveDataset(Dataset):
             outputs = [obs_pose, obs_vel]
             outputs_vis = {'obs_pose': obs_pose, 'obs_vel': obs_vel}
         except:
-            logger.warning('faulty row skipped.')
+            # logger.warning('faulty row skipped.')
             return self.__getitem__((index + 1) % self.__len__())
 
         if self.use_mask:
@@ -111,11 +110,10 @@ import time
 
 st = time.time()
 
-ds = InteractiveDataset('../preprocessed_data/JTA_2D_validation.csv', 2, False, False, 0, False)
+ds = InteractiveDataset('../preprocessed_data/PoseTrack_train_interactive.csv', 2, 8, False, False, 0, False)
 
 print(time.time() - st)
 
 data = ds.__getitem__(5)
 print(len(data))
 print(data[0].shape)
-print(data[0][:, 5])
