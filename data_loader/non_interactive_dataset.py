@@ -5,8 +5,8 @@ from ast import literal_eval
 import logging
 from logging import config
 
-config.fileConfig('configs/logging.conf')
-logger = logging.getLogger('consoleLogger')
+# config.fileConfig('configs/logging.conf')
+# logger = logging.getLogger('consoleLogger')
 
 
 class NonInteractiveDataset(Dataset):
@@ -34,7 +34,7 @@ class NonInteractiveDataset(Dataset):
             seq = self.data.iloc[index][1:].apply(lambda x: literal_eval(x))
         except Exception:
             msg = "data must be convertible to valid data-structures"
-            logger.exception(msg=msg)
+            # logger.exception(msg=msg)
             raise Exception(msg)
 
         try:
@@ -43,7 +43,7 @@ class NonInteractiveDataset(Dataset):
             outputs = [obs_pose, obs_vel]
             outputs_vis = {'obs_pose': obs_pose, 'obs_vel': obs_vel}
         except:
-            logger.warning('faulty row skipped.')
+            # logger.warning('faulty row skipped.')
             return self.__getitem__((index + 1) % self.__len__())
 
         if self.use_mask:
@@ -84,3 +84,9 @@ class NonInteractiveDataset(Dataset):
         frames_num = len(seq[segment])
         return torch.tensor([seq[segment][frame_idx] for frame_idx in range(0, frames_num, self.skip_frame + 1)],
                             dtype=torch.float32)
+
+
+ds = NonInteractiveDataset('../preprocessed_data/sample.csv', 2, False, False, 0, False)
+
+data = ds.__getitem__(0)
+print(data[0].shape)

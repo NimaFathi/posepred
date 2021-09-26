@@ -105,9 +105,3 @@ class InteractiveDataset(Dataset):
             result = torch.cat((result, padding), dim=0)
 
         return result
-
-
-ds = InteractiveDataset('../preprocessed_data/sample_interactive.csv', 2, 8, False, False, 0, False)
-
-data = ds.__getitem__(0)
-print(data[0].shape)
