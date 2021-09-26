@@ -5,9 +5,8 @@ from ast import literal_eval
 import logging
 from logging import config
 
-# config.fileConfig('configs/logging.conf')
-# logger = logging.getLogger('consoleLogger')
-
+config.fileConfig('configs/logging.conf')
+logger = logging.getLogger('consoleLogger')
 
 
 class NonInteractiveDataset(Dataset):
@@ -44,7 +43,7 @@ class NonInteractiveDataset(Dataset):
             outputs = [obs_pose, obs_vel]
             outputs_vis = {'obs_pose': obs_pose, 'obs_vel': obs_vel}
         except:
-            # logger.warning('faulty row skipped.')
+            logger.warning('faulty row skipped.')
             return self.__getitem__((index + 1) % self.__len__())
 
         if self.use_mask:
