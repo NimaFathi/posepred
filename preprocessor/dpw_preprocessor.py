@@ -81,7 +81,7 @@ class Preprocessor3DPW(Processor):
                                 pose_data[p_id, i * total_frame_num * (self.skip_frame_num + 1) + j - 1, :].tolist()
                             )
                             video_data['obs_frames'][p_id].append(
-                                f'{video_name}/image_{frame_ids_data[i * total_frame_num * (self.skip_frame_num + 1) + j - 1]:05}.jpg'
+                                f'{video_name}/image_{i * total_frame_num * (self.skip_frame_num + 1) + j - 1:05}.jpg'
                             )
                             if p_id == 0:
                                 video_data['obs_cam_ext'].append(
@@ -92,7 +92,7 @@ class Preprocessor3DPW(Processor):
                                 pose_data[p_id, i * total_frame_num * (self.skip_frame_num + 1) + j - 1, :].tolist()
                             )
                             video_data['future_frames'][p_id].append(
-                                f'{video_name}/image_{frame_ids_data[i * total_frame_num * (self.skip_frame_num + 1) + j - 1]:05}.jpg'
+                                f'{video_name}/image_{i * total_frame_num * (self.skip_frame_num + 1) + j - 1:05}.jpg'
                             )
                             if p_id == 0:
                                 video_data['future_cam_ext'].append(
