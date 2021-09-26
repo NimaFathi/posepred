@@ -14,15 +14,6 @@ import time
 class NonInteractiveDataset(Dataset):
     def __init__(self, dataset_path, keypoint_dim, is_testing, use_mask, skip_frame, is_visualizing):
         data = pd.read_csv(dataset_path)
-
-        # for col in list(data.columns[1:].values):
-        #     try:
-        #         data.loc[:, col] = data.loc[:, col].apply(lambda x: literal_eval(x))
-        #     except Exception:
-        #         msg = "data must be convertible to valid data-structures"
-        #         # logger.exception(msg=msg)
-        #         raise Exception(msg)
-
         self.data = data.copy().reset_index(drop=True)
         self.is_testing = is_testing
         self.use_mask = use_mask
@@ -40,8 +31,6 @@ class NonInteractiveDataset(Dataset):
         return len(self.data)
 
     def __getitem__(self, index):
-
-
 
         try:
             seq = self.data.iloc[index][1:].apply(lambda x: literal_eval(x))
