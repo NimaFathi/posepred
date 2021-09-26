@@ -105,3 +105,17 @@ class InteractiveDataset(Dataset):
             result = torch.cat((result, padding), dim=0)
 
         return result
+
+
+import time
+
+st = time.time()
+
+ds = InteractiveDataset('../preprocessed_data/JTA_2D_validation.csv', 2, False, False, 0, False)
+
+print(time.time() - st)
+
+data = ds.__getitem__(5)
+print(len(data))
+print(data[0].shape)
+print(data[0][:, 5])
