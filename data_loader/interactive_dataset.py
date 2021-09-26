@@ -7,6 +7,7 @@ import torch
 from numpy import random
 from torch.utils.data import Dataset
 
+
 # config.fileConfig('configs/logging.conf')
 # logger = logging.getLogger('consoleLogger')
 
@@ -106,14 +107,7 @@ class InteractiveDataset(Dataset):
         return result
 
 
-import time
+ds = InteractiveDataset('../preprocessed_data/sample_interactive.csv', 2, 8, False, False, 0, False)
 
-st = time.time()
-
-ds = InteractiveDataset('../preprocessed_data/PoseTrack_train_interactive.csv', 2, 8, False, False, 0, False)
-
-print(time.time() - st)
-
-data = ds.__getitem__(5)
-print(len(data))
+data = ds.__getitem__(0)
 print(data[0].shape)
