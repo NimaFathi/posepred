@@ -18,7 +18,7 @@ class NonInteractiveDataset(Dataset):
         self.skip_frame = skip_frame
         self.is_visualizing = is_visualizing
 
-        seq = self.data.iloc[0]
+        seq = self.data.iloc[0][1:].apply(lambda x: literal_eval(x))
         self.keypoint_dim = keypoint_dim
         self.keypoints_num = int(len(seq.observed_pose[0]) / self.keypoint_dim)
         self.obs_frames_num = len(seq.observed_pose)
