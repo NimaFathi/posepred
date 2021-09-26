@@ -5,8 +5,9 @@ from ast import literal_eval
 
 import logging
 from logging import config
+from path_definition import LOGGER_CONF
 
-config.fileConfig('configs/logging.conf')
+config.fileConfig(LOGGER_CONF)
 logger = logging.getLogger('consoleLogger')
 
 
