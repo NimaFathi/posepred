@@ -5,20 +5,23 @@ from ast import literal_eval
 import logging
 from logging import config
 
-config.fileConfig('configs/logging.conf')
-logger = logging.getLogger('consoleLogger')
+# config.fileConfig('configs/logging.conf')
+# logger = logging.getLogger('consoleLogger')
+
+import time
 
 
 class NonInteractiveDataset(Dataset):
     def __init__(self, dataset_path, keypoint_dim, is_testing, use_mask, skip_frame, is_visualizing):
         data = pd.read_csv(dataset_path)
-        for col in list(data.columns[1:].values):
-            try:
-                data.loc[:, col] = data.loc[:, col].apply(lambda x: literal_eval(x))
-            except Exception:
-                msg = "data must be convertible to valid data-structures"
-                logger.exception(msg=msg)
-                raise Exception(msg)
+
+        # for col in list(data.columns[1:].values):
+        #     try:
+        #         data.loc[:, col] = data.loc[:, col].apply(lambda x: literal_eval(x))
+        #     except Exception:
+        #         msg = "data must be convertible to valid data-structures"
+        #         # logger.exception(msg=msg)
+        #         raise Exception(msg)
 
         self.data = data.copy().reset_index(drop=True)
         self.is_testing = is_testing
@@ -37,7 +40,15 @@ class NonInteractiveDataset(Dataset):
         return len(self.data)
 
     def __getitem__(self, index):
-        seq = self.data.iloc[index]
+
+
+
+        try:
+            seq = self.data.iloc[index][1:].apply(lambda x: literal_eval(x))
+        except Exception:
+            msg = "data must be convertible to valid data-structures"
+            # logger.exception(msg=msg)
+            raise Exception(msg)
 
         try:
             obs_pose = self.get_tensor(seq, 'observed_pose')
@@ -45,7 +56,7 @@ class NonInteractiveDataset(Dataset):
             outputs = [obs_pose, obs_vel]
             outputs_vis = {'obs_pose': obs_pose, 'obs_vel': obs_vel}
         except:
-            logger.warning('faulty row skipped.')
+            # logger.warning('faulty row skipped.')
             return self.__getitem__((index + 1) % self.__len__())
 
         if self.use_mask:
@@ -86,3 +97,15 @@ class NonInteractiveDataset(Dataset):
         frames_num = len(seq[segment])
         return torch.tensor([seq[segment][frame_idx] for frame_idx in range(0, frames_num, self.skip_frame + 1)],
                             dtype=torch.float32)
+
+
+st = time.time()
+
+ds = NonInteractiveDataset('../preprocessed_data/3DPW_train.csv', 3, False, False, 0, False)
+
+print(time.time() - st)
+
+data = ds.__getitem__(5)
+print(len(data))
+print(data[0].shape)
+print(data[0][:, 5])
