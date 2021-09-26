@@ -2,6 +2,7 @@ import logging
 from logging import config
 
 from args.preprocessing_args import parse_preprocessor_args
+from path_definition import LOGGER_CONF
 from preprocessor.dpw_preprocessor import Preprocessor3DPW
 from preprocessor.jaad_preprocessor import JAADPreprocessor
 from preprocessor.jta_preprocessor import JTAPreprocessor
@@ -10,7 +11,7 @@ from preprocessor.posetrack_preprocessor import PoseTrackPreprocessor
 from preprocessor.somof_3dpw_preprocessor import SoMoF3DPWPreprocessor
 from preprocessor.somof_posetrack_preprocessor import SoMoFPoseTrackPreprocessor
 
-config.fileConfig('configs/logging.conf')
+config.fileConfig(LOGGER_CONF)
 logger = logging.getLogger('consoleLogger')
 
 if __name__ == '__main__':

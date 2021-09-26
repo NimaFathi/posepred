@@ -5,10 +5,11 @@ from logging import config
 import pandas as pd
 import torch
 
+from path_definition import LOGGER_CONF
 from utils.others import pose_from_vel
 from utils.save_load import save_test_results
 
-config.fileConfig('configs/logging.conf')
+config.fileConfig(LOGGER_CONF)
 logger = logging.getLogger('predLogger')
 
 

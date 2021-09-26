@@ -14,12 +14,13 @@ from bs4 import BeautifulSoup
 from openpifpaf.predict import out_name
 from scipy.interpolate import interp1d
 
+from path_definition import LOGGER_CONF
 from path_definition import PREPROCESSED_DATA_DIR
 from preprocessor.preprocessor import Processor
 
 Rectangle = namedtuple('Rectangle', 'xtl ytl xbr ybr')
 
-config.fileConfig('configs/logging.conf')
+config.fileConfig(LOGGER_CONF)
 logger = logging.getLogger('consoleLogger')
 
 
@@ -120,11 +121,13 @@ class PIEPreprocessor(Processor):
             obs_x = list(raw_data_obs[ped_id].keys())
             obs_y = np.array(list(raw_data_obs[ped_id].values()))
             obs_image_path.append(
-                [os.path.join(*re.search("(\w+)_(\w+_\w+)", video_name).groups(), str(frame_number).zfill(5) + ".png") for
+                [os.path.join(*re.search("(\w+)_(\w+_\w+)", video_name).groups(), str(frame_number).zfill(5) + ".png")
+                 for
                  frame_number in obs_frame_range]
             )
             pred_image_path.append(
-                [os.path.join(*re.search("(\w+)_(\w+_\w+)", video_name).groups(), str(frame_number).zfill(5) + ".png") for
+                [os.path.join(*re.search("(\w+)_(\w+_\w+)", video_name).groups(), str(frame_number).zfill(5) + ".png")
+                 for
                  frame_number in pred_frame_range]
             )
             obs_interp = interp1d(obs_x, obs_y, axis=0, fill_value="extrapolate")
@@ -205,7 +208,7 @@ class PIEPreprocessor(Processor):
                                     row_matrix.append(
                                         intersect_area(rectangle, ped_bbox) / (
                                                 intersect_area(rectangle, rectangle) + intersect_area(
-                                                    ped_bbox, ped_bbox) - intersect_area(rectangle, ped_bbox)
+                                            ped_bbox, ped_bbox) - intersect_area(rectangle, ped_bbox)
                                         )
                                     )
                                 score_matrix.append((ped_id, row_matrix))

@@ -1,16 +1,19 @@
-import random
-import torch
-import os
-
-from path_definition import ROOT_DIR
-from args.visualization_args import parse_visualization_args
-from visualization.visualizer import Visualizer
-from data_loader.data_loader import get_dataloader
-from utils.save_load import get_model, load_snapshot
-from utils.others import pose_from_vel
 import logging
+import os
+import random
 from logging import config
-config.fileConfig('configs/logging.conf')
+
+import torch
+
+from args.visualization_args import parse_visualization_args
+from data_loader.data_loader import get_dataloader
+from path_definition import LOGGER_CONF
+from path_definition import ROOT_DIR
+from utils.others import pose_from_vel
+from utils.save_load import get_model, load_snapshot
+from visualization.visualizer import Visualizer
+
+config.fileConfig(LOGGER_CONF)
 logger = logging.getLogger('consoleLogger')
 
 if __name__ == '__main__':
@@ -40,7 +43,8 @@ if __name__ == '__main__':
     model.eval()
     with torch.no_grad():
         if dataloader_args.use_mask:
-            outputs = model([data.get('obs_pose').to('cuda'), data.get('obs_vel').to('cuda'), data.get('obs_mask').to('cuda')])
+            outputs = model(
+                [data.get('obs_pose').to('cuda'), data.get('obs_vel').to('cuda'), data.get('obs_mask').to('cuda')])
         else:
             outputs = model([data.get('obs_pose').to('cuda'), data.get('obs_vel').to('cuda')])
         pred_vel = outputs[0]
@@ -82,7 +86,8 @@ if __name__ == '__main__':
     cam_in = data.get('cam_in') if 'cam_in' in data.keys() else None
 
     gif_name = '_'.join((model.args.model_name, dataloader_args.dataset_name.split("/")[-1], str(index)))
-    visualizer = Visualizer(dataset_name=dataset_name, images_dir=os.path.join(ROOT_DIR, images_dir if images_dir else ''))
+    visualizer = Visualizer(dataset_name=dataset_name,
+                            images_dir=os.path.join(ROOT_DIR, images_dir if images_dir else ''))
     if dataloader_args.keypoint_dim == 2:
         visualizer.visualizer_2D(names, poses, masks, images_path, gif_name)
     else:
