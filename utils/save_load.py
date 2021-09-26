@@ -9,8 +9,9 @@ import torch.optim as optim
 
 from args.helper import JSONEncoder_
 from models import disentangled, pv_lstm, zero_vel, nearest_neighbor, his_rep_itself, derpof
+from path_definition import LOGGER_CONF
 
-config.fileConfig('configs/logging.conf')
+config.fileConfig(LOGGER_CONF)
 logger = logging.getLogger('consoleLogger')
 
 

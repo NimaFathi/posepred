@@ -7,7 +7,9 @@ import torch
 from numpy import random
 from torch.utils.data import Dataset
 
-config.fileConfig('configs/logging.conf')
+from path_definition import LOGGER_CONF
+
+config.fileConfig(LOGGER_CONF)
 logger = logging.getLogger('consoleLogger')
 
 

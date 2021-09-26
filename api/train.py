@@ -6,11 +6,12 @@ import torch.optim as optim
 from args.training_args import parse_training_args
 from data_loader.data_loader import get_dataloader
 from factory.trainer import Trainer
+from path_definition import LOGGER_CONF
 from path_definition import ROOT_DIR
 from utils.reporter import Reporter
 from utils.save_load import load_snapshot, get_model, save_snapshot, save_args, setup_training_dir
 
-config.fileConfig('configs/logging.conf')
+config.fileConfig(LOGGER_CONF)
 logger = logging.getLogger('consoleLogger')
 
 if __name__ == '__main__':

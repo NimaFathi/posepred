@@ -1,11 +1,14 @@
-import torch
-from torch.utils.data import Dataset
-import pandas as pd
-from ast import literal_eval
 import logging
+from ast import literal_eval
 from logging import config
 
-config.fileConfig('configs/logging.conf')
+import pandas as pd
+import torch
+from torch.utils.data import Dataset
+
+from path_definition import LOGGER_CONF
+
+config.fileConfig(LOGGER_CONF)
 logger = logging.getLogger('consoleLogger')
 
 

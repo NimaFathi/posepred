@@ -4,10 +4,11 @@ from logging import config
 from args.prediction_args import parse_prediction_args
 from data_loader.data_loader import get_dataloader
 from factory.predictor import Predictor
+from path_definition import LOGGER_CONF
 from path_definition import ROOT_DIR
 from utils.save_load import get_model, load_snapshot, save_args, setup_testing_dir
 
-config.fileConfig('configs/logging.conf')
+config.fileConfig(LOGGER_CONF)
 logger = logging.getLogger('consoleLogger')
 
 if __name__ == '__main__':

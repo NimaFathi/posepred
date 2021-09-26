@@ -8,10 +8,11 @@ from logging import config
 import numpy as np
 import pandas as pd
 
+from path_definition import LOGGER_CONF
 from path_definition import PREPROCESSED_DATA_DIR
 from preprocessor.preprocessor import Processor
 
-config.fileConfig('configs/logging.conf')
+config.fileConfig(LOGGER_CONF)
 logger = logging.getLogger('consoleLogger')
 
 
@@ -62,7 +63,7 @@ class Preprocessor3DPW(Processor):
             cam_extrinsic = pickle_obj['cam_poses'][:, :3]
             cam_intrinsic = pickle_obj['cam_intrinsics'].tolist()
             section_range = pose_data.shape[1] // (
-                        total_frame_num * (self.skip_frame_num + 1)) if self.use_video_once is False else 1
+                    total_frame_num * (self.skip_frame_num + 1)) if self.use_video_once is False else 1
             data = []
             for i in range(section_range):
                 video_data = {

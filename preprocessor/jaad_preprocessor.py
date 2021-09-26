@@ -13,12 +13,13 @@ import openpifpaf
 from bs4 import BeautifulSoup
 from scipy.interpolate import interp1d
 
+from path_definition import LOGGER_CONF
 from path_definition import PREPROCESSED_DATA_DIR
 from preprocessor.preprocessor import Processor
 
 Rectangle = namedtuple('Rectangle', 'xtl ytl xbr ybr')
 
-config.fileConfig('configs/logging.conf')
+config.fileConfig(LOGGER_CONF)
 logger = logging.getLogger('consoleLogger')
 
 
@@ -247,7 +248,7 @@ class JAADPreprocessor(Processor):
                 for pred, _, meta in predictor.images(new_files):
                     json_out_name = os.path.join(
                         annotation_dir,
-                         os.path.basename(meta['file_name']) + ".predictions.json")
+                        os.path.basename(meta['file_name']) + ".predictions.json")
                     logger.debug('json output = %s', json_out_name)
                     with open(json_out_name, 'w') as f:
                         json.dump([ann for ann in pred], f, indent=4)

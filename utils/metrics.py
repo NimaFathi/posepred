@@ -4,7 +4,9 @@ from logging import config
 import numpy as np
 import torch
 
-config.fileConfig('configs/logging.conf')
+from path_definition import LOGGER_CONF
+
+config.fileConfig(LOGGER_CONF)
 logger = logging.getLogger('consoleLogger')
 
 

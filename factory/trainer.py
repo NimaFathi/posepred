@@ -4,13 +4,14 @@ from logging import config
 
 import torch
 
+from path_definition import LOGGER_CONF
 from utils.losses import L1, MSE, BCE
 from utils.metrics import accuracy, ADE, FDE
 from utils.others import pose_from_vel
 from utils.reporter import Reporter
 from utils.save_load import save_snapshot
 
-config.fileConfig('configs/logging.conf')
+config.fileConfig(LOGGER_CONF)
 logger = logging.getLogger('trainLogger')
 
 

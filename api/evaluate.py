@@ -4,10 +4,11 @@ from logging import config
 from args.evaluation_args import parse_evaluation_args
 from data_loader.data_loader import get_dataloader
 from factory.evaluator import Evaluator
+from path_definition import LOGGER_CONF
 from utils.reporter import Reporter
 from utils.save_load import get_model, load_snapshot
 
-config.fileConfig('configs/logging.conf')
+config.fileConfig(LOGGER_CONF)
 logger = logging.getLogger('consoleLogger')
 
 if __name__ == '__main__':
