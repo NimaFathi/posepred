@@ -4,7 +4,7 @@ from logging import config
 import torch.optim as optim
 
 from args.training_args import parse_training_args
-from data_loader.data_loader import get_dataloader
+from data_loader.my_dataloader import get_dataloader
 from factory.trainer import Trainer
 from path_definition import LOGGER_CONF
 from path_definition import ROOT_DIR

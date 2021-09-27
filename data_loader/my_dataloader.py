@@ -19,3 +19,30 @@ def get_dataloader(args):
                             num_workers=args.num_workers)
 
     return dataloader
+
+
+class DataloaderArgs:
+    def __init__(self, dataset_name, keypoint_dim, is_interactive, persons_num, use_mask, skip_num, batch_size,
+                 shuffle, pin_memory, num_workers, is_testing=False, is_visualizing=False):
+        self.dataset_name = dataset_name
+        self.keypoint_dim = keypoint_dim
+        self.is_interactive = is_interactive
+        self.persons_num = persons_num
+        self.use_mask = use_mask
+        self.skip_frame = skip_num
+        self.batch_size = batch_size
+        self.shuffle = shuffle
+        self.pin_memory = pin_memory
+        self.num_workers = num_workers
+        self.is_testing = is_testing
+        self.is_visualizing = is_visualizing
+
+
+args = DataloaderArgs('3DPW_train', 3, False, 1, False, 0, 20, False, False, 0)
+
+dataloader = get_dataloader(args)
+
+for data in dataloader:
+    print(len(data))
+    print(data.shape)
+    exit()

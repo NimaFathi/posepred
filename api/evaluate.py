@@ -2,7 +2,7 @@ import logging
 from logging import config
 
 from args.evaluation_args import parse_evaluation_args
-from data_loader.data_loader import get_dataloader
+from data_loader.my_dataloader import get_dataloader
 from factory.evaluator import Evaluator
 from path_definition import LOGGER_CONF
 from utils.reporter import Reporter

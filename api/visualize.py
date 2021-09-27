@@ -6,7 +6,7 @@ from logging import config
 import torch
 
 from args.visualization_args import parse_visualization_args
-from data_loader.data_loader import get_dataloader
+from data_loader.my_dataloader import get_dataloader
 from path_definition import LOGGER_CONF
 from path_definition import ROOT_DIR
 from utils.others import pose_from_vel
