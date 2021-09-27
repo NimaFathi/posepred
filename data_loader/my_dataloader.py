@@ -37,12 +37,26 @@ class DataloaderArgs:
         self.is_testing = is_testing
         self.is_visualizing = is_visualizing
 
-
-args = DataloaderArgs('3DPW_train', 3, False, 1, False, 0, 20, False, False, 0)
-
-dataloader = get_dataloader(args)
-
-for data in dataloader:
-    print(len(data))
-    print(data[0].shape)
-    exit()
+# args = DataloaderArgs('3DPW_train', 3, False, 1, False, 0, 20, False, False, 0)
+#
+# st = time.time()
+# dataloader = get_dataloader(args)
+# init_ = time.time() - st
+# print('init:',  np.round(init_, 5))
+# print('-' * 100)
+#
+#
+#
+#
+# st = time.time()
+#
+# total = 0
+# for i in range(10):
+#     for data in dataloader:
+#         pass
+#     total += np.round(time.time() - st, 5)
+#     print('epoch' + str(i) + ':', np.round(time.time() - st, 5))
+#     st = time.time()
+#
+# print('-' * 100)
+# print('total time:', np.round(init_, 5), '+',  np.round(total, 5), '=', np.round(init_ + total, 5))
