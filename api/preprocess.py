@@ -20,8 +20,8 @@ if __name__ == '__main__':
     if args.dataset_name == 'posetrack':
         preprocessor = PoseTrackPreprocessor(
             mask=args.use_mask, dataset_path=args.official_annotation_path,
-            obs_frame_num=16, custom_name=args.output_name, is_interactive=args.interactive,
-            pred_frame_num=14, skip_frame_num=0, use_video_once=True)
+            obs_frame_num=args.obs_frames_num, custom_name=args.output_name, is_interactive=args.interactive,
+            pred_frame_num=args.pred_frames_num, skip_frame_num=0, use_video_once=args.use_video_once)
     elif args.dataset_name == 'jta':
         preprocessor = JTAPreprocessor(
             is_3d=args.is_3D, dataset_path=args.official_annotation_path,

@@ -46,6 +46,7 @@ class Processor:
         :param is_3d: pass if your data is in 3D format or not (3D or 2D)
         :return None: save meta data as json format
         """
+        assert meta_data['count'] > 0
         if data_type != 'train':
             return
         output_file_path = os.path.join(outputdir, f'3D_meta.json' if is_3d else f'2D_meta.json')
