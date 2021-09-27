@@ -2,7 +2,7 @@ import logging
 from logging import config
 
 from args.prediction_args import parse_prediction_args
-from data_loader.data_loader import get_dataloader
+from data_loader.my_dataloader import get_dataloader
 from factory.predictor import Predictor
 from path_definition import LOGGER_CONF
 from path_definition import ROOT_DIR
