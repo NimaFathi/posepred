@@ -8,7 +8,6 @@ import logging
 from logging import config
 from path_definition import LOGGER_CONF
 
-print(LOGGER_CONF)
 config.fileConfig(LOGGER_CONF)
 logger = logging.getLogger('consoleLogger')
 

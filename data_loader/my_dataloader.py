@@ -44,5 +44,5 @@ dataloader = get_dataloader(args)
 
 for data in dataloader:
     print(len(data))
-    print(data.shape)
+    print(data[0].shape)
     exit()
