@@ -29,15 +29,14 @@ if __name__ == '__main__':
         model_args.keypoints_num = train_dataloader.dataset.keypoints_num
         model = get_model(model_args)
         optimizer = optim.Adam(model.parameters(), lr=trainer_args.lr)
-        train_reporter = Reporter(state='train')
-        valid_reporter = Reporter(state='valid')
         trainer_args.save_dir = setup_training_dir(ROOT_DIR)
+        train_reporter = Reporter(save_dir=trainer_args.save_dir, state='train')
+        valid_reporter = Reporter(save_dir=trainer_args.save_dir, state='valid')
         save_args({'trainer_args': trainer_args, 'model_args': model.args}, trainer_args.save_dir)
         save_snapshot(model, optimizer, trainer_args.lr, 0, train_reporter, valid_reporter, trainer_args.save_dir)
 
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=trainer_args.decay_factor,
                                                      patience=trainer_args.decay_patience, threshold=1e-8, verbose=True)
-
     trainer = Trainer(trainer_args, model, train_dataloader, valid_dataloader, optimizer, scheduler, train_reporter,
                       valid_reporter)
     trainer.train()
