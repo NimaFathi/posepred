@@ -63,16 +63,16 @@ class Trainer:
 
             # predict
             self.model.zero_grad()
-            outputs = self.model(data)
+            model_outputs = self.model(data)
 
             # calculate metrics
-            pred_vel = outputs[0]
-            vel_loss = self.distance_loss(pred_vel, target_vel)
+            pred_vel = model_outputs[0]
+
             pred_pose = pose_from_vel(pred_vel, obs_pose[..., -1, :])
             loss = vel_loss
             report_metrics = {'vel_loss': vel_loss}
             if self.model.args.use_mask:
-                pred_mask = outputs[1]
+                pred_mask = model_outputs[1]
                 mask_loss = self.mask_loss(pred_mask, target_mask)
                 mask_acc = accuracy(pred_mask, target_mask)
                 loss += self.args.mask_loss_weight * mask_loss
