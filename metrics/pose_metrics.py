@@ -43,6 +43,7 @@ def VIM(pred, target, dim, mask):
     Output:
         errorPose:
     """
+    assert mask is not None, 'pred_mask should not be None.'
 
     target_i_global = np.copy(target)
     if dim == 2:
@@ -75,6 +76,7 @@ def VAM(pred, target, dim, mask, occ_cutoff=100):
     Output:
         seq_err:
     """
+    assert mask is not None, 'pred_mask should not be None.'
     assert dim == 2 or dim == 3
 
     pred_mask = np.repeat(mask, 2, axis=-1)
