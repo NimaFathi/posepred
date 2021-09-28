@@ -12,19 +12,17 @@ from utils.average_meter import AverageMeter
 
 class Reporter:
 
-    def __init__(self, report_attrs, state=''):
+    def __init__(self, attrs, state=''):
         self.state = state
 
-        self.attrs = dict()
-        self.attrs['ADE'] = AverageMeter()
-        self.attrs['FDE'] = AverageMeter()
-        self.attrs['vel_loss'] = AverageMeter()
-        self.attrs['mask_loss'] = AverageMeter()
-        self.attrs['mask_acc'] = AverageMeter()
+        self.attrs = {'loss': AverageMeter()}
+        for attr in attrs:
+            self.attrs[attr] = AverageMeter()
         self.start_time = None
 
-        self.history = dict()
-
+        self.history = {'loss': []}
+        for attr in attrs:
+            self.history[attr] = []
         self.history['time'] = []
 
     def update(self, metrics, batch_size):
