@@ -98,33 +98,37 @@ class Trainer:
     def __validate(self):
         self.valid_reporter.start_time = time.time()
         for data in self.valid_dataloader:
-            for i, d in enumerate(data):
-                data[i] = d.to(self.device)
-            batch_size = data[0].shape[0]
-            if self.model.args.use_mask:
-                obs_pose, obs_vel, obs_mask, target_pose, target_vel, target_mask = data
-            else:
-                obs_pose, obs_vel, target_pose, target_vel = data
+            for key, value in data.items():
+                data[key] = value.to(self.device)
+            batch_size = data['observed_pose'].shape[0]
 
             with torch.no_grad():
-                # predict
-                outputs = self.model(data[:len(data) // 2])
+                # predict & calculate loss
+                model_outputs = self.model(data)
+                loss = self.loss_module(model_outputs, data)
+                assert 'pred_pose' in model_outputs.keys(), 'outputs of model should include pred_pose'
 
-                # calculate metrics
-                pred_vel = outputs[0]
-                vel_loss = self.distance_loss(pred_vel, target_vel)
-                pred_pose = pose_from_vel(pred_vel, obs_pose[..., -1, :])
-                report_metrics = {'vel_loss': vel_loss}
                 if self.model.args.use_mask:
-                    pred_mask = outputs[1]
-                    mask_loss = self.mask_loss(pred_mask, target_mask)
-                    mask_acc = accuracy(pred_mask, target_mask)
-                    report_metrics['mask_loss'] = mask_loss
-                    report_metrics['mask_acc'] = mask_acc
-                ade = ADE(pred_pose, target_pose, self.model.args.keypoint_dim)
-                fde = FDE(pred_pose, target_pose, self.model.args.keypoint_dim)
-                report_metrics['ADE'] = ade
-                report_metrics['FDE'] = fde
+                    assert 'pred_mask' in model_outputs.keys(), 'outputs of model should include pred_mask'
+                    pred_mask = model_outputs['pred_mask']
+                else:
+                    pred_mask = None
+
+                # calculate pose_metrics
+                report_metrics = {'loss': loss}
+                for metric_name in self.args.pose_metrics:
+                    metric_func = POSE_METRICS[metric_name]
+                    metric_value = metric_func(model_outputs['pred_pose'], data['future_pose'],
+                                               self.model.args.keypoint_dim, pred_mask)
+                    report_metrics[metric_name] = metric_value
+
+                # calculate mask_metrics
+                if self.model.args.use_mask:
+                    for metric_name in self.args.mask_metrics:
+                        metric_func = MASK_METRICS[metric_name]
+                        metric_value = metric_func(pred_mask, data['future_mask'])
+                        report_metrics[metric_name] = metric_value
+
                 self.valid_reporter.update(report_metrics, batch_size)
 
         self.valid_reporter.epoch_finished(self.tb)
