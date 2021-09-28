@@ -5,7 +5,7 @@ from models.disentangled import Disentangled
 from models.derpof import DeRPoF
 from models.his_rep_itself import HisRepItself
 
-models = {'zero_vel': ZeroVel,
+MODELS = {'zero_vel': ZeroVel,
           'nearest_neighbor': NearestNeighbor,
           'pv_lstm': PVLSTM,
           'disentangled': Disentangled,
