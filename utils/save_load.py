@@ -79,7 +79,7 @@ def setup_training_dir(root_dir):
             os.makedirs(new_dir, exist_ok=False)
             os.makedirs(os.path.join(new_dir, 'snapshots'), exist_ok=False)
             os.makedirs(os.path.join(new_dir, 'plots'), exist_ok=False)
-            os.makedirs(os.path.join(new_dir, 'data'), exist_ok=False)
+            os.makedirs(os.path.join(new_dir, 'metrics_history'), exist_ok=False)
             return new_dir
     msg = "Too many folders exist."
     logger.error(msg=msg)
