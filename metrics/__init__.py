@@ -1,4 +1,5 @@
 from .mask_metrics import accuracy, f1_score, precision, recall
+from .pose_metrics import ADE, FDE, VIM, VAM
 
 MASK_METRICS = {'accuracy': accuracy,
                 'f1_score': f1_score,
