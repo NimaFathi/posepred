@@ -30,8 +30,8 @@ if __name__ == '__main__':
         model = get_model(model_args)
         optimizer = optim.Adam(model.parameters(), lr=trainer_args.lr)
         trainer_args.save_dir = setup_training_dir(ROOT_DIR)
-        train_reporter = Reporter(save_dir=trainer_args.save_dir, state='train')
-        valid_reporter = Reporter(save_dir=trainer_args.save_dir, state='valid')
+        train_reporter = Reporter(state='train')
+        valid_reporter = Reporter(state='valid')
         save_args({'trainer_args': trainer_args, 'model_args': model.args}, trainer_args.save_dir)
         save_snapshot(model, optimizer, trainer_args.lr, 0, train_reporter, valid_reporter, trainer_args.save_dir)
 
