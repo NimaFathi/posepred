@@ -72,25 +72,25 @@ class Trainer:
                 pred_mask = None
 
             # calculate pose_metrics
-            report_metrics = {'loss': loss}
+            report_attrs = {'loss': loss}
             for metric_name in self.args.pose_metrics:
                 metric_func = POSE_METRICS[metric_name]
                 metric_value = metric_func(model_outputs['pred_pose'], data['future_pose'],
                                            self.model.args.keypoint_dim, pred_mask)
-                report_metrics[metric_name] = metric_value
+                report_attrs[metric_name] = metric_value
 
             # calculate mask_metrics
             if self.model.args.use_mask:
                 for metric_name in self.args.mask_metrics:
                     metric_func = MASK_METRICS[metric_name]
                     metric_value = metric_func(pred_mask, data['future_mask'])
-                    report_metrics[metric_name] = metric_value
+                    report_attrs[metric_name] = metric_value
 
             # backpropagate and optimize
             loss.backward()
             self.optimizer.step()
 
-            self.train_reporter.update(report_metrics, batch_size)
+            self.train_reporter.update(report_attrs, batch_size)
 
         self.train_reporter.epoch_finished(self.tb)
         self.train_reporter.print_values(logger, self.model.args.use_mask)
@@ -115,21 +115,21 @@ class Trainer:
                     pred_mask = None
 
                 # calculate pose_metrics
-                report_metrics = {'loss': loss}
+                report_attrs = {'loss': loss}
                 for metric_name in self.args.pose_metrics:
                     metric_func = POSE_METRICS[metric_name]
                     metric_value = metric_func(model_outputs['pred_pose'], data['future_pose'],
                                                self.model.args.keypoint_dim, pred_mask)
-                    report_metrics[metric_name] = metric_value
+                    report_attrs[metric_name] = metric_value
 
                 # calculate mask_metrics
                 if self.model.args.use_mask:
                     for metric_name in self.args.mask_metrics:
                         metric_func = MASK_METRICS[metric_name]
                         metric_value = metric_func(pred_mask, data['future_mask'])
-                        report_metrics[metric_name] = metric_value
+                        report_attrs[metric_name] = metric_value
 
-                self.valid_reporter.update(report_metrics, batch_size)
+                self.valid_reporter.update(report_attrs, batch_size)
 
         self.valid_reporter.epoch_finished(self.tb)
         self.valid_reporter.print_values(logger, self.model.args.use_mask)
