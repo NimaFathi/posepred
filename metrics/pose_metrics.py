@@ -10,7 +10,6 @@ config.fileConfig(LOGGER_CONF)
 logger = logging.getLogger('consoleLogger')
 
 
-
 def ADE(pred, target, dim):
     keypoints_num = int(pred.shape[-1] / dim)
     pred = torch.reshape(pred, pred.shape[:-1] + (keypoints_num, dim))
