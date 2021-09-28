@@ -37,6 +37,7 @@ class DataloaderArgs:
         self.is_testing = is_testing
         self.is_visualizing = is_visualizing
 
+
 # args = DataloaderArgs('3DPW_train_interactive', keypoint_dim=2, is_interactive=True, persons_num=3, use_mask=True,
 #                       skip_num=0, batch_size=4, shuffle=False, pin_memory=False, num_workers=0)
 #
@@ -47,3 +48,7 @@ class DataloaderArgs:
 #     print(data.keys())
 #     print(data['observed_pose'].shape)
 #     break
+
+
+# my_dict = {'a': [1, 2, 3], 'b': [45, 76, 123]}
+

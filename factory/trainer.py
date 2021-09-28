@@ -57,18 +57,13 @@ class Trainer:
     def __train(self):
         self.train_reporter.start_time = time.time()
         for data in self.train_dataloader:
-            for i, d in enumerate(data):
-                data[i] = d.to(self.device)
-            batch_size = data[0].shape[0]
-
-            if self.model.args.use_mask:
-                obs_pose, obs_vel, obs_mask, target_pose, target_vel, target_mask = data
-            else:
-                obs_pose, obs_vel, target_pose, target_vel = data
+            for key, value in data.items():
+                data[key] = value.to(self.device)
+            batch_size = data['observed_pose'].shape[0]
 
             # predict
             self.model.zero_grad()
-            outputs = self.model(data[:len(data) // 2])
+            outputs = self.model(data)
 
             # calculate metrics
             pred_vel = outputs[0]

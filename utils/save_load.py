@@ -8,30 +8,10 @@ import torch
 import torch.optim as optim
 
 from args.helper import JSONEncoder_
-from models import disentangled, pv_lstm, zero_vel, nearest_neighbor, his_rep_itself, derpof
 from path_definition import LOGGER_CONF
 
 config.fileConfig(LOGGER_CONF)
 logger = logging.getLogger('consoleLogger')
-
-
-def get_model(model_args):
-    if model_args.model_name == 'pv_lstm':
-        return pv_lstm.PVLSTM(model_args).to('cuda')
-    elif model_args.model_name == 'zero_vel':
-        return zero_vel.ZeroVel(model_args).to('cuda')
-    elif model_args.model_name == 'disentangled':
-        return disentangled.Disentangled(model_args).to('cuda')
-    elif model_args.model_name == 'nearest_neighbor':
-        return nearest_neighbor.NearestNeighbor(model_args).to('cuda')
-    elif model_args.model_name == 'his_rep_itself':
-        return his_rep_itself.HisRepItself(model_args).to('cuda')
-    elif model_args.model_name == 'derpof':
-        return derpof.DeRPoF(model_args).to('cuda')
-    else:
-        msg = "Invalid model."
-        logger.error(msg=msg)
-        raise Exception(msg)
 
 
 # TODO map_location="cuda:0" ???
