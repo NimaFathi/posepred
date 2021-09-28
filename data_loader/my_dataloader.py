@@ -38,7 +38,7 @@ class DataloaderArgs:
         self.is_visualizing = is_visualizing
 
 
-args = DataloaderArgs('3DPW_train', 3, False, 1, False, 0, 20, False, False, 0)
+args = DataloaderArgs('PoseTrack_train', 2, False, 1, True, 0, 20, False, False, 0)
 
 dataloader = get_dataloader(args)
 

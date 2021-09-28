@@ -50,14 +50,14 @@ class NonInteractiveDataset(Dataset):
 
         try:
             obs_pose = self.get_tensor(seq, 'observed_pose')
-            outputs = {'obs_pose': obs_pose}
+            outputs = {'observed_pose': obs_pose}
         except:
             logger.warning('faulty row skipped.')
             return self.__getitem__((index + 1) % self.__len__())
 
         if self.use_mask:
             obs_mask = self.get_tensor(seq, 'observed_mask')
-            outputs['obs_mask'] = obs_mask
+            outputs['observed_mask'] = obs_mask
 
         if not self.is_testing:
             future_pose = self.get_tensor(seq, 'future_pose')
@@ -69,11 +69,11 @@ class NonInteractiveDataset(Dataset):
 
         if self.is_visualizing:
             if 'observed_image_path' in seq.keys():
-                outputs['obs_image'] = seq['observed_image_path']
+                outputs['observed_image'] = seq['observed_image_path']
             if 'future_image_path' in seq.keys():
                 outputs['future_image'] = seq['future_image_path']
             if 'observed_cam_extrinsic' in seq.keys():
-                outputs['obs_cam_ex'] = torch.tensor(seq['observed_cam_extrinsic'])
+                outputs['observed_cam_ex'] = torch.tensor(seq['observed_cam_extrinsic'])
             if 'future_cam_extrinsic' in seq.keys():
                 outputs['future_cam_ex'] = torch.tensor(seq['future_cam_extrinsic'])
             if 'cam_intrinsic' in seq.keys():
