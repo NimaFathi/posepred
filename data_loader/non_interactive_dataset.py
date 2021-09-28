@@ -49,15 +49,15 @@ class NonInteractiveDataset(Dataset):
             raise Exception(msg)
 
         try:
-            obs_pose = self.get_tensor(seq, 'observed_pose')
-            outputs = {'observed_pose': obs_pose}
+            observed_pose = self.get_tensor(seq, 'observed_pose')
+            outputs = {'observed_pose': observed_pose}
         except:
             logger.warning('faulty row skipped.')
             return self.__getitem__((index + 1) % self.__len__())
 
         if self.use_mask:
-            obs_mask = self.get_tensor(seq, 'observed_mask')
-            outputs['observed_mask'] = obs_mask
+            observed_mask = self.get_tensor(seq, 'observed_mask')
+            outputs['observed_mask'] = observed_mask
 
         if not self.is_testing:
             future_pose = self.get_tensor(seq, 'future_pose')

@@ -54,26 +54,19 @@ class InteractiveDataset(Dataset):
 
         try:
             obs_pose = self.get_tensor(seq, 'observed_pose', persons_in_seq, self.obs_frames_num)
-            obs_vel = (obs_pose[:, 1:, :] - obs_pose[:, :-1, :])
-            outputs = [obs_pose, obs_vel]
-            outputs_vis = {'obs_pose': obs_pose, 'obs_vel': obs_vel}
+            outputs = {'obs_pose': obs_pose}
         except:
             logger.warning('faulty row skipped.')
             return self.__getitem__((index + 1) % self.__len__())
 
         if self.use_mask:
             obs_mask = self.get_tensor(seq, 'observed_mask', persons_in_seq, self.obs_frames_num)
-            outputs.append(obs_mask)
-            outputs_vis['obs_mask'] = obs_mask
+            outputs['obs_mask'] = obs_mask
 
         if not self.is_testing:
             assert len(seq.observed_pose) == len(seq.future_pose), "unequal persons in observed and future frames."
             future_pose = self.get_tensor(seq, 'future_pose', persons_in_seq, self.future_frames_num)
-            future_vel = torch.cat(((future_pose[:, 0, :] - obs_pose[:, -1, :]).unsqueeze(1),
-                                    future_pose[:, 1:, :] - future_pose[:, :-1, :]), 1)
-            outputs += [future_pose, future_vel]
-            outputs_vis['future_pose'] = future_pose
-            outputs_vis['future_vel'] = future_vel
+            outputs['future_pose'] = future_pose
 
             if self.use_mask:
                 future_mask = self.get_tensor(seq, 'future_mask', persons_in_seq, self.future_frames_num)
