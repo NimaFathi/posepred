@@ -9,7 +9,8 @@ from factory.trainer import Trainer
 from path_definition import LOGGER_CONF
 from path_definition import ROOT_DIR
 from utils.reporter import Reporter
-from utils.save_load import load_snapshot, get_model, save_snapshot, save_args, setup_training_dir
+from utils.save_load import load_snapshot, save_snapshot, save_args, setup_training_dir
+from models import get_model
 
 config.fileConfig(LOGGER_CONF)
 logger = logging.getLogger('consoleLogger')
@@ -27,7 +28,7 @@ if __name__ == '__main__':
     else:
         model_args.pred_frames_num = train_dataloader.dataset.future_frames_num
         model_args.keypoints_num = train_dataloader.dataset.keypoints_num
-        model = get_model(model_args)
+        model = get_model(model_args).to('cuda')
         optimizer = optim.Adam(model.parameters(), lr=trainer_args.lr)
         trainer_args.save_dir = setup_training_dir(ROOT_DIR)
         train_reporter = Reporter(state='train')

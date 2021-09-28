@@ -10,8 +10,9 @@ from data_loader.my_dataloader import get_dataloader
 from path_definition import LOGGER_CONF
 from path_definition import ROOT_DIR
 from utils.others import pose_from_vel
-from utils.save_load import get_model, load_snapshot
+from utils.save_load import load_snapshot
 from visualization.visualizer import Visualizer
+from models import get_model
 
 config.fileConfig(LOGGER_CONF)
 logger = logging.getLogger('consoleLogger')
@@ -27,7 +28,7 @@ if __name__ == '__main__':
         model_args.pred_frames_num = dataloader.dataset.future_frames_num if ground_truth else pred_frames_num
         assert model_args.pred_frames_num is not None, 'specify pred_frames_num'
         model_args.keypoints_num = dataloader.dataset.keypoints_num
-        model = get_model(model_args)
+        model = get_model(model_args).to('cuda')
     else:
         msg = "Please provide either a model_name or a load_path to a trained model."
         logger.error(msg)

@@ -7,7 +7,7 @@ from logging import config
 import torch
 import torch.optim as optim
 
-from models import MODELS
+from models import get_model
 from args.helper import JSONEncoder_
 from path_definition import LOGGER_CONF
 
@@ -18,9 +18,7 @@ logger = logging.getLogger('consoleLogger')
 # TODO map_location="cuda:0" ???
 def load_snapshot(load_snapshot_path):
     snapshot = torch.load(load_snapshot_path, map_location='cpu')
-    model_args = snapshot['model_args']
-    model_name = model_args.model_name
-    model = MODELS[model_name](model_args).to('cuda')
+    model = get_model(snapshot['model_args']).to('cuda')
     model.load_state_dict(snapshot['model_state_dict'])
     optimizer = optim.Adam(model.parameters(), lr=snapshot['optimizer_lr'])
     return model, optimizer, snapshot['epoch'], snapshot['train_reporter'], snapshot['valid_reporter']

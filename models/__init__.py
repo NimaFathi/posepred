@@ -11,3 +11,9 @@ MODELS = {'zero_vel': ZeroVel,
           'disentangled': Disentangled,
           'derpof': DeRPoF,
           'his_rep_itself': HisRepItself}
+
+
+def get_model(model_args):
+    model_name = model_args.model_name
+    assert model_name in MODELS.keys(), "invalid model"
+    return MODELS[model_name](model_args)
