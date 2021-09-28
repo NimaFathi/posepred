@@ -6,7 +6,7 @@ import torch
 from torch.utils.tensorboard import SummaryWriter
 
 from path_definition import LOGGER_CONF
-from utils.losses import L1, MSE, BCE
+from losses import LOSSES
 from utils.metrics import accuracy, ADE, FDE
 from utils.others import pose_from_vel
 from utils.reporter import Reporter
@@ -29,8 +29,7 @@ class Trainer:
         self.valid_reporter = valid_reporter
         self.tb = SummaryWriter(trainer_args.save_dir)
         self.use_validation = False if valid_dataloader is None else True
-        self.distance_loss = L1() if self.args.distance_loss == 'L1' else MSE()
-        self.mask_loss = BCE()
+        self.loss_module = LOSSES[self.args.loss_name]
         self.device = torch.device('cuda')
 
     def train(self):
@@ -64,24 +63,25 @@ class Trainer:
             # predict
             self.model.zero_grad()
             model_outputs = self.model(data)
+            assert 'pred_pose' in model_outputs.keys(), 'model_outputs should include pred_pose'
+
+            # calculate loss
+            loss = self.loss_module(model_outputs, data)
 
             # calculate metrics
-            pred_vel = model_outputs[0]
 
-            pred_pose = pose_from_vel(pred_vel, obs_pose[..., -1, :])
-            loss = vel_loss
-            report_metrics = {'vel_loss': vel_loss}
+
+
             if self.model.args.use_mask:
-                pred_mask = model_outputs[1]
-                mask_loss = self.mask_loss(pred_mask, target_mask)
-                mask_acc = accuracy(pred_mask, target_mask)
-                loss += self.args.mask_loss_weight * mask_loss
-                report_metrics['mask_loss'] = mask_loss
-                report_metrics['mask_acc'] = mask_acc
-            ade = ADE(pred_pose, target_pose, self.model.args.keypoint_dim)
-            fde = FDE(pred_pose, target_pose, self.model.args.keypoint_dim)
-            report_metrics['ADE'] = ade
-            report_metrics['FDE'] = fde
+                assert 'pred_mask' in model_outputs.keys(), 'model_outputs should include pred_mask'
+                # mask_acc = accuracy(pred_mask, target_mask)
+                # report_metrics['mask_acc'] = mask_acc
+
+            # report_metrics = {'vel_loss': vel_loss}
+            # ade = ADE(pred_pose, target_pose, self.model.args.keypoint_dim)
+            # fde = FDE(pred_pose, target_pose, self.model.args.keypoint_dim)
+            # report_metrics['ADE'] = ade
+            # report_metrics['FDE'] = fde
             self.train_reporter.update(report_metrics, batch_size)
 
             # backpropagate and optimize

@@ -10,12 +10,6 @@ config.fileConfig(LOGGER_CONF)
 logger = logging.getLogger('consoleLogger')
 
 
-def accuracy(pred, target):
-    zeros = torch.zeros_like(pred)
-    ones = torch.ones_like(pred)
-    pred = torch.where(pred > 0.5, ones, zeros)
-    return torch.sum(pred == target) / torch.numel(pred)
-
 
 def ADE(pred, target, dim):
     keypoints_num = int(pred.shape[-1] / dim)
