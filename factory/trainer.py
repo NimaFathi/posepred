@@ -7,7 +7,7 @@ from torch.utils.tensorboard import SummaryWriter
 
 from path_definition import LOGGER_CONF
 from losses import LOSSES
-from utils.metrics import accuracy, ADE, FDE
+from metrics import POSE_METRICS, MASK_METRICS
 from utils.others import pose_from_vel
 from utils.reporter import Reporter
 from utils.save_load import save_snapshot
@@ -69,8 +69,6 @@ class Trainer:
             loss = self.loss_module(model_outputs, data)
 
             # calculate metrics
-
-
 
             if self.model.args.use_mask:
                 assert 'pred_mask' in model_outputs.keys(), 'model_outputs should include pred_mask'
