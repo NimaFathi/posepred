@@ -38,15 +38,13 @@ class DataloaderArgs:
         self.is_visualizing = is_visualizing
 
 
-args = DataloaderArgs('PoseTrack_train', 2, False, 1, True, 0, 20, False, False, 0)
+args = DataloaderArgs('sample_interactive', keypoint_dim=2, is_interactive=True, persons_num=3, use_mask=False,
+                      skip_num=0, batch_size=4, shuffle=False, pin_memory=False, num_workers=0)
 
 dataloader = get_dataloader(args)
-
 
 for data in dataloader:
     print(len(data))
     print(data.keys())
     print(data['obs_pose'].shape)
     break
-
-
