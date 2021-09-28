@@ -38,7 +38,7 @@ class DataloaderArgs:
         self.is_visualizing = is_visualizing
 
 
-args = DataloaderArgs('sample_interactive', keypoint_dim=2, is_interactive=True, persons_num=3, use_mask=False,
+args = DataloaderArgs('3DPW_train_interactive', keypoint_dim=2, is_interactive=True, persons_num=3, use_mask=True,
                       skip_num=0, batch_size=4, shuffle=False, pin_memory=False, num_workers=0)
 
 dataloader = get_dataloader(args)
@@ -46,5 +46,5 @@ dataloader = get_dataloader(args)
 for data in dataloader:
     print(len(data))
     print(data.keys())
-    print(data['obs_pose'].shape)
+    print(data['observed_pose'].shape)
     break

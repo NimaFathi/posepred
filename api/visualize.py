@@ -36,21 +36,16 @@ if __name__ == '__main__':
     index = random.randint(0, dataloader.dataset.__len__() - 1) if index is None else index
     data = dataloader.dataset.__getitem__(index)
 
-    for key in ['obs_pose', 'future_pose', 'obs_vel', 'future_vel', 'obs_mask', 'future_mask']:
+    for key in ['observed_pose', 'future_pose', 'observed_mask', 'future_mask']:
         if key in data.keys():
             data[key] = data.get(key).unsqueeze(0)
 
     model.eval()
     with torch.no_grad():
-        if dataloader_args.use_mask:
-            outputs = model(
-                [data.get('obs_pose').to('cuda'), data.get('obs_vel').to('cuda'), data.get('obs_mask').to('cuda')])
-        else:
-            outputs = model([data.get('obs_pose').to('cuda'), data.get('obs_vel').to('cuda')])
-        pred_vel = outputs[0]
-        data['pred_pose'] = pose_from_vel(pred_vel, data['obs_pose'][..., -1, :].to('cuda')).detach().cpu()
-        if len(outputs) > 1:
-            data['pred_mask'] = outputs[1].detach().cpu()
+        outputs = model(data)
+        data['pred_pose'] = pose_from_vel(outputs['pred_vel'], data['obs_pose'][..., -1, :].to('cuda')).detach().cpu()
+        if 'pred_mask' in outputs.keys():
+            data['pred_mask'] = outputs['pred_mask'].detach().cpu()
 
     names = []
     poses = []
@@ -58,26 +53,26 @@ if __name__ == '__main__':
     images_path = []
     cam_exs = []
 
-    for key in ['obs_pose', 'future_pose', 'pred_pose']:
+    for key in ['observed_pose', 'future_pose', 'pred_pose']:
         if key in data.keys():
             pose = data.get(key).squeeze(0) if dataloader_args.is_interactive else data.get(key)
             poses.append(pose.permute(1, 0, 2))
             names.append(key.split('_')[0])
 
-    for key in ['obs_mask', 'future_mask', 'pred_mask']:
+    for key in ['observed_mask', 'future_mask', 'pred_mask']:
         if key in data.keys():
             mask = data.get(key).squeeze(0) if dataloader_args.is_interactive else data.get(key)
             masks.append(mask.permute(1, 0, 2))
 
-    if 'obs_image' in data.keys():
-        images_path.append(data.get('obs_image'))
+    if 'observed_image' in data.keys():
+        images_path.append(data.get('observed_image'))
     if 'future_image' in data.keys():
         images_path.append(data.get('future_image'))
         if 'pred_pose' in data.keys():
             images_path.append(data.get('future_image'))
 
-    if 'obs_cam_ex' in data.keys():
-        cam_exs.append(data.get('obs_cam_ex'))
+    if 'observed_cam_ex' in data.keys():
+        cam_exs.append(data.get('observed_cam_ex'))
     if 'future_cam_ex' in data.keys():
         cam_exs.append(data.get('future_cam_ex'))
         if 'pred_pose' in data.keys():

@@ -45,12 +45,12 @@ class InteractiveDataset(Dataset):
         seq = self.data.iloc[index]  # [1:].apply(lambda x: literal_eval(x))
         persons_in_seq = self.select_persons(seq)
 
-        # try:
-        observed_pose = self.get_tensor(seq, 'observed_pose', persons_in_seq, self.obs_frames_num)
-        outputs = {'observed_pose': observed_pose}
-        # except:
-        #     logger.warning('faulty row skipped.')
-        #     return self.__getitem__((index + 1) % self.__len__())
+        try:
+            observed_pose = self.get_tensor(seq, 'observed_pose', persons_in_seq, self.obs_frames_num)
+            outputs = {'observed_pose': observed_pose}
+        except:
+            logger.warning('faulty row skipped.')
+            return self.__getitem__((index + 1) % self.__len__())
 
         if self.use_mask:
             observed_mask = self.get_tensor(seq, 'observed_mask', persons_in_seq, self.obs_frames_num)
