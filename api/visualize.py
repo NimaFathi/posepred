@@ -40,12 +40,20 @@ if __name__ == '__main__':
         if key in data.keys():
             data[key] = data.get(key).unsqueeze(0)
 
+    for key in ['observed_pose', 'observed_mask']:
+        if key in data.keys():
+            data[key] = data.get(key).to('cuda')
+
     model.eval()
     with torch.no_grad():
         outputs = model(data)
-        data['pred_pose'] = pose_from_vel(outputs['pred_vel'], data['obs_pose'][..., -1, :].to('cuda')).detach().cpu()
+        data['pred_pose'] = pose_from_vel(outputs['pred_vel'], data['observed_pose'][..., -1, :]).detach().cpu()
         if 'pred_mask' in outputs.keys():
             data['pred_mask'] = outputs['pred_mask'].detach().cpu()
+
+    for key in ['observed_pose', 'observed_mask']:
+        if key in data.keys():
+            data[key] = data.get(key).detach().cpu()
 
     names = []
     poses = []
