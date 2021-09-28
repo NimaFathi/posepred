@@ -1,8 +1,9 @@
-import logging
 import time
+import logging
 from logging import config
 
 import torch
+from torch.utils.tensorboard import SummaryWriter
 
 from path_definition import LOGGER_CONF
 from utils.losses import L1, MSE, BCE
@@ -26,6 +27,7 @@ class Trainer:
         self.scheduler = scheduler
         self.train_reporter = train_reporter
         self.valid_reporter = valid_reporter
+        self.tb = SummaryWriter(trainer_args.save_dir)
         self.use_validation = False if valid_dataloader is None else True
         self.distance_loss = L1() if self.args.distance_loss == 'L1' else MSE()
         self.mask_loss = BCE()
@@ -95,7 +97,7 @@ class Trainer:
             loss.backward()
             self.optimizer.step()
 
-        self.train_reporter.epoch_finished()
+        self.train_reporter.epoch_finished(self.tb)
         self.train_reporter.print_values(logger, self.model.args.use_mask)
 
     def __validate(self):
@@ -130,5 +132,5 @@ class Trainer:
                 report_metrics['FDE'] = fde
                 self.valid_reporter.update(report_metrics, batch_size)
 
-        self.valid_reporter.epoch_finished()
+        self.valid_reporter.epoch_finished(self.tb)
         self.valid_reporter.print_values(logger, self.model.args.use_mask)

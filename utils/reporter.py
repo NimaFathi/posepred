@@ -6,17 +6,14 @@ import matplotlib.pyplot as plt
 
 import numpy as np
 import torch
-from torch.utils.tensorboard import SummaryWriter
 
 from utils.average_meter import AverageMeter
 
 
 class Reporter:
 
-    def __init__(self, save_dir, state=''):
+    def __init__(self, state=''):
         self.state = state
-        self.save_dir = save_dir
-        self.tb = SummaryWriter(save_dir, comment=state)
 
         self.attrs = dict()
         self.attrs['ADE'] = AverageMeter()
@@ -38,13 +35,13 @@ class Reporter:
         for key, value in metrics.items():
             self.attrs.get(key).update(value, batch_size)
 
-    def epoch_finished(self):
+    def epoch_finished(self, tb):
         self.history.get('time').append(time.time() - self.start_time)
         for key, avg_meter in self.attrs.items():
             value = avg_meter.get_average()
             value = value.detach().cpu().numpy() if torch.is_tensor(value) else value
             self.history.get(key).append(float(value))
-            self.tb.add_scalar(key, float(value), len(self.history.get(key)))
+            tb.add_scalar(self.state + '_' + key, float(value), len(self.history.get(key)))
         self.reset_avr_meters()
 
     def reset_avr_meters(self):
@@ -65,7 +62,7 @@ class Reporter:
         for key, value in self.history.items():
             if not use_mask and 'mask' in key:
                 continue
-            with open(os.path.join(save_dir, 'data', '_'.join((self.state, key)) + '.json'), "w") as f:
+            with open(os.path.join(save_dir, 'metrics_history', '_'.join((self.state, key)) + '.json'), "w") as f:
                 json.dump(value, f, indent=4)
 
     def print_mean_std(self, logger, use_mask):
