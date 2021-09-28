@@ -5,3 +5,8 @@ MASK_METRICS = {'accuracy': accuracy,
                 'f1_score': f1_score,
                 'precision': precision,
                 'recall': recall}
+
+POSE_METRICS = {'ADE': ADE,
+                'FDE': FDE,
+                'VIM': VIM,
+                'VAM': VAM}
