@@ -1,6 +1,8 @@
 import torch
 import torch.nn as nn
 
+from utils.others import pose_from_vel
+
 
 class DeRPoF(nn.Module):
     def __init__(self, args):
@@ -22,8 +24,8 @@ class DeRPoF(nn.Module):
         self.local_model = VAE(Encoder=encoder, Decoder=decoder).cuda().double()
 
     def forward(self, inputs):
-        outputs = []
-        vel = inputs[1].permute(1, 0, 2)
+        pose = inputs['observed_pose']
+        vel = (pose[..., 1:, :] - pose[..., :-1, :]).permute(1, 0, 2)
         frames_num, bs, _ = vel.shape
 
         # global
@@ -41,13 +43,16 @@ class DeRPoF(nn.Module):
         # merge local and global velocity
         vel_out = (global_vel_out.view(frames_num, bs, 1, self.keypoint_dim)
                    + local_vel_out.view(frames_num, bs, self.keypoints_num, self.keypoint_dim))
-        outputs.append(vel_out.view(frames_num, bs, self.features_num).permute(1, 0, 2))
+        pred_vel = vel_out.view(frames_num, bs, self.features_num).permute(1, 0, 2)
+        pred_pose = pose_from_vel(pred_vel, pose[..., -1, :])
+        outputs = {'pred_pose': pred_pose, 'pred_vel': pred_vel}
 
         if self.args.use_mask:
-            mask = inputs[2]
-            outputs.append(mask[:, -1, :].repeat(1, self.args.pred_frames_num, 1))
+            mask = inputs['observed_mask']
+            pred_mask = mask[:, -1, :].repeat(1, self.args.pred_frames_num, 1)
+            outputs['pred_mask'] = pred_mask
 
-        return tuple(outputs)
+        return outputs
 
 
 class LSTM_g(nn.Module):
