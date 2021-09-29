@@ -26,7 +26,7 @@ def __parse_preprocessor_args():
     parser = argparse.ArgumentParser('Preprocessor Arguments')
     parser.add_argument(
         '--dataset_name', type=str,
-        choices=['somof_posetrack', 'posetrack', 'somof_3dpw', '3dpw', 'jta', 'jaad', 'pie'],
+        choices=['somof_posetrack', 'posetrack', 'somof_3dpw', '3dpw', 'jta', 'jaad', 'pie', 'human3.6m'],
         help='dataset_name'
     )
     parser.add_argument('--official_annotation_path', type=str, default='./raw_data', help='path of dataset')
