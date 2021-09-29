@@ -1,6 +1,8 @@
 import torch
 import torch.nn as nn
 
+from utils.others import pose_from_vel
+
 
 class Encoder(nn.Module):
     def __init__(self, input_size, hidden_size, n_layers, dropout):
@@ -62,8 +64,8 @@ class PVLSTM(nn.Module):
                                         args.n_layers, args.dropout_mask_dec, 'sigmoid')
 
     def forward(self, inputs):
-        outputs = []
-        pose, vel = inputs[:2]
+        pose = inputs['observed_pose']
+        vel = pose[..., 1:, :] - pose[..., :-1, :]
 
         (hidden_vel, cell_vel) = self.vel_encoder(vel.permute(1, 0, 2))
         hidden_vel = hidden_vel.squeeze(0)
@@ -76,15 +78,18 @@ class PVLSTM(nn.Module):
         vel_dec_input = vel[:, -1, :]
         hidden_dec = hidden_pose + hidden_vel
         cell_dec = cell_pose + cell_vel
-        outputs.append(self.vel_decoder(vel_dec_input, hidden_dec, cell_dec))
+        pred_vel = self.vel_decoder(vel_dec_input, hidden_dec, cell_dec)
+        pred_pose = pose_from_vel(pred_vel, pose[..., -1, :])
+        outputs = {'pred_pose': pred_pose, 'pred_vel': pred_vel}
 
         if self.args.use_mask:
-            mask = inputs[2]
+            mask = inputs['observed_mask']
             (hidden_mask, cell_mask) = self.mask_encoder(mask.permute(1, 0, 2))
             hidden_mask = hidden_mask.squeeze(0)
             cell_mask = cell_mask.squeeze(0)
 
             mask_dec_input = mask[:, -1, :]
-            outputs.append(self.mask_decoder(mask_dec_input, hidden_mask, cell_mask))
+            pred_mask = self.mask_decoder(mask_dec_input, hidden_mask, cell_mask)
+            outputs['pred_mask'] = pred_mask
 
-        return tuple(outputs)
+        return outputs
