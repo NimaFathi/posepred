@@ -25,8 +25,8 @@ class Evaluator:
         self.device = torch.device('cuda')
 
     def evaluate(self):
-        self.model.eval()
         logger.info('Evaluation started.')
+        self.model.eval()
         for i in range(self.rounds_num):
             logger.info('round', i + 1)
             self.__evaluate()
