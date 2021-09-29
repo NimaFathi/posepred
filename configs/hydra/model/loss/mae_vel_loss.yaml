@@ -1,0 +1,3 @@
+defaults:
+  - base_loss
+loss_name: mae_vel_loss

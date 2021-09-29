@@ -1,0 +1,6 @@
+defaults:
+  - base_model
+  - loss: ???
+
+model_name: zero_vel
+use_mask: false

@@ -1,0 +1,6 @@
+defaults:
+  - base_model
+  - loss: ???
+
+model_name: derpof
+use_mask: false

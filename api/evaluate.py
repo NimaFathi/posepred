@@ -1,24 +1,42 @@
 import logging
 from logging import config
 
-from args.evaluation_args import parse_evaluation_args
+import hydra
+from omegaconf import DictConfig
+
+from args.helper import DataloaderArgs, ModelArgs
 from data_loader.my_dataloader import get_dataloader
 from factory.evaluator import Evaluator
+from models import get_model
+from path_definition import HYDRA_PATH
 from path_definition import LOGGER_CONF
 from utils.reporter import Reporter
 from utils.save_load import load_snapshot
-from models import get_model
 
 config.fileConfig(LOGGER_CONF)
 logger = logging.getLogger('consoleLogger')
 
-if __name__ == '__main__':
 
-    dataloader_args, model_args, load_path, is_interactive, loss_name, pose_metrics, mask_metrics, rounds_num, train_dataloader_args = parse_evaluation_args()
+@hydra.main(config_path=HYDRA_PATH, config_name="evaluate")
+def evaluate(cfg: DictConfig):
+    dataloader_args = DataloaderArgs(cfg.dataloader.dataset_name, cfg.keypoint_dim, cfg.interactive,
+                                     cfg.dataloader.persons_num,
+                                     cfg.use_mask, cfg.dataloader.skip_num, cfg.dataloader.batch_size,
+                                     cfg.dataloader.shuffle, cfg.dataloader.pin_memory,
+                                     cfg.dataloader.num_workers)
+    model_args = ModelArgs(cfg.model.model_name, cfg.use_mask, cfg.keypoint_dim)
+
+    if cfg.train_dataset is not None:
+        train_dataloader_args = DataloaderArgs(cfg.train_dataset, cfg.keypoint_dim, cfg.interactive,
+                                               cfg.dataloader.persons_num, cfg.use_mask, cfg.dataloader.skip_num, 1024,
+                                               False,
+                                               cfg.dataloader.pin_memory, cfg.dataloader.num_workers)
+    else:
+        train_dataloader_args = None
     dataloader = get_dataloader(dataloader_args)
-    reporter = Reporter(attrs=pose_metrics + mask_metrics)
-    if load_path:
-        model, _, _, _, _ = load_snapshot(load_path)
+    reporter = Reporter(attrs=cfg.metrics.pose_metrics + cfg.metrics.mask_metrics)
+    if cfg.load_path:
+        model, _, _, _, _ = load_snapshot(cfg.load_path)
     elif model_args.model_name:
         model_args.pred_frames_num = dataloader.dataset.future_frames_num
         model_args.keypoints_num = dataloader.dataset.keypoints_num
@@ -30,6 +48,13 @@ if __name__ == '__main__':
         msg = "Please provide either a model_name or a load_path to a trained model."
         logger.error(msg)
         raise Exception(msg)
-    evaluator = Evaluator(model, dataloader, reporter, is_interactive, loss_name, pose_metrics, mask_metrics,
-                          rounds_num)
+    evaluator = Evaluator(model, dataloader, reporter, cfg.interactive, cfg.model.loss.loss_name,
+                          cfg.metrics.pose_metrics,
+                          cfg.metrics.mask_metrics, cfg.rounds_num)
     evaluator.evaluate()
+
+    return dataloader_args, model_args, cfg.load_path, cfg.interactive, cfg.distance_loss, cfg.metrics.pose_metrics, cfg.metrics.mask_metrics, cfg.rounds_num, train_dataloader_args
+
+
+if __name__ == '__main__':
+    evaluate()

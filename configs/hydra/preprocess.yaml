@@ -1,0 +1,15 @@
+official_annotation_path: ???
+dataset_name: ???
+keypoint_dim: 2
+data_type: train
+use_mask: false
+interactive: false
+output_name:
+obs_frames_num: 16
+pred_frames_num: 14
+skip_num: 0
+use_video_once: false
+annotate_openpifpaf: false
+image_dir: ???
+joints_annotation_path: ???
+is_3D:

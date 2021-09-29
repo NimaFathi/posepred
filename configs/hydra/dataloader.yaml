@@ -1,0 +1,11 @@
+dataset_name: ???
+keypoints_dim: 2
+is_interactive: false
+persons_num: 1
+use_mask: false
+batch_size: 256
+shuffle: true
+pin_memory: false
+num_workers: 1
+is_testing: false
+is_visualizing: false

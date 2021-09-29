@@ -1,0 +1,6 @@
+defaults:
+  - base_model
+  - loss: ???
+
+model_name: his_rep_itself
+use_mask: false

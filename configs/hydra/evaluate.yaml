@@ -1,0 +1,21 @@
+defaults:
+  - model: pv_lstm
+  - dataloader: base_dataloader
+  - metrics: base_metrics
+  - _self_
+
+dataloader:
+  batch_size: 1
+  shuffle: false
+  pin_memory: false
+  persons_num: 1
+
+persons_num: 1
+use_mask: false
+keypoint_dim: ???
+
+load_path: ???
+distance_loss: L1
+rounds_num: 1
+interactive: false  # work with this just
+train_dataset:

@@ -1,0 +1,6 @@
+defaults:
+  - base_model
+  - loss: ???
+
+model_name: nearest_neighbor
+use_mask: false
