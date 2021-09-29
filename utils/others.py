@@ -28,3 +28,9 @@ def get_dct_matrix(N):
             dct_m[k, i] = w * np.cos(np.pi * (i + 1 / 2) * k / N)
     idct_m = np.linalg.inv(dct_m)
     return dct_m, idct_m
+
+
+def get_binary(src, device):
+    zero = torch.zeros_like(src).to(device)
+    one = torch.ones_like(src).to(device)
+    return torch.where(src > 0.5, one, zero)
