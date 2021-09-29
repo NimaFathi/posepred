@@ -10,7 +10,7 @@ from preprocessor.pie_preprocessor import PIEPreprocessor
 from preprocessor.posetrack_preprocessor import PoseTrackPreprocessor
 from preprocessor.somof_3dpw_preprocessor import SoMoF3DPWPreprocessor
 from preprocessor.somof_posetrack_preprocessor import SoMoFPoseTrackPreprocessor
-
+from preprocessor.human36m_preprocessor import PreprocessorHuman36m
 config.fileConfig(LOGGER_CONF)
 logger = logging.getLogger('consoleLogger')
 
@@ -60,6 +60,12 @@ if __name__ == '__main__':
             obs_frame_num=args.obs_frames_num, custom_name=args.output_name, is_interactive=args.interactive,
             pred_frame_num=args.pred_frames_num, skip_frame_num=args.skip_num, use_video_once=args.use_video_once,
             annotation_path=args.joints_annotation_path
+        )
+    elif args.dataset_name == 'human3.6m':
+        preprocessor = PreprocessorHuman36m(
+            dataset_path=args.official_annotation_path,
+            obs_frame_num=args.obs_frames_num, custom_name=args.output_name, is_interactive=args.interactive,
+            pred_frame_num=args.pred_frames_num, skip_frame_num=args.skip_num, use_video_once=args.use_video_once
         )
     else:
         msg = "Invalid preprocessor."
