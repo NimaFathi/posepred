@@ -26,7 +26,7 @@ class Evaluator:
 
     def evaluate(self):
         self.model.eval()
-        logger.info('Evaluation started ...')
+        logger.info('Evaluation started.')
         for i in range(self.rounds_num):
             logger.info('round', i + 1)
             self.__evaluate()
