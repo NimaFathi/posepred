@@ -1,13 +1,13 @@
-import logging
 import time
+import logging
 from logging import config
 
 import torch
+from torch.utils.tensorboard import SummaryWriter
 
 from path_definition import LOGGER_CONF
-from utils.losses import L1, MSE, BCE
-from utils.metrics import accuracy, ADE, FDE
-from utils.others import pose_from_vel
+from losses import LOSSES
+from metrics import POSE_METRICS, MASK_METRICS
 from utils.reporter import Reporter
 from utils.save_load import save_snapshot
 
@@ -26,23 +26,20 @@ class Trainer:
         self.scheduler = scheduler
         self.train_reporter = train_reporter
         self.valid_reporter = valid_reporter
+        self.tb = SummaryWriter(trainer_args.save_dir)
         self.use_validation = False if valid_dataloader is None else True
-        self.distance_loss = L1() if self.args.distance_loss == 'L1' else MSE()
-        self.mask_loss = BCE()
+        self.loss_module = LOSSES[self.args.loss_name]
         self.device = torch.device('cuda')
 
     def train(self):
-        logger.info("Training started ...")
+        logger.info("Training started.")
         self.model.train()
         time0 = time.time()
         for epoch in range(self.args.start_epoch, self.args.epochs):
             self.__train()
             if self.use_validation:
-                logger.info("USE VALIDATION")
                 self.__validate()
                 self.scheduler.step(self.valid_reporter.history['vel_loss'][-1])
-            else:
-                logger.info("DO NOT USE VALIDATION")
             if (epoch + 1) % self.args.snapshot_interval == 0 or (epoch + 1) == self.args.epochs:
                 save_snapshot(self.model, self.optimizer, self.args.lr, epoch + 1, self.train_reporter,
                               self.valid_reporter, self.args.save_dir)
@@ -51,82 +48,88 @@ class Trainer:
                     self.valid_reporter.save_data(self.model.args.use_mask, self.args.save_dir)
                 Reporter.save_plots(self.model.args.use_mask, self.args.save_dir, self.train_reporter.history,
                                     self.valid_reporter.history, self.use_validation)
+        self.tb.close()
         logger.info("-" * 100)
         logger.info('Training is completed in %.2f seconds.' % (time.time() - time0))
 
     def __train(self):
         self.train_reporter.start_time = time.time()
         for data in self.train_dataloader:
-            for i, d in enumerate(data):
-                data[i] = d.to(self.device)
-            batch_size = data[0].shape[0]
+            for key, value in data.items():
+                data[key] = value.to(self.device)
+            batch_size = data['observed_pose'].shape[0]
 
-            if self.model.args.use_mask:
-                obs_pose, obs_vel, obs_mask, target_pose, target_vel, target_mask = data
-            else:
-                obs_pose, obs_vel, target_pose, target_vel = data
-
-            # predict
+            # predict & calculate loss
             self.model.zero_grad()
-            outputs = self.model(data[:len(data) // 2])
+            model_outputs = self.model(data)
+            loss = self.loss_module(model_outputs, data)
+            assert 'pred_pose' in model_outputs.keys(), 'outputs of model should include pred_pose'
 
-            # calculate metrics
-            pred_vel = outputs[0]
-            vel_loss = self.distance_loss(pred_vel, target_vel)
-            pred_pose = pose_from_vel(pred_vel, obs_pose[..., -1, :])
-            loss = vel_loss
-            report_metrics = {'vel_loss': vel_loss}
             if self.model.args.use_mask:
-                pred_mask = outputs[1]
-                mask_loss = self.mask_loss(pred_mask, target_mask)
-                mask_acc = accuracy(pred_mask, target_mask)
-                loss += self.args.mask_loss_weight * mask_loss
-                report_metrics['mask_loss'] = mask_loss
-                report_metrics['mask_acc'] = mask_acc
-            ade = ADE(pred_pose, target_pose, self.model.args.keypoint_dim)
-            fde = FDE(pred_pose, target_pose, self.model.args.keypoint_dim)
-            report_metrics['ADE'] = ade
-            report_metrics['FDE'] = fde
-            self.train_reporter.update(report_metrics, batch_size)
+                assert 'pred_mask' in model_outputs.keys(), 'outputs of model should include pred_mask'
+                pred_mask = model_outputs['pred_mask']
+            else:
+                pred_mask = None
+
+            # calculate pose_metrics
+            report_attrs = {'loss': loss}
+            for metric_name in self.args.pose_metrics:
+                metric_func = POSE_METRICS[metric_name]
+                metric_value = metric_func(model_outputs['pred_pose'], data['future_pose'],
+                                           self.model.args.keypoint_dim, pred_mask)
+                report_attrs[metric_name] = metric_value
+
+            # calculate mask_metrics
+            if self.model.args.use_mask:
+                for metric_name in self.args.mask_metrics:
+                    metric_func = MASK_METRICS[metric_name]
+                    metric_value = metric_func(pred_mask, data['future_mask'])
+                    report_attrs[metric_name] = metric_value
 
             # backpropagate and optimize
             loss.backward()
             self.optimizer.step()
 
-        self.train_reporter.epoch_finished()
+            self.train_reporter.update(report_attrs, batch_size)
+
+        self.train_reporter.epoch_finished(self.tb)
         self.train_reporter.print_values(logger, self.model.args.use_mask)
 
     def __validate(self):
         self.valid_reporter.start_time = time.time()
         for data in self.valid_dataloader:
-            for i, d in enumerate(data):
-                data[i] = d.to(self.device)
-            batch_size = data[0].shape[0]
-            if self.model.args.use_mask:
-                obs_pose, obs_vel, obs_mask, target_pose, target_vel, target_mask = data
-            else:
-                obs_pose, obs_vel, target_pose, target_vel = data
+            for key, value in data.items():
+                data[key] = value.to(self.device)
+            batch_size = data['observed_pose'].shape[0]
 
             with torch.no_grad():
-                # predict
-                outputs = self.model(data[:len(data) // 2])
+                # predict & calculate loss
+                model_outputs = self.model(data)
+                loss = self.loss_module(model_outputs, data)
+                assert 'pred_pose' in model_outputs.keys(), 'outputs of model should include pred_pose'
 
-                # calculate metrics
-                pred_vel = outputs[0]
-                vel_loss = self.distance_loss(pred_vel, target_vel)
-                pred_pose = pose_from_vel(pred_vel, obs_pose[..., -1, :])
-                report_metrics = {'vel_loss': vel_loss}
                 if self.model.args.use_mask:
-                    pred_mask = outputs[1]
-                    mask_loss = self.mask_loss(pred_mask, target_mask)
-                    mask_acc = accuracy(pred_mask, target_mask)
-                    report_metrics['mask_loss'] = mask_loss
-                    report_metrics['mask_acc'] = mask_acc
-                ade = ADE(pred_pose, target_pose, self.model.args.keypoint_dim)
-                fde = FDE(pred_pose, target_pose, self.model.args.keypoint_dim)
-                report_metrics['ADE'] = ade
-                report_metrics['FDE'] = fde
-                self.valid_reporter.update(report_metrics, batch_size)
+                    assert 'pred_mask' in model_outputs.keys(), 'outputs of model should include pred_mask'
+                    pred_mask = model_outputs['pred_mask']
+                else:
+                    pred_mask = None
 
-        self.valid_reporter.epoch_finished()
+                # calculate pose_metrics
+                report_attrs = {'loss': loss}
+                for metric_name in self.args.pose_metrics:
+                    metric_func = POSE_METRICS[metric_name]
+                    metric_value = metric_func(model_outputs['pred_pose'], data['future_pose'],
+                                               self.model.args.keypoint_dim, pred_mask)
+                    report_attrs[metric_name] = metric_value
+
+                # calculate mask_metrics
+                if self.model.args.use_mask:
+                    for metric_name in self.args.mask_metrics:
+                        metric_func = MASK_METRICS[metric_name]
+                        metric_value = metric_func(pred_mask, data['future_mask'])
+                        report_attrs[metric_name] = metric_value
+
+                self.valid_reporter.update(report_attrs, batch_size)
+
+        self.valid_reporter.epoch_finished(self.tb)
         self.valid_reporter.print_values(logger, self.model.args.use_mask)

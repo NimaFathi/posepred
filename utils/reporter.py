@@ -1,8 +1,9 @@
 import sys
 import os
 import time
-import matplotlib.pyplot as plt
 import json
+import matplotlib.pyplot as plt
+
 import numpy as np
 import torch
 
@@ -11,35 +12,30 @@ from utils.average_meter import AverageMeter
 
 class Reporter:
 
-    def __init__(self, state=''):
+    def __init__(self, attrs, state=''):
         self.state = state
 
-        self.attrs = dict()
-        self.attrs['ADE'] = AverageMeter()
-        self.attrs['FDE'] = AverageMeter()
-        self.attrs['vel_loss'] = AverageMeter()
-        self.attrs['mask_loss'] = AverageMeter()
-        self.attrs['mask_acc'] = AverageMeter()
+        self.attrs = {'loss': AverageMeter()}
+        for attr in attrs:
+            self.attrs[attr] = AverageMeter()
         self.start_time = None
 
-        self.history = dict()
-        self.history['ADE'] = []
-        self.history['FDE'] = []
-        self.history['vel_loss'] = []
-        self.history['mask_loss'] = []
-        self.history['mask_acc'] = []
+        self.history = {'loss': []}
+        for attr in attrs:
+            self.history[attr] = []
         self.history['time'] = []
 
     def update(self, metrics, batch_size):
         for key, value in metrics.items():
             self.attrs.get(key).update(value, batch_size)
 
-    def epoch_finished(self):
+    def epoch_finished(self, tb):
         self.history.get('time').append(time.time() - self.start_time)
         for key, avg_meter in self.attrs.items():
             value = avg_meter.get_average()
             value = value.detach().cpu().numpy() if torch.is_tensor(value) else value
             self.history.get(key).append(float(value))
+            tb.add_scalar(self.state + '_' + key, float(value), len(self.history.get(key)))
         self.reset_avr_meters()
 
     def reset_avr_meters(self):
@@ -60,7 +56,7 @@ class Reporter:
         for key, value in self.history.items():
             if not use_mask and 'mask' in key:
                 continue
-            with open(os.path.join(save_dir, 'data', '_'.join((self.state, key)) + '.json'), "w") as f:
+            with open(os.path.join(save_dir, 'metrics_history', '_'.join((self.state, key)) + '.json'), "w") as f:
                 json.dump(value, f, indent=4)
 
     def print_mean_std(self, logger, use_mask):

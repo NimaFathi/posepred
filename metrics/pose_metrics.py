@@ -10,14 +10,7 @@ config.fileConfig(LOGGER_CONF)
 logger = logging.getLogger('consoleLogger')
 
 
-def accuracy(pred, target):
-    zeros = torch.zeros_like(pred)
-    ones = torch.ones_like(pred)
-    pred = torch.where(pred > 0.5, ones, zeros)
-    return torch.sum(pred == target) / torch.numel(pred)
-
-
-def ADE(pred, target, dim):
+def ADE(pred, target, dim, mask=None):
     keypoints_num = int(pred.shape[-1] / dim)
     pred = torch.reshape(pred, pred.shape[:-1] + (keypoints_num, dim))
     target = torch.reshape(target, target.shape[:-1] + (keypoints_num, dim))
@@ -28,7 +21,7 @@ def ADE(pred, target, dim):
     return ade
 
 
-def FDE(pred, target, dim):
+def FDE(pred, target, dim, mask=None):
     keypoints_num = int(pred.shape[-1] / dim)
     pred = torch.reshape(pred, pred.shape[:-1] + (keypoints_num, dim))
     target = torch.reshape(target, target.shape[:-1] + (keypoints_num, dim))
@@ -39,17 +32,18 @@ def FDE(pred, target, dim):
     return fde
 
 
-def VIM(pred, target, mask, dim):
+def VIM(pred, target, dim, mask):
     """
     Visibilty Ignored Metric
     Inputs:
-        target: Ground truth data - array of shape (pred_len, #joint*(2D/3D))
         pred: Prediction data - array of shape (pred_len, #joint*(2D/3D))
-        dataset_name: Dataset name
+        target: Ground truth data - array of shape (pred_len, #joint*(2D/3D))
+        dim: dimension of data (2D/3D)
         mask: Visibility mask of pos - array of shape (pred_len, #joint)
     Output:
         errorPose:
     """
+    assert mask is not None, 'pred_mask should not be None.'
 
     target_i_global = np.copy(target)
     if dim == 2:
@@ -70,18 +64,22 @@ def VIM(pred, target, mask, dim):
     return errorPose
 
 
-def VAM(target, pred, occ_cutoff, pred_mask):
+def VAM(pred, target, dim, mask, occ_cutoff=100):
     """
     Visibility Aware Metric
     Inputs:
-        target: ground truth data - array of shape (pred_len, #joint*(2D/3D))
         pred: Prediction data - array of shape (pred_len, #joint*(2D/3D))
+        target: ground truth data - array of shape (pred_len, #joint*(2D/3D))
+        dim: dimension of data (2D/3D)
+        mask: Predicted visibilities of pose, array of shape (pred_len, #joint)
         occ_cutoff: Maximum error penalty
-        pred_visib: Predicted visibilities of pose, array of shape (pred_len, #joint)
     Output:
         seq_err:
     """
-    pred_mask = np.repeat(pred_mask, 2, axis=-1)
+    assert mask is not None, 'pred_mask should not be None.'
+    assert dim == 2 or dim == 3
+
+    pred_mask = np.repeat(mask, 2, axis=-1)
     seq_err = []
     if type(target) is list:
         target = np.array(target)
