@@ -1,15 +1,14 @@
-import logging
 import os
 import random
+import logging
 from logging import config
 
 import torch
 
+from path_definition import ROOT_DIR
 from args.visualization_args import parse_visualization_args
 from data_loader.my_dataloader import get_dataloader
 from path_definition import LOGGER_CONF
-from path_definition import ROOT_DIR
-from utils.others import pose_from_vel
 from utils.save_load import load_snapshot
 from visualization.visualizer import Visualizer
 from models import get_model

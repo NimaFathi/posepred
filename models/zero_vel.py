@@ -8,16 +8,17 @@ class ZeroVel(torch.nn.Module):
         self.input_size = self.output_size = int(args.keypoints_num * args.keypoint_dim)
 
     def forward(self, inputs):
-        outputs = []
-        shape = inputs[0].shape
-        pred_shape = shape[:-2] + (self.args.pred_frames_num, self.output_size)
-        pred_vel = torch.zeros(pred_shape)
-        outputs.append(pred_vel.to('cuda'))
+        obs_pose = inputs['observed_pose']
+        last_frame = obs_pose[..., -1, :].unsqueeze(-2)
+        ndims = len(obs_pose.shape)
+        pred_pose = last_frame.repeat([1 for _ in range(ndims - 2)] + [self.args.pred_frames_num, 1])
+        outputs = {'pred_pose': pred_pose.to('cuda')}
 
         if self.args.use_mask:
-            mask = inputs[2]
-            last_frame = mask[..., -1, :].unsqueeze(-2)
-            pred_mask = last_frame.repeat([1 for _ in range(len(mask.shape[:-2]))] + [self.args.pred_frames_num, 1])
-            outputs.append(pred_mask.to('cuda'))
+            obs_mask = inputs['observed_mask']
+            last_frame = obs_mask[..., -1, :].unsqueeze(-2)
+            ndims = len(obs_mask.shape)
+            pred_mask = last_frame.repeat([1 for _ in range(ndims - 2)] + [self.args.pred_frames_num, 1])
+            outputs['pred_mask'] = pred_mask.to('cuda')
 
-        return tuple(outputs)
+        return outputs
