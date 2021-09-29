@@ -245,6 +245,8 @@ venv/
 exps/
 
 logs/
+logs
+logs/*.log
 preprocessed_data/
 raw_data/
 /visualization/outputs/*D
