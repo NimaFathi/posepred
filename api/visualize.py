@@ -48,8 +48,10 @@ if __name__ == '__main__':
     model.eval()
     with torch.no_grad():
         outputs = model(data)
-        data['pred_pose'] = pose_from_vel(outputs['pred_vel'], data['observed_pose'][..., -1, :]).detach().cpu()
-        if 'pred_mask' in outputs.keys():
+        assert 'pred_pose' in outputs.keys(), 'outputs of model should include pred_pose'
+        data['pred_pose'] = outputs['pred_pose'].detach().cpu()
+        if dataloader_args.use_mask:
+            assert 'pred_mask' in outputs.keys(), 'outputs of model should include pred_mask'
             data['pred_mask'] = outputs['pred_mask'].detach().cpu()
 
     for key in ['observed_pose', 'observed_mask']:
