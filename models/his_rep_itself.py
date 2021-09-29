@@ -157,8 +157,7 @@ class HisRepItself(nn.Module):
                            num_stage=self.num_stage, node_n=self.in_features)
 
     def forward(self, inputs):
-        outputs = []
-        src = inputs[0]
+        src = inputs['observed_pose']
         input_n = src.shape[1]
         bs = src.shape[0]
         output_n = self.args.pred_frames_num
