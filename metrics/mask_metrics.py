@@ -1,15 +1,16 @@
 import torch
 
+from utils.others import get_binary
+
 
 def accuracy(pred, target):
-    zero = torch.zeros_like(pred).to('cuda')
-    one = torch.ones_like(pred).to('cuda')
-    pred = torch.where(pred > 0.5, one, zero)
+    pred = get_binary(pred, 'cuda')
 
     return torch.sum(pred == target) / torch.numel(pred)
 
 
 def f1_score(pred, target):
+    pred = get_binary(pred, 'cuda')
     target_true = torch.sum(target)
     pred_true = torch.sum(pred)
     correct_true = torch.sum((target == 1) * (pred == 1))
@@ -21,6 +22,7 @@ def f1_score(pred, target):
 
 
 def precision(pred, target):
+    pred = get_binary(pred, 'cuda')
     pred_true = torch.sum(pred)
     correct_true = torch.sum((target == 1) * (pred == 1))
 
@@ -28,9 +30,8 @@ def precision(pred, target):
 
 
 def recall(pred, target):
+    pred = get_binary(pred, 'cuda')
     target_true = torch.sum(target)
     correct_true = torch.sum((target == 1) * (pred == 1))
 
     return correct_true / target_true
-
-
