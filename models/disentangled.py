@@ -3,6 +3,7 @@ import torch.nn as nn
 
 from models.pv_lstm import PVLSTM
 from models.zero_vel import ZeroVel
+from utils.others import pose_from_vel
 
 
 class Disentangled(nn.Module):
@@ -23,7 +24,6 @@ class Disentangled(nn.Module):
     def forward(self, inputs):
 
         pose = inputs['observed_pose']
-        vel = pose[..., 1:, :] - pose[..., :-1, :]
 
         # global
         global_pose = pose[..., : self.args.keypoint_dim]
@@ -45,13 +45,16 @@ class Disentangled(nn.Module):
         local_outputs = self.local_model(local_inputs)
 
         # merge local and global velocity
-        global_vel_out = global_outputs[0]
-        local_vel_out = local_outputs[0]
+        global_vel_out = global_outputs['pred_vel']
+        local_vel_out = local_outputs['pred_vel']
         repeat = torch.ones(len(global_vel_out.shape), dtype=int)
         repeat[-1] = self.local_model.args.keypoints_num
-        outputs.append(torch.cat((global_vel_out, local_vel_out + global_vel_out.repeat(tuple(repeat))), dim=-1))
+        pred_vel = torch.cat((global_vel_out, local_vel_out + global_vel_out.repeat(tuple(repeat))), dim=-1)
+        pred_pose = pose_from_vel(pred_vel, pose[..., -1, :])
+        outputs = {'pred_pose': pred_pose, 'pred_vel': pred_vel}
 
         if self.args.use_mask:
-            outputs.append(torch.cat((global_outputs[-1], local_outputs[-1]), dim=-1))
+            pred_mask = torch.cat((global_outputs[-1], local_outputs[-1]), dim=-1)
+            outputs['pred_mask'] = pred_mask
 
-        return tuple(outputs)
+        return outputs
