@@ -14,9 +14,9 @@ logger = logging.getLogger('consoleLogger')
 
 if __name__ == '__main__':
 
-    dataloader_args, model_args, load_path, is_interactive, distance_loss, rounds_num, train_dataloader_args = parse_evaluation_args()
+    dataloader_args, model_args, load_path, is_interactive, loss_name, pose_metrics, mask_metrics, rounds_num, train_dataloader_args = parse_evaluation_args()
     dataloader = get_dataloader(dataloader_args)
-    reporter = Reporter()
+    reporter = Reporter(attrs=pose_metrics + mask_metrics)
     if load_path:
         model, _, _, _, _ = load_snapshot(load_path)
     elif model_args.model_name:
@@ -30,5 +30,6 @@ if __name__ == '__main__':
         msg = "Please provide either a model_name or a load_path to a trained model."
         logger.error(msg)
         raise Exception(msg)
-    evaluator = Evaluator(model, dataloader, reporter, is_interactive, distance_loss, rounds_num)
+    evaluator = Evaluator(model, dataloader, reporter, is_interactive, loss_name, pose_metrics, mask_metrics,
+                          rounds_num)
     evaluator.evaluate()
