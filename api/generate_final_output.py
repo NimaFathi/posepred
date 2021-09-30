@@ -17,10 +17,8 @@ logger = logging.getLogger(__name__)
 @hydra.main(config_path=HYDRA_PATH, config_name="predict")
 def generate_output(cfg: DictConfig):
     dataloader_args = DataloaderArgs(cfg.dataloader.dataset_file_name, cfg.keypoint_dim, cfg.interactive,
-                                     cfg.persons_num,
-                                     cfg.use_mask, cfg.skip_num, cfg.dataloader.batch_size,
-                                     cfg.dataloader.shuffle, cfg.pin_memory,
-                                     cfg.num_workers, is_testing=True)
+                                     cfg.persons_num, cfg.use_mask, cfg.skip_num, cfg.dataloader.batch_size,
+                                     cfg.dataloader.shuffle, cfg.pin_memory, cfg.num_workers, is_testing=True)
     model_args = ModelArgs(cfg.model.model_name, cfg.use_mask, cfg.keypoint_dim)
 
     if cfg.train_dataset is not None:

@@ -17,17 +17,13 @@ logger = logging.getLogger(__name__)
 @hydra.main(config_path=HYDRA_PATH, config_name="evaluate")
 def evaluate(cfg: DictConfig):
     dataloader_args = DataloaderArgs(cfg.dataloader.dataset_file_name, cfg.keypoint_dim, cfg.interactive,
-                                     cfg.persons_num,
-                                     cfg.use_mask, cfg.skip_num, cfg.dataloader.batch_size,
-                                     cfg.dataloader.shuffle, cfg.pin_memory,
-                                     cfg.num_workers)
+                                     cfg.persons_num, cfg.use_mask, cfg.skip_num, cfg.dataloader.batch_size,
+                                     cfg.dataloader.shuffle, cfg.pin_memory, cfg.num_workers)
     model_args = ModelArgs(cfg.model.model_name, cfg.use_mask, cfg.keypoint_dim)
 
     if cfg.train_dataset is not None:
-        train_dataloader_args = DataloaderArgs(cfg.train_dataset, cfg.keypoint_dim, cfg.interactive,
-                                               cfg.persons_num, cfg.use_mask, cfg.skip_num, 1024,
-                                               False,
-                                               cfg.pin_memory, cfg.num_workers)
+        train_dataloader_args = DataloaderArgs(cfg.train_dataset, cfg.keypoint_dim, cfg.interactive, cfg.persons_num,
+                                               cfg.use_mask, cfg.skip_num, 1024, False, cfg.pin_memory, cfg.num_workers)
     else:
         train_dataloader_args = None
     dataloader = get_dataloader(dataloader_args)
