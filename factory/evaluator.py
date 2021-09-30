@@ -5,6 +5,7 @@ import torch
 
 from losses import LOSSES
 from metrics import POSE_METRICS, MASK_METRICS
+from utils.others import dict_to_device
 
 logger = logging.getLogger(__name__)
 
@@ -34,14 +35,12 @@ class Evaluator:
     def __evaluate(self):
         self.reporter.start_time = time.time()
         for data in self.dataloader:
-            for key, value in data.items():
-                data[key] = value.to(self.device)
             batch_size = data['observed_pose'].shape[0]
 
             with torch.no_grad():
                 # predict & calculate loss
-                model_outputs = self.model(data)
-                loss_outputs = self.loss_module(model_outputs, data)
+                model_outputs = self.model(dict_to_device(data, self.device))
+                loss_outputs = self.loss_module(model_outputs, dict_to_device(data, self.device))
                 assert 'pred_pose' in model_outputs.keys(), 'outputs of model should include pred_pose'
 
                 if self.model.args.use_mask:

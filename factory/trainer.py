@@ -8,6 +8,7 @@ from losses import LOSSES
 from metrics import POSE_METRICS, MASK_METRICS
 from utils.reporter import Reporter
 from utils.save_load import save_snapshot
+from utils.others import dict_to_device
 
 logger = logging.getLogger(__name__)
 
@@ -52,14 +53,12 @@ class Trainer:
         self.model.train()
         self.train_reporter.start_time = time.time()
         for data in self.train_dataloader:
-            for key, value in data.items():
-                data[key] = value.to(self.device)
             batch_size = data['observed_pose'].shape[0]
 
             # predict & calculate loss
             self.model.zero_grad()
-            model_outputs = self.model(data)
-            loss_outputs = self.loss_module(model_outputs, data)
+            model_outputs = self.model(dict_to_device(data, self.device))
+            loss_outputs = self.loss_module(model_outputs, dict_to_device(data, self.device))
             assert 'pred_pose' in model_outputs.keys(), 'outputs of model should include pred_pose'
             assert 'loss' in loss_outputs.keys(), 'outputs of loss should include loss'
 
@@ -98,14 +97,12 @@ class Trainer:
         self.model.eval()
         self.valid_reporter.start_time = time.time()
         for data in self.valid_dataloader:
-            for key, value in data.items():
-                data[key] = value.to(self.device)
             batch_size = data['observed_pose'].shape[0]
 
             with torch.no_grad():
                 # predict & calculate loss
-                model_outputs = self.model(data)
-                loss_outputs = self.loss_module(model_outputs, data)
+                model_outputs = self.model(dict_to_device(data, self.device))
+                loss_outputs = self.loss_module(model_outputs, dict_to_device(data, self.device))
                 assert 'pred_pose' in model_outputs.keys(), 'outputs of model should include pred_pose'
 
                 if self.model.args.use_mask:

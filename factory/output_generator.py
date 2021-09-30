@@ -5,6 +5,7 @@ import pandas as pd
 import torch
 
 from utils.save_load import save_test_results
+from utils.others import dict_to_device
 
 logger = logging.getLogger(__name__)
 
@@ -26,18 +27,15 @@ class Output_Generator:
         self.model.eval()
         time0 = time.time()
         self.__generate()
-        save_test_results(self.result, [self.pred_pose, self.pred_vel, self.pred_mask], self.save_dir)
+        save_test_results(self.result, [self.pred_pose, self.pred_mask], self.save_dir)
         logger.info("-" * 100)
         logger.info('Testing is completed in: %.2f' % (time.time() - time0))
 
     def __generate(self):
         for data in self.dataloader:
-            for key, value in data.items():
-                data[key] = value.to(self.device)
-
             with torch.no_grad():
                 # predict & calculate loss
-                model_outputs = self.model(data)
+                model_outputs = self.model(dict_to_device(data, self.device))
                 assert 'pred_pose' in model_outputs.keys(), 'outputs of model should include pred_pose'
                 pred_pose = model_outputs['pred_pose']
 
