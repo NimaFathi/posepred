@@ -15,3 +15,4 @@ jsonlines
 pygifsicle
 tensorboard
 hydra-core
+cdflib
