@@ -2,17 +2,14 @@ import json
 import logging
 import os
 import pickle
-from logging import config
 
 import torch
 import torch.optim as optim
 
-from models import get_model
 from api.helper import JSONEncoder_
-from path_definition import LOGGER_CONF
+from models import get_model
 
-config.fileConfig(LOGGER_CONF)
-logger = logging.getLogger('consoleLogger')
+logger = logging.getLogger(__name__)
 
 
 # TODO map_location="cuda:0" ???

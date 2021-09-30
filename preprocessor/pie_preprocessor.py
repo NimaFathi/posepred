@@ -5,7 +5,6 @@ import os
 import re
 import shutil
 from collections import namedtuple, defaultdict
-from logging import config
 from pathlib import Path
 
 import numpy as np
@@ -14,14 +13,12 @@ from bs4 import BeautifulSoup
 from openpifpaf.predict import out_name
 from scipy.interpolate import interp1d
 
-from path_definition import LOGGER_CONF
 from path_definition import PREPROCESSED_DATA_DIR
 from preprocessor.preprocessor import Processor
 
 Rectangle = namedtuple('Rectangle', 'xtl ytl xbr ybr')
 
-config.fileConfig(LOGGER_CONF)
-logger = logging.getLogger('consoleLogger')
+logger = logging.getLogger(__name__)
 
 
 class PIEPreprocessor(Processor):

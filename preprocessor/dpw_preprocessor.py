@@ -3,17 +3,14 @@ import logging
 import os
 import re
 from collections import defaultdict
-from logging import config
 
 import numpy as np
 import pandas as pd
 
-from path_definition import LOGGER_CONF
 from path_definition import PREPROCESSED_DATA_DIR
 from preprocessor.preprocessor import Processor
 
-config.fileConfig(LOGGER_CONF)
-logger = logging.getLogger('consoleLogger')
+logger = logging.getLogger(__name__)
 
 
 class Preprocessor3DPW(Processor):

@@ -1,17 +1,15 @@
 import logging
 import os
 from glob import glob
-from logging import config
 
 import cdflib
 import jsonlines
 import numpy as np
 
-from path_definition import PREPROCESSED_DATA_DIR, LOGGER_CONF
+from path_definition import PREPROCESSED_DATA_DIR
 from preprocessor.preprocessor import Processor
 
-config.fileConfig(LOGGER_CONF)
-logger = logging.getLogger('consoleLogger')
+logger = logging.getLogger(__name__)
 
 
 class PreprocessorHuman36m(Processor):

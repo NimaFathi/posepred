@@ -3,16 +3,13 @@ import json
 import logging
 import os
 from collections import defaultdict
-from logging import config
 
 import numpy as np
 
-from path_definition import LOGGER_CONF
 from path_definition import PREPROCESSED_DATA_DIR
 from preprocessor.preprocessor import Processor
 
-config.fileConfig(LOGGER_CONF)
-logger = logging.getLogger('consoleLogger')
+logger = logging.getLogger(__name__)
 
 
 class SoMoF3DPWPreprocessor(Processor):

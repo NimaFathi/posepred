@@ -1,13 +1,9 @@
 import logging
-from logging import config
 
 import numpy as np
 import torch
 
-from path_definition import LOGGER_CONF
-
-config.fileConfig(LOGGER_CONF)
-logger = logging.getLogger('consoleLogger')
+logger = logging.getLogger(__name__)
 
 
 def ADE(pred, target, dim, mask=None):

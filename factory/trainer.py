@@ -1,18 +1,15 @@
 import time
 import logging
-from logging import config
 
 import torch
 from torch.utils.tensorboard import SummaryWriter
 
-from path_definition import LOGGER_CONF
 from losses import LOSSES
 from metrics import POSE_METRICS, MASK_METRICS
 from utils.reporter import Reporter
 from utils.save_load import save_snapshot
 
-config.fileConfig(LOGGER_CONF)
-logger = logging.getLogger('trainLogger')
+logger = logging.getLogger(__name__)
 
 
 class Trainer:

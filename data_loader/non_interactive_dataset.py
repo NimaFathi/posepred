@@ -1,14 +1,11 @@
-import torch
-from torch.utils.data import Dataset
-import pandas as pd
+import logging
 from ast import literal_eval
 
-import logging
-from logging import config
-from path_definition import LOGGER_CONF
+import pandas as pd
+import torch
+from torch.utils.data import Dataset
 
-config.fileConfig(LOGGER_CONF)
-logger = logging.getLogger('consoleLogger')
+logger = logging.getLogger(__name__)
 
 
 class NonInteractiveDataset(Dataset):

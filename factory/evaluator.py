@@ -1,15 +1,12 @@
 import logging
 import time
-from logging import config
 
 import torch
 
-from path_definition import LOGGER_CONF
 from losses import LOSSES
 from metrics import POSE_METRICS, MASK_METRICS
 
-config.fileConfig(LOGGER_CONF)
-logger = logging.getLogger('evalLogger')
+logger = logging.getLogger(__name__)
 
 
 class Evaluator:
