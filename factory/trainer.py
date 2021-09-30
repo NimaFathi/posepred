@@ -30,7 +30,6 @@ class Trainer:
 
     def train(self):
         logger.info("Training started.")
-        self.model.train()
         time0 = time.time()
         for epoch in range(self.args.start_epoch, self.args.epochs):
             self.__train()
@@ -50,6 +49,7 @@ class Trainer:
         logger.info('Training is completed in %.2f seconds.' % (time.time() - time0))
 
     def __train(self):
+        self.model.train()
         self.train_reporter.start_time = time.time()
         for data in self.train_dataloader:
             for key, value in data.items():
@@ -93,6 +93,7 @@ class Trainer:
         self.train_reporter.print_values(logger, self.model.args.use_mask)
 
     def __validate(self):
+        self.model.eval()
         self.valid_reporter.start_time = time.time()
         for data in self.valid_dataloader:
             for key, value in data.items():
