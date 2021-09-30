@@ -28,9 +28,7 @@ def train(cfg: DictConfig):
     valid_dataloader_args = DataloaderArgs(cfg.valid_dataset, cfg.keypoint_dim, cfg.interactive, cfg.persons_num,
                                            cfg.use_mask, cfg.skip_num, cfg.dataloader.batch_size,
                                            cfg.dataloader.shuffle, cfg.pin_memory, cfg.num_workers)
-    model_args = ModelArgs(cfg.model.model_name, cfg.use_mask, cfg.keypoint_dim, cfg.model.hidden_size,
-                           cfg.model.hardtanh_limit, cfg.model.n_layers,
-                           cfg.model.dropout_enc, cfg.model.dropout_pose_dec, cfg.model.dropout_mask_dec)
+    model_args = ModelArgs(cfg.model.model_name, cfg.use_mask, cfg.keypoint_dim)
 
     train_dataloader = get_dataloader(train_dataloader_args)
     valid_dataloader = get_dataloader(valid_dataloader_args) if valid_dataloader_args.dataset_name is not None else None

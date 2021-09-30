@@ -3,3 +3,11 @@ defaults:
   - loss: mse_vel_loss
 
 model_name: pv_lstm
+
+
+hidden_size: 200
+hardtanh_limit: 10
+n_layers: 1
+dropout_enc: 0
+dropout_pose_dec: 0
+dropout_mask_dec: 0
