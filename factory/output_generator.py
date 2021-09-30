@@ -9,7 +9,7 @@ from utils.save_load import save_test_results
 logger = logging.getLogger(__name__)
 
 
-class Predictor:
+class Output_Generator:
     def __init__(self, model, dataloader, is_interactive, save_dir):
         self.model = model
         self.dataloader = dataloader
@@ -21,16 +21,16 @@ class Predictor:
         self.pred_pose = torch.Tensor().to('cuda')
         self.pred_mask = torch.Tensor().to('cuda')
 
-    def predict(self):
+    def generate(self):
         logger.info("Prediction started.")
         self.model.eval()
         time0 = time.time()
-        self.__predict()
+        self.__generate()
         save_test_results(self.result, [self.pred_pose, self.pred_vel, self.pred_mask], self.save_dir)
         logger.info("-" * 100)
         logger.info('Testing is completed in: %.2f' % (time.time() - time0))
 
-    def __predict(self):
+    def __generate(self):
         for data in self.dataloader:
             for key, value in data.items():
                 data[key] = value.to(self.device)

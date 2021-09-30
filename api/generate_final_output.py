@@ -5,7 +5,7 @@ from omegaconf import DictConfig
 
 from configs.helper import DataloaderArgs, ModelArgs
 from data_loader.my_dataloader import get_dataloader
-from factory.predictor import Predictor
+from factory.output_generator import Output_Generator
 from models import get_model
 from path_definition import HYDRA_PATH
 from path_definition import ROOT_DIR
@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 @hydra.main(config_path=HYDRA_PATH, config_name="predict")
-def predict(cfg: DictConfig):
+def generate_output(cfg: DictConfig):
     dataloader_args = DataloaderArgs(cfg.dataloader.dataset_file_name, cfg.keypoint_dim, cfg.interactive,
                                      cfg.persons_num,
                                      cfg.use_mask, cfg.skip_num, cfg.dataloader.batch_size,
@@ -54,9 +54,9 @@ def predict(cfg: DictConfig):
     save_dir = setup_testing_dir(ROOT_DIR)
     save_args({'dataloader_args': dataloader_args, 'model_args': model.args}, save_dir)
 
-    predictor = Predictor(model, dataloader, cfg.interactive, save_dir)
-    predictor.predict()
+    utput_enerator = Output_Generator(model, dataloader, cfg.interactive, save_dir)
+    utput_enerator.generate()
 
 
 if __name__ == '__main__':
-    predict()
+    generate_output()
