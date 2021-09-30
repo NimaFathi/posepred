@@ -38,16 +38,23 @@ class DataloaderArgs:
         self.is_visualizing = is_visualizing
 
 
-args = DataloaderArgs('human3.6_train.jsonl', keypoint_dim=2, is_interactive=False, persons_num=3, use_mask=True,
-                      skip_num=0, batch_size=4, shuffle=False, pin_memory=False, num_workers=0)
+# validation_16_14_1_JTA.jsonl
+# human3.6_train.jsonl
+args = DataloaderArgs('validation_16_14_1_JTA.jsonl', keypoint_dim=2, is_interactive=False, persons_num=5,
+                      use_mask=False, skip_num=0, batch_size=4, shuffle=False, pin_memory=False, num_workers=0)
 
+import time
+
+st = time.time()
 dataloader = get_dataloader(args)
-
-# for data in dataloader:
-#     print(len(data))
-#     print(data.keys())
-#     print(data['observed_pose'].shape)
-#     break
+init_end = time.time()
 
 
-# my_dict = {'a': [1, 2, 3], 'b': [45, 76, 123]}
+for data in dataloader:
+    pass
+
+epoch_end = time.time()
+
+print(init_end - st)
+
+print(epoch_end - init_end)

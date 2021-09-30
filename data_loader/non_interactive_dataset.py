@@ -1,7 +1,6 @@
 import torch
 from torch.utils.data import Dataset
-import pandas as pd
-from ast import literal_eval
+import jsonlines
 import logging
 
 logger = logging.getLogger(__name__)
@@ -9,59 +8,51 @@ logger = logging.getLogger(__name__)
 
 class NonInteractiveDataset(Dataset):
     def __init__(self, dataset_path, keypoint_dim, is_testing, use_mask, skip_frame, is_visualizing):
-        data = pd.read_csv(dataset_path)
 
-        for col in list(data.columns[1:].values):
-            try:
-                data.loc[:, col] = data.loc[:, col].apply(lambda x: literal_eval(x))
-            except Exception:
-                msg = "Each row must be convertible to python list"
-                logger.exception(msg=msg)
-                raise Exception(msg)
+        tensor_keys = ['observed_pose', 'future_pose', 'observed_mask', 'future_mask']
+        data = list()
+        with jsonlines.open(dataset_path) as reader:
+            for seq in reader:
+                seq_tensor = {}
+                for k, v in seq.items():
+                    if k in tensor_keys:
+                        seq_tensor[k] = torch.tensor(v, dtype=torch.float32)
+                    else:
+                        seq_tensor[k] = v
+                data.append(seq_tensor)
 
-        self.data = data.copy().reset_index(drop=True)
+        self.data = data
+        self.keypoint_dim = keypoint_dim
         self.is_testing = is_testing
         self.use_mask = use_mask
         self.skip_frame = skip_frame
         self.is_visualizing = is_visualizing
 
-        seq = self.data.iloc[0]  # [1:].apply(lambda x: literal_eval(x))
-        self.keypoint_dim = keypoint_dim
-        self.keypoints_num = int(len(seq.observed_pose[0]) / self.keypoint_dim)
-        self.obs_frames_num = len(seq.observed_pose)
+        seq = self.data[0]
+        assert 'observed_pose' in seq.keys(), 'dataset must include observed_pose'
+        self.keypoints_num = int(seq['observed_pose'].shape[-1] / self.keypoint_dim)
+        self.obs_frames_num = seq['observed_pose'].shape[-2]
         if not self.is_testing:
-            self.future_frames_num = len(seq.future_pose)
+            assert 'future_pose' in seq.keys(), 'dataset must include future_pose'
+            self.future_frames_num = seq['future_pose'].shape[-2]
 
     def __len__(self):
         return len(self.data)
 
     def __getitem__(self, index):
+        seq = self.data[index]
 
-        try:
-            seq = self.data.iloc[index]  # [1:].apply(lambda x: literal_eval(x))
-        except Exception:
-            msg = "data must be convertible to valid data-structures"
-            logger.exception(msg=msg)
-            raise Exception(msg)
-
-        try:
-            observed_pose = self.get_tensor(seq, 'observed_pose')
-            outputs = {'observed_pose': observed_pose}
-        except:
-            logger.warning('faulty row skipped.')
-            return self.__getitem__((index + 1) % self.__len__())
-
+        outputs_keys = ['observed_pose']
         if self.use_mask:
-            observed_mask = self.get_tensor(seq, 'observed_mask')
-            outputs['observed_mask'] = observed_mask
-
+            outputs_keys.append('observed_mask')
         if not self.is_testing:
-            future_pose = self.get_tensor(seq, 'future_pose')
-            outputs['future_pose'] = future_pose
-
+            outputs_keys.append('future_pose')
             if self.use_mask:
-                future_mask = self.get_tensor(seq, 'future_mask')
-                outputs['future_mask'] = future_mask
+                outputs_keys.append('future_mask')
+
+        outputs = dict()
+        for key in outputs_keys:
+            outputs[key] = seq[key]
 
         if self.is_visualizing:
             if 'observed_image_path' in seq.keys():
@@ -76,9 +67,3 @@ class NonInteractiveDataset(Dataset):
                 outputs['cam_in'] = torch.tensor(seq['cam_intrinsic'])
 
         return outputs
-
-    def get_tensor(self, seq, segment):
-        assert segment in seq, 'No segment named: ' + segment
-        frames_num = len(seq[segment])
-        return torch.tensor([seq[segment][frame_idx] for frame_idx in range(0, frames_num, self.skip_frame + 1)],
-                            dtype=torch.float32)
