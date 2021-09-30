@@ -34,3 +34,10 @@ def get_binary(src, device):
     zero = torch.zeros_like(src).to(device)
     one = torch.ones_like(src).to(device)
     return torch.where(src > 0.5, one, zero)
+
+
+def dict_to_device(src, device):
+    out = src.clone()
+    for key, value in out.items():
+        out[key] = value.to(device)
+    return out
