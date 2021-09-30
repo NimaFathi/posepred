@@ -45,9 +45,8 @@ def train(cfg: DictConfig):
         model = get_model(model_args).to('cuda')
         optimizer = optim.Adam(model.parameters(), lr=trainer_args.lr)
         trainer_args.save_dir = setup_training_dir(ROOT_DIR)
-        report_attrs = trainer_args.pose_metrics + trainer_args.mask_metrics
-        train_reporter = Reporter(attrs=report_attrs, state='train')
-        valid_reporter = Reporter(attrs=report_attrs, state='valid')
+        train_reporter = Reporter(state='train')
+        valid_reporter = Reporter(state='valid')
         save_args({'trainer_args': trainer_args, 'model_args': model.args}, trainer_args.save_dir)
         save_snapshot(model, optimizer, trainer_args.lr, 0, train_reporter, valid_reporter, trainer_args.save_dir)
 
