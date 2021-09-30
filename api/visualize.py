@@ -14,6 +14,7 @@ from path_definition import ROOT_DIR
 from utils.save_load import load_snapshot
 from utils.lists import dataset
 from visualization.visualizer import Visualizer
+
 logger = logging.getLogger(__name__)
 
 
@@ -21,10 +22,9 @@ logger = logging.getLogger(__name__)
 def visualize(cfg: DictConfig):
     assert cfg.dataset in dataset, 'invalid dataset name'
     dataloader_args = DataloaderArgs(cfg.dataloader.dataset_file_name, cfg.keypoint_dim, cfg.interactive,
-                                     cfg.persons_num,
-                                     cfg.use_mask, cfg.skip_num, cfg.dataloader.batch_size,
-                                     cfg.dataloader.shuffle, cfg.pin_memory,
-                                     cfg.num_workers, is_testing=not cfg.ground_truth, is_visualizing=True)
+                                     cfg.persons_num, cfg.use_mask, cfg.skip_num, cfg.dataloader.batch_size,
+                                     cfg.dataloader.shuffle, cfg.pin_memory, cfg.num_workers,
+                                     is_testing=not cfg.ground_truth, is_visualizing=True)
     model_args = ModelArgs(cfg.model.model_name, cfg.use_mask, cfg.keypoint_dim)
     dataloader = get_dataloader(dataloader_args)
     if cfg.load_path:
@@ -43,7 +43,6 @@ def visualize(cfg: DictConfig):
     for key in ['observed_pose', 'future_pose', 'observed_mask', 'future_mask']:
         if key in data.keys():
             data[key] = data.get(key).unsqueeze(0)
-
     for key in ['observed_pose', 'observed_mask']:
         if key in data.keys():
             data[key] = data.get(key).to('cuda')
