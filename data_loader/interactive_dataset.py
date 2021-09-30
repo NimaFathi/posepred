@@ -1,10 +1,9 @@
-import logging
-from ast import literal_eval
-
-import pandas as pd
 import torch
-from numpy import random
 from torch.utils.data import Dataset
+from numpy import random
+import pandas as pd
+from ast import literal_eval
+import logging
 
 logger = logging.getLogger(__name__)
 

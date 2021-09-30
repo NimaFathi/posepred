@@ -1,24 +1,36 @@
 import torch
 from torch.utils.data import Dataset
+import jsonlines
 import pandas as pd
 from ast import literal_eval
-import logging
 
-logger = logging.getLogger(__name__)
+import logging
+from logging import config
+from path_definition import LOGGER_CONF
+
+config.fileConfig(LOGGER_CONF)
+logger = logging.getLogger('consoleLogger')
 
 
 class NonInteractiveDataset(Dataset):
     def __init__(self, dataset_path, keypoint_dim, is_testing, use_mask, skip_frame, is_visualizing):
-        data = pd.read_csv(dataset_path)
 
-        for col in list(data.columns[1:].values):
-            try:
-                data.loc[:, col] = data.loc[:, col].apply(lambda x: literal_eval(x))
-            except Exception:
-                msg = "Each row must be convertible to python list"
-                logger.exception(msg=msg)
-                raise Exception(msg)
+        data = list()
+        with jsonlines.open(dataset_path) as reader:
+            for obj in reader:
+                t_obj = {}
+                for k, v in obj.items():
+                    if isinstance(v, str):
+                        t_obj[k] = v
+                    else:
+                        t_obj[k] = torch.tensor(v)
+                data.append(t_obj)
 
+        print(len(data))
+        print(len(data[0]))
+        print(data[0].keys())
+        print(data[0]['observed_pose'].shape)
+        exit()
         self.data = data.copy().reset_index(drop=True)
         self.is_testing = is_testing
         self.use_mask = use_mask

@@ -8,7 +8,7 @@ from data_loader.non_interactive_dataset import NonInteractiveDataset
 
 def get_dataloader(args):
     data_folder = os.path.join(ROOT_DIR, 'preprocessed_data/')
-    dataset_path = data_folder + args.dataset_name + '.csv'
+    dataset_path = data_folder + args.dataset_name  # + '.csv'
     if args.is_interactive:
         dataset = InteractiveDataset(dataset_path, args.keypoint_dim, args.persons_num, args.is_testing, args.use_mask,
                                      args.skip_frame, args.is_visualizing)
@@ -37,11 +37,12 @@ class DataloaderArgs:
         self.is_testing = is_testing
         self.is_visualizing = is_visualizing
 
-# args = DataloaderArgs('3DPW_train_interactive', keypoint_dim=2, is_interactive=True, persons_num=3, use_mask=True,
-#                       skip_num=0, batch_size=4, shuffle=False, pin_memory=False, num_workers=0)
-#
-# dataloader = get_dataloader(args)
-#
+
+args = DataloaderArgs('human3.6_train.jsonl', keypoint_dim=2, is_interactive=False, persons_num=3, use_mask=True,
+                      skip_num=0, batch_size=4, shuffle=False, pin_memory=False, num_workers=0)
+
+dataloader = get_dataloader(args)
+
 # for data in dataloader:
 #     print(len(data))
 #     print(data.keys())
