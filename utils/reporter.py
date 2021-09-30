@@ -12,21 +12,25 @@ from utils.average_meter import AverageMeter
 
 class Reporter:
 
-    def __init__(self, attrs, state=''):
+    def __init__(self, state=''):
         self.state = state
+        self.start_time = None
+        self.attrs = None
+        self.history = None
 
-        self.attrs = {'loss': AverageMeter()}
+    def setup(self, attrs):
+        self.attrs = {}
         for attr in attrs:
             self.attrs[attr] = AverageMeter()
-        self.start_time = None
-
-        self.history = {'loss': []}
+        self.history = {}
         for attr in attrs:
             self.history[attr] = []
         self.history['time'] = []
 
-    def update(self, metrics, batch_size):
-        for key, value in metrics.items():
+    def update(self, attrs, batch_size):
+        if self.attrs is None or self.history is None:
+            self.setup(attrs)
+        for key, value in attrs.items():
             self.attrs.get(key).update(value, batch_size)
 
     def epoch_finished(self, tb):
