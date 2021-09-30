@@ -23,5 +23,6 @@ class MAEVelLoss(nn.Module):
             mask_loss = 0
 
         loss = vel_loss + (0.3 * mask_loss)
+        outputs = {'loss': loss, 'vel_loss': vel_loss, 'mask_loss': mask_loss}
 
-        return loss
+        return outputs
