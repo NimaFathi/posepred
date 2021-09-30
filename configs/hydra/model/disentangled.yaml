@@ -1,6 +1,5 @@
 defaults:
   - base_model
-  - loss: ???
+  - loss: mse_vel_loss
 
 model_name: disentangled
-use_mask: false

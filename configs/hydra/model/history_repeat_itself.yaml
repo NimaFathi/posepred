@@ -1,6 +1,5 @@
 defaults:
   - base_model
-  - loss: ???
+  - loss: mse_vel_loss
 
 model_name: his_rep_itself
-use_mask: false

@@ -3,4 +3,3 @@ defaults:
   - loss: mse_vel_loss
 
 model_name: pv_lstm
-use_mask: false

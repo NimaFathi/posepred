@@ -1,30 +1,35 @@
+import logging
 import os
 import random
-import logging
-from logging import config
 
+import hydra
 import torch
+from omegaconf import DictConfig
 
-from path_definition import ROOT_DIR
-from args.visualization_args import parse_visualization_args
+from args.helper import DataloaderArgs, ModelArgs
 from data_loader.my_dataloader import get_dataloader
-from path_definition import LOGGER_CONF
+from models import get_model
+from path_definition import HYDRA_PATH
+from path_definition import ROOT_DIR
 from utils.save_load import load_snapshot
 from visualization.visualizer import Visualizer
-from models import get_model
 
-config.fileConfig(LOGGER_CONF)
-logger = logging.getLogger('consoleLogger')
+logger = logging.getLogger(__name__)
 
-if __name__ == '__main__':
 
-    dataloader_args, model_args, load_path, ground_truth, pred_frames_num, index, images_dir, dataset_name = parse_visualization_args()
+@hydra.main(config_path=HYDRA_PATH, config_name="visualize")
+def visualize(cfg: DictConfig):
+    dataloader_args = DataloaderArgs(cfg.dataloader.dataset_file_name, cfg.keypoint_dim, cfg.interactive,
+                                     cfg.persons_num,
+                                     cfg.use_mask, cfg.skip_num, cfg.dataloader.batch_size,
+                                     cfg.dataloader.shuffle, cfg.pin_memory,
+                                     cfg.num_workers, is_testing=not cfg.ground_truth, is_visualizing=True)
+    model_args = ModelArgs(cfg.model.model_name, cfg.use_mask, cfg.keypoint_dim)
     dataloader = get_dataloader(dataloader_args)
-
-    if load_path:
-        model, _, _, _, _ = load_snapshot(load_path)
+    if cfg.load_path:
+        model, _, _, _, _ = load_snapshot(cfg.load_path)
     elif model_args.model_name:
-        model_args.pred_frames_num = dataloader.dataset.future_frames_num if ground_truth else pred_frames_num
+        model_args.pred_frames_num = dataloader.dataset.future_frames_num if cfg.ground_truth else cfg.pred_frames_num
         assert model_args.pred_frames_num is not None, 'specify pred_frames_num'
         model_args.keypoints_num = dataloader.dataset.keypoints_num
         model = get_model(model_args).to('cuda')
@@ -32,10 +37,8 @@ if __name__ == '__main__':
         msg = "Please provide either a model_name or a load_path to a trained model."
         logger.error(msg)
         raise Exception(msg)
-
-    index = random.randint(0, dataloader.dataset.__len__() - 1) if index is None else index
+    index = random.randint(0, dataloader.dataset.__len__() - 1) if cfg.index is None else cfg.index
     data = dataloader.dataset.__getitem__(index)
-
     for key in ['observed_pose', 'future_pose', 'observed_mask', 'future_mask']:
         if key in data.keys():
             data[key] = data.get(key).unsqueeze(0)
@@ -91,9 +94,13 @@ if __name__ == '__main__':
     cam_in = data.get('cam_in') if 'cam_in' in data.keys() else None
 
     gif_name = '_'.join((model.args.model_name, dataloader_args.dataset_name.split("/")[-1], str(index)))
-    visualizer = Visualizer(dataset_name=dataset_name,
-                            images_dir=os.path.join(ROOT_DIR, images_dir if images_dir else ''))
+    visualizer = Visualizer(dataset_name=cfg.dataset,
+                            images_dir=os.path.join(ROOT_DIR, cfg.images_dir if cfg.images_dir else ''))
     if dataloader_args.keypoint_dim == 2:
         visualizer.visualizer_2D(names, poses, masks, images_path, gif_name)
     else:
         visualizer.visualizer_3D(names, poses, cam_exs, cam_in, images_path, gif_name)
+
+
+if __name__ == '__main__':
+    visualize()
