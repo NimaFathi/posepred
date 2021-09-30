@@ -1,5 +1,4 @@
 import logging
-
 import hydra
 import torch.optim as optim
 from omegaconf import DictConfig
@@ -8,10 +7,11 @@ from configs.helper import TrainerArgs, DataloaderArgs, ModelArgs
 from data_loader.my_dataloader import get_dataloader
 from factory.trainer import Trainer
 from models import get_model
-from path_definition import HYDRA_PATH
-from path_definition import ROOT_DIR
+from optimizers import OPTIMIZERS
 from utils.reporter import Reporter
 from utils.save_load import load_snapshot, save_snapshot, save_args, setup_training_dir
+from path_definition import HYDRA_PATH
+from path_definition import ROOT_DIR
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +43,7 @@ def train(cfg: DictConfig):
         model_args.pred_frames_num = train_dataloader.dataset.future_frames_num
         model_args.keypoints_num = train_dataloader.dataset.keypoints_num
         model = get_model(model_args).to('cuda')
-        optimizer = optim.Adam(model.parameters(), lr=trainer_args.lr)
+        optimizer = OPTIMIZERS[optimizer_type](model.parameters(), optimizer_args)
         trainer_args.save_dir = setup_training_dir(ROOT_DIR)
         train_reporter = Reporter(state='train')
         valid_reporter = Reporter(state='valid')
