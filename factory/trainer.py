@@ -59,8 +59,14 @@ class Trainer:
             # predict & calculate loss
             self.model.zero_grad()
             model_outputs = self.model(data)
-            loss = self.loss_module(model_outputs, data)
+            loss_outputs = self.loss_module(model_outputs, data)
             assert 'pred_pose' in model_outputs.keys(), 'outputs of model should include pred_pose'
+            assert 'loss' in loss_outputs.keys(), 'outputs of loss should include loss'
+
+            # backpropagate and optimize
+            loss = loss_outputs['loss']
+            loss.backward()
+            self.optimizer.step()
 
             if self.model.args.use_mask:
                 assert 'pred_mask' in model_outputs.keys(), 'outputs of model should include pred_mask'
@@ -69,7 +75,7 @@ class Trainer:
                 pred_mask = None
 
             # calculate pose_metrics
-            report_attrs = {'loss': loss}
+            report_attrs = loss_outputs
             for metric_name in self.args.pose_metrics:
                 metric_func = POSE_METRICS[metric_name]
                 metric_value = metric_func(model_outputs['pred_pose'], data['future_pose'],
@@ -82,10 +88,6 @@ class Trainer:
                     metric_func = MASK_METRICS[metric_name]
                     metric_value = metric_func(pred_mask, data['future_mask'])
                     report_attrs[metric_name] = metric_value
-
-            # backpropagate and optimize
-            loss.backward()
-            self.optimizer.step()
 
             self.train_reporter.update(report_attrs, batch_size)
 
@@ -103,7 +105,7 @@ class Trainer:
             with torch.no_grad():
                 # predict & calculate loss
                 model_outputs = self.model(data)
-                loss = self.loss_module(model_outputs, data)
+                loss_outputs = self.loss_module(model_outputs, data)
                 assert 'pred_pose' in model_outputs.keys(), 'outputs of model should include pred_pose'
 
                 if self.model.args.use_mask:
@@ -113,7 +115,7 @@ class Trainer:
                     pred_mask = None
 
                 # calculate pose_metrics
-                report_attrs = {'loss': loss}
+                report_attrs = loss_outputs
                 for metric_name in self.args.pose_metrics:
                     metric_func = POSE_METRICS[metric_name]
                     metric_value = metric_func(model_outputs['pred_pose'], data['future_pose'],

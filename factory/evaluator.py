@@ -41,7 +41,7 @@ class Evaluator:
             with torch.no_grad():
                 # predict & calculate loss
                 model_outputs = self.model(data)
-                loss = self.loss_module(model_outputs, data)
+                loss_outputs = self.loss_module(model_outputs, data)
                 assert 'pred_pose' in model_outputs.keys(), 'outputs of model should include pred_pose'
 
                 if self.model.args.use_mask:
@@ -51,7 +51,7 @@ class Evaluator:
                     pred_mask = None
 
                 # calculate pose_metrics
-                report_attrs = {'loss': loss}
+                report_attrs = loss_outputs
                 for metric_name in self.pose_metrics:
                     metric_func = POSE_METRICS[metric_name]
                     metric_value = metric_func(model_outputs['pred_pose'], data['future_pose'],
