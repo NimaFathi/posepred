@@ -6,7 +6,7 @@ import pickle
 import torch
 import torch.optim as optim
 
-from api.helper import JSONEncoder_
+from configs.helper import JSONEncoder_
 from models import get_model
 
 logger = logging.getLogger(__name__)

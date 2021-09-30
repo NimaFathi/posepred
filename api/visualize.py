@@ -6,7 +6,7 @@ import hydra
 import torch
 from omegaconf import DictConfig
 
-from api.helper import DataloaderArgs, ModelArgs
+from configs.helper import DataloaderArgs, ModelArgs
 from data_loader.my_dataloader import get_dataloader
 from models import get_model
 from path_definition import HYDRA_PATH

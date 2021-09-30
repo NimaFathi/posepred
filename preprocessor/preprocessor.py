@@ -3,7 +3,7 @@ import os
 
 import numpy as np
 
-from api.helper import NumpyEncoder
+from configs.helper import NumpyEncoder
 
 
 class Processor:

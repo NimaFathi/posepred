@@ -4,7 +4,7 @@ import hydra
 import torch.optim as optim
 from omegaconf import DictConfig
 
-from api.helper import TrainerArgs, DataloaderArgs, ModelArgs
+from configs.helper import TrainerArgs, DataloaderArgs, ModelArgs
 from data_loader.my_dataloader import get_dataloader
 from factory.trainer import Trainer
 from models import get_model

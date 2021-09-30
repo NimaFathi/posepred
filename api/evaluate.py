@@ -3,7 +3,7 @@ import logging
 import hydra
 from omegaconf import DictConfig
 
-from api.helper import DataloaderArgs, ModelArgs
+from configs.helper import DataloaderArgs, ModelArgs
 from data_loader.my_dataloader import get_dataloader
 from factory.evaluator import Evaluator
 from models import get_model
