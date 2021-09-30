@@ -1,10 +1,10 @@
-import csv
 import json
 import logging
 import os
 import re
 from collections import defaultdict
 
+import jsonlines
 import numpy as np
 
 from path_definition import PREPROCESSED_DATA_DIR
@@ -81,18 +81,14 @@ class JTAPreprocessor(Processor):
 
     def normal(self, data_type='train'):
         logger.info('start creating JTA normal static data ... ')
-        header = [
-            'video_section', 'observed_pose', 'future_pose', 'observed_mask', 'future_mask',
-            'observed_image_path', 'future_image_path'
-        ]
         if self.custom_name:
-            output_file_name = f'{data_type}_{self.obs_frame_num}_{self.pred_frame_num}_{self.skip_frame_num}_{self.custom_name}.csv'
+            output_file_name = f'{data_type}_{self.obs_frame_num}_{self.pred_frame_num}_{self.skip_frame_num}_{self.custom_name}.jsonl'
         else:
-            output_file_name = f'{data_type}_{self.obs_frame_num}_{self.pred_frame_num}_{self.skip_frame_num}_JTA.csv'
-        with open(os.path.join(self.output_dir, output_file_name), 'w') as f_object:
-            writer = csv.writer(f_object)
-            writer.writerow(header)
-
+            output_file_name = f'{data_type}_{self.obs_frame_num}_{self.pred_frame_num}_{self.skip_frame_num}_JTA.jsonl'
+        assert os.path.exists(os.path.join(
+            self.output_dir,
+            output_file_name
+        )) is False, f"preprocessed file exists at {os.path.join(self.output_dir, output_file_name)}"
         total_frame_num = self.obs_frame_num + self.pred_frame_num
         section_range = self.dataset_total_frame_num // (
                 total_frame_num * (self.skip_frame_num + 1)) if not self.use_video_once else 1
@@ -165,7 +161,15 @@ class JTAPreprocessor(Processor):
                                 '%s-%d' % (video_number, i), obs, future, obs_mask, future_mask,
                                 obs_frames[0], future_frames[0]
                             ])
-                with open(os.path.join(self.output_dir, output_file_name), 'a') as f_object:
-                    writer = csv.writer(f_object)
-                    writer.writerows(data)
+                with jsonlines.open(os.path.join(self.output_dir, output_file_name), 'a') as writer:
+                    for data_row in data:
+                        writer.write({
+                            'video_section': data_row[0],
+                            'observed_pose': data_row[1],
+                            'future_pose': data_row[2],
+                            'observed_mask': data_row[3],
+                            'future_mask': data_row[4],
+                            'observed_image_path': data_row[5],
+                            'future_image_path': data_row[6]
+                        })
         self.save_meta_data(self.meta_data, self.output_dir, self.is_3d, data_type)

@@ -1,9 +1,9 @@
-import csv
 import logging
 import os
 import re
 from collections import defaultdict
 
+import jsonlines
 import numpy as np
 import pandas as pd
 
@@ -34,21 +34,16 @@ class Preprocessor3DPW(Processor):
 
     def normal(self, data_type='train'):
         logger.info('start creating 3DPW normal static data ... ')
-        header = [
-            'video_section', 'observed_pose', 'future_pose',
-            'observed_image_path', 'future_image_path',
-            'observed_cam_extrinsic', 'future_cam_extrinsic', 'cam_intrinsic'
-        ]
         total_frame_num = self.obs_frame_num + self.pred_frame_num
 
         if self.custom_name:
-            output_file_name = f'{data_type}_{self.obs_frame_num}_{self.pred_frame_num}_{self.skip_frame_num}_{self.custom_name}.csv'
+            output_file_name = f'{data_type}_{self.obs_frame_num}_{self.pred_frame_num}_{self.skip_frame_num}_{self.custom_name}.jsonl'
         else:
-            output_file_name = f'{data_type}_{self.obs_frame_num}_{self.pred_frame_num}_{self.skip_frame_num}_3dpw.csv'
-
-        with open(os.path.join(self.output_dir, output_file_name), 'w') as f_object:
-            writer = csv.writer(f_object)
-            writer.writerow(header)
+            output_file_name = f'{data_type}_{self.obs_frame_num}_{self.pred_frame_num}_{self.skip_frame_num}_3dpw.jsonl'
+        assert os.path.exists(os.path.join(
+            self.output_dir,
+            output_file_name
+        )) is False, f"preprocessed file exists at {os.path.join(self.output_dir, output_file_name)}"
         for entry in os.scandir(self.dataset_path):
             if not entry.name.endswith('.pkl'):
                 continue
@@ -114,7 +109,16 @@ class Preprocessor3DPW(Processor):
                             video_data['obs_frames'][0], video_data['future_frames'][0],
                             video_data['obs_cam_ext'], video_data['future_cam_ext'], cam_intrinsic
                         ])
-            with open(os.path.join(self.output_dir, output_file_name), 'a') as f_object:
-                writer = csv.writer(f_object)
-                writer.writerows(data)
+            with jsonlines.open(os.path.join(self.output_dir, output_file_name), 'a') as writer:
+                for data_row in data:
+                    writer.write({
+                        'video_section': data_row[0],
+                        'observed_pose': data_row[1],
+                        'future_pose': data_row[2],
+                        'observed_image_path': data_row[3],
+                        'future_image_path': data_row[4],
+                        'observed_cam_extrinsic': data_row[5],
+                        'future_cam_extrinsic': data_row[6],
+                        'cam_intrinsic': data_row[7]
+                    })
         self.save_meta_data(self.meta_data, self.output_dir, True, data_type)

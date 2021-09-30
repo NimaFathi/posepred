@@ -38,7 +38,10 @@ class PreprocessorHuman36m(Processor):
             output_file_name = f'{data_type}_{self.obs_frame_num}_{self.pred_frame_num}_{self.skip_frame_num}_{self.custom_name}.jsonl'
         else:
             output_file_name = f'{data_type}_{self.obs_frame_num}_{self.pred_frame_num}_{self.skip_frame_num}_human3.6m.jsonl'
-        assert os.path.exists(os.path.join(self.output_dir, output_file_name)) is False, "preprocessed file exists"
+        assert os.path.exists(os.path.join(
+            self.output_dir,
+            output_file_name
+        )) is False, f"preprocessed file exists at {os.path.join(self.output_dir, output_file_name)}"
         for subject in self.subjects:
             logger.info("handling subject: {}".format(subject))
             file_list = glob(self.dataset_path + '/' + subject + '/MyPoseFeatures/D3_Positions/*.cdf')

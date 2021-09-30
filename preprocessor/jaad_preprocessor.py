@@ -1,4 +1,3 @@
-import csv
 import json
 import logging
 import os
@@ -7,6 +6,7 @@ import shutil
 from collections import namedtuple, defaultdict
 from pathlib import Path
 
+import jsonlines
 import numpy as np
 import openpifpaf
 from bs4 import BeautifulSoup
@@ -48,17 +48,14 @@ class JAADPreprocessor(Processor):
         assert self.skip_frame_num >= 0 and self.skip_frame_num is not None
         assert self.dataset_path is not None
         logger.info('start creating JAAD normal static data ... ')
-        header = [
-            'video_section', 'observed_pose', 'future_pose',
-            'observed_image_path', 'future_image_path'
-        ]
         if self.custom_name:
-            output_file_name = f'{data_type}_{self.obs_frame_num}_{self.pred_frame_num}_{self.skip_frame_num}_{self.custom_name}.csv'
+            output_file_name = f'{data_type}_{self.obs_frame_num}_{self.pred_frame_num}_{self.skip_frame_num}_{self.custom_name}.jsonl'
         else:
-            output_file_name = f'{data_type}_{self.obs_frame_num}_{self.pred_frame_num}_{self.skip_frame_num}_JAAD.csv'
-        with open(os.path.join(self.output_dir, output_file_name), 'w') as f_object:
-            writer = csv.writer(f_object)
-            writer.writerow(header)
+            output_file_name = f'{data_type}_{self.obs_frame_num}_{self.pred_frame_num}_{self.skip_frame_num}_JAAD.jsonl'
+        assert os.path.exists(os.path.join(
+            self.output_dir,
+            output_file_name
+        )) is False, f"preprocessed file exists at {os.path.join(self.output_dir, output_file_name)}"
         total_frame_num = (self.obs_frame_num + self.pred_frame_num) * (self.skip_frame_num + 1)
         frame_range = []
         joints_dir = self.__create_frame_poses()
@@ -129,15 +126,25 @@ class JAADPreprocessor(Processor):
                 pred_y = np.array(list(raw_data_pred[ped_id].values()))
                 pred_interp = interp1d(pred_x, pred_y, axis=0, fill_value="extrapolate")
                 pred_poses.append(pred_interp(pred_frame_range).tolist())
-        with open(os.path.join(self.output_dir, output_file_name), 'a') as f_object:
-            writer = csv.writer(f_object)
+        with jsonlines.open(os.path.join(self.output_dir, output_file_name), 'a') as writer:
             if len(obs_poses) > 0:
                 if self.is_interactive:
-                    writer.writerow([video_name, obs_poses, pred_poses, obs_image_path, pred_image_path])
+                    writer.write({
+                        'video_section': video_name,
+                        'observed_pose': obs_poses,
+                        'future_pose': pred_poses,
+                        'observed_image_path': obs_image_path,
+                        'future_image_path': pred_image_path
+                    })
                 else:
                     for i in range(len(obs_poses)):
-                        writer.writerow(
-                            [video_name, obs_poses[i], pred_poses[i], obs_image_path[i], pred_image_path[i]])
+                        writer.write({
+                            'video_section': video_name,
+                            'observed_pose': obs_poses[i],
+                            'future_pose': pred_poses[i],
+                            'observed_image_path': obs_image_path[i],
+                            'future_image_path': pred_image_path[i]
+                        })
 
     def __create_frame_poses(self):
         if self.annotate is not False:

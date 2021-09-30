@@ -1,9 +1,9 @@
-import csv
 import json
 import logging
 import os
 from collections import defaultdict
 
+import jsonlines
 import numpy as np
 
 from path_definition import PREPROCESSED_DATA_DIR
@@ -40,25 +40,19 @@ class SoMoFPoseTrackPreprocessor(Processor):
     def __save_csv(self, data_type, processed_data, file_type=None):
         if self.custom_name:
             if file_type is None:
-                output_name = f'{data_type}_16_14_1_{self.custom_name}.csv'
+                output_file_name = f'{data_type}_16_14_1_{self.custom_name}.jsonl'
             else:
-                output_name = f'{file_type}_{data_type}_16_14_1_{self.custom_name}.csv'
+                output_file_name = f'{file_type}_{data_type}_16_14_1_{self.custom_name}.jsonl'
         else:
             if file_type is None:
-                output_name = f'{data_type}_16_14_1_SoMoF_PoseTrack.csv'
+                output_file_name = f'{data_type}_16_14_1_SoMoF_PoseTrack.csv'
             else:
-                output_name = f'{file_type}_{data_type}_16_14_1_SoMoF_PoseTrack.csv'
+                output_file_name = f'{file_type}_{data_type}_16_14_1_SoMoF_PoseTrack.csv'
+        assert os.path.exists(os.path.join(
+            self.output_dir,
+            output_file_name
+        )) is False, f"preprocessed file exists at {os.path.join(self.output_dir, output_file_name)}"
         data = []
-        if data_type == 'test':
-            header = ['video_section', 'observed_pose', 'observed_mask', 'observed_image_path']
-        else:
-            header = [
-                'video_section', 'observed_pose', 'future_pose',
-                'observed_mask', 'future_mask', 'observed_image_path'
-            ]
-        with open(os.path.join(self.output_dir, output_name), 'w') as f_object:
-            writer = csv.writer(f_object)
-            writer.writerow(header)
         if data_type == 'test':
             if self.is_interactive:
                 for vid_id in range(len(processed_data['obs_pose'])):
@@ -95,9 +89,22 @@ class SoMoFPoseTrackPreprocessor(Processor):
                             processed_data['obs_mask'][vid_id][p_id], processed_data['future_pose'][vid_id][p_id],
                             processed_data['obs_frames_path'][vid_id].tolist()
                         ])
-        with open(os.path.join(self.is_interactive, output_name), 'a') as f_object:
-            writer = csv.writer(f_object)
-            writer.writerows(data)
+        with jsonlines.open(os.path.join(self.is_interactive, output_file_name), 'a') as writer:
+            if data_type == 'test':
+                for data_row in data:
+                    writer.write({
+                        'video_section': data_row[0],
+                        'observed_pose': data_row[1],
+                        'observed_image_path': data_row[2]
+                    })
+            else:
+                for data_row in data:
+                    writer.write({
+                        'video_section': data_row[0],
+                        'observed_pose': data_row[1],
+                        'future_pose': data_row[2],
+                        'observed_image_path': data_row[3]
+                    })
 
     def __clean_data(self, data_type):
         if data_type == 'validation':
