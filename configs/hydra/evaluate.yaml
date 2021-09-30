@@ -1,5 +1,5 @@
 defaults:
-  - model: pv_lstm
+  - model: ???
   - dataloader: base_dataloader
   - metrics: base_metrics
   - share

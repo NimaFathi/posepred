@@ -1,0 +1,22 @@
+defaults:
+  - model: ???
+  - dataloader: base_dataloader
+  - metrics: base_metrics
+  - share
+  - _self_
+
+dataloader:
+  batch_size: 1
+  shuffle: false
+snapshot_interval: -1
+epochs: 100
+start_epoch: 0
+lr: 0.01
+decay_factor: 0.95
+decay_patience: 20
+distance_loss: L1
+mask_loss_weight: 0.25
+train_dataset: ???
+valid_dataset: ???
+load_path:
+

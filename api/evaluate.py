@@ -1,36 +1,33 @@
 import logging
-from logging import config
 
 import hydra
 from omegaconf import DictConfig
 
-from args.helper import DataloaderArgs, ModelArgs
+from api.helper import DataloaderArgs, ModelArgs
 from data_loader.my_dataloader import get_dataloader
 from factory.evaluator import Evaluator
 from models import get_model
 from path_definition import HYDRA_PATH
-from path_definition import LOGGER_CONF
 from utils.reporter import Reporter
 from utils.save_load import load_snapshot
 
-config.fileConfig(LOGGER_CONF)
-logger = logging.getLogger('consoleLogger')
+logger = logging.getLogger(__name__)
 
 
 @hydra.main(config_path=HYDRA_PATH, config_name="evaluate")
 def evaluate(cfg: DictConfig):
-    dataloader_args = DataloaderArgs(cfg.dataloader.dataset_name, cfg.keypoint_dim, cfg.interactive,
-                                     cfg.dataloader.persons_num,
-                                     cfg.use_mask, cfg.dataloader.skip_num, cfg.dataloader.batch_size,
-                                     cfg.dataloader.shuffle, cfg.dataloader.pin_memory,
-                                     cfg.dataloader.num_workers)
+    dataloader_args = DataloaderArgs(cfg.dataloader.dataset_file_name, cfg.keypoint_dim, cfg.interactive,
+                                     cfg.persons_num,
+                                     cfg.use_mask, cfg.skip_num, cfg.dataloader.batch_size,
+                                     cfg.dataloader.shuffle, cfg.pin_memory,
+                                     cfg.num_workers)
     model_args = ModelArgs(cfg.model.model_name, cfg.use_mask, cfg.keypoint_dim)
 
     if cfg.train_dataset is not None:
         train_dataloader_args = DataloaderArgs(cfg.train_dataset, cfg.keypoint_dim, cfg.interactive,
-                                               cfg.dataloader.persons_num, cfg.use_mask, cfg.dataloader.skip_num, 1024,
+                                               cfg.persons_num, cfg.use_mask, cfg.skip_num, 1024,
                                                False,
-                                               cfg.dataloader.pin_memory, cfg.dataloader.num_workers)
+                                               cfg.pin_memory, cfg.num_workers)
     else:
         train_dataloader_args = None
     dataloader = get_dataloader(dataloader_args)

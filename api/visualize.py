@@ -6,19 +6,20 @@ import hydra
 import torch
 from omegaconf import DictConfig
 
-from args.helper import DataloaderArgs, ModelArgs
+from api.helper import DataloaderArgs, ModelArgs
 from data_loader.my_dataloader import get_dataloader
 from models import get_model
 from path_definition import HYDRA_PATH
 from path_definition import ROOT_DIR
 from utils.save_load import load_snapshot
+from utils.lists import dataset
 from visualization.visualizer import Visualizer
-
 logger = logging.getLogger(__name__)
 
 
 @hydra.main(config_path=HYDRA_PATH, config_name="visualize")
 def visualize(cfg: DictConfig):
+    assert cfg.dataset in dataset, 'invalid dataset name'
     dataloader_args = DataloaderArgs(cfg.dataloader.dataset_file_name, cfg.keypoint_dim, cfg.interactive,
                                      cfg.persons_num,
                                      cfg.use_mask, cfg.skip_num, cfg.dataloader.batch_size,

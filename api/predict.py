@@ -1,24 +1,38 @@
 import logging
-from logging import config
 
-from args.prediction_args import parse_prediction_args
+import hydra
+from omegaconf import DictConfig
+
+from api.helper import DataloaderArgs, ModelArgs
 from data_loader.my_dataloader import get_dataloader
 from factory.predictor import Predictor
-from path_definition import LOGGER_CONF
+from models import get_model
+from path_definition import HYDRA_PATH
 from path_definition import ROOT_DIR
 from utils.save_load import load_snapshot, save_args, setup_testing_dir
-from models import get_model
 
-config.fileConfig(LOGGER_CONF)
-logger = logging.getLogger('consoleLogger')
+logger = logging.getLogger(__name__)
 
-if __name__ == '__main__':
 
-    dataloader_args, model_args, load_path, pred_frames_num, is_interactive, train_dataloader_args = parse_prediction_args()
+@hydra.main(config_path=HYDRA_PATH, config_name="predict")
+def predict(cfg: DictConfig):
+    dataloader_args = DataloaderArgs(cfg.dataloader.dataset_file_name, cfg.keypoint_dim, cfg.interactive,
+                                     cfg.persons_num,
+                                     cfg.use_mask, cfg.skip_num, cfg.dataloader.batch_size,
+                                     cfg.dataloader.shuffle, cfg.pin_memory,
+                                     cfg.num_workers, is_testing=True)
+    model_args = ModelArgs(cfg.model.model_name, cfg.use_mask, cfg.keypoint_dim)
+
+    if cfg.train_dataset is not None:
+        train_dataloader_args = DataloaderArgs(cfg.train_dataset, cfg.keypoint_dim, cfg.interactive,
+                                               cfg.persons_num, cfg.use_mask, cfg.skip_num, 1, False,
+                                               cfg.pin_memory, cfg.num_workers)
+    else:
+        train_dataloader_args = None
     dataloader = get_dataloader(dataloader_args)
 
-    if load_path:
-        model, _, _, _, _ = load_snapshot(load_path)
+    if cfg.load_path:
+        model, _, _, _, _ = load_snapshot(cfg.load_path)
     elif model_args.model_name:
         if model_args.model_name == 'nearest_neighbor':
             assert train_dataloader_args is not None, 'Please provide a train_dataset for nearest_neighbor model.'
@@ -28,7 +42,7 @@ if __name__ == '__main__':
             model = get_model(model_args).to('cuda')
             model.train_dataloader = train_dataloader
         else:
-            model_args.pred_frames_num = pred_frames_num
+            model_args.pred_frames_num = cfg.pred_frames_num
             assert model_args.pred_frames_num is not None, 'specify pred_frames_num'
             model_args.keypoints_num = dataloader.dataset.keypoints_num
             model = get_model(model_args).to('cuda')
@@ -40,5 +54,9 @@ if __name__ == '__main__':
     save_dir = setup_testing_dir(ROOT_DIR)
     save_args({'dataloader_args': dataloader_args, 'model_args': model.args}, save_dir)
 
-    predictor = Predictor(model, dataloader, is_interactive, save_dir)
+    predictor = Predictor(model, dataloader, cfg.interactive, save_dir)
     predictor.predict()
+
+
+if __name__ == '__main__':
+    predict()
