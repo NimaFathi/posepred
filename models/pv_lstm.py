@@ -68,7 +68,7 @@ class Decoder(nn.Module):
         self.outputs_num = outputs_num
         self.dropout = nn.Dropout(dropout)
         lstms = [
-            nn.LSTMCell(input_size=input_size if i == 0 else hidden_size, hidden_size=hidden_size).cuda() for
+            nn.LSTMCell(input_size=input_size if i == 0 else hidden_size, hidden_size=hidden_size) for
             i in range(n_layers)]
         self.lstms = nn.Sequential(*lstms)
         self.fc_out = nn.Linear(in_features=hidden_size, out_features=output_size)
@@ -82,7 +82,8 @@ class Decoder(nn.Module):
         if len(hiddens.shape) < 3 or len(cells.shape) < 3:
             hiddens = torch.unsqueeze(hiddens, 0)
             cells = torch.unsqueeze(cells, 0)
-        outputs = torch.tensor([], device='cuda')
+        device = 'cuda' if inputs.is_cude else 'cpu'
+        outputs = torch.tensor([], device=device)
         for j in range(self.outputs_num):
             for i, lstm in enumerate(self.lstms):
                 if i == 0:
