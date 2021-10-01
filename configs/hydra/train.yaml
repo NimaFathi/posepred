@@ -3,14 +3,14 @@ defaults:
   - loss: ???
   - optimizer: adam
   - scheduler: reduce_lr_on_plateau
+  - dataloader: main
   - metrics
-  - dataloader
   - _self_
 
 train_dataset: ???
 valid_dataset:
 epochs: ???
-snapshot_interval: -1
+snapshot_interval: ${epochs}
 start_epoch: 0
 load_path:
 device: cuda

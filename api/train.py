@@ -19,18 +19,16 @@ logger = logging.getLogger(__name__)
 @hydra.main(config_path=HYDRA_PATH, config_name="train")
 def train(cfg: DictConfig):
     print(OmegaConf.to_yaml(cfg))
-    print(cfg.mask_metrics)
-    # if cfg.snapshot_interval == -1:
-    cfg.snapshot_interval = cfg.epochs
-    trainer_args = TrainerArgs(cfg.epochs, cfg.interactive, cfg.start_epoch, cfg.lr, cfg.decay_factor,
-                               cfg.decay_patience, cfg.distance_loss, cfg.mask_loss_weight, cfg.snapshot_interval)
+    exit()
+    # trainer_args = TrainerArgs(cfg.epochs, cfg.interactive, cfg.start_epoch, cfg.lr, cfg.decay_factor,
+    #                            cfg.decay_patience, cfg.distance_loss, cfg.mask_loss_weight, cfg.snapshot_interval)
     train_dataloader_args = DataloaderArgs(cfg.train_dataset, cfg.keypoint_dim, cfg.interactive, cfg.persons_num,
                                            cfg.use_mask, cfg.skip_num, cfg.dataloader.batch_size,
                                            cfg.dataloader.shuffle, cfg.pin_memory, cfg.num_workers)
-    valid_dataloader_args = DataloaderArgs(cfg.valid_dataset, cfg.keypoint_dim, cfg.interactive, cfg.persons_num,
-                                           cfg.use_mask, cfg.skip_num, cfg.dataloader.batch_size,
-                                           cfg.dataloader.shuffle, cfg.pin_memory, cfg.num_workers)
-    model_args = ModelArgs(cfg.model.model_name, cfg.use_mask, cfg.keypoint_dim)
+    # valid_dataloader_args = DataloaderArgs(cfg.valid_dataset, cfg.keypoint_dim, cfg.interactive, cfg.persons_num,
+    #                                        cfg.use_mask, cfg.skip_num, cfg.dataloader.batch_size,
+    #                                        cfg.dataloader.shuffle, cfg.pin_memory, cfg.num_workers)
+    # model_args = ModelArgs(cfg.model.model_name, cfg.use_mask, cfg.keypoint_dim)
 
     train_dataloader = get_dataloader(train_dataloader_args)
     valid_dataloader = get_dataloader(valid_dataloader_args) if valid_dataloader_args.dataset_name is not None else None
