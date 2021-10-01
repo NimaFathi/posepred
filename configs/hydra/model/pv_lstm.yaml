@@ -1,3 +1,4 @@
+type: pv_lstm
 hidden_size: 200
 hardtanh_limit: 10
 n_layers: 1

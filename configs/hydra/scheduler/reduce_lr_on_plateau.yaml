@@ -1,3 +1,4 @@
+type: reduce_lr_on_plateau
 mode: min
 factor: 0.1
 patience: 10

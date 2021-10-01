@@ -1,3 +1,5 @@
 defaults:
   - zero_vel
   - pv_lstm
+
+type: disentangled

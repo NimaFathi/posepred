@@ -1,6 +1,6 @@
 import logging
 import hydra
-from omegaconf import DictConfig
+from omegaconf import DictConfig, OmegaConf
 import torch.optim as optim
 
 from configs.helper import TrainerArgs, DataloaderArgs, ModelArgs
@@ -18,11 +18,10 @@ logger = logging.getLogger(__name__)
 
 @hydra.main(config_path=HYDRA_PATH, config_name="train")
 def train(cfg: DictConfig):
-    for k, v in cfg.items():
-        print(k)
-    exit()
-    if cfg.snapshot_interval == -1:
-        cfg.snapshot_interval = cfg.epochs
+    print(OmegaConf.to_yaml(cfg))
+    print(cfg.mask_metrics)
+    # if cfg.snapshot_interval == -1:
+    cfg.snapshot_interval = cfg.epochs
     trainer_args = TrainerArgs(cfg.epochs, cfg.interactive, cfg.start_epoch, cfg.lr, cfg.decay_factor,
                                cfg.decay_patience, cfg.distance_loss, cfg.mask_loss_weight, cfg.snapshot_interval)
     train_dataloader_args = DataloaderArgs(cfg.train_dataset, cfg.keypoint_dim, cfg.interactive, cfg.persons_num,
