@@ -1,0 +1,5 @@
+mode: min
+factor: 0.1
+patience: 10
+threshold: 1e-4
+verbose: false

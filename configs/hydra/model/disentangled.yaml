@@ -1,5 +1,3 @@
 defaults:
-  - base_model
-  - loss: mse_vel_loss
-
-model_name: disentangled
+  - zero_vel
+  - pv_lstm

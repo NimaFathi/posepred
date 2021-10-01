@@ -1,0 +1,4 @@
+lr: 0.001
+momentum: 0
+dampening: 0
+nesterov: false

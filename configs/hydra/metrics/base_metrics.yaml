@@ -1,5 +1,0 @@
-pose_metrics:
-  - ADE
-  - FD
-mask_metrics:
-  - FDE

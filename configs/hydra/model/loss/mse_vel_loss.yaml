@@ -1,3 +1,0 @@
-defaults:
-  - base_loss
-loss_name: mse_vel_loss
