@@ -13,3 +13,4 @@ epochs: ???
 snapshot_interval: -1
 start_epoch: 0
 load_path:
+device: cuda

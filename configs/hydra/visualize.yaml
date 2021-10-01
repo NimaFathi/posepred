@@ -9,3 +9,4 @@ load_path:
 index:
 images_dir:
 ground_truth: false
+device: cuda

@@ -6,3 +6,4 @@ defaults:
 dataset: ???
 pred_frames_num: ???
 load_path:
+device: cuda
