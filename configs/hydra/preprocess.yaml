@@ -1,14 +1,14 @@
 defaults:
-  - share
   - _self_
+
 official_annotation_path: ???
 dataset: ???
-data_type: train
+data_type: ???
 output_name:
-obs_frames_num: 16
-pred_frames_num: 14
+obs_frames_num: ???
+pred_frames_num: ???
 use_video_once: false
 annotate_openpifpaf: false
 image_dir: ???
 joints_annotation_path: ???
-is_3D:
+is_3D: ???

@@ -1,15 +1,11 @@
 defaults:
-  - model: ???
-  - dataloader: base_dataloader
-  - share
+  - model:
+  - dataloader
   - _self_
 
-dataloader:
-  batch_size: 1
-
 dataset: ???
-index: ???
-images_dir:
+pred_frames_num:
 load_path:
+index:
+images_dir:
 ground_truth: false
-pred_frames_num: 14

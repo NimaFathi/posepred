@@ -1,9 +1,8 @@
 defaults:
-  - dataloader: base_dataloader
-  - model: ???
-  - share
+  - model:
+  - dataloader
   - _self_
 
-load_path: ???
-pred_frames_num: 14
-train_dataset:
+dataset: ???
+pred_frames_num: ???
+load_path:

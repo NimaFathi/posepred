@@ -42,8 +42,7 @@ def evaluate(cfg: DictConfig):
         logger.error(msg)
         raise Exception(msg)
     evaluator = Evaluator(model, dataloader, reporter, cfg.interactive, cfg.model.loss.loss_name,
-                          cfg.metrics.pose_metrics,
-                          cfg.metrics.mask_metrics, cfg.rounds_num)
+                          cfg.metrics.pose_metrics, cfg.metrics.mask_metrics, cfg.rounds_num)
     evaluator.evaluate()
 
     return dataloader_args, model_args, cfg.load_path, cfg.interactive, cfg.distance_loss, cfg.metrics.pose_metrics, cfg.metrics.mask_metrics, cfg.rounds_num, train_dataloader_args

@@ -1,15 +1,10 @@
 defaults:
-  - model: ???
-  - dataloader: base_dataloader
-  - metrics: base_metrics
-  - share
+  - model:
+  - loss: ???
+  - metrics
+  - dataloader
   - _self_
 
-dataloader:
-  batch_size: 1
-  shuffle: false
-
-load_path: ???
-distance_loss: L1
+dataset: ???
+load_path:
 rounds_num: 1
-train_dataset:
