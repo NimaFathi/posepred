@@ -3,3 +3,4 @@ defaults:
   - common
 
 type: nearest_neighbor
+train_dataset: ???

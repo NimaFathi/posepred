@@ -5,8 +5,7 @@ defaults:
   - loss: ???
   - metrics
 
-eval_dataset: ???
-train_dataset:
+dataset: ???
 load_path:
 rounds_num: 1
 device: cuda
