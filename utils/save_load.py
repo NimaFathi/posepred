@@ -1,11 +1,9 @@
-import json
 import logging
 import os
 import pickle
 
 import torch
 
-from configs.helper import JSONEncoder_
 from models import MODELS
 from losses import LOSSES
 from optimizers import OPTIMIZERS
@@ -40,12 +38,6 @@ def save_snapshot(model, loss_module, optimizer, optimizer_args, epoch, train_re
     }
     torch.save(snapshot, os.path.join(save_path, 'snapshots', '%03d.pt' % epoch))
     del snapshot
-
-
-def save_args(args, save_dir):
-    for key, arg in args.items():
-        with open(os.path.join(save_dir, key + '.txt'), 'w') as f:
-            f.write(json.dumps(arg, indent=4, cls=JSONEncoder_))
 
 
 def save_test_results(result_df, result_tensor, save_dir):

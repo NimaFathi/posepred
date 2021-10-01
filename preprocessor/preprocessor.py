@@ -1,9 +1,7 @@
-import json
 import os
-
+import json
+from json import JSONEncoder
 import numpy as np
-
-from configs.helper import NumpyEncoder
 
 
 class Processor:
@@ -62,3 +60,10 @@ class Processor:
         }
         with open(output_file_path, 'w') as f_object:
             json.dump(meta, f_object, cls=NumpyEncoder, indent=4)
+
+
+class NumpyEncoder(JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        return JSONEncoder.default(self, obj)
