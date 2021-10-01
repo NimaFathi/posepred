@@ -13,8 +13,8 @@ class Evaluator:
     # evaluator = Evaluator(cfg, eval_dataloader, model, loss_module, eval_reporter)
     def __init__(self, args, dataloader, model, loss_module, reporter):
         self.dataloader = dataloader
-        self.model = model
-        self.loss_module = loss_module
+        self.model = model.to(args.device)
+        self.loss_module = loss_module.to(args.device)
         self.reporter = reporter
         self.is_interactive = args.data.is_interactive
         self.pose_metrics = args.pose_metrics

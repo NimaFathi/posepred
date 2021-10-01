@@ -35,7 +35,7 @@ def generate_output(cfg: DictConfig):
     cfg.save_dir = os.getcwd()
     setup_testing_dir(cfg.save_dir)
 
-    output_enerator = Output_Generator(model, dataloader, cfg.save_dir)
+    output_enerator = Output_Generator(model, dataloader, cfg.save_dir, cfg.device)
     output_enerator.generate()
 
 

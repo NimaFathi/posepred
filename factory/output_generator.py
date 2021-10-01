@@ -1,6 +1,5 @@
 import logging
 import time
-
 import pandas as pd
 import torch
 
@@ -11,15 +10,15 @@ logger = logging.getLogger(__name__)
 
 
 class Output_Generator:
-    def __init__(self, model, dataloader, save_dir):
-        self.model = model
+    def __init__(self, model, dataloader, save_dir, device):
+        self.model = model.to(device)
         self.dataloader = dataloader
         self.save_dir = save_dir
-        self.device = torch.device('cuda')
+        self.device = device
 
         self.result = pd.DataFrame()
-        self.pred_pose = torch.Tensor().to('cuda')
-        self.pred_mask = torch.Tensor().to('cuda')
+        self.pred_pose = torch.Tensor().to(device)
+        self.pred_mask = torch.Tensor().to(device)
 
     def generate(self):
         logger.info("Prediction started.")
@@ -52,11 +51,17 @@ class Output_Generator:
         if self.model.args.use_mask:
             self.pred_mask = torch.cat((self.pred_mask, pred_mask), 0)
 
+        # to cpu
+        if self.device == 'cuda':
+            pred_pose = pred_pose.detach().cpu()
+            if self.model.args.use_mask:
+                pred_mask = pred_mask.detach().cpu()
+
         # update dataframe
         for i in range(pred_pose.shape[0]):
             if self.model.args.use_mask:
-                single_data = {'pred_pose': str(pred_pose[i].detach().cpu().numpy().tolist()),
-                               'pred_mask': str(pred_mask[i].detach().cpu().numpy().round().tolist())}
+                single_data = {'pred_pose': str(pred_pose[i].numpy().tolist()),
+                               'pred_mask': str(pred_mask[i].numpy().round().tolist())}
             else:
-                single_data = {'pred_pose': str(pred_pose[i].detach().cpu().numpy().tolist()), }
+                single_data = {'pred_pose': str(pred_pose[i].numpy().tolist())}
             self.result = self.result.append(single_data, ignore_index=True)
