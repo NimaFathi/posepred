@@ -247,5 +247,6 @@ exps/
 preprocessed_data/
 raw_data/
 visualization/example.py
-visualization/presentation/
+visualization/presentation/obs.gif
+visualization/presentation/pred.gif
 outputs/
