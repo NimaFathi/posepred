@@ -12,7 +12,6 @@ class NearestNeighbor(nn.Module):
         self.train_dataloader = None
 
     def forward(self, inputs):
-        device = 'cuda' if inputs.is_cuda else 'cpu'
         min_distance = None
         best_pred_vel = None
         best_pred_mask = None
@@ -20,6 +19,8 @@ class NearestNeighbor(nn.Module):
         obs_pose = inputs['observed_pose']
         in_vel = (obs_pose[..., 1:, :] - obs_pose[..., :-1, :]).view(1, -1)
         assert in_vel.shape[0] == 1, "only support batch_size 1 in nearest neighbor"
+
+        device = 'cuda' if obs_pose.is_cuda else 'cpu'
 
         for data in self.train_dataloader:
             obs_vel = data[1].to(device)

@@ -22,7 +22,6 @@ class Disentangled(nn.Module):
         self.local_model = PVLSTM(local_args)
 
     def forward(self, inputs):
-
         pose = inputs['observed_pose']
 
         # global

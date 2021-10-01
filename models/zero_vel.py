@@ -8,13 +8,13 @@ class ZeroVel(torch.nn.Module):
         self.input_size = self.output_size = int(args.keypoints_num * args.keypoint_dim)
 
     def forward(self, inputs):
-        device = 'cuda' if inputs.is_cuda else 'cpu'
         obs_pose = inputs['observed_pose']
         last_frame = obs_pose[..., -1, :].unsqueeze(-2)
         ndims = len(obs_pose.shape)
         pred_pose = last_frame.repeat([1 for _ in range(ndims - 2)] + [self.args.pred_frames_num, 1])
         pred_vel = torch.zeros_like(pred_pose)
 
+        device = 'cuda' if obs_pose.is_cuda else 'cpu'
         outputs = {'pred_pose': pred_pose.to(device), 'pred_vel': pred_vel.to(device)}
 
         if self.args.use_mask:
