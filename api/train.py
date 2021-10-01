@@ -9,10 +9,9 @@ from optimizers import OPTIMIZERS
 from schedulers import SCHEDULERS
 from factory.trainer import Trainer
 from utils.reporter import Reporter
-from utils.save_load import load_snapshot, save_snapshot, save_args, setup_training_dir
+from utils.save_load import load_snapshot, save_snapshot
 
 from path_definition import HYDRA_PATH
-from path_definition import ROOT_DIR
 
 logger = logging.getLogger(__name__)
 
@@ -22,36 +21,34 @@ def train(cfg: DictConfig):
     if cfg.load_path is None and cfg.model is None:
         raise Exception('either specify a load_path or config a model.')
     print(OmegaConf.to_yaml(cfg))
-
-    # trainer_args = TrainerArgs(cfg.epochs, cfg.interactive, cfg.start_epoch, cfg.lr, cfg.decay_factor,
-    #                            cfg.decay_patience, cfg.distance_loss, cfg.mask_loss_weight, cfg.snapshot_interval)
     # model_args = ModelArgs(cfg.model.model_name, cfg.use_mask, cfg.keypoint_dim)
 
     train_dataloader = get_dataloader(cfg.train_dataset, cfg.data)
     valid_dataloader = get_dataloader(cfg.valid_dataset, cfg.data)
 
     if cfg.load_path:
-        model, optimizer, epoch, train_reporter, valid_reporter = load_snapshot(cfg.load_path)
+        model, optimizer, optimizer_args, epoch, train_reporter, valid_reporter = load_snapshot(cfg.load_path)
         cfg.start_epoch = epoch
+        cfg.optimizer = optimizer_args
         cfg.save_dir = cfg.load_path[:cfg.load_path.rindex('snapshots/')]
     else:
         cfg.model.keypoint_dim = cfg.data.keypoint_dim
+        cfg.model.keypoint_dim = cfg.data.use_mask
         cfg.model.pred_frames_num = train_dataloader.dataset.future_frames_num
         cfg.model.keypoints_num = train_dataloader.dataset.keypoints_num
         model = MODELS[cfg.model.type](cfg.model)
         optimizer = OPTIMIZERS[cfg.optimizer.type](model.parameters(), cfg.optimizer)
-        print(os.getcwd())
-        exit()
-        cfg.save_dir = setup_training_dir(ROOT_DIR)
+        cfg.save_dir = os.getcwd()
         train_reporter = Reporter(state='train')
         valid_reporter = Reporter(state='valid')
-        save_args({'trainer_args': trainer_args, 'model_args': model.args}, trainer_args.save_dir)
-        save_snapshot(model, optimizer, trainer_args.lr, 0, train_reporter, valid_reporter, trainer_args.save_dir)
+        save_snapshot(model, optimizer, cfg.optimizer, 0, train_reporter, valid_reporter, cfg.save_dir)
 
-    model = model.to(cfg.device)
     scheduler = SCHEDULERS[cfg.scheduler.type](optimizer, cfg.scheduler)
-    trainer = Trainer(trainer_args, model, train_dataloader, valid_dataloader, optimizer, scheduler, train_reporter,
-                      valid_reporter)
+
+    args = {'epochs': cfg.epochs, 'start_epoch': cfg.start_epoch, 'is_interactive': cfg.data.is_interactive,
+            'snapshot_interval': cfg.snapshot_interval, 'save_dir': cfg.save_dir, 'device': cfg.device}
+    trainer = Trainer(args, train_dataloader, valid_dataloader, model, optimizer, cfg.optimizer, scheduler,
+                      train_reporter, valid_reporter)
     trainer.train()
 
 

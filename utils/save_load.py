@@ -17,16 +17,17 @@ def load_snapshot(snapshot_path):
     model = MODELS[snapshot['model_args'].type](snapshot['model_args'])
     model.load_state_dict(snapshot['model_state_dict'])
     optimizer = OPTIMIZERS[snapshot['optimizer_args'].type](model.parameters(), snapshot['optimizer_args'])
-    return model, optimizer, snapshot['epoch'], snapshot['train_reporter'], snapshot['valid_reporter']
+    optimizer.load_state_dict(snapshot['optimizer_state_dict'])
+    return model, optimizer, optimizer_args, snapshot['epoch'], snapshot['train_reporter'], snapshot['valid_reporter']
 
 
-def save_snapshot(model, optimizer, optimizer_lr, epoch, train_reporter, valid_reporter, save_path):
+def save_snapshot(model, optimizer, optimizer_args, epoch, train_reporter, valid_reporter, save_path):
     logger.info('### Taking Snapshot ###')
     snapshot = {
         'model_state_dict': model.state_dict(),
-        'optimizer_state_dict': optimizer.state_dict(),
-        'optimizer_lr': optimizer_lr,
         'model_args': model.args,
+        'optimizer_state_dict': optimizer.state_dict(),
+        'optimizer_args': optimizer_args,
         'epoch': epoch,
         'train_reporter': train_reporter,
         'valid_reporter': valid_reporter

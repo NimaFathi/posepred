@@ -14,20 +14,20 @@ logger = logging.getLogger(__name__)
 
 
 class Trainer:
-    def __init__(self, trainer_args, model, train_dataloader, valid_dataloader, optimizer, scheduler, train_reporter,
-                 valid_reporter):
-        self.args = trainer_args
-        self.model = model
+    def __init__(self, args, train_dataloader, valid_dataloader, model, optimizer, optimizer_args, scheduler,
+                 train_reporter, valid_reporter):
+        self.args = args
         self.train_dataloader = train_dataloader
         self.valid_dataloader = valid_dataloader
+        self.model = model.to(args.device)
         self.optimizer = optimizer
+        self.optimizer_args = optimizer_args
         self.scheduler = scheduler
         self.train_reporter = train_reporter
         self.valid_reporter = valid_reporter
-        self.tb = SummaryWriter(trainer_args.save_dir)
+        self.tensor_board = SummaryWriter(args.save_dir)
         self.use_validation = False if valid_dataloader is None else True
         self.loss_module = LOSSES[self.args.loss_name]
-        self.device = torch.device('cuda')
 
     def train(self):
         logger.info("Training started.")
@@ -45,7 +45,7 @@ class Trainer:
                     self.valid_reporter.save_data(self.model.args.use_mask, self.args.save_dir)
                 Reporter.save_plots(self.model.args.use_mask, self.args.save_dir, self.train_reporter.history,
                                     self.valid_reporter.history, self.use_validation)
-        self.tb.close()
+        self.tensor_board.close()
         logger.info("-" * 100)
         logger.info('Training is completed in %.2f seconds.' % (time.time() - time0))
 
@@ -90,7 +90,7 @@ class Trainer:
 
             self.train_reporter.update(report_attrs, batch_size)
 
-        self.train_reporter.epoch_finished(self.tb)
+        self.train_reporter.epoch_finished(self.tensor_board)
         self.train_reporter.print_values(logger, self.model.args.use_mask)
 
     def __validate(self):
@@ -128,5 +128,5 @@ class Trainer:
 
                 self.valid_reporter.update(report_attrs, batch_size)
 
-        self.valid_reporter.epoch_finished(self.tb)
+        self.valid_reporter.epoch_finished(self.tensor_board)
         self.valid_reporter.print_values(logger, self.model.args.use_mask)
