@@ -12,15 +12,15 @@ from preprocessor.pie_preprocessor import PIEPreprocessor
 from preprocessor.posetrack_preprocessor import PoseTrackPreprocessor
 from preprocessor.somof_3dpw_preprocessor import SoMoF3DPWPreprocessor
 from preprocessor.somof_posetrack_preprocessor import SoMoFPoseTrackPreprocessor
-from utils.lists import dataset, data_type
+from data_loader import DATASETS, DATA_TYPES
 
 logger = logging.getLogger(__name__)
 
 
 @hydra.main(config_path=HYDRA_PATH, config_name="preprocess")
 def preprocess(cfg: DictConfig):
-    assert cfg.dataset in dataset, "invalid dataset name"
-    assert cfg.data_type in data_type, "data_type must be in ['train', 'test', 'validation']"
+    assert cfg.dataset in DATASETS, "invalid dataset name"
+    assert cfg.data_type in DATA_TYPES, "data_type choices: " + str(DATA_TYPES)
     if cfg.keypoint_dim == 2:
         cfg.is_3D = False
     elif cfg.keypoint_dim == 3:
