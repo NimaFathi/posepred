@@ -21,13 +21,12 @@ class Output_Generator:
         self.pred_mask = torch.Tensor().to(device)
 
     def generate(self):
-        logger.info("Prediction started.")
+        logger.info("Generating outputs started.")
         self.model.eval()
         time0 = time.time()
         self.__generate()
         save_test_results(self.result, [self.pred_pose, self.pred_mask], self.save_dir)
-        logger.info("-" * 100)
-        logger.info('Testing is completed in: %.2f' % (time.time() - time0))
+        logger.info('Generating outputs is completed in: %.2f' % (time.time() - time0))
 
     def __generate(self):
         for data in self.dataloader:
