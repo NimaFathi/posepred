@@ -33,13 +33,14 @@ class Reporter:
         for key, value in attrs.items():
             self.attrs.get(key).update(value, batch_size)
 
-    def epoch_finished(self, tb):
+    def epoch_finished(self, tb=None):
         self.history.get('time').append(time.time() - self.start_time)
         for key, avg_meter in self.attrs.items():
             value = avg_meter.get_average()
             value = value.detach().cpu().numpy() if torch.is_tensor(value) else value
             self.history.get(key).append(float(value))
-            tb.add_scalar(self.state + '_' + key, float(value), len(self.history.get(key)))
+            if tb is not None:
+                tb.add_scalar(self.state + '_' + key, float(value), len(self.history.get(key)))
         self.reset_avr_meters()
 
     def reset_avr_meters(self):
@@ -67,7 +68,7 @@ class Reporter:
         for key, value in self.history.items():
             if not use_mask and 'mask' in key:
                 continue
-            logger.info(str(key) + ': (mean=%.3f, std=%.3f)' % (np.mean(value), np.std(value)))
+            logger.info(str(key) + ': (mean=%.5f, std=%.3f)' % (np.mean(value), np.std(value)))
 
     @staticmethod
     def save_plots(use_mask, save_dir, train_history, validiation_history, use_validation):
