@@ -6,7 +6,6 @@ from omegaconf import DictConfig
 from configs.helper import DataloaderArgs, ModelArgs
 from data_loader.my_dataloader import get_dataloader
 from factory.evaluator import Evaluator
-from models import get_model
 from path_definition import HYDRA_PATH
 from utils.reporter import Reporter
 from utils.save_load import load_snapshot
@@ -44,8 +43,6 @@ def evaluate(cfg: DictConfig):
     evaluator = Evaluator(model, dataloader, reporter, cfg.interactive, cfg.model.loss.loss_name,
                           cfg.metrics.pose_metrics, cfg.metrics.mask_metrics, cfg.rounds_num)
     evaluator.evaluate()
-
-    return dataloader_args, model_args, cfg.load_path, cfg.interactive, cfg.distance_loss, cfg.metrics.pose_metrics, cfg.metrics.mask_metrics, cfg.rounds_num, train_dataloader_args
 
 
 if __name__ == '__main__':

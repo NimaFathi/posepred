@@ -1,3 +1,4 @@
+import os
 import logging
 import hydra
 from omegaconf import DictConfig, OmegaConf
@@ -21,10 +22,10 @@ def train(cfg: DictConfig):
     if cfg.load_path is None and cfg.model is None:
         raise Exception('either specify a load_path or config a model.')
     print(OmegaConf.to_yaml(cfg))
-    exit()
-    trainer_args = TrainerArgs(cfg.epochs, cfg.interactive, cfg.start_epoch, cfg.lr, cfg.decay_factor,
-                               cfg.decay_patience, cfg.distance_loss, cfg.mask_loss_weight, cfg.snapshot_interval)
-    model_args = ModelArgs(cfg.model.model_name, cfg.use_mask, cfg.keypoint_dim)
+
+    # trainer_args = TrainerArgs(cfg.epochs, cfg.interactive, cfg.start_epoch, cfg.lr, cfg.decay_factor,
+    #                            cfg.decay_patience, cfg.distance_loss, cfg.mask_loss_weight, cfg.snapshot_interval)
+    # model_args = ModelArgs(cfg.model.model_name, cfg.use_mask, cfg.keypoint_dim)
 
     train_dataloader = get_dataloader(cfg.train_dataset, cfg.data)
     valid_dataloader = get_dataloader(cfg.valid_dataset, cfg.data)
@@ -38,6 +39,8 @@ def train(cfg: DictConfig):
         cfg.model.keypoints_num = train_dataloader.dataset.keypoints_num
         model = MODELS[cfg.model.type](cfg.model)
         optimizer = OPTIMIZERS[cfg.optimizer.type](model.parameters(), cfg.optimizer)
+        print(os.getcwd())
+        exit()
         cfg.save_dir = setup_training_dir(ROOT_DIR)
         train_reporter = Reporter(state='train')
         valid_reporter = Reporter(state='valid')

@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 
 
 class NonInteractiveDataset(Dataset):
-    def __init__(self, dataset_path, keypoint_dim, is_testing, use_mask, skip_frame, is_visualizing):
+    def __init__(self, dataset_path, keypoint_dim, is_testing, use_mask, is_visualizing):
 
         tensor_keys = ['observed_pose', 'future_pose', 'observed_mask', 'future_mask']
         data = list()
@@ -25,7 +25,6 @@ class NonInteractiveDataset(Dataset):
         self.keypoint_dim = keypoint_dim
         self.is_testing = is_testing
         self.use_mask = use_mask
-        self.skip_frame = skip_frame
         self.is_visualizing = is_visualizing
 
         seq = self.data[0]
