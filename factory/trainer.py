@@ -4,7 +4,6 @@ import logging
 import torch
 from torch.utils.tensorboard import SummaryWriter
 
-from losses import LOSSES
 from metrics import POSE_METRICS, MASK_METRICS
 from utils.reporter import Reporter
 from utils.save_load import save_snapshot
@@ -14,12 +13,13 @@ logger = logging.getLogger(__name__)
 
 
 class Trainer:
-    def __init__(self, args, train_dataloader, valid_dataloader, model, optimizer, optimizer_args, scheduler,
+    def __init__(self, args, train_dataloader, valid_dataloader, model, loss_module, optimizer, optimizer_args, scheduler,
                  train_reporter, valid_reporter):
         self.args = args
         self.train_dataloader = train_dataloader
         self.valid_dataloader = valid_dataloader
         self.model = model.to(args.device)
+        self.loss_module = loss_module
         self.optimizer = optimizer
         self.optimizer_args = optimizer_args
         self.scheduler = scheduler
@@ -27,7 +27,6 @@ class Trainer:
         self.valid_reporter = valid_reporter
         self.tensor_board = SummaryWriter(args.save_dir)
         self.use_validation = False if valid_dataloader is None else True
-        self.loss_module = LOSSES[self.args.loss_name]
 
     def train(self):
         logger.info("Training started.")

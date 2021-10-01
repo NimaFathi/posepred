@@ -1,10 +1,11 @@
 import os
 import logging
 import hydra
-from omegaconf import DictConfig, OmegaConf
+from omegaconf import DictConfig
 
 from data_loader.my_dataloader import get_dataloader
 from models import MODELS
+from losses import LOSSES
 from optimizers import OPTIMIZERS
 from schedulers import SCHEDULERS
 from factory.trainer import Trainer
@@ -20,12 +21,8 @@ logger = logging.getLogger(__name__)
 def train(cfg: DictConfig):
     if cfg.load_path is None and cfg.model is None:
         raise Exception('either specify a load_path or config a model.')
-    print(OmegaConf.to_yaml(cfg))
-    # model_args = ModelArgs(cfg.model.model_name, cfg.use_mask, cfg.keypoint_dim)
-
     train_dataloader = get_dataloader(cfg.train_dataset, cfg.data)
     valid_dataloader = get_dataloader(cfg.valid_dataset, cfg.data)
-
     if cfg.load_path:
         model, optimizer, optimizer_args, epoch, train_reporter, valid_reporter = load_snapshot(cfg.load_path)
         cfg.start_epoch = epoch
@@ -37,8 +34,8 @@ def train(cfg: DictConfig):
         cfg.model.pred_frames_num = train_dataloader.dataset.future_frames_num
         cfg.model.keypoints_num = train_dataloader.dataset.keypoints_num
         model = MODELS[cfg.model.type](cfg.model)
+        loss = LOSSES[cfg.loss.type](cfg.loss)
         optimizer = OPTIMIZERS[cfg.optimizer.type](model.parameters(), cfg.optimizer)
-
         train_reporter = Reporter(state='train')
         valid_reporter = Reporter(state='valid')
         cfg.save_dir = os.getcwd()
@@ -46,8 +43,7 @@ def train(cfg: DictConfig):
         save_snapshot(model, optimizer, cfg.optimizer, 0, train_reporter, valid_reporter, cfg.save_dir)
 
     scheduler = SCHEDULERS[cfg.scheduler.type](optimizer, cfg.scheduler)
-
-    trainer = Trainer(cfg, train_dataloader, valid_dataloader, model, optimizer, cfg.optimizer, scheduler,
+    trainer = Trainer(cfg, train_dataloader, valid_dataloader, model, loss, optimizer, cfg.optimizer, scheduler,
                       train_reporter, valid_reporter)
     trainer.train()
 

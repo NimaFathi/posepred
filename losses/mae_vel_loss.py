@@ -4,9 +4,10 @@ import torch.nn as nn
 
 class MAEVelLoss(nn.Module):
 
-    def __init__(self):
+    def __init__(self, args):
         super().__init__()
 
+        self.args = args
         self.mae = nn.MSELoss()
         self.bce = nn.BCELoss()
 
@@ -22,7 +23,7 @@ class MAEVelLoss(nn.Module):
         else:
             mask_loss = 0
 
-        loss = vel_loss + (0.3 * mask_loss)
+        loss = vel_loss + (self.args.mask_weight * mask_loss)
         outputs = {'loss': loss, 'vel_loss': vel_loss, 'mask_loss': mask_loss}
 
         return outputs
