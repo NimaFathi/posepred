@@ -3,7 +3,6 @@ import time
 
 import torch
 
-from losses import LOSSES
 from metrics import POSE_METRICS, MASK_METRICS
 from utils.others import dict_to_device
 
@@ -11,16 +10,17 @@ logger = logging.getLogger(__name__)
 
 
 class Evaluator:
-    def __init__(self, model, dataloader, reporter, is_interactive, loss_name, pose_metrics, mask_metrics, rounds_num):
-        self.model = model
+    # evaluator = Evaluator(cfg, eval_dataloader, model, loss_module, eval_reporter)
+    def __init__(self, args, dataloader, model, loss_module, reporter):
         self.dataloader = dataloader
+        self.model = model
+        self.loss_module = loss_module
         self.reporter = reporter
-        self.is_interactive = is_interactive
-        self.loss_module = LOSSES[loss_name]
-        self.pose_metrics = pose_metrics
-        self.mask_metrics = mask_metrics
-        self.rounds_num = rounds_num
-        self.device = torch.device('cuda')
+        self.is_interactive = args.data.is_interactive
+        self.pose_metrics = args.pose_metrics
+        self.mask_metrics = args.mask_metrics
+        self.rounds_num = args.rounds_num
+        self.device = args.device
 
     def evaluate(self):
         logger.info('Evaluation started.')

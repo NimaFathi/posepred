@@ -1,7 +1,7 @@
 defaults:
-  - model:
-  - data: main
   - _self_
+  - data: main
+  - model:
 
 dataset: ???
 pred_frames_num:

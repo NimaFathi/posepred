@@ -1,11 +1,12 @@
 defaults:
+  - _self_
+  - data: main
   - model:
   - loss: ???
-  - data: main
   - metrics
-  - _self_
 
-dataset: ???
+eval_dataset: ???
+train_dataset:
 load_path:
 rounds_num: 1
 device: cuda

@@ -1,10 +1,10 @@
 import logging
-
 import hydra
 from omegaconf import DictConfig
 
-from configs.helper import DataloaderArgs, ModelArgs
 from data_loader.my_dataloader import get_dataloader
+from models import MODELS
+from losses import LOSSES
 from factory.evaluator import Evaluator
 from path_definition import HYDRA_PATH
 from utils.reporter import Reporter
@@ -15,33 +15,29 @@ logger = logging.getLogger(__name__)
 
 @hydra.main(config_path=HYDRA_PATH, config_name="evaluate")
 def evaluate(cfg: DictConfig):
-    dataloader_args = DataloaderArgs(cfg.dataloader.dataset_file_name, cfg.keypoint_dim, cfg.interactive,
-                                     cfg.persons_num, cfg.use_mask, cfg.skip_num, cfg.dataloader.batch_size,
-                                     cfg.dataloader.shuffle, cfg.pin_memory, cfg.num_workers)
-    model_args = ModelArgs(cfg.model.model_name, cfg.use_mask, cfg.keypoint_dim)
-
-    if cfg.train_dataset is not None:
-        train_dataloader_args = DataloaderArgs(cfg.train_dataset, cfg.keypoint_dim, cfg.interactive, cfg.persons_num,
-                                               cfg.use_mask, cfg.skip_num, 1024, False, cfg.pin_memory, cfg.num_workers)
-    else:
-        train_dataloader_args = None
-    dataloader = get_dataloader(dataloader_args)
-    reporter = Reporter(attrs=cfg.metrics.pose_metrics + cfg.metrics.mask_metrics)
-    if cfg.load_path:
-        model, _, _, _, _ = load_snapshot(cfg.load_path)
-    elif model_args.model_name:
-        model_args.pred_frames_num = dataloader.dataset.future_frames_num
-        model_args.keypoints_num = dataloader.dataset.keypoints_num
-        model = get_model(model_args).to('cuda')
-        if model_args.model_name == 'nearest_neighbor':
-            assert train_dataloader_args is not None, 'Please provide a train_dataset for nearest_neighbor model.'
-            model.train_dataloader = get_dataloader(train_dataloader_args)
-    else:
-        msg = "Please provide either a model_name or a load_path to a trained model."
+    if cfg.load_path is None and cfg.model is None:
+        msg = 'either specify a load_path or config a model.'
         logger.error(msg)
         raise Exception(msg)
-    evaluator = Evaluator(model, dataloader, reporter, cfg.interactive, cfg.model.loss.loss_name,
-                          cfg.metrics.pose_metrics, cfg.metrics.mask_metrics, cfg.rounds_num)
+    if cfg.train_dataset is not None:
+        pass
+
+    eval_dataloader = get_dataloader(cfg.eval_dataset, cfg.data)
+    eval_reporter = Reporter(state='eval')
+    if cfg.load_path is not None:
+        model, loss_module, _, _, _, _, _ = load_snapshot(cfg.load_path)
+    else:
+        cfg.model.keypoint_dim = cfg.data.keypoint_dim
+        cfg.model.pred_frames_num = eval_dataloader.dataset.future_frames_num
+        cfg.model.keypoints_num = eval_dataloader.dataset.keypoints_num
+        cfg.model.use_mask = cfg.data.use_mask
+        model = MODELS[cfg.model.type](cfg.model)
+        loss_module = LOSSES[cfg.loss.type](cfg.loss)
+        if cfg.model.type == 'nearest_neighbor':
+            assert cfg.train_dataset is not None, 'Please provide a train_dataset for nearest_neighbor model.'
+            model.train_dataloader = get_dataloader(cfg.train_dataset, cfg.data)
+
+    evaluator = Evaluator(cfg, eval_dataloader, model, loss_module, eval_reporter)
     evaluator.evaluate()
 
 

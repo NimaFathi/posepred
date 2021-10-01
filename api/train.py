@@ -20,10 +20,12 @@ logger = logging.getLogger(__name__)
 @hydra.main(config_path=HYDRA_PATH, config_name="train")
 def train(cfg: DictConfig):
     if cfg.load_path is None and cfg.model is None:
-        raise Exception('either specify a load_path or config a model.')
+        msg = 'either specify a load_path or config a model.'
+        logger.error(msg)
+        raise Exception(msg)
     train_dataloader = get_dataloader(cfg.train_dataset, cfg.data)
     valid_dataloader = get_dataloader(cfg.valid_dataset, cfg.data)
-    if cfg.load_path:
+    if cfg.load_path is not None:
         model, loss_module, optimizer, optimizer_args, epoch, train_reporter, valid_reporter = load_snapshot(
             cfg.load_path)
         cfg.start_epoch = epoch

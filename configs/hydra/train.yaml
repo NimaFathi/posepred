@@ -1,11 +1,12 @@
 defaults:
+  - _self_
+  - data: main
   - model: ???
   - loss: ???
   - optimizer: adam
   - scheduler: reduce_lr_on_plateau
-  - data: main
   - metrics
-  - _self_
+
 
 train_dataset: ???
 valid_dataset:
