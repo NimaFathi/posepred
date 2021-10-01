@@ -82,7 +82,7 @@ class Decoder(nn.Module):
         if len(hiddens.shape) < 3 or len(cells.shape) < 3:
             hiddens = torch.unsqueeze(hiddens, 0)
             cells = torch.unsqueeze(cells, 0)
-        device = 'cuda' if inputs.is_cude else 'cpu'
+        device = 'cuda' if inputs.is_cuda else 'cpu'
         outputs = torch.tensor([], device=device)
         for j in range(self.outputs_num):
             for i, lstm in enumerate(self.lstms):

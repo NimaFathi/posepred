@@ -3,7 +3,8 @@ import numpy as np
 
 
 def pose_from_vel(velocity, last_obs_pose, stay_in_frame=False):
-    pose = torch.zeros_like(velocity).to('cuda')
+    device = 'cuda' if velocity.is_cuda else 'cpu'
+    pose = torch.zeros_like(velocity).to(device)
     last_obs_pose_ = last_obs_pose
 
     for i in range(velocity.shape[-2]):
