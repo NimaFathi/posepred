@@ -7,6 +7,7 @@ import torch
 
 from configs.helper import JSONEncoder_
 from models import MODELS
+from losses import LOSSES
 from optimizers import OPTIMIZERS
 
 logger = logging.getLogger(__name__)
@@ -16,17 +17,21 @@ def load_snapshot(snapshot_path):
     snapshot = torch.load(snapshot_path, map_location='cpu')
     model = MODELS[snapshot['model_args'].type](snapshot['model_args'])
     model.load_state_dict(snapshot['model_state_dict'])
+    loss_module = LOSSES[snapshot['loss_args'].type](snapshot['loss_args'])
+    loss_module.load_state_dict(snapshot['loss_state_dict'])
     optimizer = OPTIMIZERS[snapshot['optimizer_args'].type](model.parameters(), snapshot['optimizer_args'])
     optimizer.load_state_dict(snapshot['optimizer_state_dict'])
-    return model, optimizer, snapshot['optimizer_args'], snapshot['epoch'], snapshot['train_reporter'], snapshot[
-        'valid_reporter']
+    return (model, loss_module, optimizer, snapshot['optimizer_args'], snapshot['epoch'], snapshot['train_reporter'],
+            snapshot['valid_reporter'])
 
 
-def save_snapshot(model, optimizer, optimizer_args, epoch, train_reporter, valid_reporter, save_path):
+def save_snapshot(model, loss_module, optimizer, optimizer_args, epoch, train_reporter, valid_reporter, save_path):
     logger.info('### Taking Snapshot ###')
     snapshot = {
         'model_state_dict': model.state_dict(),
         'model_args': model.args,
+        'loss_state_dict': loss_module.state_dict(),
+        'loss_args': loss_module.args,
         'optimizer_state_dict': optimizer.state_dict(),
         'optimizer_args': optimizer_args,
         'epoch': epoch,
