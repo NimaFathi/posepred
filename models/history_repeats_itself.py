@@ -126,10 +126,10 @@ class GCN(nn.Module):
         return y
 
 
-class HisRepItself(nn.Module):
+class HistoryRepeatsItself(nn.Module):
 
     def __init__(self, args):
-        super(HisRepItself, self).__init__()
+        super(HistoryRepeatsItself, self).__init__()
 
         self.args = args
         self.in_features = int(args.keypoints_num * args.keypoint_dim)

@@ -3,14 +3,14 @@ from .nearest_neighbor import NearestNeighbor
 from .pv_lstm import PVLSTM
 from .disentangled import Disentangled
 from .derpof import DeRPoF
-from .his_rep_itself import HisRepItself
+from .history_repeats_itself import HistoryRepeatsItself
 
 MODELS = {'zero_vel': ZeroVel,
           'nearest_neighbor': NearestNeighbor,
           'pv_lstm': PVLSTM,
           'disentangled': Disentangled,
           'derpof': DeRPoF,
-          'his_rep_itself': HisRepItself}
+          'history_repeats_itself': HistoryRepeatsItself}
 
 
 def get_model(model_args):
