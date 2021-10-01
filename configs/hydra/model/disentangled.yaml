@@ -1,5 +1,7 @@
 defaults:
+  - _self_
   - zero_vel
   - pv_lstm
+  - common
 
 type: disentangled

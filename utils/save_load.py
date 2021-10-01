@@ -4,20 +4,19 @@ import os
 import pickle
 
 import torch
-import torch.optim as optim
 
 from configs.helper import JSONEncoder_
-from models import get_model
+from models import MODELS
+from optimizers import OPTIMIZERS
 
 logger = logging.getLogger(__name__)
 
 
-# TODO map_location="cuda:0" ???
-def load_snapshot(load_snapshot_path):
-    snapshot = torch.load(load_snapshot_path, map_location='cpu')
-    model = get_model(snapshot['model_args']).to('cuda')
+def load_snapshot(snapshot_path):
+    snapshot = torch.load(snapshot_path, map_location='cpu')
+    model = MODELS[snapshot['model_args'].type](snapshot['model_args'])
     model.load_state_dict(snapshot['model_state_dict'])
-    optimizer = optim.Adam(model.parameters(), lr=snapshot['optimizer_lr'])
+    optimizer = OPTIMIZERS[snapshot['optimizer_args'].type](model.parameters(), snapshot['optimizer_args'])
     return model, optimizer, snapshot['epoch'], snapshot['train_reporter'], snapshot['valid_reporter']
 
 
