@@ -52,7 +52,7 @@ class Reporter:
         for key, value in self.history.items():
             if not use_mask and 'mask' in key:
                 continue
-            msg += key + ': %.3f, ' % value[-1]
+            msg += key + ': %.5f, ' % value[-1]
         logger.info(str(msg))
         sys.stdout.flush()
 

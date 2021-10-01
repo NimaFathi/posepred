@@ -1,8 +1,8 @@
 pose_metrics:
   - ADE
   - FDE
-  - VIM
-  - VAM
+#  - VIM
+#  - VAM
 
 mask_metrics:
   - accuracy

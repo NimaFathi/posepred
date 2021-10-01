@@ -38,7 +38,7 @@ class Trainer:
                 self.__validate()
                 self.scheduler.step(self.valid_reporter.history['loss'][-1])
             if (epoch + 1) % self.args.snapshot_interval == 0 or (epoch + 1) == self.args.epochs:
-                save_snapshot(self.model, self.optimizer, self.args.lr, epoch + 1, self.train_reporter,
+                save_snapshot(self.model, self.loss_module, self.optimizer, self.optimizer_args, epoch + 1, self.train_reporter,
                               self.valid_reporter, self.args.save_dir)
                 self.train_reporter.save_data(self.model.args.use_mask, self.args.save_dir)
                 if self.use_validation:
