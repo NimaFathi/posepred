@@ -9,7 +9,7 @@ from optimizers import OPTIMIZERS
 from schedulers import SCHEDULERS
 from factory.trainer import Trainer
 from utils.reporter import Reporter
-from utils.save_load import load_snapshot, save_snapshot
+from utils.save_load import load_snapshot, save_snapshot, setup_training_dir
 
 from path_definition import HYDRA_PATH
 
@@ -38,16 +38,16 @@ def train(cfg: DictConfig):
         cfg.model.keypoints_num = train_dataloader.dataset.keypoints_num
         model = MODELS[cfg.model.type](cfg.model)
         optimizer = OPTIMIZERS[cfg.optimizer.type](model.parameters(), cfg.optimizer)
-        cfg.save_dir = os.getcwd()
+
         train_reporter = Reporter(state='train')
         valid_reporter = Reporter(state='valid')
+        cfg.save_dir = os.getcwd()
+        setup_training_dir(cfg.save_dir)
         save_snapshot(model, optimizer, cfg.optimizer, 0, train_reporter, valid_reporter, cfg.save_dir)
 
     scheduler = SCHEDULERS[cfg.scheduler.type](optimizer, cfg.scheduler)
 
-    args = {'epochs': cfg.epochs, 'start_epoch': cfg.start_epoch, 'is_interactive': cfg.data.is_interactive,
-            'snapshot_interval': cfg.snapshot_interval, 'save_dir': cfg.save_dir, 'device': cfg.device}
-    trainer = Trainer(args, train_dataloader, valid_dataloader, model, optimizer, cfg.optimizer, scheduler,
+    trainer = Trainer(cfg, train_dataloader, valid_dataloader, model, optimizer, cfg.optimizer, scheduler,
                       train_reporter, valid_reporter)
     trainer.train()
 

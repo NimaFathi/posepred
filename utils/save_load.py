@@ -18,7 +18,8 @@ def load_snapshot(snapshot_path):
     model.load_state_dict(snapshot['model_state_dict'])
     optimizer = OPTIMIZERS[snapshot['optimizer_args'].type](model.parameters(), snapshot['optimizer_args'])
     optimizer.load_state_dict(snapshot['optimizer_state_dict'])
-    return model, optimizer, optimizer_args, snapshot['epoch'], snapshot['train_reporter'], snapshot['valid_reporter']
+    return model, optimizer, snapshot['optimizer_args'], snapshot['epoch'], snapshot['train_reporter'], snapshot[
+        'valid_reporter']
 
 
 def save_snapshot(model, optimizer, optimizer_args, epoch, train_reporter, valid_reporter, save_path):
@@ -49,19 +50,9 @@ def save_test_results(result_df, result_tensor, save_dir):
 
 
 def setup_training_dir(root_dir):
-    train_dir = os.path.join(root_dir, 'exps', 'train')
-    os.makedirs(train_dir, exist_ok=True)
-    for i in range(1, 1000000):
-        new_dir = os.path.join(train_dir, str(i))
-        if not os.path.isdir(new_dir):
-            os.makedirs(new_dir, exist_ok=False)
-            os.makedirs(os.path.join(new_dir, 'snapshots'), exist_ok=False)
-            os.makedirs(os.path.join(new_dir, 'plots'), exist_ok=False)
-            os.makedirs(os.path.join(new_dir, 'metrics_history'), exist_ok=False)
-            return new_dir
-    msg = "Too many folders exist."
-    logger.error(msg=msg)
-    raise Exception(msg)
+    os.makedirs(os.path.join(root_dir, 'snapshots'), exist_ok=False)
+    os.makedirs(os.path.join(root_dir, 'plots'), exist_ok=False)
+    os.makedirs(os.path.join(root_dir, 'metrics_history'), exist_ok=False)
 
 
 def setup_testing_dir(root_dir):

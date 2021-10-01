@@ -57,8 +57,8 @@ class Trainer:
 
             # predict & calculate loss
             self.model.zero_grad()
-            model_outputs = self.model(dict_to_device(data, self.device))
-            loss_outputs = self.loss_module(model_outputs, dict_to_device(data, self.device))
+            model_outputs = self.model(dict_to_device(data, self.args.device))
+            loss_outputs = self.loss_module(model_outputs, dict_to_device(data, self.args.device))
             assert 'pred_pose' in model_outputs.keys(), 'outputs of model should include pred_pose'
             assert 'loss' in loss_outputs.keys(), 'outputs of loss should include loss'
 
@@ -101,8 +101,8 @@ class Trainer:
 
             with torch.no_grad():
                 # predict & calculate loss
-                model_outputs = self.model(dict_to_device(data, self.device))
-                loss_outputs = self.loss_module(model_outputs, dict_to_device(data, self.device))
+                model_outputs = self.model(dict_to_device(data, self.args.device))
+                loss_outputs = self.loss_module(model_outputs, dict_to_device(data, self.args.device))
                 assert 'pred_pose' in model_outputs.keys(), 'outputs of model should include pred_pose'
 
                 if self.model.args.use_mask:
