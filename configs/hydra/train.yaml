@@ -8,7 +8,7 @@ defaults:
   - _self_
 
 train_dataset: ???
-valid_dataset: ???
+valid_dataset:
 epochs: ???
 snapshot_interval: -1
 start_epoch: 0

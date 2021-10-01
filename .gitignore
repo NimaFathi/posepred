@@ -246,6 +246,8 @@ exps/
 
 preprocessed_data/
 raw_data/
-/visualization/outputs/*D
-/visualization/example.py
+visualization/outputs/*D
+visualization/example.py
+visualization/outputs/
 outputs/
+

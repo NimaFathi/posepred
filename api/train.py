@@ -1,7 +1,7 @@
 import logging
 import hydra
-import torch.optim as optim
 from omegaconf import DictConfig
+import torch.optim as optim
 
 from configs.helper import TrainerArgs, DataloaderArgs, ModelArgs
 from data_loader.my_dataloader import get_dataloader
@@ -18,7 +18,6 @@ logger = logging.getLogger(__name__)
 
 @hydra.main(config_path=HYDRA_PATH, config_name="train")
 def train(cfg: DictConfig):
-
     for k, v in cfg.items():
         print(k)
     exit()
