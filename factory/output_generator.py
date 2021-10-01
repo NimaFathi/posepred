@@ -11,10 +11,9 @@ logger = logging.getLogger(__name__)
 
 
 class Output_Generator:
-    def __init__(self, model, dataloader, is_interactive, save_dir):
+    def __init__(self, model, dataloader, save_dir):
         self.model = model
         self.dataloader = dataloader
-        self.is_interactive = is_interactive
         self.save_dir = save_dir
         self.device = torch.device('cuda')
 

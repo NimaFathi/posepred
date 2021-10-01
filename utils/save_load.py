@@ -41,8 +41,8 @@ def save_snapshot(model, loss_module, optimizer, optimizer_args, epoch, train_re
 
 
 def save_test_results(result_df, result_tensor, save_dir):
-    result_df.to_csv(os.path.join(save_dir, 'outputs', 'results.csv'), index=False)
-    with open(os.path.join(save_dir, 'outputs', 'results.pkl'), 'wb') as f:
+    result_df.to_csv(os.path.join(save_dir, 'generated_outputs', 'results.csv'), index=False)
+    with open(os.path.join(save_dir, 'generated_outputs', 'results.pkl'), 'wb') as f:
         pickle.dump(result_tensor, f)
 
 
@@ -53,27 +53,5 @@ def setup_training_dir(root_dir):
 
 
 def setup_testing_dir(root_dir):
-    test_dir = os.path.join(root_dir, 'exps', 'test')
-    os.makedirs(test_dir, exist_ok=True)
-    for i in range(1, 1000000):
-        new_dir = os.path.join(test_dir, str(i))
-        if not os.path.isdir(new_dir):
-            os.makedirs(new_dir, exist_ok=False)
-            os.makedirs(os.path.join(new_dir, 'outputs'), exist_ok=False)
-            return new_dir
-    msg = "Too many folders exist."
-    logger.error(msg=msg)
-    raise Exception(msg)
-
-
-def setup_visualization_dir(root_dir):
-    vis_dir = os.path.join(root_dir, 'exps', 'visualization')
-    os.makedirs(vis_dir, exist_ok=True)
-    for i in range(1, 1000000):
-        new_dir = os.path.join(vis_dir, str(i))
-        if not os.path.isdir(new_dir):
-            os.makedirs(new_dir, exist_ok=False)
-            return new_dir
-    msg = "Too many folders exist."
-    logger.error(msg=msg)
-    raise Exception(msg)
+    os.makedirs(root_dir, exist_ok=False)
+    os.makedirs(os.path.join(root_dir, 'generated_outputs'), exist_ok=False)
