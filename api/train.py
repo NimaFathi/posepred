@@ -8,6 +8,7 @@ from data_loader.my_dataloader import get_dataloader
 from factory.trainer import Trainer
 from models import get_model
 from optimizers import OPTIMIZERS
+from schedulers import S
 from utils.reporter import Reporter
 from utils.save_load import load_snapshot, save_snapshot, save_args, setup_training_dir
 from path_definition import HYDRA_PATH
@@ -20,12 +21,9 @@ logger = logging.getLogger(__name__)
 def train(cfg: DictConfig):
     print(OmegaConf.to_yaml(cfg))
     exit()
-    # trainer_args = TrainerArgs(cfg.epochs, cfg.interactive, cfg.start_epoch, cfg.lr, cfg.decay_factor,
-    #                            cfg.decay_patience, cfg.distance_loss, cfg.mask_loss_weight, cfg.snapshot_interval)
-    # valid_dataloader_args = DataloaderArgs(cfg.valid_dataset, cfg.keypoint_dim, cfg.interactive, cfg.persons_num,
-    #                                        cfg.use_mask, cfg.skip_num, cfg.dataloader.batch_size,
-    #                                        cfg.dataloader.shuffle, cfg.pin_memory, cfg.num_workers)
-    # model_args = ModelArgs(cfg.model.model_name, cfg.use_mask, cfg.keypoint_dim)
+    trainer_args = TrainerArgs(cfg.epochs, cfg.interactive, cfg.start_epoch, cfg.lr, cfg.decay_factor,
+                               cfg.decay_patience, cfg.distance_loss, cfg.mask_loss_weight, cfg.snapshot_interval)
+    model_args = ModelArgs(cfg.model.model_name, cfg.use_mask, cfg.keypoint_dim)
 
     train_dataloader = get_dataloader(cfg.train_dataset, cfg.data)
     valid_dataloader = get_dataloader(cfg.valid_dataset, cfg.data)
