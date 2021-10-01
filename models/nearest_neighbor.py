@@ -12,6 +12,7 @@ class NearestNeighbor(nn.Module):
         self.train_dataloader = None
 
     def forward(self, inputs):
+        device = 'cuda' if inputs.is_cuda else 'cpu'
         min_distance = None
         best_pred_vel = None
         best_pred_mask = None
@@ -21,7 +22,7 @@ class NearestNeighbor(nn.Module):
         assert in_vel.shape[0] == 1, "only support batch_size 1 in nearest neighbor"
 
         for data in self.train_dataloader:
-            obs_vel = data[1].to('cuda')
+            obs_vel = data[1].to(device)
             bs = obs_vel.shape[0]
             dis = self.distance(in_vel.repeat(bs, 1), obs_vel.view(bs, -1)).sum(1)
             value, ind = torch.min(dis, 0, out=None)
@@ -33,12 +34,12 @@ class NearestNeighbor(nn.Module):
                 else:
                     best_pred_vel = data[3][ind]
 
-        pred_vel = best_pred_vel.unsqueeze(0).to('cuda')
+        pred_vel = best_pred_vel.unsqueeze(0).to(device)
         pred_pose = pose_from_vel(pred_vel, obs_pose[..., -1, :])
         outputs = {'pred_pose': pred_pose, 'pred_vel': pred_vel}
 
         if self.args.use_mask:
-            pred_mask = best_pred_mask.unsqueeze(0).to('cuda')
+            pred_mask = best_pred_mask.unsqueeze(0).to(device)
             outputs['pred_mask'] = pred_mask
 
         return outputs

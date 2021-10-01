@@ -14,14 +14,14 @@ class DeRPoF(nn.Module):
 
         # global
         self.global_model = LSTM_g(pose_dim=self.features_num, embedding_dim=args.embedding_dim, h_dim=args.hidden_dim,
-                                   dropout=args.dropout).cuda().double()
+                                   dropout=args.dropout).double()
 
         # local
         encoder = Encoder(pose_dim=self.features_num, h_dim=args.hidden_dim, latent_dim=args.latent_dim,
                           dropout=args.dropout)
         decoder = Decoder(pose_dim=self.features_num, h_dim=args.hidden_dim, latent_dim=args.latent_dim,
                           dropout=args.dropout)
-        self.local_model = VAE(Encoder=encoder, Decoder=decoder).cuda().double()
+        self.local_model = VAE(Encoder=encoder, Decoder=decoder).double()
 
     def forward(self, inputs):
         pose = inputs['observed_pose']
