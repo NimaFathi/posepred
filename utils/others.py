@@ -37,7 +37,7 @@ def get_binary(src, device):
 
 
 def dict_to_device(src, device):
-    out = src.clone()
-    for key, value in out.items():
-        out[key] = value.to(device)
+    out = dict()
+    for key, value in src.items():
+        out[key] = value.clone().to(device)
     return out
