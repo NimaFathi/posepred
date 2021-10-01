@@ -1,5 +1,5 @@
-from .mse_vel_loss import MSEVelLoss
-from .mae_vel_loss import MAEVelLoss
+from .mse_vel import MSEVel
+from .mae_vel import MAEVel
 
-LOSSES = {'mse_vel_loss': MSEVelLoss,
-          'mae_vel_loss': MAEVelLoss}
+LOSSES = {'mse_vel': MSEVel,
+          'mae_vel': MAEVel}
