@@ -3,7 +3,7 @@ defaults:
   - loss: ???
   - optimizer: adam
   - scheduler: reduce_lr_on_plateau
-  - dataloader: main
+  - data: main
   - metrics
   - _self_
 

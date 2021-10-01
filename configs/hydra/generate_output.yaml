@@ -1,6 +1,6 @@
 defaults:
   - model:
-  - dataloader
+  - data: main
   - _self_
 
 dataset: ???
