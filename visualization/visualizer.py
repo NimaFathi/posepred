@@ -1,21 +1,23 @@
-import math
 import os
-
+import logging
 import cv2
 import imageio
+from pygifsicle import optimize
+from matplotlib.pyplot import AutoLocator
+
+import math
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
-import logging
-from matplotlib.pyplot import AutoLocator
-from pygifsicle import optimize
 
-from path_definition import ROOT_DIR
 from utils.save_load import setup_visualization_dir
 from visualization.color_generator import color_generator
 from visualization.keypoints_connection import keypoint_connections
 
+from path_definition import ROOT_DIR
+
 logger = logging.getLogger(__name__)
+
 
 class Visualizer:
     def __init__(self, dataset_name, images_dir):
@@ -63,7 +65,7 @@ class Visualizer:
                 new_pose.append(torch.tensor(new_group_pose).squeeze(1))
             self.visualizer_2D(names=names, poses=new_pose, masks=[], images_paths=images_paths, fig_size=fig_size,
                                gif_name=gif_name + '_2D_overlay')
-        logger.info("start 3D visualizing ...")
+        logger.info("start 3D visualizing.")
         max_axes = []
         min_axes = []
         limit_axes = []
@@ -102,7 +104,7 @@ class Visualizer:
         for filename in set(filenames):
             os.remove(filename)
         optimize(os.path.join(save_dir, f'{gif_name}.gif'))
-        logger.info("end 3D visualizing ...")
+        logger.info("end 3D visualizing.")
 
     def visualizer_2D(self, names, poses, masks, images_paths, gif_name, fig_size=(8, 6)):
         """
@@ -125,7 +127,7 @@ class Visualizer:
                 :param gif_name: str: name of generated output .gif file
                 :return None: generate a .gif file
         """
-        logger.info("start 2D visualizing ...")
+        logger.info("start 2D visualizing.")
         poses = self.__clean_data(poses)
         if masks is None or masks == []:
             masks = []
@@ -170,7 +172,7 @@ class Visualizer:
         for filename in set(filenames):
             os.remove(filename)
         optimize(os.path.join(save_dir, f'{gif_name}.gif'))
-        logger.info("end 2D visualizing ...")
+        logger.info("end 2D visualizing.")
 
     def __generate_3D_figure(self, all_poses, ax):
         num_keypoints = all_poses.shape[-1] // 3

@@ -54,3 +54,9 @@ def setup_training_dir(root_dir):
 
 def setup_testing_dir(root_dir):
     os.makedirs(os.path.join(root_dir, 'generated_outputs'), exist_ok=False)
+
+
+def setup_visualization_dir(root_dir):
+    vis_dir = os.path.join(root_dir, 'visualization')
+    os.makedirs(vis_dir, exist_ok=False)
+    return vis_dir

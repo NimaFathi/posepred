@@ -4,9 +4,10 @@ defaults:
   - model:
 
 dataset: ???
+ground_truth: false
+device: cuda
 pred_frames_num:
 load_path:
 index:
 images_dir:
-ground_truth: false
-device: cuda
+save_dir:
