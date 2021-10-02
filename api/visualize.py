@@ -6,6 +6,7 @@ import random
 import torch
 
 from data_loader.my_dataloader import get_dataloader
+from data_loader import DATASETS
 from models import MODELS
 from utils.save_load import load_snapshot
 from visualization.visualizer import Visualizer
@@ -18,6 +19,7 @@ logger = logging.getLogger(__name__)
 
 @hydra.main(config_path=HYDRA_PATH, config_name="visualize")
 def visualize(cfg: DictConfig):
+    assert cfg.dataset_name in DATASETS, 'dataset_name chioces: ' + str(DATASETS)
     if cfg.load_path is None and cfg.model is None:
         msg = 'either specify a load_path or config a model.'
         logger.error(msg)
@@ -95,8 +97,8 @@ def visualize(cfg: DictConfig):
 
     cam_in = data.get('cam_in') if 'cam_in' in data.keys() else None
 
-    gif_name = '_'.join((model.args.model_name, cfg.dataset.split("/")[-1], str(index)))
-    visualizer = Visualizer(dataset_name=cfg.dataset,
+    gif_name = '_'.join((cfg.model.type, cfg.dataset.split("/")[-1], str(index)))
+    visualizer = Visualizer(dataset_name=cfg.dataset_name,
                             images_dir=os.path.join(ROOT_DIR, cfg.images_dir if cfg.images_dir else ''))
     if cfg.data.keypoint_dim == 2:
         visualizer.visualizer_2D(names, poses, masks, images_path, gif_name)

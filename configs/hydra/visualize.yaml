@@ -4,6 +4,7 @@ defaults:
   - model:
 
 dataset: ???
+dataset_name: ???
 ground_truth: false
 device: cuda
 pred_frames_num:
