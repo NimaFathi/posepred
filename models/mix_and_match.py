@@ -1,6 +1,7 @@
+import random
+
 import torch
 import torch.nn as nn
-import random
 
 
 class MixAndMatch(nn.Module):
@@ -8,6 +9,10 @@ class MixAndMatch(nn.Module):
         super(MixAndMatch, self).__init__()
         self.args = args
         args.latent_dim = 32
+        if args.alpha is None:
+            self.alpha = args.hidden_size // 2
+        else:
+            self.alpha = args.alpha
         # the list containing the random indices sampled by "Sampling" operation
         self.sampled_indices = []
         self.complementary_indices = []
@@ -28,7 +33,8 @@ class MixAndMatch(nn.Module):
             nn.Linear(args.hidden_size, args.hidden_size),
             nn.ReLU()
         )
-
+        self.res_block1 = ResidualBlock(input_size=args.hidden_size, embedding_size=args.hidden_size)
+        self.res_block2 = ResidualBlock(input_size=args.hidden_size, embedding_size=self.alpha)
         # layers to compute the data posterior
         self.mean = nn.Linear(args.hidden_size, args.latent_dim)
         self.std = nn.Linear(args.hidden_size, args.latent_dim)
@@ -44,7 +50,7 @@ class MixAndMatch(nn.Module):
         sampled_observed = h[:, self.sampled_indices]
         complementary_observed = h[:, self.complementary_indices]
 
-        return sampled_observed, complementary_observed
+        return h, sampled_observed, complementary_observed
 
     def encode_future(self, data):
         h = self.future_encoder(data)
@@ -57,15 +63,16 @@ class MixAndMatch(nn.Module):
 
         return sampled_data, complementary_data
 
-    def encode(self, sampled_data, complementary_condition):
+    def encode(self, sampled_past, complementary_future):
 
         # Resample
         # creating a new vector (the result of conditioning the encoder)
         # that the total size is args.hidden_dim
-        fusion = torch.zeros(sampled_data.shape[0], sampled_data.shape[1] + complementary_condition.shape[1]).to(self.args.device)
-        fusion[:, self.sampled_indices] = sampled_data
-        fusion[:, self.complementary_indices] = complementary_condition
-
+        fusion = torch.zeros(sampled_past.shape[0], sampled_past.shape[1] + complementary_future.shape[1]).to(
+            self.args.device)
+        fusion[:, self.sampled_indices] = sampled_past
+        fusion[:, self.complementary_indices] = complementary_future
+        fusion = self.res_block1(fusion, nn.ReLU())
         # compute the mean and standard deviation of the approximate posterior
         mu = self.mean(fusion)
         sigma = self.std(fusion)
@@ -78,54 +85,58 @@ class MixAndMatch(nn.Module):
         eps = torch.randn_like(std).to(self.args.device)
         return eps.mul(std).add_(mu)
 
-    def decode(self, latent, sampled_condition):
+    def decode(self, latent, sampled_past, complementary_past):
         latent = self.decode_latent(latent)
         complementary_latent = latent[:, self.complementary_indices]
 
         # Resample
-        fusion = torch.zeros(sampled_condition.shape[0], self.args.hidden_size).to(self.args.device)
-        fusion[:, self.sampled_indices] = sampled_condition
-        fusion[:, self.complementary_indices] = complementary_latent
-        return self.data_decoder(fusion)
+        fusion1 = torch.zeros(sampled_past.shape[0], self.args.hidden_size).to(self.args.device)
+        fusion1[:, self.sampled_indices] = sampled_past
+        fusion1[:, self.complementary_indices] = complementary_latent
+        h_zp = self.res_block2(fusion1, nn.ReLU())
+        fusion2 = torch.zeros(sampled_past.shape[0], self.args.hidden_size).to(self.args.device)
+        fusion2[:, self.sampled_indices] = h_zp
+        fusion2[:, self.complementary_indices] = complementary_past
+        return self.data_decoder(fusion2)
 
-    def forward(self, inputs, observed_poses, future_poses, alpha):
+    def forward(self, inputs):
         observed_poses = inputs['observed_pose']
-        alpha = inputs['alpha']
         future_poses = inputs['future_pose']
         # The fist step is to perform "Sampling"
         # the parameter "alpha" is the pertubation rate. it is usually half of hidden_dim
-        self.sampled_indices = list(random.sample(range(0, self.args.hidden_size), alpha))
+        self.sampled_indices = list(random.sample(range(0, self.args.hidden_size), self.alpha))
         self.complementary_indices = [i for i in range(self.args.hidden_size) if i not in self.sampled_indices]
         # encode data and condition
         sampled_future, complementary_future = self.encode_future(future_poses.permute(1, 0, 2))
-        sampled_past, complementary_past = self.encode_past(observed_poses.permute(1, 0, 2))
+        hidden_pose, sampled_past, complementary_past = self.encode_past(observed_poses.permute(1, 0, 2))
         # VAE encoder
-        z, mu, sigma = self.encode(sampled_future, complementary_past)
+        z, mu, sigma = self.encode(sampled_past, complementary_future)
 
         # VAE decoder
-        decoded = self.decode(z, sampled_past)
-        pred_poses = self.future_decoder(input=observed_poses[:, -1, :], future_poses=future_poses, hiddens=decoded, teacher_forcing_rate=self.teacher_forcing_rate)
+        decoded = self.decode(z, sampled_past, complementary_past)
+        pred_poses = self.future_decoder(input=observed_poses[:, -1, :], future_poses=future_poses, hiddens=decoded,
+                                         teacher_forcing_rate=self.teacher_forcing_rate)
         self.__update_teacher_forcing_rate()
         outputs = {'pred_pose': pred_poses, 'mu': mu, 'sigma': sigma}
-        return decoded, mu, sigma
+        return outputs
 
-    def sample(self, obs, alpha, z=None):
-        # The fist step is to perform "Sampling"
-        # the parameter "alpha" is the perturbation rate. it is usually half of hidden_dim
-        self.sampled_indices = list(random.sample(range(0, self.args.hidden_dim), alpha))
-        self.complementary_indices = [i for i in range(self.args.hidden_dim) if i not in self.sampled_indices]
-
-        # encode the condition
-        sampled_past, complementary_past = self.encode_past(obs)
-
-        # draw a sample from the prior distribution
-        if z is None:
-            z = torch.randn(obs.shape[0], self.args.latent_dim).normal_(0, 1).to(self.args.device)
-
-        # VAE decoder
-        generated = self.decode(z, sampled_past)
-
-        return generated
+    # def sample(self, obs, alpha, z=None):
+    #     # The fist step is to perform "Sampling"
+    #     # the parameter "alpha" is the perturbation rate. it is usually half of hidden_dim
+    #     self.sampled_indices = list(random.sample(range(0, self.args.hidden_dim), alpha))
+    #     self.complementary_indices = [i for i in range(self.args.hidden_dim) if i not in self.sampled_indices]
+    #
+    #     # encode the condition
+    #     sampled_past, complementary_past = self.encode_past(obs)
+    #
+    #     # draw a sample from the prior distribution
+    #     if z is None:
+    #         z = torch.randn(obs.shape[0], self.args.latent_dim).normal_(0, 1).to(self.args.device)
+    #
+    #     # VAE decoder
+    #     generated = self.decode(z, sampled_past)
+    #
+    #     return generated
 
     def __update_teacher_forcing_rate(self):
         self.count += 1
@@ -180,3 +191,32 @@ class GRUDecoder(nn.Module):
                 dec_inputs = output.detach()
             outputs = torch.cat((outputs, output.unsqueeze(1)), 1)
         return outputs
+
+
+class ResidualBlock(nn.Module):
+    """ Residual Network that is then used for the VAE encoder and the VAE decoder. """
+
+    def __init__(self, input_size, embedding_size):
+        super().__init__()
+        self.shortcut = nn.Linear(input_size, embedding_size)
+        self.deep1 = nn.Linear(input_size, embedding_size // 2)
+        self.deep2 = nn.Linear(embedding_size // 2, embedding_size // 2)
+        self.deep3 = nn.Linear(embedding_size // 2, embedding_size)
+
+    def forward(self, input_tensor, activation=None):
+        if activation is not None:
+            shortcut = activation(self.shortcut(input_tensor))
+            deep1 = activation(self.deep1(input_tensor))
+            deep2 = activation(self.deep2(deep1))
+            deep3 = activation(self.deep3(deep2))
+        else:
+            shortcut = self.shortcut(input_tensor)
+            deep1 = self.deep1(input_tensor)
+
+            deep2 = self.deep2(deep1)
+
+            deep3 = self.deep3(deep2)
+
+        output = shortcut + deep3
+
+        return output
