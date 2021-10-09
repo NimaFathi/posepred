@@ -4,10 +4,12 @@ from .pv_lstm import PVLSTM
 from .disentangled import Disentangled
 from .derpof import DeRPoF
 from .history_repeats_itself import HistoryRepeatsItself
-
+from .mix_and_match import MixAndMatch
 MODELS = {'zero_vel': ZeroVel,
           'nearest_neighbor': NearestNeighbor,
           'pv_lstm': PVLSTM,
           'disentangled': Disentangled,
           'derpof': DeRPoF,
-          'history_repeats_itself': HistoryRepeatsItself}
+          'history_repeats_itself': HistoryRepeatsItself,
+          'mix_and_match': MixAndMatch
+          }

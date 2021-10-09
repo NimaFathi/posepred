@@ -8,38 +8,38 @@ class MixAndMatch(nn.Module):
     def __init__(self, args):
         super(MixAndMatch, self).__init__()
         self.args = args
-        args.latent_dim = 32
-        if args.alpha is None:
-            self.alpha = args.hidden_size // 2
+        if self.args.alpha is None:
+            self.alpha = self.args.hidden_size // 2
         else:
-            self.alpha = args.alpha
+            assert self.args.alpha <= self.args.hidden_size, 'alpha should be smaller than hidden_size'
+            self.alpha = self.args.alpha
         # the list containing the random indices sampled by "Sampling" operation
         self.sampled_indices = []
         self.complementary_indices = []
-        input_size = output_size = int(args.keypoints_num * args.keypoint_dim)
-        self.teacher_forcing_rate = 1
+        input_size = output_size = int(self.args.keypoints_num * self.args.keypoint_dim)
+        self.teacher_forcing_rate = self.args.teacher_forcing_rate
         self.count = 0
 
         # the encoder (note, it can be any neural network, e.g., GRU, Linear, ...)
-        self.past_encoder = GRUEncoder(input_size, args.hidden_size, args.n_layers, args.dropout_enc)
-        self.future_encoder = GRUEncoder(input_size, args.hidden_size, args.n_layers, args.dropout_enc)
-        self.future_decoder = GRUDecoder(14, input_size, output_size, args.hidden_size, args.n_layers,
-                                         args.dropout_pose_dec, 'hardtanh', args.hardtanh_limit
+        self.past_encoder = GRUEncoder(input_size, self.args.hidden_size, self.args.n_layers, self.args.dropout_enc)
+        self.future_encoder = GRUEncoder(input_size, self.args.hidden_size, self.args.n_layers, self.args.dropout_enc)
+        self.future_decoder = GRUDecoder(self.args.pred_frames_num, input_size, output_size, self.args.hidden_size, self.args.n_layers,
+                                         self.args.dropout_pose_dec, 'hardtanh', self.args.hardtanh_limit
                                          )
         self.data_decoder = nn.Sequential(
-            nn.Linear(args.hidden_size, args.hidden_size),
-            nn.BatchNorm1d(args.hidden_size),
+            nn.Linear(self.args.hidden_size, self.args.hidden_size),
+            nn.BatchNorm1d(self.args.hidden_size),
             nn.ReLU(),
-            nn.Linear(args.hidden_size, args.hidden_size),
+            nn.Linear(self.args.hidden_size, self.args.hidden_size),
             nn.ReLU()
         )
-        self.res_block1 = ResidualBlock(input_size=args.hidden_size, embedding_size=args.hidden_size)
-        self.res_block2 = ResidualBlock(input_size=args.hidden_size, embedding_size=self.alpha)
+        self.res_block1 = ResidualBlock(input_size=self.args.hidden_size, embedding_size=self.args.hidden_size)
+        self.res_block2 = ResidualBlock(input_size=self.args.hidden_size, embedding_size=self.alpha)
         # layers to compute the data posterior
-        self.mean = nn.Linear(args.hidden_size, args.latent_dim)
-        self.std = nn.Linear(args.hidden_size, args.latent_dim)
+        self.mean = nn.Linear(self.args.hidden_size, self.args.latent_dim)
+        self.std = nn.Linear(self.args.hidden_size, self.args.latent_dim)
         # layer to map the latent variable back to hidden size
-        self.decode_latent = nn.Sequential(nn.Linear(args.latent_dim, args.hidden_size), nn.ReLU())
+        self.decode_latent = nn.Sequential(nn.Linear(self.args.latent_dim, self.args.hidden_size), nn.ReLU())
 
     def encode_past(self, condition):
         h = self.past_encoder(condition)
@@ -212,9 +212,7 @@ class ResidualBlock(nn.Module):
         else:
             shortcut = self.shortcut(input_tensor)
             deep1 = self.deep1(input_tensor)
-
             deep2 = self.deep2(deep1)
-
             deep3 = self.deep3(deep2)
 
         output = shortcut + deep3
