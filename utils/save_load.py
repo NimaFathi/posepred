@@ -39,6 +39,8 @@ def save_snapshot(model, loss_module, optimizer, optimizer_args, epoch, train_re
     torch.save(snapshot, os.path.join(save_path, 'snapshots', '%03d.pt' % epoch))
     del snapshot
 
+# save dirs are working correctly
+# TODO: use os.getcwd() instead of root when you call'em!!
 
 def save_test_results(result_df, result_tensor, save_dir):
     result_df.to_csv(os.path.join(save_dir, 'generated_outputs', 'results.csv'), index=False)
