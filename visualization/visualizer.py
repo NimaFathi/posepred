@@ -77,7 +77,7 @@ class Visualizer:
         comparison_number = len(poses)
         axarr = []
         filenames = []
-        save_dir = setup_visualization_dir(ROOT_DIR)
+        save_dir = setup_visualization_dir(os.getcwd())
         for j in range(len(poses[0])):
             fig = plt.figure(figsize=fig_size, dpi=100)
             axarr.append([])
@@ -150,7 +150,7 @@ class Visualizer:
                     )
                 )
         filenames = []
-        save_dir = setup_visualization_dir(ROOT_DIR)
+        save_dir = setup_visualization_dir(os.getcwd())
         for plt_index in range(len(poses[0])):
             fig = plt.figure(figsize=fig_size, dpi=100)
             axarr = []
@@ -177,14 +177,15 @@ class Visualizer:
     def __generate_3D_figure(self, all_poses, ax):
         num_keypoints = all_poses.shape[-1] // 3
         poses = all_poses.reshape(all_poses.shape[0], num_keypoints, 3)
+        visualizing_keypoints = np.array(np.unique(keypoint_connections[self.dataset_name]))
         for i, keypoints in enumerate(poses):
             for ie, edge in enumerate(keypoint_connections[self.dataset_name]):
-                pass
                 ax.plot(xs=[keypoints[edge, 0][0], keypoints[edge, 0][1]],
                         zs=[keypoints[edge, 1][0], keypoints[edge, 1][1]],
                         ys=[keypoints[edge, 2][0], keypoints[edge, 2][1]], linewidth=1, label=r'$z=y=x$')
-            ax.scatter(xs=keypoints[:, 0].detach().cpu().numpy(), zs=keypoints[:, 1].detach().cpu().numpy(),
-                       ys=keypoints[:, 2].detach().cpu().numpy(), s=1)
+            if keypoints in keypoint_connections[self.dataset_name]:
+                ax.scatter(xs=keypoints[visualizing_keypoints, 0].detach().cpu().numpy(), zs=keypoints[visualizing_keypoints, 1].detach().cpu().numpy(),
+                           ys=keypoints[visualizing_keypoints, 2].detach().cpu().numpy(), s=5)
 
     def __generate_2D_figure(self, all_poses, all_masks=None, image_path=None):
         num_keypoints = all_poses.shape[-1] // 2
