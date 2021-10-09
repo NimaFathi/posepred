@@ -8,7 +8,7 @@ class MAEVel(nn.Module):
         super().__init__()
 
         self.args = args
-        self.mae = nn.MSELoss()
+        self.mae = nn.L1Loss()
         self.bce = nn.BCELoss()
 
     def forward(self, model_outputs, input_data):
