@@ -42,3 +42,89 @@ def dict_to_device(src, device):
     for key, value in src.items():
         out[key] = value.clone().to(device)
     return out
+
+def expmap_to_quaternion(e):
+    """
+    Convert axis-angle rotations (aka exponential maps) to quaternions.
+    Stable formula from "Practical Parameterization of Rotations Using the Exponential Map".
+    Expects a tensor of shape (*, 3), where * denotes any number of dimensions.
+    Returns a tensor of shape (*, 4).
+    """
+    assert e.shape[-1] == 3
+
+    original_shape = list(e.shape)
+    original_shape[-1] = 4
+    e = e.reshape(-1, 3)
+    theta = np.linalg.norm(e, axis=1).reshape(-1, 1)
+    w = np.cos(0.5 * theta).reshape(-1, 1)
+    xyz = 0.5 * np.sinc(0.5 * theta / np.pi) * e
+    return np.concatenate((w, xyz), axis=1).reshape(original_shape)
+
+
+def qfix(q):
+    """
+    Enforce quaternion continuity across the time dimension by selecting
+    the representation (q or -q) with minimal distance (or, equivalently, maximal dot product)
+    between two consecutive frames.
+
+    Expects a tensor of shape (L, J, 4), where L is the sequence length and J is the number of joints.
+    Returns a tensor of the same shape.
+    """
+    assert len(q.shape) == 3
+    assert q.shape[-1] == 4
+
+    result = q.copy()
+    dot_products = np.sum(q[1:] * q[:-1], axis=2)
+    mask = dot_products < 0
+    mask = (np.cumsum(mask, axis=0) % 2).astype(bool)
+    result[1:][mask] *= -1
+    return result
+
+
+def qeuler(q, order, epsilon=0):
+    """
+    Convert quaternion(s) q to Euler angles.
+    Expects a tensor of shape (*, 4), where * denotes any number of dimensions.
+    Returns a tensor of shape (*, 3).
+    """
+    assert q.shape[-1] == 4
+
+    original_shape = list(q.shape)
+    original_shape[-1] = 3
+    print(q.shape)
+    q = torch.from_numpy(q).view(-1, 4)
+    print(q.shape)
+    # exit()
+    q0 = q[:, 0]
+    q1 = q[:, 1]
+    q2 = q[:, 2]
+    q3 = q[:, 3]
+
+    if order == 'xyz':
+        x = torch.atan2(2 * (q0 * q1 - q2 * q3), 1 - 2 * (q1 * q1 + q2 * q2))
+        y = torch.asin(torch.clamp(2 * (q1 * q3 + q0 * q2), -1 + epsilon, 1 - epsilon))
+        z = torch.atan2(2 * (q0 * q3 - q1 * q2), 1 - 2 * (q2 * q2 + q3 * q3))
+    elif order == 'yzx':
+        x = torch.atan2(2 * (q0 * q1 - q2 * q3), 1 - 2 * (q1 * q1 + q3 * q3))
+        y = torch.atan2(2 * (q0 * q2 - q1 * q3), 1 - 2 * (q2 * q2 + q3 * q3))
+        z = torch.asin(torch.clamp(2 * (q1 * q2 + q0 * q3), -1 + epsilon, 1 - epsilon))
+    elif order == 'zxy':
+        x = torch.asin(torch.clamp(2 * (q0 * q1 + q2 * q3), -1 + epsilon, 1 - epsilon))
+        y = torch.atan2(2 * (q0 * q2 - q1 * q3), 1 - 2 * (q1 * q1 + q2 * q2))
+        z = torch.atan2(2 * (q0 * q3 - q1 * q2), 1 - 2 * (q1 * q1 + q3 * q3))
+    elif order == 'xzy':
+        x = torch.atan2(2 * (q0 * q1 + q2 * q3), 1 - 2 * (q1 * q1 + q3 * q3))
+        y = torch.atan2(2 * (q0 * q2 + q1 * q3), 1 - 2 * (q2 * q2 + q3 * q3))
+        z = torch.asin(torch.clamp(2 * (q0 * q3 - q1 * q2), -1 + epsilon, 1 - epsilon))
+    elif order == 'yxz':
+        x = torch.asin(torch.clamp(2 * (q0 * q1 - q2 * q3), -1 + epsilon, 1 - epsilon))
+        y = torch.atan2(2 * (q1 * q3 + q0 * q2), 1 - 2 * (q1 * q1 + q2 * q2))
+        z = torch.atan2(2 * (q1 * q2 + q0 * q3), 1 - 2 * (q1 * q1 + q3 * q3))
+    elif order == 'zyx':
+        x = torch.atan2(2 * (q0 * q1 + q2 * q3), 1 - 2 * (q1 * q1 + q2 * q2))
+        y = torch.asin(torch.clamp(2 * (q0 * q2 - q1 * q3), -1 + epsilon, 1 - epsilon))
+        z = torch.atan2(2 * (q0 * q3 + q1 * q2), 1 - 2 * (q2 * q2 + q3 * q3))
+    else:
+        raise
+
+    return torch.stack((x, y, z), dim=1).view(original_shape)

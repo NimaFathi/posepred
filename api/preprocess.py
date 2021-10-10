@@ -22,9 +22,9 @@ def preprocess(cfg: DictConfig):
     assert cfg.dataset in DATASETS, "invalid dataset name"
     assert cfg.data_type in DATA_TYPES, "data_type choices: " + str(DATA_TYPES)
     if cfg.keypoint_dim == 2:
-        cfg.is_3D = False
+        is_3D = False
     elif cfg.keypoint_dim == 3:
-        cfg.is_3D = True
+        is_3D = True
     else:
         msg = "Dimension of data must be either 2 or 3"
         logger.error(msg=msg)
@@ -36,7 +36,7 @@ def preprocess(cfg: DictConfig):
             pred_frame_num=cfg.pred_frames_num, skip_frame_num=0, use_video_once=cfg.use_video_once)
     elif cfg.dataset == 'jta':
         preprocessor = JTAPreprocessor(
-            is_3d=cfg.is_3D, dataset_path=cfg.official_annotation_path,
+            is_3d=is_3D, dataset_path=cfg.official_annotation_path,
             obs_frame_num=cfg.obs_frames_num, custom_name=cfg.output_name, is_interactive=cfg.interactive,
             pred_frame_num=cfg.pred_frames_num, skip_frame_num=cfg.skip_num, use_video_once=cfg.use_video_once
         )

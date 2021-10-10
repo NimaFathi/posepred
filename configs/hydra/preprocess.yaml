@@ -11,4 +11,6 @@ use_video_once: false
 annotate_openpifpaf: false
 image_dir: ???
 joints_annotation_path: ???
-is_3D: ???
+keypoint_dim: ???
+skip_num: 0
+interactive: false
