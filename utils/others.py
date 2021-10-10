@@ -1,5 +1,5 @@
-import torch
 import numpy as np
+import torch
 
 
 def pose_from_vel(velocity, last_obs_pose, stay_in_frame=False):
@@ -42,6 +42,7 @@ def dict_to_device(src, device):
     for key, value in src.items():
         out[key] = value.clone().to(device)
     return out
+
 
 def expmap_to_quaternion(e):
     """
