@@ -8,7 +8,8 @@ import numpy as np
 
 from path_definition import PREPROCESSED_DATA_DIR
 from preprocessor.preprocessor import Processor
-from utils.others import expmap_to_quaternion, qfix, qeuler
+from utils.others import expmap_to_quaternion, qfix
+
 logger = logging.getLogger(__name__)
 
 
