@@ -3,7 +3,7 @@ is_interactive: ???
 persons_num: 1
 use_mask: false
 is_testing: false
-is_visualizing: false
+is_visualizing: true
 batch_size: 256
 shuffle: false
 pin_memory: false

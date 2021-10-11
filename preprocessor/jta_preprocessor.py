@@ -113,7 +113,7 @@ class JTAPreprocessor(Processor):
                     obs_mask = []
                     future = []
                     future_mask = []
-                    for j in range(1, total_frame_num * (self.skip_frame_num + 1) + 1, self.skip_frame_num + 1):
+                    for j in range(0, total_frame_num * (self.skip_frame_num + 1), self.skip_frame_num + 1):
                         frame_data = {
                             'pose': defaultdict(list),
                             'mask': defaultdict(list)

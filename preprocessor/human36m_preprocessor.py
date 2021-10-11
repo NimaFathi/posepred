@@ -74,7 +74,7 @@ class PreprocessorHuman36m(Processor):
                         'future_image_path': list()
                     }
                     for j in range(0, total_frame_num * (self.skip_frame_num + 1), self.skip_frame_num + 1):
-                        if j <= (self.skip_frame_num + 1) * self.obs_frame_num:
+                        if j < (self.skip_frame_num + 1) * self.obs_frame_num:
                             video_data['observed_pose'].append(
                                 positions[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
                             video_data['observed_quaternion_pose'].append(

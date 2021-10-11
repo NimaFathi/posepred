@@ -18,7 +18,7 @@ class MixAndMatch(nn.Module):
         # the list containing the random indices sampled by "Sampling" operation
         self.sampled_indices = []
         self.complementary_indices = []
-        input_size = output_size = int(self.args.keypoints_num * self.args.keypoint_dim)
+        input_size = output_size = int(self.args.keypoints_num * 4)  # 4 for quaternion display
         self.teacher_forcing_rate = self.args.teacher_forcing_rate
         self.count = 0
 
@@ -122,7 +122,9 @@ class MixAndMatch(nn.Module):
         pred_q_poses = self.future_decoder(input=obs_q_poses[:, -1, :], future_poses=future_q_poses, hiddens=decoded,
                                            teacher_forcing_rate=self.teacher_forcing_rate)
         self.__update_teacher_forcing_rate()
-        pred_poses = qeuler(q=pred_q_poses, order='xyz')
+        quaternion_poses = pred_q_poses.view(*pred_q_poses.shape[:-1], -1, 4)
+        pred_poses = qeuler(q=quaternion_poses, order='xyz')
+        pred_poses = pred_poses.view(*pred_poses.shape[:-2], pred_poses.shape[-2] * pred_poses.shape[-1])
         outputs = {'pred_pose': pred_poses, 'pred_q_pose': pred_q_poses, 'mu': mu, 'sigma': sigma}
         return outputs
 
