@@ -3,6 +3,8 @@ import random
 import torch
 import torch.nn as nn
 
+from utils.others import qeuler
+
 
 class MixAndMatch(nn.Module):
     def __init__(self, args):
@@ -23,7 +25,8 @@ class MixAndMatch(nn.Module):
         # the encoder (note, it can be any neural network, e.g., GRU, Linear, ...)
         self.past_encoder = GRUEncoder(input_size, self.args.hidden_size, self.args.n_layers, self.args.dropout_enc)
         self.future_encoder = GRUEncoder(input_size, self.args.hidden_size, self.args.n_layers, self.args.dropout_enc)
-        self.future_decoder = GRUDecoder(self.args.pred_frames_num, input_size, output_size, self.args.hidden_size, self.args.n_layers,
+        self.future_decoder = GRUDecoder(self.args.pred_frames_num, input_size, output_size, self.args.hidden_size,
+                                         self.args.n_layers,
                                          self.args.dropout_pose_dec, 'hardtanh', self.args.hardtanh_limit
                                          )
         self.data_decoder = nn.Sequential(
@@ -100,24 +103,27 @@ class MixAndMatch(nn.Module):
         return self.data_decoder(fusion2)
 
     def forward(self, inputs):
-        observed_poses = inputs['observed_pose']
-        future_poses = inputs['future_pose']
+        assert {'observed_quaternion_pose', 'future_quaternion_pose'}.issubset(
+            set(inputs.keys())), 'data should be in quaternion form'
+        obs_q_poses = inputs['observed_quaternion_pose']
+        future_q_poses = inputs['future_quaternion_pose']
         # The fist step is to perform "Sampling"
         # the parameter "alpha" is the pertubation rate. it is usually half of hidden_dim
         self.sampled_indices = list(random.sample(range(0, self.args.hidden_size), self.alpha))
         self.complementary_indices = [i for i in range(self.args.hidden_size) if i not in self.sampled_indices]
         # encode data and condition
-        sampled_future, complementary_future = self.encode_future(future_poses.permute(1, 0, 2))
-        hidden_pose, sampled_past, complementary_past = self.encode_past(observed_poses.permute(1, 0, 2))
+        sampled_future, complementary_future = self.encode_future(future_q_poses.permute(1, 0, 2))
+        hidden_pose, sampled_past, complementary_past = self.encode_past(obs_q_poses.permute(1, 0, 2))
         # VAE encoder
         z, mu, sigma = self.encode(sampled_past, complementary_future)
 
         # VAE decoder
         decoded = self.decode(z, sampled_past, complementary_past)
-        pred_poses = self.future_decoder(input=observed_poses[:, -1, :], future_poses=future_poses, hiddens=decoded,
-                                         teacher_forcing_rate=self.teacher_forcing_rate)
+        pred_q_poses = self.future_decoder(input=obs_q_poses[:, -1, :], future_poses=future_q_poses, hiddens=decoded,
+                                           teacher_forcing_rate=self.teacher_forcing_rate)
         self.__update_teacher_forcing_rate()
-        outputs = {'pred_pose': pred_poses, 'mu': mu, 'sigma': sigma}
+        pred_poses = qeuler(q=pred_q_poses, order='xyz')
+        outputs = {'pred_pose': pred_poses, 'pred_q_pose': pred_q_poses, 'mu': mu, 'sigma': sigma}
         return outputs
 
     # def sample(self, obs, alpha, z=None):
