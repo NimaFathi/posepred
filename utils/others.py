@@ -40,7 +40,10 @@ def get_binary(src, device):
 def dict_to_device(src, device):
     out = dict()
     for key, value in src.items():
-        out[key] = value.clone().to(device)
+        if isinstance(value, torch.Tensor):
+            out[key] = value.clone().to(device)
+        else:
+            out[key] = value
     return out
 
 
@@ -92,10 +95,7 @@ def qeuler(q, order, epsilon=0):
 
     original_shape = list(q.shape)
     original_shape[-1] = 3
-    print(q.shape)
-    q = torch.from_numpy(q).view(-1, 4)
-    print(q.shape)
-    # exit()
+    q = q.view(-1, 4)
     q0 = q[:, 0]
     q1 = q[:, 1]
     q2 = q[:, 2]
