@@ -4,6 +4,7 @@ defaults:
 
 type: mix_and_match
 hidden_size: 1000
+alpha: 500
 latent_dim: 32
 hardtanh_limit: 10
 n_layers: 1
@@ -11,3 +12,6 @@ dropout_enc: 0
 dropout_pose_dec: 0
 dropout_mask_dec: 0
 teacher_forcing_rate: 1
+keypoint_dim: 3
+use_mask: false
+device: cuda
