@@ -14,5 +14,7 @@ epochs: ???
 snapshot_interval: ${epochs}
 start_epoch: 0
 device: cuda
+loss:
+  device: ${device}
 load_path:
 save_dir:
