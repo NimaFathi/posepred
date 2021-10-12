@@ -31,7 +31,6 @@ class DeRPoFLoss(nn.Module):
         loss_global = self.mse(future_vel_global, model_outputs['pred_vel_global'])
         loss_local = vae_loss_function(future_vel_local, model_outputs['pred_vel_local'], model_outputs['mean'],
                                        model_outputs['log_var'])
-
         loss = loss_global + 0.1 * loss_local
 
         outputs = {'loss': loss, 'global_loss': loss_global, 'local_loss': loss_local}
