@@ -1,8 +1,8 @@
 import numpy as np
+import torch
 import torch.nn as nn
 
 from losses import KLDivergenceLoss
-from utils.others import qeuler
 
 
 class MixAndMatchLoss(nn.Module):
@@ -22,15 +22,14 @@ class MixAndMatchLoss(nn.Module):
         self.step = 0
 
     def forward(self, model_outputs, input_data=None):
-        q_target_pose = qeuler(q=input_data['future_pose'], order='xyz')
-        rot_loss = self.L_rot(model_outputs['pred_q_pose'], q_target_pose)
+        rot_loss = self.L_rot(model_outputs['pred_q_pose'], input_data['future_quaternion_pose'])
         pose_loss = self.L_skl(model_outputs['pred_pose'], input_data['future_pose'])
         kl_loss = self.kl_loss(model_outputs)
         kl_weight = self.kl_anneal_function(self.args.anneal_function)
         elbo_loss = self.elbo(model_outputs, input_data)
-        loss = rot_loss + pose_loss + kl_weight * kl_loss
-        outputs = {'loss': loss, 'L_rot': rot_loss, 'L_skl': pose_loss, 'L_prior': kl_weight * kl_loss,
-                   'kl_weight': kl_weight, 'ELBO': elbo_loss}
+        loss = rot_loss + pose_loss + kl_weight * kl_loss['loss'].mean()
+        outputs = {'loss': loss, 'L_rot': rot_loss, 'L_skl': pose_loss, 'L_prior': kl_weight * kl_loss['loss'].mean(),
+                   'kl_weight': kl_weight, 'kl_loss': kl_loss['loss'].mean(), 'ELBO': elbo_loss}
         return outputs
 
     def kl_anneal_function(self, anneal_function):
@@ -48,11 +47,21 @@ class ELBOMixAndMatch(nn.Module):
         super().__init__()
 
         self.args = args
-        self.bce = nn.BCELoss(reduction='sum')
         self.kl_loss = KLDivergenceLoss(self.args)
+        self.log_scale = nn.Parameter(torch.Tensor([0.0]))
 
     def forward(self, model_outputs, input_data=None):
         kl_loss = self.kl_loss(model_outputs)
-        bce_loss = self.bce(model_outputs['pred_pose'], input_data['target_pose'])
+        recon_loss = self.gaussian_likelihood(model_outputs['pred_q_pose'], self.log_scale,
+                                              input_data['future_quaternion_pose'])
+        elbo = kl_loss['loss'] - recon_loss
+        return elbo.mean()
 
-        return kl_loss + bce_loss
+    def gaussian_likelihood(self, x_hat, logscale, x):
+        scale = torch.exp(logscale)
+        mean = x_hat
+        dist = torch.distributions.Normal(mean, scale)
+
+        # measure prob of seeing image under p(x|z)
+        log_pxz = dist.log_prob(x)
+        return log_pxz.sum(dim=(1, 2))

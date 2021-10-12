@@ -3,7 +3,7 @@ import random
 import torch
 import torch.nn as nn
 
-from utils.others import qeuler
+from utils.others import qeuler, qfix
 
 
 class MixAndMatch(nn.Module):
@@ -122,7 +122,11 @@ class MixAndMatch(nn.Module):
         pred_q_poses = self.future_decoder(input=obs_q_poses[:, -1, :], future_poses=future_q_poses, hiddens=decoded,
                                            teacher_forcing_rate=self.teacher_forcing_rate)
         self.__update_teacher_forcing_rate()
-        quaternion_poses = pred_q_poses.view(*pred_q_poses.shape[:-1], -1, 4)
+        quaternion_poses = pred_q_poses.clone().view(*pred_q_poses.shape[:-1], -1, 4)
+        q_poses = quaternion_poses.cpu().detach().numpy()
+        for i, q in enumerate(q_poses):
+            q_poses[i] = qfix(q)
+        quaternion_poses = torch.from_numpy(q_poses).to(self.args.device)
         pred_poses = qeuler(q=quaternion_poses, order='xyz')
         pred_poses = pred_poses.view(*pred_poses.shape[:-2], pred_poses.shape[-2] * pred_poses.shape[-1])
         outputs = {'pred_pose': pred_poses, 'pred_q_pose': pred_q_poses, 'mu': mu, 'sigma': sigma}
