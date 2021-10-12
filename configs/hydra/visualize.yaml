@@ -7,6 +7,11 @@ dataset: ???
 dataset_name: ???
 ground_truth: false
 device: cuda
+keypoint_dim: ???
+model:
+  keypoint_dim: ${keypint_dim}
+data:
+  keypint_dim: ${keypoint_dim}
 pred_frames_num:
 load_path:
 index:

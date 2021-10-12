@@ -5,6 +5,11 @@ defaults:
 
 dataset: ???
 pred_frames_num: ???
+keypoint_dim: ???
+model:
+  keypoint_dim: ${keypint_dim}
+data:
+  keypint_dim: ${keypoint_dim}
 device: cuda
 load_path:
 save_dir:

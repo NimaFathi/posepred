@@ -6,6 +6,11 @@ defaults:
   - metrics
 
 dataset: ???
+keypoint_dim: ???
+model:
+  keypoint_dim: ${keypint_dim}
+data:
+  keypint_dim: ${keypoint_dim}
 load_path:
 rounds_num: 1
 device: cuda
