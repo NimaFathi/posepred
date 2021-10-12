@@ -18,12 +18,14 @@ class MSEVel(nn.Module):
                                 future_pose[..., 1:, :] - future_pose[..., :-1, :]), -2)
         vel_loss = self.mse(model_outputs['pred_vel'], future_vel)
 
+        loss = vel_loss
+        outputs = {'vel_loss': vel_loss}
+
         if 'pred_mask' in model_outputs.keys():
             mask_loss = self.bce(model_outputs['pred_mask'], input_data['future_mask'])
-        else:
-            mask_loss = 0
+            loss += self.args.mask_weight * mask_loss
+            outputs['mask_loss'] = mask_loss
 
-        loss = vel_loss + (self.args.mask_weight * mask_loss)
-        outputs = {'loss': loss, 'vel_loss': vel_loss, 'mask_loss': mask_loss}
+        outputs['loss'] = loss
 
         return outputs
