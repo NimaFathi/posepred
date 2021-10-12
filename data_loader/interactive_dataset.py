@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 
 class InteractiveDataset(Dataset):
-    def __init__(self, dataset_path, keypoint_dim, persons_num, is_testing, use_mask, is_visualizing):
+    def __init__(self, dataset_path, keypoint_dim, persons_num, is_testing, use_mask, is_visualizing, use_quaternion):
 
         tensor_keys = ['observed_pose', 'future_pose', 'observed_mask', 'future_mask']
         data = list()
@@ -28,6 +28,7 @@ class InteractiveDataset(Dataset):
         self.is_testing = is_testing
         self.use_mask = use_mask
         self.is_visualizing = is_visualizing
+        self.use_quaternion = use_quaternion
 
         seq = self.data[0]
         assert 'observed_pose' in seq.keys(), 'dataset must include observed_pose'
@@ -50,6 +51,9 @@ class InteractiveDataset(Dataset):
         if self.use_mask:
             observed_mask = self.fix_persons(seq, 'observed_mask', persons_in_seq)
             outputs['observed_mask'] = observed_mask
+        if self.use_quaternion:
+            outputs['observed_quaternion_pose'] = self.fix_persons(seq, 'observed_quaternion_pose', persons_in_seq)
+            outputs['future_quaternion_pose'] = self.fix_persons(seq, 'future_quaternion_pose', persons_in_seq)
 
         if not self.is_testing:
             assert seq['observed_pose'].shape[0] == seq['future_pose'].shape[

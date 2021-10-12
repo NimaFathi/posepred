@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 
 
 class NonInteractiveDataset(Dataset):
-    def __init__(self, dataset_path, keypoint_dim, is_testing, use_mask, is_visualizing):
+    def __init__(self, dataset_path, keypoint_dim, is_testing, use_mask, is_visualizing, use_quaternion):
 
         tensor_keys = ['observed_pose', 'future_pose', 'observed_mask', 'future_mask']
         data = list()
@@ -26,6 +26,7 @@ class NonInteractiveDataset(Dataset):
         self.is_testing = is_testing
         self.use_mask = use_mask
         self.is_visualizing = is_visualizing
+        self.use_quaternion = use_quaternion
 
         seq = self.data[0]
         assert 'observed_pose' in seq.keys(), 'dataset must include observed_pose'
@@ -51,7 +52,11 @@ class NonInteractiveDataset(Dataset):
 
         outputs = dict()
         for key in outputs_keys:
-            outputs[key] = seq[key]
+            if key in seq.keys():
+                outputs[key] = seq[key]
+        if self.use_quaternion:
+            outputs['observed_quaternion_pose'] = torch.tensor(seq['observed_quaternion_pose'])
+            outputs['future_quaternion_pose'] = torch.tensor(seq['future_quaternion_pose'])
 
         if self.is_visualizing:
             if 'observed_image_path' in seq.keys():
