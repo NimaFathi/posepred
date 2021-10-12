@@ -39,8 +39,6 @@ def save_snapshot(model, loss_module, optimizer, optimizer_args, epoch, train_re
     torch.save(snapshot, os.path.join(save_path, 'snapshots', '%03d.pt' % epoch))
     del snapshot
 
-# save dirs are working correctly
-# TODO: use os.getcwd() instead of root when you call'em!!
 
 def save_test_results(result_df, result_tensor, save_dir):
     result_df.to_csv(os.path.join(save_dir, 'generated_outputs', 'results.csv'), index=False)
@@ -48,14 +46,14 @@ def save_test_results(result_df, result_tensor, save_dir):
         pickle.dump(result_tensor, f)
 
 
-def setup_training_dir(root_dir):
-    os.makedirs(os.path.join(root_dir, 'snapshots'), exist_ok=False)
-    os.makedirs(os.path.join(root_dir, 'plots'), exist_ok=False)
-    os.makedirs(os.path.join(root_dir, 'metrics_history'), exist_ok=False)
+def setup_training_dir(parent_dir):
+    os.makedirs(os.path.join(parent_dir, 'snapshots'), exist_ok=False)
+    os.makedirs(os.path.join(parent_dir, 'plots'), exist_ok=False)
+    os.makedirs(os.path.join(parent_dir, 'metrics_history'), exist_ok=False)
 
 
-def setup_testing_dir(root_dir):
-    os.makedirs(os.path.join(root_dir, 'generated_outputs'), exist_ok=False)
+def setup_testing_dir(parent_dir):
+    os.makedirs(os.path.join(parent_dir, 'generated_outputs'), exist_ok=False)
 
 
 def setup_visualization_dir(parent_dir):

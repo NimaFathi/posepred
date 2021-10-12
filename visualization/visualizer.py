@@ -14,13 +14,12 @@ from utils.save_load import setup_visualization_dir
 from visualization.color_generator import color_generator
 from visualization.keypoints_connection import keypoint_connections
 
-from path_definition import ROOT_DIR
-
 logger = logging.getLogger(__name__)
 
 
 class Visualizer:
-    def __init__(self, dataset_name, images_dir):
+    def __init__(self, dataset_name, parent_dir, images_dir):
+        self.parent_dir = parent_dir
         self.images_dir = images_dir
         self.dataset_name = dataset_name
 
@@ -77,7 +76,7 @@ class Visualizer:
         comparison_number = len(poses)
         axarr = []
         filenames = []
-        save_dir = setup_visualization_dir(os.getcwd())
+        save_dir = setup_visualization_dir(self.parent_dir)
         for j in range(len(poses[0])):
             fig = plt.figure(figsize=fig_size, dpi=100)
             axarr.append([])
@@ -150,7 +149,7 @@ class Visualizer:
                     )
                 )
         filenames = []
-        save_dir = setup_visualization_dir(os.getcwd())
+        save_dir = setup_visualization_dir(self.parent_dir)
         for plt_index in range(len(poses[0])):
             fig = plt.figure(figsize=fig_size, dpi=100)
             axarr = []
@@ -184,7 +183,8 @@ class Visualizer:
                         zs=[keypoints[edge, 1][0], keypoints[edge, 1][1]],
                         ys=[keypoints[edge, 2][0], keypoints[edge, 2][1]], linewidth=1, label=r'$z=y=x$')
             if keypoints in keypoint_connections[self.dataset_name]:
-                ax.scatter(xs=keypoints[visualizing_keypoints, 0].detach().cpu().numpy(), zs=keypoints[visualizing_keypoints, 1].detach().cpu().numpy(),
+                ax.scatter(xs=keypoints[visualizing_keypoints, 0].detach().cpu().numpy(),
+                           zs=keypoints[visualizing_keypoints, 1].detach().cpu().numpy(),
                            ys=keypoints[visualizing_keypoints, 2].detach().cpu().numpy(), s=5)
 
     def __generate_2D_figure(self, all_poses, all_masks=None, image_path=None):
