@@ -3,3 +3,4 @@ defaults:
   - common
 
 type: derpof
+local_loss_weight: 0.1
