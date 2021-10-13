@@ -8,7 +8,8 @@ class HisRepItselfLoss(nn.Module):
         super().__init__()
 
         self.args = args
-        self.dim = args.keypoint_dim
+        self.kernel_size = 10
+        self.dim = 3
 
     def forward(self, model_outputs, input_data):
         future_pose = input_data['future_pose']
@@ -19,9 +20,9 @@ class HisRepItselfLoss(nn.Module):
             dim=3))
 
         observed_pose = input_data['observed_pose']
-        sup_seq = torch.cat((observed_pose[:, -self.args.kernel_size:, :], future_pose), 1).reshape(-1,
-                                                                                                    feature_n // self.dim,
-                                                                                                    self.dim)
+        sup_seq = torch.cat((observed_pose[:, -self.kernel_size:, :], future_pose), 1).reshape(-1,
+                                                                                               feature_n // self.dim,
+                                                                                               self.dim)
         out_all = model_outputs['out_all'].reshape(-1, feature_n // self.dim, self.dim)
         loss_all = torch.mean(torch.norm(out_all - sup_seq, dim=3))
 
