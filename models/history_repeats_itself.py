@@ -179,6 +179,7 @@ class HistoryRepeatsItself(nn.Module):
         idx = list(range(-self.kernel_size, 0, 1)) + [-1] * output_n
         key_tmp = self.convK(src_key_tmp / 1000.0)
 
+        outputs_ = []
         for i in range(self.itera):
             query_tmp = self.convQ(src_query_tmp / 1000.0)
             score_tmp = torch.matmul(query_tmp.transpose(1, 2), key_tmp) + 1e-15
@@ -191,7 +192,7 @@ class HistoryRepeatsItself(nn.Module):
             dct_out_tmp = self.gcn(dct_in_tmp)
             out_gcn = torch.matmul(idct_m[:, :self.dct_n].unsqueeze(dim=0),
                                    dct_out_tmp[:, :, :self.dct_n].transpose(1, 2))
-            outputs.append(out_gcn.unsqueeze(2))
+            outputs_.append(out_gcn.unsqueeze(2))
             if self.itera > 1:
                 # update key-value query
                 out_tmp = out_gcn.clone()[:, 0 - output_n:]
@@ -215,25 +216,8 @@ class HistoryRepeatsItself(nn.Module):
 
                 src_query_tmp = src_tmp[:, -self.kernel_size:].transpose(1, 2)
 
-        outputs = torch.cat(outputs, dim=2)
+        out_all = torch.cat(outputs_, dim=2)  # shape: [bs, kernel_size + output_n, itera, feature_n]
+        out = out_all[:, self.kernel_size:, 0]
+        outputs = {'pred_pose': out, 'out_all': out_all}
+
         return outputs
-
-
-# for i, data in enumerate(data_loader):
-#     bs, in_out_sum, feature_n = data.shape
-#
-#     sup_seq = data.clone()[:, -(kernel_size + out_n):, :].reshape([bs, kernel_size + out_n, len(feature_n) // 3, 3])
-#     src = data.clone()
-#
-#     out_all = net_pred(src, input_n=in_n, output_n=out_n)
-#     # out.shape: [bs, seq_in + out_n, itera, feature_n]
-#
-#     out = out_all[:, kernel_size:, 0]
-#     out = out.reshape([bs, out_n, len(feature_n) // 3, 3])
-#     data = data.reshape([bs, in_n + out_n, len(feature_n) // 3, 3])
-#     out_all = out_all.reshape([bs, kernel_size + out_n, itera, len(feature_n) // 3, 3])
-#
-#     loss_p3d = torch.mean(torch.norm(out_all[:, :, 0] - sup_seq, dim=3))
-#
-#     mpjpe_p3d_h36 = torch.mean(torch.norm(data[:, in_n:] - out, dim=3))
-
