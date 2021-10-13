@@ -51,6 +51,7 @@ class InteractiveDataset(Dataset):
         if self.use_mask:
             observed_mask = self.fix_persons(seq, 'observed_mask', persons_in_seq)
             outputs['observed_mask'] = observed_mask
+
         if self.use_quaternion:
             outputs['observed_quaternion_pose'] = self.fix_persons(seq, 'observed_quaternion_pose', persons_in_seq)
             outputs['future_quaternion_pose'] = self.fix_persons(seq, 'future_quaternion_pose', persons_in_seq)
