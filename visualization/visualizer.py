@@ -181,11 +181,11 @@ class Visualizer:
             for ie, edge in enumerate(keypoint_connections[self.dataset_name]):
                 ax.plot(xs=[keypoints[edge, 0][0], keypoints[edge, 0][1]],
                         zs=[keypoints[edge, 1][0], keypoints[edge, 1][1]],
-                        ys=[keypoints[edge, 2][0], keypoints[edge, 2][1]], linewidth=1, label=r'$z=y=x$')
+                        ys=[keypoints[edge, 2][0], keypoints[edge, 2][1]], linewidth=2, label=r'$x=y=z$')
             if keypoints in keypoint_connections[self.dataset_name]:
                 ax.scatter(xs=keypoints[visualizing_keypoints, 0].detach().cpu().numpy(),
                            zs=keypoints[visualizing_keypoints, 1].detach().cpu().numpy(),
-                           ys=keypoints[visualizing_keypoints, 2].detach().cpu().numpy(), s=5)
+                           ys=keypoints[visualizing_keypoints, 2].detach().cpu().numpy(), s=8)
 
     def __generate_2D_figure(self, all_poses, all_masks=None, image_path=None):
         num_keypoints = all_poses.shape[-1] // 2
