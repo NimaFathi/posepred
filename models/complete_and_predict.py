@@ -9,12 +9,25 @@ class CompleteAndPredict(nn.Module):
         super(CompleteAndPredict, self).__init__()
         self.args = args
         input_size = output_size = int(args.keypoints_num * args.keypoint_dim)
+
         self.vel_encoder = Encoder(input_size, args.hidden_size, args.n_layers, args.dropout_enc)
-        self.res_block1 = ResidualBlock(input_size=self.args.hidden_size, embedding_size=self.args.hidden_size)
+
+        self.res_block1 = ResidualBlock(input_size=args.hidden_size, embedding_size=args.hidden_size)
+        self.mean = nn.Linear(args.hidden_size, args.latent_dim)
+        self.std = nn.Linear(args.hidden_size, args.latent_dim)
+
+        self.decode_latent = nn.Sequential(nn.Linear(args.latent_dim, args.hidden_size), nn.ReLU())
+        self.res_block2 = ResidualBlock(input_size=args.hidden_size, embedding_size=args.hidden_size)
+        self.data_decoder = nn.Sequential(
+            nn.Linear(args.hidden_size, args.hidden_size),
+            nn.BatchNorm1d(args.hidden_size),
+            nn.ReLU(),
+            nn.Linear(args.hidden_size, args.hidden_size),
+            nn.ReLU()
+        )
+
         self.vel_decoder = Decoder(args.pred_frames_num, input_size, output_size, args.hidden_size, args.n_layers,
                                    args.dropout_pose_dec, 'hardtanh', args.hardtanh_limit)
-
-
 
     def forward(self, inputs):
         pose = inputs['observed_pose']
@@ -33,14 +46,10 @@ class CompleteAndPredict(nn.Module):
         hidden_vel = hidden_vel.squeeze(0)
         cell_vel = cell_vel.squeeze(0)
 
-
-        fusion = self.res_block1(fusion, nn.ReLU())
-        # compute the mean and standard deviation of the approximate posterior
-        mu = self.mean(fusion)
-        sigma = self.std(fusion)
-        self.reparameterize(mu, sigma), mu, sigma
-
-
+        fusion = self.res_block1(hidden_vel, nn.ReLU())
+        z = self.reparameterize(self.mean(fusion), self.std(fusion))
+        latent = self.decode_latent(z)
+        h_zp = self.res_block2(latent, nn.ReLU())
 
         vel_dec_input = vel[:, -1, :]
         pred_vel = self.vel_decoder(vel_dec_input, hidden_vel, cell_vel)
@@ -48,6 +57,11 @@ class CompleteAndPredict(nn.Module):
         outputs = {'pred_pose': pred_pose, 'pred_vel': pred_vel}
 
         return outputs
+
+    def reparameterize(self, mu, logvar):
+        std = torch.exp(0.5 * logvar)
+        eps = torch.randn_like(std).to(self.args.device)
+        return eps.mul(std).add_(mu)
 
 
 class Encoder(nn.Module):
@@ -93,3 +107,30 @@ class Decoder(nn.Module):
             dec_inputs = output.detach()
             outputs = torch.cat((outputs, output.unsqueeze(1)), 1)
         return outputs
+
+
+class ResidualBlock(nn.Module):
+    """ Residual Network that is then used for the VAE encoder and the VAE decoder. """
+
+    def __init__(self, input_size, embedding_size):
+        super().__init__()
+        self.shortcut = nn.Linear(input_size, embedding_size)
+        self.deep1 = nn.Linear(input_size, embedding_size // 2)
+        self.deep2 = nn.Linear(embedding_size // 2, embedding_size // 2)
+        self.deep3 = nn.Linear(embedding_size // 2, embedding_size)
+
+    def forward(self, input_tensor, activation=None):
+        if activation is not None:
+            shortcut = activation(self.shortcut(input_tensor))
+            deep1 = activation(self.deep1(input_tensor))
+            deep2 = activation(self.deep2(deep1))
+            deep3 = activation(self.deep3(deep2))
+        else:
+            shortcut = self.shortcut(input_tensor)
+            deep1 = self.deep1(input_tensor)
+            deep2 = self.deep2(deep1)
+            deep3 = self.deep3(deep2)
+
+        output = shortcut + deep3
+
+        return output
