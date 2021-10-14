@@ -2,15 +2,17 @@ defaults:
   - _self_
   - data: main
   - model:
-  - loss: ???
   - metrics
 
 dataset: ???
 keypoint_dim: ???
+use_mask: false
 model:
   keypoint_dim: ${keypint_dim}
+  use_mask: ${use_mask}
 data:
   keypint_dim: ${keypoint_dim}
+  use_mask: ${use_mask}
 load_path:
 rounds_num: 1
 device: cuda
