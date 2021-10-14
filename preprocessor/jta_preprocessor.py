@@ -113,7 +113,7 @@ class JTAPreprocessor(Processor):
                     obs_mask = []
                     future = []
                     future_mask = []
-                    for j in range(0, total_frame_num * (self.skip_frame_num + 1), self.skip_frame_num + 1):
+                    for j in range(1, total_frame_num * (self.skip_frame_num + 1) + 1, self.skip_frame_num + 1):
                         frame_data = {
                             'pose': defaultdict(list),
                             'mask': defaultdict(list)
@@ -129,7 +129,6 @@ class JTAPreprocessor(Processor):
                             for masking_state in range(8, 10):
                                 masked += pose[masking_state]
                             frame_data['mask'][pose[1]].append(1 if masked > 0 else 0)
-
                         for p_id in frame_data['pose'].keys():
                             if j <= self.obs_frame_num * (self.skip_frame_num + 1):
                                 video_data['obs_pose'][p_id].append(frame_data['pose'][p_id])
