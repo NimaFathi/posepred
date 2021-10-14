@@ -40,7 +40,7 @@ class CompleteAndPredict(nn.Module):
         # make data noisy
         bs, frames_n, features_n = vel.shape
         vel = vel.reshape(bs, frames_n, self.args.keypoints_num, self.args.keypoint_dim)
-        mask = mask.repeat(1, 1, 1, 3)
+        mask = mask.reshape(bs, frames_n, self.args.keypoints_num, 1).repeat(1, 1, 1, 3)
         const = torch.zeros_like(mask) * (-100)
         noisy_vel = torch.where(mask == 1, const, vel).reshape(bs, frames_n, -1)
 
