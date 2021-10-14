@@ -46,13 +46,13 @@ class CompleteAndPredict(nn.Module):
         hidden_vel = hidden_vel.squeeze(0)
         cell_vel = cell_vel.squeeze(0)
 
-        fusion = self.res_block1(hidden_vel, nn.ReLU())
-        z = self.reparameterize(self.mean(fusion), self.std(fusion))
-        latent = self.decode_latent(z)
-        h_zp = self.res_block2(latent, nn.ReLU())
+        fusion1 = self.res_block1(hidden_vel, nn.ReLU())
+        latent = self.reparameterize(self.mean(fusion1), self.std(fusion1))
+        fusion2 = self.decode_latent(latent)
+        hidden_vel2 = self.res_block2(fusion2, nn.ReLU())
 
         vel_dec_input = vel[:, -1, :]
-        pred_vel = self.vel_decoder(vel_dec_input, hidden_vel, cell_vel)
+        pred_vel = self.vel_decoder(vel_dec_input, hidden_vel2, cell_vel)
         pred_pose = pose_from_vel(pred_vel, pose[..., -1, :])
         outputs = {'pred_pose': pred_pose, 'pred_vel': pred_vel}
 
