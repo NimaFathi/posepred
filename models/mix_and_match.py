@@ -107,7 +107,7 @@ class MixAndMatch(nn.Module):
             set(inputs.keys())), 'data should be in quaternion form'
         obs_q_poses = inputs['observed_quaternion_pose']
         future_q_poses = inputs['future_quaternion_pose']
-        # The fist step is to perform "Sampling"
+        # The first step is to perform "Sampling"
         # the parameter "alpha" is the pertubation rate. it is usually half of hidden_dim
         self.sampled_indices = list(random.sample(range(0, self.args.hidden_size), self.alpha))
         self.complementary_indices = [i for i in range(self.args.hidden_size) if i not in self.sampled_indices]

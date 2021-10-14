@@ -10,8 +10,11 @@ class CompleteAndPredict(nn.Module):
         self.args = args
         input_size = output_size = int(args.keypoints_num * args.keypoint_dim)
         self.vel_encoder = Encoder(input_size, args.hidden_size, args.n_layers, args.dropout_enc)
+        self.res_block1 = ResidualBlock(input_size=self.args.hidden_size, embedding_size=self.args.hidden_size)
         self.vel_decoder = Decoder(args.pred_frames_num, input_size, output_size, args.hidden_size, args.n_layers,
                                    args.dropout_pose_dec, 'hardtanh', args.hardtanh_limit)
+
+
 
     def forward(self, inputs):
         pose = inputs['observed_pose']
@@ -29,6 +32,15 @@ class CompleteAndPredict(nn.Module):
         (hidden_vel, cell_vel) = self.vel_encoder(noisy_vel.permute(1, 0, 2))
         hidden_vel = hidden_vel.squeeze(0)
         cell_vel = cell_vel.squeeze(0)
+
+
+        fusion = self.res_block1(fusion, nn.ReLU())
+        # compute the mean and standard deviation of the approximate posterior
+        mu = self.mean(fusion)
+        sigma = self.std(fusion)
+        self.reparameterize(mu, sigma), mu, sigma
+
+
 
         vel_dec_input = vel[:, -1, :]
         pred_vel = self.vel_decoder(vel_dec_input, hidden_vel, cell_vel)

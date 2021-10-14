@@ -2,3 +2,4 @@ keypoint_dim:
 pred_frames_num:
 keypoints_num:
 use_mask:
+device:
