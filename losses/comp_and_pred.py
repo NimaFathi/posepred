@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 
 
-class MSEVel(nn.Module):
+class CompAndPred(nn.Module):
 
     def __init__(self, args):
         super().__init__()
