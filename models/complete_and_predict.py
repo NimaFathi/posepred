@@ -35,14 +35,16 @@ class CompleteAndPredict(nn.Module):
     def forward(self, inputs):
         pose = inputs['observed_pose']
         vel = pose[..., 1:, :] - pose[..., :-1, :]
-        mask = inputs['observed_mask'][..., 1:, :]
+        bs, frames_n, features_n = vel.shape
+
+        # mask = inputs['observed_mask'][..., 1:, :]
+        mask = torch.randint(2, (bs, frames_n, self.args.keypoints_num))
 
         # make data noisy
-        bs, frames_n, features_n = vel.shape
         vel = vel.reshape(bs, frames_n, self.args.keypoints_num, self.args.keypoint_dim)
-        mask = mask.reshape(bs, frames_n, self.args.keypoints_num, 1).repeat(1, 1, 1, 3)
-        const = torch.zeros_like(mask) * (-100)
-        noisy_vel = torch.where(mask == 1, const, vel).reshape(bs, frames_n, -1)
+        mask_ = mask.reshape(bs, frames_n, self.args.keypoints_num, 1).repeat(1, 1, 1, 3)
+        const = (torch.zeros_like(mask_) * (-100)).to(self.args.device)
+        noisy_vel = torch.where(mask_ == 1, const, vel).reshape(bs, frames_n, -1)
 
         # velocity encoder
         (hidden_vel, cell_vel) = self.vel_encoder(noisy_vel.permute(1, 0, 2))
@@ -65,7 +67,7 @@ class CompleteAndPredict(nn.Module):
         # completion
         complited_vel = self.completion(noisy_vel, hidden_vel2, cell_vel)
 
-        outputs = {'pred_pose': pred_pose, 'pred_vel': pred_vel, 'completed_vel': complited_vel}
+        outputs = {'pred_pose': pred_pose, 'pred_vel': pred_vel, 'completed_vel': complited_vel, 'mask': mask}
 
         return outputs
 
