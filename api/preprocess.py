@@ -31,7 +31,7 @@ def preprocess(cfg: DictConfig):
         raise Exception(msg)
     if cfg.dataset == 'posetrack':
         preprocessor = PoseTrackPreprocessor(
-            mask=cfg.data.use_mask, dataset_path=cfg.official_annotation_path,
+            mask=cfg.use_mask, dataset_path=cfg.official_annotation_path,
             obs_frame_num=cfg.obs_frames_num, custom_name=cfg.output_name, is_interactive=cfg.interactive,
             pred_frame_num=cfg.pred_frames_num, skip_frame_num=0, use_video_once=cfg.use_video_once)
     elif cfg.dataset == 'jta':
@@ -42,7 +42,7 @@ def preprocess(cfg: DictConfig):
         )
     elif cfg.dataset == 'somof_posetrack':
         preprocessor = SoMoFPoseTrackPreprocessor(
-            mask=cfg.data.use_mask, dataset_path=cfg.official_annotation_path,
+            mask=cfg.use_mask, dataset_path=cfg.official_annotation_path,
             obs_frame_num=16, custom_name=cfg.output_name, is_interactive=cfg.interactive,
             pred_frame_num=14, skip_frame_num=1, use_video_once=True
         )
