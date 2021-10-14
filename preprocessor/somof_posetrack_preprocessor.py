@@ -82,6 +82,7 @@ class SoMoFPoseTrackPreprocessor(Processor):
                     ])
             else:
                 for vid_id in range(len(processed_data['obs_pose'])):
+                    self.update_meta_data(self.meta_data, processed_data['obs_pose'][vid_id], 2)
                     for p_id in range(len(processed_data['future_pose'][vid_id])):
                         data.append([
                             '%d-%d' % (vid_id, 0),
