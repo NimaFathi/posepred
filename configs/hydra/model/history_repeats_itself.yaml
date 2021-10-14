@@ -3,3 +3,6 @@ defaults:
   - common
 
 type: history_repeats_itself
+
+loss:
+  type: his_rep_itself

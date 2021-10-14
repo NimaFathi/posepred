@@ -9,3 +9,7 @@ n_layers: 1
 dropout_enc: 0
 dropout_pose_dec: 0
 dropout_mask_dec: 0
+
+loss:
+  type: mse_vel
+  mask_weight: 0

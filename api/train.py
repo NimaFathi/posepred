@@ -32,10 +32,8 @@ def train(cfg: DictConfig):
         cfg.optimizer = optimizer_args
         cfg.save_dir = cfg.load_path[:cfg.load_path.rindex('snapshots/')]
     else:
-        cfg.model.keypoint_dim = cfg.data.keypoint_dim
         cfg.model.pred_frames_num = train_dataloader.dataset.future_frames_num
         cfg.model.keypoints_num = train_dataloader.dataset.keypoints_num
-        cfg.model.use_mask = cfg.data.use_mask
         model = MODELS[cfg.model.type](cfg.model)
         loss_module = LOSSES[cfg.loss.type](cfg.loss)
         optimizer = OPTIMIZERS[cfg.optimizer.type](model.parameters(), cfg.optimizer)

@@ -37,15 +37,17 @@ class DeRPoF(nn.Module):
                      - global_vel.view(frames_num, bs, 1, self.keypoint_dim)).view(frames_num, bs, self.features_num)
 
         # predict
-        global_vel_out = self.global_model(global_vel, self.args.pred_frames_num)
-        local_vel_out, _, _ = self.local_model(local_vel, self.args.pred_frames_num)
+        global_vel_out = self.global_model(global_vel, self.args.pred_frames_num).view(frames_num, bs, 1,
+                                                                                       self.keypoint_dim)
+        local_vel_out, mean, log_var = self.local_model(local_vel, self.args.pred_frames_num)
+        local_vel_out = local_vel_out.view(frames_num, bs, self.keypoints_num, self.keypoint_dim)
 
         # merge local and global velocity
-        vel_out = (global_vel_out.view(frames_num, bs, 1, self.keypoint_dim)
-                   + local_vel_out.view(frames_num, bs, self.keypoints_num, self.keypoint_dim))
+        vel_out = (global_vel_out + local_vel_out)
         pred_vel = vel_out.view(frames_num, bs, self.features_num).permute(1, 0, 2)
         pred_pose = pose_from_vel(pred_vel, pose[..., -1, :])
-        outputs = {'pred_pose': pred_pose, 'pred_vel': pred_vel}
+        outputs = {'pred_pose': pred_pose, 'pred_vel_global': global_vel_out, 'pred_vel_local': local_vel_out,
+                   'mean': mean, 'log_var': log_var}
 
         if self.args.use_mask:
             mask = inputs['observed_mask']
@@ -87,6 +89,25 @@ class LSTM_g(nn.Module):
             last_s_g = curr_s_g.unsqueeze(0)
 
         return pred_s_g
+
+
+class VAE(nn.Module):
+    def __init__(self, Encoder, Decoder):
+        super(VAE, self).__init__()
+        self.Encoder = Encoder
+        self.Decoder = Decoder
+
+    def reparameterization(self, mean, var):
+        epsilon = torch.randn_like(var)  # sampling epsilon
+        z = mean + var * epsilon  # reparameterization trick
+        return z
+
+    def forward(self, obs_s, pred_len):
+        mean, log_var = self.Encoder(obs_s=obs_s)
+        z = self.reparameterization(mean, torch.exp(0.5 * log_var))  # takes exponential function (log var -> var)
+        preds_s = self.Decoder(obs_s=obs_s, latent=z, pred_len=pred_len)
+
+        return preds_s, mean, log_var
 
 
 class Encoder(nn.Module):
@@ -141,29 +162,3 @@ class Decoder(nn.Module):
             last_s = curr_s.unsqueeze(0)
 
         return preds_s
-
-
-class VAE(nn.Module):
-    def __init__(self, Encoder, Decoder):
-        super(VAE, self).__init__()
-        self.Encoder = Encoder
-        self.Decoder = Decoder
-
-    def reparameterization(self, mean, var):
-        epsilon = torch.randn_like(var)  # sampling epsilon
-        z = mean + var * epsilon  # reparameterization trick
-        return z
-
-    def forward(self, obs_s, pred_len):
-        mean, log_var = self.Encoder(obs_s=obs_s)
-        z = self.reparameterization(mean, torch.exp(0.5 * log_var))  # takes exponential function (log var -> var)
-        preds_s = self.Decoder(obs_s=obs_s, latent=z, pred_len=pred_len)
-
-        return preds_s, mean, log_var
-
-
-def vae_loss_function(x, x_hat, mean, log_var):
-    assert x_hat.shape == x.shape
-    reconstruction_loss = torch.mean(torch.norm(x - x_hat, dim=len(x.shape) - 1))
-    KLD = - 0.5 * torch.sum(1 + log_var - mean.pow(2) - log_var.exp())
-    return reconstruction_loss + 0.01 * KLD
