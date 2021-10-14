@@ -45,7 +45,8 @@ class PreprocessorHuman36m(Processor):
         )) is False, f"preprocessed file exists at {os.path.join(self.output_dir, output_file_name)}"
         for subject in self.subjects:
             logger.info("handling subject: {}".format(subject))
-            file_list_pose = glob(self.dataset_path + '/' + subject + '/MyPoseFeatures/D3_Positions/*.cdf')
+            subject_pose_path = os.path.join(self.dataset_path, subject, 'MyPoseFeatures/D3_Positions/*.cdf')
+            file_list_pose = glob(subject_pose_path)
             assert len(file_list_pose) == 30, "Expected 30 files for subject " + subject + ", got " + str(len(file_list_pose))
             for f in file_list_pose:
                 action = os.path.splitext(os.path.basename(f))[0]
