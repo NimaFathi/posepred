@@ -39,9 +39,9 @@ class SoMoF3DPWPreprocessor(Processor):
     def __save_csv(self, data_type, processed_data, file_type=None):
         if self.custom_name:
             if file_type is None:
-                output_file_name = f'{data_type}_16_14_1_{self.custom_name}.csv'
+                output_file_name = f'{data_type}_16_14_1_{self.custom_name}.jsonl'
             else:
-                output_file_name = f'{file_type}_{data_type}_16_14_1_{self.custom_name}.csv'
+                output_file_name = f'{file_type}_{data_type}_16_14_1_{self.custom_name}.josnl'
         else:
             if file_type is None:
                 output_file_name = f'{data_type}_16_14_1_SoMoF_3dpw.jsonl'

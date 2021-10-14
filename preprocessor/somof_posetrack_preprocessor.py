@@ -45,9 +45,9 @@ class SoMoFPoseTrackPreprocessor(Processor):
                 output_file_name = f'{file_type}_{data_type}_16_14_1_{self.custom_name}.jsonl'
         else:
             if file_type is None:
-                output_file_name = f'{data_type}_16_14_1_SoMoF_PoseTrack.csv'
+                output_file_name = f'{data_type}_16_14_1_SoMoF_PoseTrack.jsonl'
             else:
-                output_file_name = f'{file_type}_{data_type}_16_14_1_SoMoF_PoseTrack.csv'
+                output_file_name = f'{file_type}_{data_type}_16_14_1_SoMoF_PoseTrack.jsonl'
         assert os.path.exists(os.path.join(
             self.output_dir,
             output_file_name
