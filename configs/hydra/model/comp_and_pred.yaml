@@ -12,5 +12,5 @@ dropout_pose_dec: 0
 dropout_mask_dec: 0
 
 loss:
-  type: mse_vel
-  mask_weight: 0
+  type: comp&pred
+  comp_weight: 1
