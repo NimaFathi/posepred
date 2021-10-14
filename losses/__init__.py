@@ -14,5 +14,5 @@ LOSSES = {'mse_vel': MSEVel,
           'elbo': ELBO,
           'derpof': DeRPoFLoss,
           'his_rep_itself': HisRepItselfLoss,
-          'comp&pred': CompAndPred,
+          'comp_and_pred': CompAndPred,
           }

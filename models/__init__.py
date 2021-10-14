@@ -14,5 +14,5 @@ MODELS = {'zero_vel': ZeroVel,
           'derpof': DeRPoF,
           'history_repeats_itself': HistoryRepeatsItself,
           'mix_and_match': MixAndMatch,
-          'comp&pred': CompleteAndPredict,
+          'comp_and_pred': CompleteAndPredict,
           }
