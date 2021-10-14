@@ -14,12 +14,5 @@ start_epoch: 0
 device: cuda
 keypoint_dim: ???
 use_mask: false
-model:
-  keypoint_dim: ${keypint_dim}
-  use_mask: ${use_mask}
-  device: ${device}
-data:
-  keypint_dim: ${keypoint_dim}
-  use_mask: ${use_mask}
 load_path:
 save_dir:

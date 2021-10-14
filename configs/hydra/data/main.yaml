@@ -1,7 +1,7 @@
-keypoint_dim: ???
-is_interactive: ???
+keypoint_dim: ${keypoint_dim}
+is_interactive: false
 persons_num: 1
-use_mask: false
+use_mask: ${use_mask}
 use_quaternion: false
 is_testing: false
 is_visualizing: false

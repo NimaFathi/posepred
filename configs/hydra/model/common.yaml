@@ -1,5 +1,5 @@
-keypoint_dim:
+keypoint_dim: ${keypoint_dim}
 pred_frames_num:
 keypoints_num:
-use_mask:
-device:
+use_mask: ${use_mask}
+device: ${device}
