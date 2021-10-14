@@ -8,10 +8,13 @@ dataset_name: ???
 ground_truth: false
 device: cuda
 keypoint_dim: ???
+use_mask: false
 model:
   keypoint_dim: ${keypint_dim}
+  use_mask: ${use_mask}
 data:
   keypint_dim: ${keypoint_dim}
+  use_mask: ${use_mask}
 pred_frames_num:
 load_path:
 index:

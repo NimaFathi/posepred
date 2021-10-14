@@ -6,10 +6,13 @@ defaults:
 dataset: ???
 pred_frames_num: ???
 keypoint_dim: ???
+use_mask: false
 model:
   keypoint_dim: ${keypint_dim}
+  use_mask: ${use_mask}
 data:
   keypint_dim: ${keypoint_dim}
+  use_mask: ${use_mask}
 device: cuda
 load_path:
 save_dir:
