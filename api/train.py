@@ -35,7 +35,7 @@ def train(cfg: DictConfig):
         cfg.model.pred_frames_num = train_dataloader.dataset.future_frames_num
         cfg.model.keypoints_num = train_dataloader.dataset.keypoints_num
         model = MODELS[cfg.model.type](cfg.model)
-        loss_module = LOSSES[cfg.loss.type](cfg.loss)
+        loss_module = LOSSES[cfg.model.loss.type](cfg.model.loss)
         optimizer = OPTIMIZERS[cfg.optimizer.type](model.parameters(), cfg.optimizer)
         train_reporter = Reporter(state='train')
         valid_reporter = Reporter(state='valid')
