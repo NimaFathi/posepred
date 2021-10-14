@@ -13,11 +13,10 @@ logger = logging.getLogger(__name__)
 
 
 class SoMoFPoseTrackPreprocessor(Processor):
-    def __init__(self, mask, dataset_path, is_interactive, obs_frame_num, pred_frame_num,
+    def __init__(self, dataset_path, is_interactive, obs_frame_num, pred_frame_num,
                  skip_frame_num, use_video_once, custom_name):
         super(SoMoFPoseTrackPreprocessor, self).__init__(dataset_path, is_interactive, obs_frame_num,
                                                          pred_frame_num, skip_frame_num, use_video_once, custom_name)
-        self.mask = mask
         self.output_dir = os.path.join(
             PREPROCESSED_DATA_DIR, 'SoMoF_PoseTrack_interactive') if self.is_interactive else os.path.join(
             PREPROCESSED_DATA_DIR, 'SoMoF_PoseTrack'
@@ -45,9 +44,9 @@ class SoMoFPoseTrackPreprocessor(Processor):
                 output_file_name = f'{file_type}_{data_type}_16_14_1_{self.custom_name}.jsonl'
         else:
             if file_type is None:
-                output_file_name = f'{data_type}_16_14_1_SoMoF_PoseTrack.csv'
+                output_file_name = f'{data_type}_16_14_1_SoMoF_PoseTrack.jsonl'
             else:
-                output_file_name = f'{file_type}_{data_type}_16_14_1_SoMoF_PoseTrack.csv'
+                output_file_name = f'{file_type}_{data_type}_16_14_1_SoMoF_PoseTrack.jsonl'
         assert os.path.exists(os.path.join(
             self.output_dir,
             output_file_name
@@ -82,6 +81,7 @@ class SoMoFPoseTrackPreprocessor(Processor):
                     ])
             else:
                 for vid_id in range(len(processed_data['obs_pose'])):
+                    self.update_meta_data(self.meta_data, processed_data['obs_pose'][vid_id], 2)
                     for p_id in range(len(processed_data['future_pose'][vid_id])):
                         data.append([
                             '%d-%d' % (vid_id, 0),
@@ -89,7 +89,7 @@ class SoMoFPoseTrackPreprocessor(Processor):
                             processed_data['obs_mask'][vid_id][p_id], processed_data['future_pose'][vid_id][p_id],
                             processed_data['obs_frames_path'][vid_id].tolist()
                         ])
-        with jsonlines.open(os.path.join(self.is_interactive, output_file_name), 'a') as writer:
+        with jsonlines.open(os.path.join(self.output_dir, output_file_name), 'a') as writer:
             if data_type == 'test':
                 for data_row in data:
                     writer.write({

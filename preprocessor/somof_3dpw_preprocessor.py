@@ -39,9 +39,9 @@ class SoMoF3DPWPreprocessor(Processor):
     def __save_csv(self, data_type, processed_data, file_type=None):
         if self.custom_name:
             if file_type is None:
-                output_file_name = f'{data_type}_16_14_1_{self.custom_name}.csv'
+                output_file_name = f'{data_type}_16_14_1_{self.custom_name}.jsonl'
             else:
-                output_file_name = f'{file_type}_{data_type}_16_14_1_{self.custom_name}.csv'
+                output_file_name = f'{file_type}_{data_type}_16_14_1_{self.custom_name}.josnl'
         else:
             if file_type is None:
                 output_file_name = f'{data_type}_16_14_1_SoMoF_3dpw.jsonl'
@@ -78,6 +78,7 @@ class SoMoF3DPWPreprocessor(Processor):
                     ])
             else:
                 for vid_id in range(len(processed_data['obs_pose'])):
+                    self.update_meta_data(self.meta_data, processed_data['obs_pose'][vid_id], 3)
                     for p_id in range(len(processed_data['future_pose'][vid_id])):
                         data.append([
                             '%d-%d' % (vid_id, 0),
@@ -85,7 +86,7 @@ class SoMoF3DPWPreprocessor(Processor):
                             processed_data['future_pose'][vid_id][p_id].tolist(),
                             processed_data['obs_frames_path'][vid_id].tolist()
                         ])
-        with jsonlines.open(os.path.join(self.is_interactive, output_file_name), 'a') as writer:
+        with jsonlines.open(os.path.join(self.output_dir, output_file_name), 'a') as writer:
             if data_type == 'test':
                 for data_row in data:
                     writer.write({
