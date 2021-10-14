@@ -14,4 +14,3 @@ joints_annotation_path: ???
 keypoint_dim: ???
 skip_num: 0
 interactive: false
-use_mask: false
