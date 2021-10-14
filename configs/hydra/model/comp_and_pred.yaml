@@ -4,7 +4,7 @@ defaults:
 
 type: comp_and_pred
 hidden_size: 200
-latent_size: 10
+latent_dim: 10
 hardtanh_limit: 10
 n_layers: 1
 dropout_enc: 0

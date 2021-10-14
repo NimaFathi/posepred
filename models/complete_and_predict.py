@@ -27,10 +27,10 @@ class CompleteAndPredict(nn.Module):
         )
 
         self.vel_decoder = Decoder(args.pred_frames_num, input_size, output_size, args.hidden_size, args.n_layers,
-                                   args.dropout_pose_dec, 'hardtanh', args.hardtanh_limit)
+                                   args.dropout_pose_dec, 'hardtanh', args.hardtanh_limit, args.device)
 
         self.completion = Completion(input_size, output_size, args.hidden_size, args.n_layers, args.dropout_pose_dec,
-                                     'hardtanh', args.hardtanh_limit)
+                                     'hardtanh', args.hardtanh_limit, args.device)
 
     def forward(self, inputs):
         pose = inputs['observed_pose']
@@ -43,7 +43,7 @@ class CompleteAndPredict(nn.Module):
         # make data noisy
         vel = vel.reshape(bs, frames_n, self.args.keypoints_num, self.args.keypoint_dim)
         mask_ = mask.reshape(bs, frames_n, self.args.keypoints_num, 1).repeat(1, 1, 1, 3)
-        const = (torch.zeros_like(mask_) * (-100)).to(self.args.device)
+        const = (torch.zeros_like(mask_, dtype=torch.float) * (-100)).to(self.args.device)
         noisy_vel = torch.where(mask_ == 1, const, vel).reshape(bs, frames_n, -1)
 
         # velocity encoder
@@ -89,8 +89,9 @@ class Encoder(nn.Module):
 
 class Decoder(nn.Module):
     def __init__(self, outputs_num, input_size, output_size, hidden_size, n_layers, dropout, activation_type,
-                 hardtanh_limit=None):
+                 hardtanh_limit=None, device='cpu'):
         super().__init__()
+        self.device = device
         self.outputs_num = outputs_num
         self.dropout = nn.Dropout(dropout)
         lstms = [
@@ -108,7 +109,7 @@ class Decoder(nn.Module):
         if len(hiddens.shape) < 3 or len(cells.shape) < 3:
             hiddens = torch.unsqueeze(hiddens, 0)
             cells = torch.unsqueeze(cells, 0)
-        outputs = torch.tensor([], device=self.args.device)
+        outputs = torch.tensor([], device=self.device)
         for j in range(self.outputs_num):
             for i, lstm in enumerate(self.lstms):
                 if i == 0:
@@ -123,8 +124,9 @@ class Decoder(nn.Module):
 
 class Completion(nn.Module):
     def __init__(self, input_size, output_size, hidden_size, n_layers, dropout, activation_type,
-                 hardtanh_limit=None):
+                 hardtanh_limit=None, device='cpu'):
         super().__init__()
+        self.device = device
         self.dropout = nn.Dropout(dropout)
         lstms = [
             nn.LSTMCell(input_size=input_size if i == 0 else hidden_size, hidden_size=hidden_size) for
@@ -142,7 +144,7 @@ class Completion(nn.Module):
         if len(hiddens.shape) < 3 or len(cells.shape) < 3:
             hiddens = torch.unsqueeze(hiddens, 0)
             cells = torch.unsqueeze(cells, 0)
-        outputs = torch.tensor([], device=self.args.device)
+        outputs = torch.tensor([], device=self.device)
         for j in range(frames_n):
             for i, lstm in enumerate(self.lstms):
                 if i == 0:
