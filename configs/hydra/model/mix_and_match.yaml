@@ -15,3 +15,10 @@ teacher_forcing_rate: 1
 keypoint_dim: 3
 use_mask: false
 device: cuda
+
+loss:
+  type: m&m
+  k: 0.002
+  x0: 2500
+  anneal_function: logistic
+  device: ${device}

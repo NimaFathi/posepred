@@ -2,11 +2,9 @@ defaults:
   - _self_
   - data: main
   - model: ???
-  - loss: ???
   - optimizer: adam
   - scheduler: reduce_lr_on_plateau
   - metrics
-
 
 train_dataset: ???
 valid_dataset:
@@ -15,8 +13,6 @@ snapshot_interval: ${epochs}
 start_epoch: 0
 device: cuda
 keypoint_dim: ???
-loss:
-  device: ${device}
 model:
   keypoint_dim: ${keypint_dim}
 data:
