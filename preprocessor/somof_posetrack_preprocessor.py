@@ -89,7 +89,7 @@ class SoMoFPoseTrackPreprocessor(Processor):
                             processed_data['obs_mask'][vid_id][p_id], processed_data['future_pose'][vid_id][p_id],
                             processed_data['obs_frames_path'][vid_id].tolist()
                         ])
-        with jsonlines.open(os.path.join(self.is_interactive, output_file_name), 'a') as writer:
+        with jsonlines.open(os.path.join(self.output_dir, output_file_name), 'a') as writer:
             if data_type == 'test':
                 for data_row in data:
                     writer.write({
