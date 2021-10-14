@@ -12,14 +12,21 @@ class CompleteAndPredict(nn.Module):
         self.vel_encoder = Encoder(input_size, args.hidden_size, args.n_layers, args.dropout_enc)
         self.vel_decoder = Decoder(args.pred_frames_num, input_size, output_size, args.hidden_size, args.n_layers,
                                    args.dropout_pose_dec, 'hardtanh', args.hardtanh_limit)
-        self.pose_completion = Decoder(args.pred_frames_num, input_size, output_size, args.hidden_size, args.n_layers,
-                                   args.dropout_pose_dec, 'hardtanh', args.hardtanh_limit)
 
     def forward(self, inputs):
         pose = inputs['observed_pose']
         vel = pose[..., 1:, :] - pose[..., :-1, :]
+        mask = inputs['observed_mask'][..., 1:, :]
 
-        (hidden_vel, cell_vel) = self.vel_encoder(vel.permute(1, 0, 2))
+        bs, frames_n, features_n = vel.shape
+        vel = vel.reshape(bs, frames_n, self.args.keypoints_num, self.args.keypoint_dim)
+
+        mask = mask.repeat(1, 1, 1, 3)
+        const = torch.zeros_like(mask) * -1000
+
+        noisy_vel = torch.where(mask == 1, const, vel).reshape(bs, frames_n, -1)
+
+        (hidden_vel, cell_vel) = self.vel_encoder(noisy_vel.permute(1, 0, 2))
         hidden_vel = hidden_vel.squeeze(0)
         cell_vel = cell_vel.squeeze(0)
 
