@@ -1,11 +1,3 @@
-pose_metrics:
-  - ADE
-  - FDE
-#  - VIM
-#  - VAM
+pose_metrics: ADE, FDE, VIM, VAM
 
-mask_metrics:
-  - accuracy
-  - f1_score
-  - precision
-  - recall
+mask_metrics: accuracy, f1_score, precision, recall

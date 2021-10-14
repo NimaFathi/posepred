@@ -12,6 +12,8 @@ class CompleteAndPredict(nn.Module):
         self.vel_encoder = Encoder(input_size, args.hidden_size, args.n_layers, args.dropout_enc)
         self.vel_decoder = Decoder(args.pred_frames_num, input_size, output_size, args.hidden_size, args.n_layers,
                                    args.dropout_pose_dec, 'hardtanh', args.hardtanh_limit)
+        self.pose_completion = Decoder(args.pred_frames_num, input_size, output_size, args.hidden_size, args.n_layers,
+                                   args.dropout_pose_dec, 'hardtanh', args.hardtanh_limit)
 
     def forward(self, inputs):
         pose = inputs['observed_pose']
