@@ -6,7 +6,6 @@ import shutil
 from collections import namedtuple, defaultdict
 from pathlib import Path
 
-import jsonlines
 import numpy as np
 import openpifpaf
 from bs4 import BeautifulSoup
@@ -15,6 +14,7 @@ from scipy.interpolate import interp1d
 
 from path_definition import PREPROCESSED_DATA_DIR
 from preprocessor.preprocessor import Processor
+from utils.others import DATA_FORMAT
 
 Rectangle = namedtuple('Rectangle', 'xtl ytl xbr ybr')
 
@@ -42,6 +42,10 @@ class PIEPreprocessor(Processor):
         self.image_dir = image_dir
         self.annotate = annotate
         self.annotation_path = annotation_path
+        self.hdf_keys_dict = {
+            0: 'video_section', 1: 'observed_pose', 2: 'future_pose', 3: 'observed_image_path',
+            4: 'future_image_path'
+        }
 
     def normal(self, data_type='train'):
         assert self.obs_frame_num > 0 and self.obs_frame_num is not None
@@ -50,13 +54,14 @@ class PIEPreprocessor(Processor):
         assert self.dataset_path is not None
         logger.info('start creating PIE normal static data ... ')
         if self.custom_name:
-            output_file_name = f'{data_type}_{self.obs_frame_num}_{self.pred_frame_num}_{self.skip_frame_num}_{self.custom_name}.jsonl'
+            output_file_name = f'{data_type}_{self.obs_frame_num}_{self.pred_frame_num}_{self.skip_frame_num}_{self.custom_name}.{DATA_FORMAT}'
         else:
-            output_file_name = f'{data_type}_{self.obs_frame_num}_{self.pred_frame_num}_{self.skip_frame_num}_PIE.jsonl'
+            output_file_name = f'{data_type}_{self.obs_frame_num}_{self.pred_frame_num}_{self.skip_frame_num}_PIE.{DATA_FORMAT}'
         assert os.path.exists(os.path.join(
             self.output_dir,
             output_file_name
         )) is False, f"preprocessed file exists at {os.path.join(self.output_dir, output_file_name)}"
+        hf, hf_groups = self.init_hdf(output_file_name)
         total_frame_num = (self.obs_frame_num + self.pred_frame_num) * (self.skip_frame_num + 1)
         frame_range = []
         joints_dir = self.__create_frame_poses()
@@ -92,22 +97,24 @@ class PIEPreprocessor(Processor):
                             self.skip_frame_num + 1
                         )
                     ]
-                    self.__create_data(data, obs_frame_range, pred_frame_range, video_name, output_file_name)
+                    self.__create_data(data, obs_frame_range, pred_frame_range, video_name, hf_groups)
         shutil.rmtree(joints_dir)
+        hf.close()
 
-    def __create_data(self, data, obs_frame_range, pred_frame_range, video_name, output_file_name):
+    def __create_data(self, input_data, obs_frame_range, pred_frame_range, video_name, groups):
+        data = []
         raw_data_obs = defaultdict(dict)
         raw_data_pred = defaultdict(dict)
-        for ped_id, value in data.items():
+        for ped_id, value in input_data.items():
             for frame_number, pose in value.items():
                 if int(frame_number) in obs_frame_range:
                     raw_data_obs[ped_id][int(frame_number)] = pose
                 elif int(frame_number) in pred_frame_range:
                     raw_data_pred[ped_id][int(frame_number)] = pose
         obs_poses = list()
-        pred_poses = list()
+        future_poses = list()
         obs_image_path = list()
-        pred_image_path = list()
+        future_image_path = list()
         for ped_id in raw_data_obs.keys():
             pass
         if ped_id in raw_data_pred.keys() and len(raw_data_pred[ped_id]) > 0.2 * len(pred_frame_range) and len(
@@ -119,7 +126,7 @@ class PIEPreprocessor(Processor):
                  for
                  frame_number in obs_frame_range]
             )
-            pred_image_path.append(
+            future_image_path.append(
                 [os.path.join(*re.search("(\w+)_(\w+_\w+)", video_name).groups(), str(frame_number).zfill(5) + ".png")
                  for
                  frame_number in pred_frame_range]
@@ -129,26 +136,19 @@ class PIEPreprocessor(Processor):
             pred_x = list(raw_data_pred[ped_id].keys())
             pred_y = np.array(list(raw_data_pred[ped_id].values()))
             pred_interp = interp1d(pred_x, pred_y, axis=0, fill_value="extrapolate")
-            pred_poses.append(pred_interp(pred_frame_range).tolist())
-        with jsonlines.open(os.path.join(self.output_dir, output_file_name), 'a') as writer:
-            if len(obs_poses) > 0:
-                if self.is_interactive:
-                    writer.write({
-                        'video_section': video_name,
-                        'observed_pose': obs_poses,
-                        'future_pose': pred_poses,
-                        'observed_image_path': obs_image_path,
-                        'future_image_path': pred_image_path
-                    })
-                else:
-                    for i in range(len(obs_poses)):
-                        writer.write({
-                            'video_section': video_name,
-                            'observed_pose': obs_poses[i],
-                            'future_pose': pred_poses[i],
-                            'observed_image_path': obs_image_path[i],
-                            'future_image_path': pred_image_path[i]
-                        })
+            future_poses.append(pred_interp(pred_frame_range).tolist())
+
+        if len(obs_poses) > 0:
+            if self.is_interactive:
+                data.append([
+                    video_name, obs_poses, future_poses, obs_image_path, future_image_path
+                ])
+            else:
+                for i in range(len(obs_poses)):
+                    data.append([
+                        video_name, obs_poses[i], future_poses[i], obs_image_path[i], future_image_path[i]
+                    ])
+        self.update_hdf(hf_groups=groups, data=data)
 
     def __create_frame_poses(self):
         if self.annotate is not False:
