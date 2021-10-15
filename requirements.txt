@@ -16,3 +16,4 @@ pygifsicle
 tensorboard
 hydra-core
 cdflib
+h5py
