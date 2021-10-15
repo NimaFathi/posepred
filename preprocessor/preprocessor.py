@@ -1,6 +1,8 @@
-import os
 import json
+import os
 from json import JSONEncoder
+
+import h5py
 import numpy as np
 
 
@@ -14,6 +16,8 @@ class Processor:
         self.use_video_once = use_video_once
         self.dataset_path = dataset_path
         self.custom_name = custom_name
+        self.seek_index = 0
+        self.hdf_keys_dict = {}
 
     def normal(self, data_type='train'):
         """
@@ -21,6 +25,19 @@ class Processor:
         :return: None: create static <.csv> file
         """
         pass
+
+    def init_hdf(self, file_name):
+        hf = h5py.File(os.path.join(self.output_dir, file_name), 'w')
+        hf_groups = {}
+        for key in self.hdf_keys_dict.values():
+            hf_groups[key] = hf.create_group(key)
+        return hf, hf_groups
+
+    def update_hdf(self, hf_groups, data):
+        for data_row in data:
+            for row_key, row_value in enumerate(data_row):
+                hf_groups[self.hdf_keys_dict[row_key]].create_dataset(str(self.seek_index), data=row_value)
+            self.seek_index += 1
 
     @staticmethod
     def update_meta_data(meta_data, new_data, dim):
