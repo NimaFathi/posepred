@@ -3,12 +3,11 @@ import os
 from glob import glob
 
 import cdflib
-import jsonlines
 import numpy as np
 
 from path_definition import PREPROCESSED_DATA_DIR
 from preprocessor.preprocessor import Processor
-from utils.others import expmap_to_quaternion, qfix
+from utils.others import expmap_to_quaternion, qfix, DATA_FORMAT
 
 logger = logging.getLogger(__name__)
 
@@ -32,22 +31,28 @@ class PreprocessorHuman36m(Processor):
             'sum_pose': np.zeros(3)
         }
         self.subjects = ['S1', 'S5', 'S6', 'S7', 'S8', 'S9', 'S11']
+        self.hdf_keys_dict = {
+            0: 'video_section', 1: 'observed_pose', 2: 'future_pose', 3: 'observed_quaternion_pose',
+            4: 'future_quaternion_pose', 5: 'observed_image_path', 6: 'future_image_path'
+        }
 
     def normal(self, data_type='train'):
         logger.info('start creating Human3.6m normal static data from original Human3.6m dataset (CDF files) ... ')
         if self.custom_name:
-            output_file_name = f'{data_type}_{self.obs_frame_num}_{self.pred_frame_num}_{self.skip_frame_num}_{self.custom_name}.jsonl'
+            output_file_name = f'{data_type}_{self.obs_frame_num}_{self.pred_frame_num}_{self.skip_frame_num}_{self.custom_name}.{DATA_FORMAT}'
         else:
-            output_file_name = f'{data_type}_{self.obs_frame_num}_{self.pred_frame_num}_{self.skip_frame_num}_human3.6m.jsonl'
+            output_file_name = f'{data_type}_{self.obs_frame_num}_{self.pred_frame_num}_{self.skip_frame_num}_human36m.{DATA_FORMAT}'
         assert os.path.exists(os.path.join(
             self.output_dir,
             output_file_name
         )) is False, f"preprocessed file exists at {os.path.join(self.output_dir, output_file_name)}"
+        hf, hf_groups = self.init_hdf(output_file_name)
         for subject in self.subjects:
             logger.info("handling subject: {}".format(subject))
             subject_pose_path = os.path.join(self.dataset_path, subject, 'MyPoseFeatures/D3_Positions/*.cdf')
             file_list_pose = glob(subject_pose_path)
-            assert len(file_list_pose) == 30, "Expected 30 files for subject " + subject + ", got " + str(len(file_list_pose))
+            assert len(file_list_pose) == 30, "Expected 30 files for subject " + subject + ", got " + str(
+                len(file_list_pose))
             for f in file_list_pose:
                 action = os.path.splitext(os.path.basename(f))[0]
 
@@ -91,14 +96,10 @@ class PreprocessorHuman36m(Processor):
                                 f'{os.path.basename(f).split(".cdf")[0]}_{i * total_frame_num * (self.skip_frame_num + 1) + j:05}'
                             )
                     self.update_meta_data(self.meta_data, video_data['observed_pose'], 3)
-                    with jsonlines.open(os.path.join(self.output_dir, output_file_name), mode='a') as writer:
-                        writer.write({
-                            'video_section': f'{subject}-{canonical_name}-{i}',
-                            'observed_pose': video_data['observed_pose'],
-                            'future_pose': video_data['future_pose'],
-                            'observed_quaternion_pose': video_data['observed_quaternion_pose'],
-                            'future_quaternion_pose': video_data['future_quaternion_pose'],
-                            'observed_image_path': video_data['observed_image_path'],
-                            'future_image_path': video_data['future_image_path']
-                        })
+                    self.update_hdf(hf_groups=hf_groups, data=[
+                        f'{subject}-{canonical_name}-{i}', video_data['observed_pose'], video_data['future_pose'],
+                        video_data['observed_quaternion_pose'], video_data['future_quaternion_pose'],
+                        video_data['observed_image_path'], video_data['future_image_path']
+                    ])
+        hf.close()
         self.save_meta_data(self.meta_data, self.output_dir, True, data_type)
