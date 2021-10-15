@@ -8,7 +8,7 @@ import numpy as np
 
 from path_definition import PREPROCESSED_DATA_DIR
 from preprocessor.preprocessor import Processor
-
+from utils.others import DATA_FORMAT
 logger = logging.getLogger(__name__)
 
 
@@ -39,20 +39,24 @@ class SoMoFPoseTrackPreprocessor(Processor):
     def __save_csv(self, data_type, processed_data, file_type=None):
         if self.custom_name:
             if file_type is None:
-                output_file_name = f'{data_type}_16_14_1_{self.custom_name}.jsonl'
+                output_file_name = f'{data_type}_16_14_1_{self.custom_name}.{DATA_FORMAT}'
             else:
-                output_file_name = f'{file_type}_{data_type}_16_14_1_{self.custom_name}.jsonl'
+                output_file_name = f'{file_type}_{data_type}_16_14_1_{self.custom_name}.{DATA_FORMAT}'
         else:
             if file_type is None:
-                output_file_name = f'{data_type}_16_14_1_SoMoF_PoseTrack.jsonl'
+                output_file_name = f'{data_type}_16_14_1_SoMoF_PoseTrack.{DATA_FORMAT}'
             else:
-                output_file_name = f'{file_type}_{data_type}_16_14_1_SoMoF_PoseTrack.jsonl'
+                output_file_name = f'{file_type}_{data_type}_16_14_1_SoMoF_PoseTrack.{DATA_FORMAT}'
         assert os.path.exists(os.path.join(
             self.output_dir,
             output_file_name
         )) is False, f"preprocessed file exists at {os.path.join(self.output_dir, output_file_name)}"
+        hf, hf_groups = self.init_hdf(output_file_name)
         data = []
         if data_type == 'test':
+            self.hdf_keys_dict = {
+                0: 'video_section', 1: 'observed_pose', 2: 'observed_image_path'
+            }
             if self.is_interactive:
                 for vid_id in range(len(processed_data['obs_pose'])):
                     data.append([
@@ -70,6 +74,9 @@ class SoMoFPoseTrackPreprocessor(Processor):
                             processed_data['obs_frames_path'][vid_id].tolist()
                         ])
         else:
+            self.hdf_keys_dict = {
+                0: 'video_section', 1: 'observed_pose', 2: 'future_pose', 3: 'observed_image_path'
+            }
             if self.is_interactive:
                 for vid_id in range(processed_data['obs_pose'].__len__()):
                     self.update_meta_data(self.meta_data, processed_data['obs_pose'][vid_id], 2)
@@ -89,22 +96,8 @@ class SoMoFPoseTrackPreprocessor(Processor):
                             processed_data['obs_mask'][vid_id][p_id], processed_data['future_pose'][vid_id][p_id],
                             processed_data['obs_frames_path'][vid_id].tolist()
                         ])
-        with jsonlines.open(os.path.join(self.output_dir, output_file_name), 'a') as writer:
-            if data_type == 'test':
-                for data_row in data:
-                    writer.write({
-                        'video_section': data_row[0],
-                        'observed_pose': data_row[1],
-                        'observed_image_path': data_row[2]
-                    })
-            else:
-                for data_row in data:
-                    writer.write({
-                        'video_section': data_row[0],
-                        'observed_pose': data_row[1],
-                        'future_pose': data_row[2],
-                        'observed_image_path': data_row[3]
-                    })
+        self.update_hdf(hf_groups, data)
+        hf.close()
 
     def __clean_data(self, data_type):
         if data_type == 'validation':
