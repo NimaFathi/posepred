@@ -4,11 +4,11 @@ import os
 import re
 from collections import defaultdict
 
-import jsonlines
 import numpy as np
 
 from path_definition import PREPROCESSED_DATA_DIR
 from preprocessor.preprocessor import Processor
+from utils.others import DATA_FORMAT
 
 logger = logging.getLogger(__name__)
 
@@ -44,6 +44,9 @@ class JTAPreprocessor(Processor):
             'sum2_pose': np.zeros(3) if self.is_3d else np.zeros(2),
             'sum_pose': np.zeros(3) if self.is_3d else np.zeros(2)
         }
+        self.hdf_keys_dict = {0: 'video_section', 1: 'observed_pose', 2: 'future_pose', 3: 'observed_mask',
+                              4: 'future_mask',
+                              5: 'observed_image_path', 6: 'future_image_path'}
 
     def __generate_image_path(self, frame_num, file_name, input_matrix, total_frame_num):
         image_relative_path = re.search("(seq_\d+).json", file_name).group(1)
@@ -82,26 +85,26 @@ class JTAPreprocessor(Processor):
     def normal(self, data_type='train'):
         logger.info('start creating JTA normal static data ... ')
         if self.custom_name:
-            output_file_name = f'{data_type}_{self.obs_frame_num}_{self.pred_frame_num}_{self.skip_frame_num}_{self.custom_name}.jsonl'
+            output_file_name = f'{data_type}_{self.obs_frame_num}_{self.pred_frame_num}_{self.skip_frame_num}_{self.custom_name}.{DATA_FORMAT}'
         else:
-            output_file_name = f'{data_type}_{self.obs_frame_num}_{self.pred_frame_num}_{self.skip_frame_num}_JTA.jsonl'
+            output_file_name = f'{data_type}_{self.obs_frame_num}_{self.pred_frame_num}_{self.skip_frame_num}_JTA.{DATA_FORMAT}'
         assert os.path.exists(os.path.join(
             self.output_dir,
             output_file_name
         )) is False, f"preprocessed file exists at {os.path.join(self.output_dir, output_file_name)}"
+        hf, hf_groups = self.init_hdf(file_name=output_file_name)
         total_frame_num = self.obs_frame_num + self.pred_frame_num
         section_range = self.dataset_total_frame_num // (
                 total_frame_num * (self.skip_frame_num + 1)) if not self.use_video_once else 1
-
         for entry in os.scandir(self.dataset_path):
             if not entry.path.endswith('.json'):
                 continue
             with open(entry.path, 'r') as json_file:
                 logger.info(f'file name: {entry.name}')
                 video_number = re.search('seq_(\d+)', entry.name).group(1)
-                data = []
                 matrix = json.load(json_file)
                 matrix = np.array(matrix)
+                data = []
                 for i in range(section_range):
                     video_data = {
                         'obs_pose': defaultdict(list),
@@ -146,7 +149,6 @@ class JTAPreprocessor(Processor):
                             future_mask.append(video_data['future_mask'][p_id])
                     obs_frames, future_frames = self.__generate_image_path(i, entry.name, matrix, total_frame_num)
                     if len(obs) > 0:
-                        # max_acceptable_len = max(len(obs), len(future), len(obs_mask), len(obs_frames))
                         if data_type == 'train':
                             self.update_meta_data(self.meta_data, obs, 3 if self.is_3d else 2)
                         if not self.is_interactive:
@@ -160,15 +162,6 @@ class JTAPreprocessor(Processor):
                                 '%s-%d' % (video_number, i), obs, future, obs_mask, future_mask,
                                 obs_frames[0], future_frames[0]
                             ])
-                with jsonlines.open(os.path.join(self.output_dir, output_file_name), 'a') as writer:
-                    for data_row in data:
-                        writer.write({
-                            'video_section': data_row[0],
-                            'observed_pose': data_row[1],
-                            'future_pose': data_row[2],
-                            'observed_mask': data_row[3],
-                            'future_mask': data_row[4],
-                            'observed_image_path': data_row[5],
-                            'future_image_path': data_row[6]
-                        })
+                self.update_hdf(hf_groups, data)
+        hf.close()
         self.save_meta_data(self.meta_data, self.output_dir, self.is_3d, data_type)
