@@ -1,6 +1,8 @@
 import numpy as np
 import torch
 
+DATA_FORMAT = 'h5'
+
 
 def pose_from_vel(velocity, last_obs_pose, stay_in_frame=False):
     device = 'cuda' if velocity.is_cuda else 'cpu'
