@@ -3,12 +3,12 @@ import os
 import re
 from collections import defaultdict
 
-import jsonlines
 import numpy as np
 import pandas as pd
 
 from path_definition import PREPROCESSED_DATA_DIR
 from preprocessor.preprocessor import Processor
+from utils.others import DATA_FORMAT
 
 logger = logging.getLogger(__name__)
 
@@ -31,19 +31,24 @@ class Preprocessor3DPW(Processor):
             'sum2_pose': np.zeros(3),
             'sum_pose': np.zeros(3)
         }
+        self.hdf_keys_dict = {
+            0: 'video_section', 1: 'observed_pose', 2: 'future_pose', 3: 'observed_image_path',
+            4: 'future_image_path', 5: 'observed_cam_extrinsic', 6: 'future_cam_extrinsic', 7: 'cam_intrinsic'
+        }
 
     def normal(self, data_type='train'):
         logger.info('start creating 3DPW normal static data ... ')
         total_frame_num = self.obs_frame_num + self.pred_frame_num
 
         if self.custom_name:
-            output_file_name = f'{data_type}_{self.obs_frame_num}_{self.pred_frame_num}_{self.skip_frame_num}_{self.custom_name}.jsonl'
+            output_file_name = f'{data_type}_{self.obs_frame_num}_{self.pred_frame_num}_{self.skip_frame_num}_{self.custom_name}.{DATA_FORMAT}'
         else:
-            output_file_name = f'{data_type}_{self.obs_frame_num}_{self.pred_frame_num}_{self.skip_frame_num}_3dpw.jsonl'
+            output_file_name = f'{data_type}_{self.obs_frame_num}_{self.pred_frame_num}_{self.skip_frame_num}_3dpw.{DATA_FORMAT}'
         assert os.path.exists(os.path.join(
             self.output_dir,
             output_file_name
         )) is False, f"preprocessed file exists at {os.path.join(self.output_dir, output_file_name)}"
+        hf, hf_groups = self.init_hdf(output_file_name)
         for entry in os.scandir(self.dataset_path):
             if not entry.name.endswith('.pkl'):
                 continue
@@ -109,16 +114,6 @@ class Preprocessor3DPW(Processor):
                             video_data['obs_frames'][0], video_data['future_frames'][0],
                             video_data['obs_cam_ext'], video_data['future_cam_ext'], cam_intrinsic
                         ])
-            with jsonlines.open(os.path.join(self.output_dir, output_file_name), 'a') as writer:
-                for data_row in data:
-                    writer.write({
-                        'video_section': data_row[0],
-                        'observed_pose': data_row[1],
-                        'future_pose': data_row[2],
-                        'observed_image_path': data_row[3],
-                        'future_image_path': data_row[4],
-                        'observed_cam_extrinsic': data_row[5],
-                        'future_cam_extrinsic': data_row[6],
-                        'cam_intrinsic': data_row[7]
-                    })
+            self.update_hdf(hf_groups, data)
         self.save_meta_data(self.meta_data, self.output_dir, True, data_type)
+        hf.close()
