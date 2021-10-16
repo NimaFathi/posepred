@@ -20,9 +20,8 @@ class CompAndPred(nn.Module):
 
         pred_loss = self.mse1(model_outputs['pred_vel'], future_vel)
 
-        mask = model_outputs['mask']
-        bs, frames_n, keypoints_num = mask.shape
-        mask = mask.reshape(bs, frames_n, keypoints_num, 1).repeat(1, 1, 1, 3)
+        bs, frames_n, featurs_n = observed_vel.shape
+        mask = model_outputs['mask'].reshape(bs, frames_n, -1)
         completed = torch.where(mask == 1, model_outputs['completed_vel'], observed_vel)
         completion_loss = self.mse2(completed, observed_vel)
 

@@ -38,13 +38,13 @@ class CompleteAndPredict(nn.Module):
         bs, frames_n, features_n = vel.shape
 
         # mask = inputs['observed_mask'][..., 1:, :]
-        mask = torch.randint(2, (bs, frames_n, self.args.keypoints_num))
+        mask = torch.FloatTensor(bs, frames_n, self.args.keypoints_num).uniform_() > 0.8
 
         # make data noisy
         vel = vel.reshape(bs, frames_n, self.args.keypoints_num, self.args.keypoint_dim)
-        mask_ = mask.reshape(bs, frames_n, self.args.keypoints_num, 1).repeat(1, 1, 1, 3)
-        const = (torch.zeros_like(mask_, dtype=torch.float) * (-100)).to(self.args.device)
-        noisy_vel = torch.where(mask_ == 1, const, vel).reshape(bs, frames_n, -1)
+        mask = mask.reshape(bs, frames_n, self.args.keypoints_num, 1).repeat(1, 1, 1, self.args.keypoint_dim)
+        const = (torch.zeros_like(mask, dtype=torch.float) * (-100)).to(self.args.device)
+        noisy_vel = torch.where(mask == 1, const, vel).reshape(bs, frames_n, -1)
 
         # velocity encoder
         (hidden_vel, cell_vel) = self.vel_encoder(noisy_vel.permute(1, 0, 2))
