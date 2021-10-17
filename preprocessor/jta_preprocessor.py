@@ -126,7 +126,7 @@ class JTAPreprocessor(Processor):
                             for kp_position in range(self.start_dim, self.end_dim):
                                 frame_data['pose'][pose[1]].append(pose[kp_position])
                             # mask data
-                            for masking_state in range(8, 10):
+                            for masking_state in range(9, 10):
                                 masked += pose[masking_state]
                             frame_data['mask'][pose[1]].append(1 if masked > 0 else 0)
                         for p_id in frame_data['pose'].keys():
