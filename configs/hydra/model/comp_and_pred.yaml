@@ -3,7 +3,7 @@ defaults:
   - common
 
 type: comp_and_pred
-vis_prob: 0.8
+input_drop: 0.2
 hidden_size: 200
 latent_dim: 10
 hardtanh_limit: 10
