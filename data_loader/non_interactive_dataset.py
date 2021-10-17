@@ -3,8 +3,6 @@ from torch.utils.data import Dataset
 import jsonlines
 import logging
 
-import h5py
-
 logger = logging.getLogger(__name__)
 
 
