@@ -49,9 +49,9 @@ class NonInteractiveDataset(Dataset):
 
         if self.is_visualizing:
             if 'observed_image_path' in self.data.keys():
-                outputs['observed_image'] = self.data['observed_image_path'][seq]
+                outputs['observed_image'] = list(self.data['observed_image_path'][seq].asstr())
             if 'future_image_path' in self.data.keys():
-                outputs['future_image'] = self.data['future_image_path'][seq]
+                outputs['future_image'] = list(self.data['future_image_path'][seq].asstr())
             if 'observed_cam_extrinsic' in self.data.keys():
                 outputs['observed_cam_ex'] = torch.tensor(self.data['observed_cam_extrinsic'][seq], dtype=torch.float)
             if 'future_cam_extrinsic' in self.data.keys():
