@@ -4,3 +4,7 @@ defaults:
 
 type: nearest_neighbor
 train_dataset: ???
+
+loss:
+  type: mse_vel
+  mask_weight: 0
