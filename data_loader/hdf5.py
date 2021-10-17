@@ -2,7 +2,6 @@ import torch
 from torch.utils.data import Dataset
 import h5py
 import logging
-from time import time
 
 logger = logging.getLogger(__name__)
 
@@ -45,6 +44,8 @@ class NonInteractiveDataset(Dataset):
         for key in outputs_keys:
             if key in self.data.keys():
                 outputs[key] = torch.tensor(self.data[key][seq], dtype=torch.float)
+            else:
+                raise Exception('Dataset must include ' + key)
 
         if self.is_visualizing:
             if 'observed_image_path' in self.data.keys():
@@ -59,11 +60,3 @@ class NonInteractiveDataset(Dataset):
                 outputs['cam_in'] = torch.tensor(self.data['cam_intrinsic'][seq], dtype=torch.float)
 
         return outputs
-
-
-# a = torch.tensor(f['observed_pose']['1'])
-start = time()
-
-a = NonInteractiveDataset('../preprocessed_data/train_16_14_1_JTA.h5', 3, False, False, False, False)
-
-print('time:', time() - start)
