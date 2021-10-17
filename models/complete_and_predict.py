@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import numpy as np
 
 from utils.others import pose_from_vel
 
@@ -40,8 +41,8 @@ class CompleteAndPredict(nn.Module):
         if self.args.use_mask:
             mask = inputs['observed_mask'][..., 1:, :]
         else:
-            mask = (torch.FloatTensor(bs, frames_n, self.args.keypoints_num).uniform_() > (
-                        1 - self.args.noisy_rate)).to(self.args.device)
+            p = np.random.normal(self.args.noise_mean, self.args.noise_std, 1)[0]
+            mask = (torch.FloatTensor(bs, frames_n, self.args.keypoints_num).uniform_() < p).to(self.args.device)
 
         # make data noisy
         vel = vel.reshape(bs, frames_n, self.args.keypoints_num, self.args.keypoint_dim)

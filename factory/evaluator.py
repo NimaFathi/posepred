@@ -28,6 +28,7 @@ class Evaluator:
         for i in range(self.rounds_num):
             logger.info('round ' + str(i + 1) + '/' + str(self.rounds_num))
             self.__evaluate()
+            print('ADE:', self.reporter.history['ADE'][-1])
         self.reporter.print_mean_std(logger, self.model.args.use_mask)
         logger.info("Evaluation has been completed.")
 
