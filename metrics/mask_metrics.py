@@ -3,14 +3,14 @@ import torch
 from utils.others import get_binary
 
 
-def accuracy(pred, target):
-    pred = get_binary(pred, 'cuda')
+def accuracy(pred, target, device):
+    pred = get_binary(pred, device)
 
     return torch.sum(pred == target) / torch.numel(pred)
 
 
-def f1_score(pred, target):
-    pred = get_binary(pred, 'cuda')
+def f1_score(pred, target, device):
+    pred = get_binary(pred, device)
     target_true = torch.sum(target)
     pred_true = torch.sum(pred)
     correct_true = torch.sum((target == 1) * (pred == 1))
@@ -21,16 +21,16 @@ def f1_score(pred, target):
     return f1_score
 
 
-def precision(pred, target):
-    pred = get_binary(pred, 'cuda')
+def precision(pred, target, device):
+    pred = get_binary(pred, device)
     pred_true = torch.sum(pred)
     correct_true = torch.sum((target == 1) * (pred == 1))
 
     return correct_true / pred_true
 
 
-def recall(pred, target):
-    pred = get_binary(pred, 'cuda')
+def recall(pred, target, device):
+    pred = get_binary(pred, device)
     target_true = torch.sum(target)
     correct_true = torch.sum((target == 1) * (pred == 1))
 

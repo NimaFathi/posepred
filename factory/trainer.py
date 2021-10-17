@@ -38,7 +38,8 @@ class Trainer:
                 self.__validate()
                 self.scheduler.step(self.valid_reporter.history['loss'][-1])
             if (epoch + 1) % self.args.snapshot_interval == 0 or (epoch + 1) == self.args.epochs:
-                save_snapshot(self.model, self.loss_module, self.optimizer, self.optimizer_args, epoch + 1, self.train_reporter,
+                save_snapshot(self.model, self.loss_module, self.optimizer, self.optimizer_args, epoch + 1,
+                              self.train_reporter,
                               self.valid_reporter, self.args.save_dir)
                 self.train_reporter.save_data(self.model.args.use_mask, self.args.save_dir)
                 if self.use_validation:
@@ -77,7 +78,7 @@ class Trainer:
             report_attrs = loss_outputs
             for metric_name in self.args.pose_metrics:
                 metric_func = POSE_METRICS[metric_name]
-                metric_value = metric_func(model_outputs['pred_pose'], data['future_pose'],
+                metric_value = metric_func(model_outputs['pred_pose'], data['future_pose'].to(self.args.device),
                                            self.model.args.keypoint_dim, pred_mask)
                 report_attrs[metric_name] = metric_value
 
@@ -85,7 +86,7 @@ class Trainer:
             if self.model.args.use_mask:
                 for metric_name in self.args.mask_metrics:
                     metric_func = MASK_METRICS[metric_name]
-                    metric_value = metric_func(pred_mask, data['future_mask'])
+                    metric_value = metric_func(pred_mask, data['future_mask'].to(self.args.device), self.args.device)
                     report_attrs[metric_name] = metric_value
 
             self.train_reporter.update(report_attrs, batch_size)
