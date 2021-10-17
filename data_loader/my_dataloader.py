@@ -6,7 +6,7 @@ from data_loader.interactive_dataset import InteractiveDataset
 from data_loader.non_interactive_dataset import NonInteractiveDataset
 # from data_loader.hdf5 import NonInteractiveDataset
 
-from time import time
+# from time import time
 
 
 def get_dataloader(dataset_name, args):

@@ -60,7 +60,7 @@ class Evaluator:
                 if self.model.args.use_mask:
                     for metric_name in self.mask_metrics:
                         metric_func = MASK_METRICS[metric_name]
-                        metric_value = metric_func(pred_mask, data['future_mask'].to(self.device))
+                        metric_value = metric_func(pred_mask, data['future_mask'].to(self.device), self.device)
                         report_attrs[metric_name] = metric_value
 
                 self.reporter.update(report_attrs, batch_size)
