@@ -40,7 +40,7 @@ class CompleteAndPredict(nn.Module):
         if self.args.use_mask:
             mask = inputs['observed_mask'][..., 1:, :]
         else:
-            mask = (torch.FloatTensor(bs, frames_n, self.args.keypoints_num).uniform_() > 0.8).to(self.args.device)
+            mask = (torch.FloatTensor(bs, frames_n, self.args.keypoints_num).uniform_() > self.args.vis_prob).to(self.args.device)
 
         # make data noisy
         vel = vel.reshape(bs, frames_n, self.args.keypoints_num, self.args.keypoint_dim)
