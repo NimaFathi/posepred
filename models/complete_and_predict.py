@@ -41,7 +41,7 @@ class CompleteAndPredict(nn.Module):
             mask = inputs['observed_mask'][..., 1:, :]
         else:
             mask = (torch.FloatTensor(bs, frames_n, self.args.keypoints_num).uniform_() > (
-                        1 - self.args.input_drop)).to(self.args.device)
+                        1 - self.args.noisy_rate)).to(self.args.device)
 
         # make data noisy
         vel = vel.reshape(bs, frames_n, self.args.keypoints_num, self.args.keypoint_dim)
@@ -60,15 +60,15 @@ class CompleteAndPredict(nn.Module):
 
         # VAE decoder
         fusion2 = self.decode_latent(latent)
-        hidden_vel2 = self.res_block2(fusion2, nn.ReLU())
+        hidden_vel = self.res_block2(fusion2, nn.ReLU())
 
         # velocity decoder
         vel_dec_input = noisy_vel[..., -1, :]
-        pred_vel = self.vel_decoder(vel_dec_input, hidden_vel2, cell_vel)
+        pred_vel = self.vel_decoder(vel_dec_input, hidden_vel, cell_vel)
         pred_pose = pose_from_vel(pred_vel, pose[..., -1, :])
 
         # completion
-        complited_vel = self.completion(noisy_vel, hidden_vel2, cell_vel)
+        complited_vel = self.completion(noisy_vel, hidden_vel, cell_vel)
 
         outputs = {'pred_pose': pred_pose, 'pred_vel': pred_vel, 'completed_vel': complited_vel, 'mask': mask}
 

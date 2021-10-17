@@ -25,7 +25,7 @@ class CompAndPred(nn.Module):
         completed = torch.where(mask == 1, model_outputs['completed_vel'], observed_vel)
         completion_loss = self.mse2(completed, observed_vel)
 
-        loss = pred_loss + self.args.comp_weight * completion_loss
+        loss = self.args.pred_weight * pred_loss + self.args.comp_weight * completion_loss
         outputs = {'loss': loss, 'pred_loss': pred_loss, 'completion_loss': completion_loss}
 
         return outputs

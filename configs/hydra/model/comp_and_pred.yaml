@@ -3,7 +3,7 @@ defaults:
   - common
 
 type: comp_and_pred
-input_drop: 0.2
+noisy_rate: 0.2
 hidden_size: 200
 latent_dim: 10
 hardtanh_limit: 10
@@ -14,4 +14,5 @@ dropout_mask_dec: 0
 
 loss:
   type: comp_and_pred
+  pred_weight: 1
   comp_weight: 1
