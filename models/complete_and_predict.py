@@ -73,7 +73,7 @@ class CompleteAndPredict(nn.Module):
         outputs = {'pred_pose': pred_pose, 'pred_vel': pred_vel, 'completed_vel': complited_vel, 'mask': mask}
 
         if self.args.use_mask:
-            outputs['pred_mask'] = inputs['observed_mask'][:, -1, :].repeat(1, self.args.pred_frames_num, 1)
+            outputs['pred_mask'] = inputs['observed_mask'][:, -1:, :].repeat(1, self.args.pred_frames_num, 1)
 
         return outputs
 
