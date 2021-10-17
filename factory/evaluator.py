@@ -52,7 +52,7 @@ class Evaluator:
                 report_attrs = loss_outputs
                 for metric_name in self.pose_metrics:
                     metric_func = POSE_METRICS[metric_name]
-                    metric_value = metric_func(model_outputs['pred_pose'], data['future_pose'],
+                    metric_value = metric_func(model_outputs['pred_pose'], data['future_pose'].to(self.device),
                                                self.model.args.keypoint_dim, pred_mask)
                     report_attrs[metric_name] = metric_value
 
@@ -60,7 +60,7 @@ class Evaluator:
                 if self.model.args.use_mask:
                     for metric_name in self.mask_metrics:
                         metric_func = MASK_METRICS[metric_name]
-                        metric_value = metric_func(pred_mask, data['future_mask'])
+                        metric_value = metric_func(pred_mask, data['future_mask'].to(self.device))
                         report_attrs[metric_name] = metric_value
 
                 self.reporter.update(report_attrs, batch_size)
