@@ -50,9 +50,7 @@ class DeRPoF(nn.Module):
                    'mean': mean, 'log_var': log_var}
 
         if self.args.use_mask:
-            mask = inputs['observed_mask']
-            pred_mask = mask[:, -1, :].repeat(1, self.args.pred_frames_num, 1)
-            outputs['pred_mask'] = pred_mask
+            outputs['pred_mask'] = inputs['observed_mask'][:, -1, :].repeat(1, self.args.pred_frames_num, 1)
 
         return outputs
 

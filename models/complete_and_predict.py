@@ -37,8 +37,10 @@ class CompleteAndPredict(nn.Module):
         vel = pose[..., 1:, :] - pose[..., :-1, :]
         bs, frames_n, features_n = vel.shape
 
-        # mask = inputs['observed_mask'][..., 1:, :]
-        mask = (torch.FloatTensor(bs, frames_n, self.args.keypoints_num).uniform_() > 0.8).to(self.args.device)
+        if self.args.use_mask:
+            mask = inputs['observed_mask'][..., 1:, :]
+        else:
+            mask = (torch.FloatTensor(bs, frames_n, self.args.keypoints_num).uniform_() > 0.8).to(self.args.device)
 
         # make data noisy
         vel = vel.reshape(bs, frames_n, self.args.keypoints_num, self.args.keypoint_dim)
@@ -68,6 +70,9 @@ class CompleteAndPredict(nn.Module):
         complited_vel = self.completion(noisy_vel, hidden_vel2, cell_vel)
 
         outputs = {'pred_pose': pred_pose, 'pred_vel': pred_vel, 'completed_vel': complited_vel, 'mask': mask}
+
+        if self.args.use_mask:
+            outputs['pred_mask'] = inputs['observed_mask'][:, -1, :].repeat(1, self.args.pred_frames_num, 1)
 
         return outputs
 
