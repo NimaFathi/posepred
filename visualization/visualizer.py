@@ -1,18 +1,18 @@
-import os
 import logging
+import math
+import os
+
 import cv2
 import imageio
-from pygifsicle import optimize
-from matplotlib.pyplot import AutoLocator
-
-import math
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
+from matplotlib.pyplot import AutoLocator
+from pygifsicle import optimize
 
 from utils.save_load import setup_visualization_dir
 from visualization.color_generator import color_generator
-from visualization.keypoints_connection import keypoint_connections
+from visualization.utils import keypoint_connections, jta_cam_int, rotation_3D
 
 logger = logging.getLogger(__name__)
 
@@ -64,6 +64,15 @@ class Visualizer:
                 new_pose.append(torch.tensor(new_group_pose).squeeze(1))
             self.visualizer_2D(names=names, poses=new_pose, masks=[], images_paths=images_paths, fig_size=fig_size,
                                gif_name=gif_name + '_2D_overlay')
+        if self.dataset_name == 'jta':
+            new_pose = []
+            for i, group_pose in enumerate(poses):
+                new_group_pose = []
+                for j in range(len(group_pose)):
+                    new_group_pose.append(self.__generate_JTA_2D_pose(group_pose[j].unsqueeze(0)).tolist())
+                new_pose.append(torch.tensor(new_group_pose).squeeze(1))
+            self.visualizer_2D(names=names, poses=new_pose, masks=[], images_paths=images_paths, fig_size=fig_size,
+                               gif_name=gif_name + "_2D_overlay")
         logger.info("start 3D visualizing.")
         max_axes = []
         min_axes = []
@@ -179,10 +188,13 @@ class Visualizer:
         visualizing_keypoints = np.array(np.unique(keypoint_connections[self.dataset_name]))
         for i, keypoints in enumerate(poses):
             for ie, edge in enumerate(keypoint_connections[self.dataset_name]):
-                ax.plot(xs=[keypoints[edge, 0][0], keypoints[edge, 0][1]],
-                        zs=[keypoints[edge, 1][0], keypoints[edge, 1][1]],
-                        ys=[keypoints[edge, 2][0], keypoints[edge, 2][1]], linewidth=2, label=r'$x=y=z$')
+                m = ax.plot(xs=[keypoints[edge, 0][0], keypoints[edge, 0][1]],
+                            zs=[keypoints[edge, 1][0], keypoints[edge, 1][1]],
+                            ys=[keypoints[edge, 2][0], keypoints[edge, 2][1]], linewidth=2, label=r'$x=y=z$', zdir='z')
             if keypoints in keypoint_connections[self.dataset_name]:
+                # m.set_xdata(keypoints[visualizing_keypoints, 1].detach().cpu().numpy())
+                # m.set_ydata(keypoints[visualizing_keypoints, 0].detach().cpu().numpy())
+                # m.set_3d_properties(keypoints[visualizing_keypoints, 2].detach().cpu().numpy(), zdir='z')
                 ax.scatter(xs=keypoints[visualizing_keypoints, 0].detach().cpu().numpy(),
                            zs=keypoints[visualizing_keypoints, 1].detach().cpu().numpy(),
                            ys=keypoints[visualizing_keypoints, 2].detach().cpu().numpy(), s=8)
@@ -215,8 +227,7 @@ class Visualizer:
                              color_generator.get_color(ie), 4, lineType=cv2.LINE_AA)
         return image
 
-    @staticmethod
-    def __create_plot(axe, axes_limit):
+    def __create_plot(self, axe, axes_limit):
         axe.xaxis.set_major_locator(AutoLocator())
         axe.yaxis.set_major_locator(AutoLocator())
         axe.zaxis.set_major_locator(AutoLocator())
@@ -225,8 +236,10 @@ class Visualizer:
         x_mean = (max(axes_limit[0]) + min(axes_limit[0])) * 0.5
         y_mean = (max(axes_limit[1]) + min(axes_limit[1])) * 0.5
         z_mean = (max(axes_limit[2]) + min(axes_limit[2])) * 0.5
+
+        axe.view_init(elev=rotation_3D[self.dataset_name], azim=rotation_3D[self.dataset_name])
         axe.set_xlim(xmin=x_mean - max_range, xmax=x_mean + max_range)
-        axe.set_ylim(ymin=y_mean - max_range, ymax=y_mean + max_range)
+        axe.set_ylim(ymin=0, ymax=y_mean + max_range)
         axe.set_zlim(zmin=z_mean - max_range, zmax=z_mean + max_range)
 
     @staticmethod
@@ -257,6 +270,23 @@ class Visualizer:
                 for joint_data in p_data:
                     new_joint_data = torch.matmul(cam_int, torch.matmul(cam_ext[frame_num][:3], joint_data))
                     new_data.append((new_joint_data[:2] / new_joint_data[-1]).tolist())
+                new_pose.append(new_data)
+        return torch.tensor(new_pose).reshape(first_shape[0], first_shape[1], 2 * first_shape[-1] // 3)
+
+    @staticmethod
+    def __generate_JTA_2D_pose(pose):
+        first_shape = pose.shape
+        poses = pose.reshape(pose.shape[0], pose.shape[1], pose.shape[-1] // 3, 3)
+        new_pose = []
+        for frame_num, frame_data in enumerate(poses):
+            for p_data in frame_data:
+                new_data = []
+                for joint_data in p_data:
+                    x_p = joint_data[0] / joint_data[2]
+                    y_p = joint_data[1] / joint_data[2]
+                    x = jta_cam_int[0][0] * x_p + jta_cam_int[0][2]
+                    y = jta_cam_int[1][1] * y_p + jta_cam_int[1][2]
+                    new_data.append([x, y])
                 new_pose.append(new_data)
         return torch.tensor(new_pose).reshape(first_shape[0], first_shape[1], 2 * first_shape[-1] // 3)
 
