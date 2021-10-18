@@ -58,5 +58,5 @@ def setup_testing_dir(parent_dir):
 
 def setup_visualization_dir(parent_dir):
     vis_dir = os.path.join(parent_dir, 'visualization')
-    os.makedirs(vis_dir, exist_ok=False)
+    os.makedirs(vis_dir, exist_ok=True)
     return vis_dir
