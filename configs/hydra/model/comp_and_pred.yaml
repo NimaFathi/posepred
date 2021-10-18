@@ -3,7 +3,8 @@ defaults:
   - common
 
 type: comp_and_pred
-noisy_rate: 0.2
+noise_mean: 0.2
+noise_std: 0.05
 hidden_size: 200
 latent_dim: 10
 hardtanh_limit: 10

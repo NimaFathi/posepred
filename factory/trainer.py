@@ -125,7 +125,7 @@ class Trainer:
                 if self.model.args.use_mask:
                     for metric_name in self.args.mask_metrics:
                         metric_func = MASK_METRICS[metric_name]
-                        metric_value = metric_func(pred_mask, data['future_mask'])
+                        metric_value = metric_func(pred_mask, data['future_mask'], self.args.device)
                         report_attrs[metric_name] = metric_value
 
                 self.valid_reporter.update(report_attrs, batch_size)

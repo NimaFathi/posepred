@@ -3,3 +3,7 @@ defaults:
   - common
 
 type: zero_vel
+
+loss:
+  type: mse_vel
+  mask_weight: 0

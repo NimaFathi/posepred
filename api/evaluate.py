@@ -30,7 +30,7 @@ def evaluate(cfg: DictConfig):
         cfg.model.keypoints_num = dataloader.dataset.keypoints_num
         cfg.model.use_mask = cfg.data.use_mask
         model = MODELS[cfg.model.type](cfg.model)
-        loss_module = LOSSES[cfg.loss.type](cfg.loss)
+        loss_module = LOSSES[cfg.model.loss.type](cfg.model.loss)
         if cfg.model.type == 'nearest_neighbor':
             model.train_dataloader = get_dataloader(cfg.model.train_dataset, cfg.data)
 

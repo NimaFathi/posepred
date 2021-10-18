@@ -68,7 +68,7 @@ class Reporter:
         for key, value in self.history.items():
             if not use_mask and 'mask' in key:
                 continue
-            logger.info(str(key) + ': (mean=%.5f, std=%.3f)' % (np.mean(value), np.std(value)))
+            logger.info(str(key) + ': (mean=%.5f, std=%.6f)' % (np.mean(value), np.std(value)))
 
     @staticmethod
     def save_plots(use_mask, save_dir, train_history, validiation_history, use_validation):
