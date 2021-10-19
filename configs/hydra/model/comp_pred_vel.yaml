@@ -2,7 +2,7 @@ defaults:
   - _self_
   - common
 
-type: comp_and_pred
+type: comp_pred_vel
 noise_mean: 0.2
 noise_std: 0.05
 autoregressive: false

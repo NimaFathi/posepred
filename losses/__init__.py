@@ -5,7 +5,7 @@ from .mix_and_match_loss import MixAndMatchLoss
 from .elbo import ELBO
 from .derpof_loss import DeRPoFLoss
 from .his_rep_itself_loss import HisRepItselfLoss
-from .comp_and_pred import CompAndPred
+from .comp_pred_vel import CompPredVel
 
 LOSSES = {'mse_vel': MSEVel,
           'mae_vel': MAEVel,
@@ -14,5 +14,5 @@ LOSSES = {'mse_vel': MSEVel,
           'elbo': ELBO,
           'derpof': DeRPoFLoss,
           'his_rep_itself': HisRepItselfLoss,
-          'comp_and_pred': CompAndPred,
+          'comp_pred_vel': CompPredVel,
           }
