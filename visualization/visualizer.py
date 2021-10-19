@@ -111,10 +111,10 @@ class Visualizer:
 
         for filename in set(filenames):
             os.remove(filename)
-        optimize(os.path.join(save_dir, f'{gif_name}.gif'))
+        # optimize(os.path.join(save_dir, f'{gif_name}.gif'))
         logger.info("end 3D visualizing.")
 
-    def visualizer_2D(self, names, poses, masks, images_paths, gif_name, fig_size=(8, 6)):
+    def visualizer_2D(self, names, poses, masks, images_paths, gif_name, fig_size=(24, 18)):
         """
              visualizer_2D(poses, masks, images_paths, fig_size) -> gif
                 @brief Draws a 2D figure with matplotlib (it can have multiple sub figures).
@@ -160,7 +160,7 @@ class Visualizer:
         filenames = []
         save_dir = setup_visualization_dir(self.parent_dir)
         for plt_index in range(len(poses[0])):
-            fig = plt.figure(figsize=fig_size, dpi=100)
+            fig = plt.figure(figsize=np.array(fig_size), dpi=100)
             axarr = []
             for i in range(len(poses)):
                 axarr.append(fig.add_subplot(1, subfig_size, i + 1))
@@ -191,13 +191,13 @@ class Visualizer:
                 m = ax.plot(xs=[keypoints[edge, 0][0], keypoints[edge, 0][1]],
                             zs=[keypoints[edge, 1][0], keypoints[edge, 1][1]],
                             ys=[keypoints[edge, 2][0], keypoints[edge, 2][1]], linewidth=2, label=r'$x=y=z$', zdir='z')
-            if keypoints in keypoint_connections[self.dataset_name]:
-                # m.set_xdata(keypoints[visualizing_keypoints, 1].detach().cpu().numpy())
-                # m.set_ydata(keypoints[visualizing_keypoints, 0].detach().cpu().numpy())
-                # m.set_3d_properties(keypoints[visualizing_keypoints, 2].detach().cpu().numpy(), zdir='z')
-                ax.scatter(xs=keypoints[visualizing_keypoints, 0].detach().cpu().numpy(),
-                           zs=keypoints[visualizing_keypoints, 1].detach().cpu().numpy(),
-                           ys=keypoints[visualizing_keypoints, 2].detach().cpu().numpy(), s=8)
+            # m.set_xdata(keypoints[visualizing_keypoints, 1].detach().cpu().numpy())
+            # m.set_ydata(keypoints[visualizing_keypoints, 0].detach().cpu().numpy())
+            # m.set_3d_properties(keypoints[visualizing_keypoints, 2].detach().cpu().numpy(), zdir='z')
+
+            ax.scatter(xs=keypoints[visualizing_keypoints, 0].detach().cpu().numpy(),
+                       zs=keypoints[visualizing_keypoints, 1].detach().cpu().numpy(),
+                       ys=keypoints[visualizing_keypoints, 2].detach().cpu().numpy(), s=2)
 
     def __generate_2D_figure(self, all_poses, all_masks=None, image_path=None):
         num_keypoints = all_poses.shape[-1] // 2
@@ -214,9 +214,6 @@ class Visualizer:
                     cv2.circle(image, (int(keypoints[keypoint, 0]), int(keypoints[keypoint, 1])), 3,
                                (0, 255, 255), thickness=-1,
                                lineType=cv2.FILLED)
-                    cv2.putText(image, f"{keypoint}",
-                                (int(keypoints[keypoint, 0] + 10), int(keypoints[keypoint, 1] - 5)),
-                                cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 0, 0), 1)
             for ie, edge in enumerate(keypoint_connections[self.dataset_name]):
                 if not ((keypoints[edge, 0][0] <= 0 or keypoints[edge, 1][0] <= 0) or (
                         keypoints[edge, 0][1] <= 0 or keypoints[edge, 1][1] <= 0)) and (
@@ -237,9 +234,9 @@ class Visualizer:
         y_mean = (max(axes_limit[1]) + min(axes_limit[1])) * 0.5
         z_mean = (max(axes_limit[2]) + min(axes_limit[2])) * 0.5
 
-        axe.view_init(elev=rotation_3D[self.dataset_name], azim=rotation_3D[self.dataset_name])
+        # axe.view_init(elev=rotation_3D[self.dataset_name][0], azim=rotation_3D[self.dataset_name][1])
         axe.set_xlim(xmin=x_mean - max_range, xmax=x_mean + max_range)
-        axe.set_ylim(ymin=0, ymax=y_mean + max_range)
+        axe.set_ylim(ymin=y_mean - max_range, ymax=y_mean + max_range)
         axe.set_zlim(zmin=z_mean - max_range, zmax=z_mean + max_range)
 
     @staticmethod

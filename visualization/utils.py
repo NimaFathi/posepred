@@ -6,8 +6,27 @@ keypoint_connections = {
         (11, 13), (12, 14), (13, 15), (14, 16)
     ],
     'jta': [
-        (0, 1), (1, 2), (2, 3), (2, 7), (2, 11), (3, 4), (4, 5), (5, 6), (7, 8), (8, 9), (11, 12),
-        (12, 13), (13, 14), (14, 15), (15, 16), (15, 19), (16, 17), (17, 18), (19, 20), (20, 21)
+        (0, 1),  # head_top -> head_center
+        (1, 2),  # head_center -> neck
+        (2, 3),  # neck -> right_clavicle
+        (3, 4),  # right_clavicle -> right_shoulder
+        (4, 5),  # right_shoulder -> right_elbow
+        (5, 6),  # right_elbow -> right_wrist
+        (2, 7),  # neck -> left_clavicle
+        (7, 8),  # left_clavicle -> left_shoulder
+        (8, 9),  # left_shoulder -> left_elbow
+        (9, 10),  # left_elbow -> left_wrist
+        (2, 11),  # neck -> spine0
+        (11, 12),  # spine0 -> spine1
+        (12, 13),  # spine1 -> spine2
+        (13, 14),  # spine2 -> spine3
+        (14, 15),  # spine3 -> spine4
+        (15, 16),  # spine4 -> right_hip
+        (16, 17),  # right_hip -> right_knee
+        (17, 18),  # right_knee -> right_ankle
+        (15, 19),  # spine4 -> left_hip
+        (19, 20),  # left_hip -> left_knee
+        (20, 21)  # left_knee -> left_ankle
     ],
     'somof_posetrack': [
         (0, 1), (0, 2), (0, 3), (2, 4), (3, 5), (4, 6), (5, 7), (2, 8), (3, 9), (8, 9), (8, 10), (9, 11),

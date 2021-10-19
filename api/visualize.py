@@ -98,8 +98,7 @@ def visualize(cfg: DictConfig):
     cam_in = data.get('cam_in') if 'cam_in' in data.keys() else None
 
     visualizer = Visualizer(dataset_name=cfg.dataset_name, parent_dir=os.getcwd(),
-                            images_dir=os.path.join(ROOT_DIR, cfg.images_dir if cfg.images_dir else ''))
-
+                            images_dir=cfg.images_dir if cfg.images_dir else ROOT_DIR)
     gif_name = '_'.join((cfg.model.type, cfg.dataset.split("/")[-1], str(index)))
     if cfg.data.keypoint_dim == 2:
         visualizer.visualizer_2D(names, poses, masks, images_path, gif_name)
