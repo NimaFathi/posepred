@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+from metrics import ADE
 
 
 class CompPredVel(nn.Module):
@@ -25,7 +26,9 @@ class CompPredVel(nn.Module):
         final_comp = torch.where(mask == 1, model_outputs['comp_vel'], observed_vel)
         comp_loss = self.mse2(final_comp, observed_vel)
 
+        comp_ade = ADE(model_outputs['comp_pose'], input_data['ovserved_pose'][:, 1:, :], self.args.keypoint_dim)
+
         loss = self.args.pred_weight * pred_loss + self.args.comp_weight * comp_loss
-        outputs = {'loss': loss, 'pred_loss': pred_loss, 'comp_loss': comp_loss}
+        outputs = {'loss': loss, 'pred_loss': pred_loss, 'comp_loss': comp_loss, 'comp_ade': comp_ade}
 
         return outputs
