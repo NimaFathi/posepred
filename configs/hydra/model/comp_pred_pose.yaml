@@ -1,0 +1,21 @@
+defaults:
+  - _self_
+  - common
+
+type: comp_pred_pose
+noise_mean: 0.2
+noise_std: 0.05
+autoregressive: false
+hidden_size: 200
+latent_dim: 10
+hardtanh_limit: 10
+n_layers: 1
+dropout_enc: 0
+dropout_pose_dec: 0
+dropout_mask_dec: 0
+
+loss:
+  type: comp_pred_pose
+  pred_weight: 1
+  comp_weight: 1
+  keypoint_dim: ${keypoint_dim}
