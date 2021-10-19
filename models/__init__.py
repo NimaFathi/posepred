@@ -15,5 +15,4 @@ MODELS = {'zero_vel': ZeroVel,
           'history_repeats_itself': HistoryRepeatsItself,
           'mix_and_match': MixAndMatch,
           'comp_pred_vel': CompPredVel,
-          'comp_and_pred': CompPredVel
           }
