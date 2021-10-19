@@ -5,9 +5,9 @@ import numpy as np
 from utils.others import pose_from_vel
 
 
-class CompleteAndPredict(nn.Module):
+class CompPredVel(nn.Module):
     def __init__(self, args):
-        super(CompleteAndPredict, self).__init__()
+        super(CompPredVel, self).__init__()
         self.args = args
         input_size = output_size = int(args.keypoints_num * args.keypoint_dim)
 
@@ -47,7 +47,7 @@ class CompleteAndPredict(nn.Module):
         # make data noisy
         vel = vel.reshape(bs, frames_n, self.args.keypoints_num, self.args.keypoint_dim)
         mask = mask.reshape(bs, frames_n, self.args.keypoints_num, 1).repeat(1, 1, 1, self.args.keypoint_dim)
-        const = (torch.zeros_like(mask, dtype=torch.float) * (-100)).to(self.args.device)
+        const = (torch.zeros_like(mask, dtype=torch.float) * (-1000)).to(self.args.device)
         noisy_vel = torch.where(mask == 1, const, vel).reshape(bs, frames_n, -1)
 
         # velocity encoder
@@ -152,10 +152,13 @@ class Completion(nn.Module):
             hiddens = torch.unsqueeze(hiddens, 0)
             cells = torch.unsqueeze(cells, 0)
         outputs = torch.tensor([], device=self.device)
+
+        output = dec_inputs[..., 0, :]
         for j in range(frames_n):
+            dec_input = output.detach() if self.args.autoregressive else dec_inputs[..., j, :]
             for i, lstm in enumerate(self.lstms):
                 if i == 0:
-                    hiddens[i], cells[i] = lstm(dec_inputs[..., j, :], (hiddens.clone()[i], cells.clone()[i]))
+                    hiddens[i], cells[i] = lstm(dec_input, (hiddens.clone()[i], cells.clone()[i]))
                 else:
                     hiddens[i], cells[i] = lstm(hiddens.clone()[i - 1], (hiddens.clone()[i], cells.clone()[i]))
             output = self.activation(self.fc_out(hiddens.clone()[-1]))

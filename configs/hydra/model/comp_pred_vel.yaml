@@ -5,6 +5,7 @@ defaults:
 type: comp_and_pred
 noise_mean: 0.2
 noise_std: 0.05
+autoregressive: false
 hidden_size: 200
 latent_dim: 10
 hardtanh_limit: 10
@@ -14,6 +15,6 @@ dropout_pose_dec: 0
 dropout_mask_dec: 0
 
 loss:
-  type: comp_and_pred
+  type: comp_pred_vel
   pred_weight: 1
   comp_weight: 1
