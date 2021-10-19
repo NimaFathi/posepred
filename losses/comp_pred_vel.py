@@ -22,10 +22,10 @@ class CompPredVel(nn.Module):
 
         bs, frames_n, featurs_n = observed_vel.shape
         mask = model_outputs['mask'].reshape(bs, frames_n, -1)
-        completed = torch.where(mask == 1, model_outputs['completed_vel'], observed_vel)
-        completion_loss = self.mse2(completed, observed_vel)
+        final_comp = torch.where(mask == 1, model_outputs['comp_vel'], observed_vel)
+        comp_loss = self.mse2(final_comp, observed_vel)
 
-        loss = self.args.pred_weight * pred_loss + self.args.comp_weight * completion_loss
-        outputs = {'loss': loss, 'pred_loss': pred_loss, 'completion_loss': completion_loss}
+        loss = self.args.pred_weight * pred_loss + self.args.comp_weight * comp_loss
+        outputs = {'loss': loss, 'pred_loss': pred_loss, 'comp_loss': comp_loss}
 
         return outputs

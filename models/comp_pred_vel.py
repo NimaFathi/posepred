@@ -57,21 +57,23 @@ class CompPredVel(nn.Module):
 
         # VAE encoder
         fusion1 = self.res_block1(hidden_vel, nn.ReLU())
-        latent = self.reparameterize(self.mean(fusion1), self.std(fusion1))
+        mean = self.mean(fusion1)
+        std = self.std(fusion1)
 
         # VAE decoder
+        latent = self.reparameterize(mean, std)
         fusion2 = self.decode_latent(latent)
         hidden_vel = self.res_block2(fusion2, nn.ReLU())
 
         # velocity decoder
-        vel_dec_input = noisy_vel[..., -1, :]
-        pred_vel = self.vel_decoder(vel_dec_input, hidden_vel, cell_vel)
+        pred_vel = self.vel_decoder(noisy_vel[..., -1, :], hidden_vel, cell_vel)
         pred_pose = pose_from_vel(pred_vel, pose[..., -1, :])
 
         # completion
-        complited_vel = self.completion(noisy_vel, hidden_vel, cell_vel)
+        comp_vel = self.completion(noisy_vel, hidden_vel, cell_vel)
+        comp_pose = pose_from_vel(comp_vel, pose[..., 0, :])
 
-        outputs = {'pred_pose': pred_pose, 'pred_vel': pred_vel, 'completed_vel': complited_vel, 'mask': mask}
+        outputs = {'pred_pose': pred_pose, 'pred_vel': pred_vel, 'comp_pose': comp_pose, 'comp_vel': comp_vel, 'mask': mask}
 
         if self.args.use_mask:
             outputs['pred_mask'] = inputs['observed_mask'][:, -1:, :].repeat(1, self.args.pred_frames_num, 1)
