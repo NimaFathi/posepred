@@ -7,6 +7,7 @@ from .derpof_loss import DeRPoFLoss
 from .his_rep_itself_loss import HisRepItselfLoss
 from .comp_pred_vel import CompPredVel
 from .comp_pred_pose import CompPredPose
+from .comp_pred_center import CompPredCenter
 
 LOSSES = {'mse_vel': MSEVel,
           'mae_vel': MAEVel,
@@ -17,4 +18,5 @@ LOSSES = {'mse_vel': MSEVel,
           'his_rep_itself': HisRepItselfLoss,
           'comp_pred_vel': CompPredVel,
           'comp_pred_pose': CompPredPose,
+          'comp_pred_center': CompPredCenter,
           }

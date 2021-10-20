@@ -7,6 +7,7 @@ from .history_repeats_itself import HistoryRepeatsItself
 from .mix_and_match import MixAndMatch
 from .comp_pred_vel import CompPredVel
 from .comp_pred_pose import CompPredPose
+from .comp_pred_center import CompPredCenter
 
 MODELS = {'zero_vel': ZeroVel,
           'nearest_neighbor': NearestNeighbor,
@@ -17,4 +18,5 @@ MODELS = {'zero_vel': ZeroVel,
           'mix_and_match': MixAndMatch,
           'comp_pred_vel': CompPredVel,
           'comp_pred_pose': CompPredPose,
+          'comp_pred_center': CompPredCenter,
           }
