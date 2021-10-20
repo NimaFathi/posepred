@@ -14,8 +14,7 @@ logger = logging.getLogger(__name__)
 
 class Trainer:
     def __init__(self, args, train_dataloader, valid_dataloader, model, loss_module, optimizer, optimizer_args,
-                 scheduler,
-                 train_reporter, valid_reporter):
+                 scheduler, train_reporter, valid_reporter):
         self.args = args
         self.train_dataloader = train_dataloader
         self.valid_dataloader = valid_dataloader

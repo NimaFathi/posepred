@@ -12,6 +12,7 @@ use_mask: false
 pred_frames_num:
 load_path:
 index:
+completion: false
 images_dir:
 save_dir:
 data:

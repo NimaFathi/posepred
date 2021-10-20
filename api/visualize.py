@@ -50,7 +50,7 @@ def visualize(cfg: DictConfig):
             model.train_dataloader = get_dataloader(cfg.model.train_dataset, cfg.data)
 
     # predict
-    model.eval()
+    model = model.to(cfg.device).eval()
     with torch.no_grad():
         outputs = model(data)
         assert 'pred_pose' in outputs.keys(), 'outputs of model should include pred_pose'
@@ -58,8 +58,11 @@ def visualize(cfg: DictConfig):
         if cfg.data.use_mask:
             assert 'pred_mask' in outputs.keys(), 'outputs of model should include pred_mask'
             data['pred_mask'] = outputs['pred_mask']
+        if cfg.completion:
+            assert 'comp_pose' in outputs.keys(), 'outputs of model should include comp_pose'
+            data['comp_pose'] = outputs['comp_pose']
 
-    for key in ['observed_pose', 'observed_mask', 'pred_pose', 'pred_mask']:
+    for key in ['observed_pose', 'observed_mask', 'pred_pose', 'pred_mask', 'comp_pose']:
         if key in data.keys():
             if data[key].is_cuda:
                 data[key] = data[key].detach().cpu()
@@ -70,30 +73,36 @@ def visualize(cfg: DictConfig):
     images_path = []
     cam_exs = []
 
-    for key in ['observed_pose', 'future_pose', 'pred_pose']:
+    for key in ['observed_pose', 'future_pose', 'pred_pose', 'comp_pose']:
         if key in data.keys():
             pose = data.get(key).squeeze(0) if cfg.data.is_interactive else data.get(key)
             poses.append(pose.permute(1, 0, 2))
             names.append(key.split('_')[0])
 
-    for key in ['observed_mask', 'future_mask', 'pred_mask']:
+    for key in ['observed_mask', 'future_mask', 'pred_mask', 'observed_mask']:
         if key in data.keys():
             mask = data.get(key).squeeze(0) if cfg.data.is_interactive else data.get(key)
             masks.append(mask.permute(1, 0, 2))
 
     if 'observed_image' in data.keys():
-        images_path.append(data.get('observed_image'))
+        images_path.append(data['observed_image'])
     if 'future_image' in data.keys():
-        images_path.append(data.get('future_image'))
+        images_path.append(data['future_image'])
         if 'pred_pose' in data.keys():
-            images_path.append(data.get('future_image'))
+            images_path.append(data['future_image'])
+    if 'observed_image' in data.keys():
+        if 'comp_pose' in data.keys():
+            images_path.append(data['observed_image'])
 
     if 'observed_cam_ex' in data.keys():
-        cam_exs.append(data.get('observed_cam_ex'))
+        cam_exs.append(data['observed_cam_ex'])
     if 'future_cam_ex' in data.keys():
-        cam_exs.append(data.get('future_cam_ex'))
+        cam_exs.append(data['future_cam_ex'])
         if 'pred_pose' in data.keys():
-            cam_exs.append(data.get('future_cam_ex'))
+            cam_exs.append(data['future_cam_ex'])
+    if 'observed_cam_ex' in data.keys():
+        if 'comp_pose' in data.keys():
+            images_path.append(data['observed_cam_ex'])
 
     cam_in = data.get('cam_in') if 'cam_in' in data.keys() else None
 
