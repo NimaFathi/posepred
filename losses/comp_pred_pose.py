@@ -31,7 +31,7 @@ class CompPredPose(nn.Module):
 
         loss = (self.args.pred_weight * pred_pose_loss) + (self.args.comp_weight * comp_pose_loss) + (
                 self.args.kl_weight * kl_loss)
-        outputs = {'loss': loss, 'pred_pose_loss': pred_pose_loss, 'comp_pose_loss': comp_pose_loss,
+        outputs = {'loss': loss, 'pred_pose_loss': pred_pose_loss, 'comp_pose_loss': comp_pose_loss, 'kl_loss': kl_loss,
                    'comp_pose_ade': comp_pose_ade}
 
         return outputs
