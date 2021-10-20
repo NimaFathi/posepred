@@ -18,4 +18,5 @@ loss:
   type: comp_pred_vel
   pred_weight: 1
   comp_weight: 1
+  kl_weight: 1
   keypoint_dim: ${keypoint_dim}
