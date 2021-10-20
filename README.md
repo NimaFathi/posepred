@@ -1,7 +1,7 @@
 # Posepred  
 Pospred is an open-source toolbox for pose prediction based on PyTorch. It is a part of the VitaLab project.    
 
-visualization/presentation/obs.mp4
+./visualization/presentation/obs.mp4
 
 <p float="left">    
   <img src="visualization/presentation/obs.mp4" alt="observation" width="475">
