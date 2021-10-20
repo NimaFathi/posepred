@@ -38,13 +38,13 @@ class CompPredVel(nn.Module):
         vel = pose[..., 1:, :] - pose[..., :-1, :]
         bs, frames_n, features_n = vel.shape
 
-        if self.args.use_mask:
-            mask = inputs['observed_mask'][..., 1:, :]
-        else:
-            p = np.random.normal(self.args.noise_mean, self.args.noise_std, 1)[0]
-            mask = (torch.FloatTensor(bs, frames_n, self.args.keypoints_num).uniform_() < p).to(self.args.device)
-
         # make data noisy
+        if self.args.is_noisy:
+            mask = inputs['observed_noise']
+        elif self.args.use_mask:
+            mask = inputs['observed_mask']
+        else:
+            raise Exception("Specific either data-mask or noise to run this model.")
         vel = vel.reshape(bs, frames_n, self.args.keypoints_num, self.args.keypoint_dim)
         mask = mask.reshape(bs, frames_n, self.args.keypoints_num, 1).repeat(1, 1, 1, self.args.keypoint_dim)
         const = (torch.zeros_like(mask, dtype=torch.float) * (-1000)).to(self.args.device)

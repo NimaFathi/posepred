@@ -37,13 +37,13 @@ class CompPredPose(nn.Module):
         pose = inputs['observed_pose']
         bs, frames_n, features_n = pose.shape
 
-        if self.args.use_mask:
+        # make data noisy
+        if self.args.is_noisy:
+            mask = inputs['observed_noise']
+        elif self.args.use_mask:
             mask = inputs['observed_mask']
         else:
-            p = np.random.normal(self.args.noise_mean, self.args.noise_std, 1)[0]
-            mask = (torch.FloatTensor(bs, frames_n, self.args.keypoints_num).uniform_() < p).to(self.args.device)
-
-        # make data noisy
+            raise Exception("Specific either data-mask or noise to run this model.")
         pose = pose.reshape(bs, frames_n, self.args.keypoints_num, self.args.keypoint_dim)
         mask = mask.reshape(bs, frames_n, self.args.keypoints_num, 1).repeat(1, 1, 1, self.args.keypoint_dim)
         const = (torch.zeros_like(mask, dtype=torch.float) * (-1000)).to(self.args.device)
