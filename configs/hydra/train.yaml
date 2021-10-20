@@ -13,6 +13,7 @@ snapshot_interval: ${epochs}
 start_epoch: 0
 device: cuda
 keypoint_dim: ???
+is_noisy: false
 use_mask: false
 load_path:
 save_dir:

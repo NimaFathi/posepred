@@ -6,6 +6,7 @@ defaults:
 dataset: ???
 pred_frames_num: ???
 keypoint_dim: ???
+is_noisy: false
 use_mask: false
 device: cuda
 load_path:

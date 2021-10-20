@@ -8,6 +8,7 @@ dataset_name: ???
 ground_truth: false
 device: cuda
 keypoint_dim: ???
+is_noisy: false
 use_mask: false
 pred_frames_num:
 load_path:
