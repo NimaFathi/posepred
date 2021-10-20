@@ -72,7 +72,7 @@ class CompPredPose(nn.Module):
         zeros = torch.zeros_like(cell_p)
         comp_pose = self.completion(noisy_pose, hidden_p, zeros)
 
-        outputs = {'pred_pose': pred_pose, 'comp_pose': comp_pose, 'mean': mean, 'std': std}
+        outputs = {'pred_pose': pred_pose, 'comp_pose': comp_pose, 'mean': mean, 'std': std, 'mask': mask}
 
         if self.args.use_mask:
             outputs['pred_mask'] = inputs['observed_mask'][:, -1:, :].repeat(1, self.args.pred_frames_num, 1)

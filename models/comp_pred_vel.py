@@ -76,7 +76,7 @@ class CompPredVel(nn.Module):
         comp_pose = pose_from_vel(comp_vel, pose[..., 0, :])
 
         outputs = {'pred_pose': pred_pose, 'pred_vel': pred_vel, 'comp_pose': comp_pose, 'comp_vel': comp_vel,
-                   'mean': mean, 'std': std}
+                   'mean': mean, 'std': std, 'mask': mask}
 
         if self.args.use_mask:
             outputs['pred_mask'] = inputs['observed_mask'][:, -1:, :].repeat(1, self.args.pred_frames_num, 1)
