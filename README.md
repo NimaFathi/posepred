@@ -1,12 +1,18 @@
 # Posepred  
 Pospred is an open-source toolbox for pose prediction based on PyTorch. It is a part of the VitaLab project.    
 
-<p float="left">  
-  https://drive.google.com/file/d/1Xjpm5FIKSfJbl3nzmOAajog2uYvP6-0K/view?usp=sharing
-  <img src="https://drive.google.com/file/d/1lLhevzsgncZT9qrlAX9u-OQQhGVA0ldO/view?usp=sharing" alt="prediction" width="475">
-<!--   <img src="visualization/presentation/obs.gif" alt="observation" width="475"> -->
-<!--   <img src="visualization/presentation/pred.gif" alt="prediction" width="475"> -->
-</p>
+<!-- obs.mp4 -->
+![obs](https://user-images.githubusercontent.com/33596552/138102745-f6b5c7a0-ee14-40ef-907f-b3ebb98ae08f.gif) 
+<!-- https://user-images.githubusercontent.com/33596552/138096632-7f13a760-00e7-462f-b110-91e882f52fa4.mp4 -->
+
+<!-- pred.mp4 -->
+![pred](https://user-images.githubusercontent.com/33596552/138102754-5bef72df-ea48-4d17-a932-611293f0bc5a.gif)
+<!-- https://user-images.githubusercontent.com/33596552/138097015-8880dbd0-1304-48bc-9b9f-8a9774b6c40a.mp4 -->
+
+<p float="left">
+<!--   <img src="visualization/presentation/obs.mp4" alt="observation" width="475"> -->
+<!--   <img src="visualization/presentation/pred.mp4" alt="prediction" width="475"> -->
+</p> -->
 
 
 ```
