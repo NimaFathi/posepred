@@ -3,8 +3,6 @@ defaults:
   - common
 
 type: comp_pred_pose
-noise_mean: 0.2
-noise_std: 0.05
 autoregressive: false
 hidden_size: 200
 latent_dim: 10

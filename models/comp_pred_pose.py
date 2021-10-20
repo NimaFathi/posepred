@@ -31,7 +31,7 @@ class CompPredPose(nn.Module):
                                     args.dropout_pose_dec, 'hardtanh', args.hardtanh_limit, args.device)
 
         self.completion = Completion(input_size, output_size, args.hidden_size, args.n_layers, args.dropout_pose_dec,
-                                     'hardtanh', args.hardtanh_limit, args.device)
+                                     args.autoregressive, 'hardtanh', args.hardtanh_limit, args.device)
 
     def forward(self, inputs):
         pose = inputs['observed_pose']
@@ -130,10 +130,11 @@ class Decoder(nn.Module):
 
 
 class Completion(nn.Module):
-    def __init__(self, input_size, output_size, hidden_size, n_layers, dropout, activation_type,
+    def __init__(self, input_size, output_size, hidden_size, n_layers, dropout, activation_type, autoregressive,
                  hardtanh_limit=None, device='cpu'):
         super().__init__()
         self.device = device
+        self.autoregressive = autoregressive
         self.dropout = nn.Dropout(dropout)
         lstms = [
             nn.LSTMCell(input_size=input_size if i == 0 else hidden_size, hidden_size=hidden_size) for
@@ -155,7 +156,7 @@ class Completion(nn.Module):
 
         output = dec_inputs[..., 0, :]
         for j in range(frames_n):
-            dec_input = output.detach() if self.args.autoregressive else dec_inputs[..., j, :]
+            dec_input = output.detach() if self.autoregressive else dec_inputs[..., j, :]
             for i, lstm in enumerate(self.lstms):
                 if i == 0:
                     hiddens[i], cells[i] = lstm(dec_input, (hiddens.clone()[i], cells.clone()[i]))
