@@ -67,11 +67,13 @@ class CompPredCenter(nn.Module):
         hidden_p = self.res_block2(fusion2, nn.ReLU())
 
         # velocity decoder
-        pred_pose_center = self.pose_decoder(noisy_pose[..., -1, :], hidden_p, cell_p)
+        zeros = torch.zeros_like(cell_p)
+        pred_pose_center = self.pose_decoder(noisy_pose[..., -1, :], hidden_p, zeros)
         pred_pose = pred_pose_center + first_frame
 
         # completion
-        comp_pose_center = self.completion(noisy_pose, hidden_p, cell_p)
+        zeros = torch.zeros_like(cell_p)
+        comp_pose_center = self.completion(noisy_pose, hidden_p, zeros)
         comp_pose = comp_pose_center + first_frame
 
         outputs = {'pred_pose': pred_pose, 'pred_pose_center': pred_pose_center, 'comp_pose': comp_pose,

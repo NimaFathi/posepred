@@ -66,11 +66,13 @@ class CompPredVel(nn.Module):
         hidden_vel = self.res_block2(fusion2, nn.ReLU())
 
         # velocity decoder
-        pred_vel = self.vel_decoder(noisy_vel[..., -1, :], hidden_vel, cell_vel)
+        zeros = torch.zeros_like(cell_vel)
+        pred_vel = self.vel_decoder(noisy_vel[..., -1, :], hidden_vel, zeros)
         pred_pose = pose_from_vel(pred_vel, pose[..., -1, :])
 
         # completion
-        comp_vel = self.completion(noisy_vel, hidden_vel, cell_vel)
+        zeros = torch.zeros_like(cell_vel)
+        comp_vel = self.completion(noisy_vel, hidden_vel, zeros)
         comp_pose = pose_from_vel(comp_vel, pose[..., 0, :])
 
         outputs = {'pred_pose': pred_pose, 'pred_vel': pred_vel, 'comp_pose': comp_pose, 'comp_vel': comp_vel,
