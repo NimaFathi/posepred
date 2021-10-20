@@ -54,6 +54,9 @@ class SolitaryDataset(Dataset):
         for key in outputs_keys:
             if key in seq.keys():
                 outputs[key] = seq[key]
+            else:
+                raise Exception('dataset must include ' + key)
+
         if self.use_quaternion:
             outputs['observed_quaternion_pose'] = torch.tensor(seq['observed_quaternion_pose'])
             outputs['future_quaternion_pose'] = torch.tensor(seq['future_quaternion_pose'])

@@ -1,6 +1,7 @@
 keypoint_dim: ${keypoint_dim}
 is_interactive: false
 is_noisy: false
+noise_rate: 0
 persons_num: 1
 use_mask: ${use_mask}
 use_quaternion: false

@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 
 
 class NoisySolitaryDataset(Dataset):
-    def __init__(self, dataset_path, keypoint_dim, is_testing, use_mask, is_visualizing, use_quaternion):
+    def __init__(self, dataset_path, keypoint_dim, is_testing, use_mask, is_visualizing, use_quaternion, noise_rate):
 
         tensor_keys = ['observed_pose', 'future_pose', 'observed_mask', 'future_mask']
         data = list()
@@ -21,6 +21,7 @@ class NoisySolitaryDataset(Dataset):
                         seq_tensor[k] = v
                 data.append(seq_tensor)
 
+        self.noise = torch.FloatTensor(len(data), self.obs_frames_num, self.keypoints_num).uniform_() < noise_rate
         self.data = data
         self.keypoint_dim = keypoint_dim
         self.is_testing = is_testing
@@ -54,6 +55,11 @@ class NoisySolitaryDataset(Dataset):
         for key in outputs_keys:
             if key in seq.keys():
                 outputs[key] = seq[key]
+            else:
+                raise Exception('dataset must include ' + key)
+
+        outputs['observed_noise'] = self.noise[index]
+
         if self.use_quaternion:
             outputs['observed_quaternion_pose'] = torch.tensor(seq['observed_quaternion_pose'])
             outputs['future_quaternion_pose'] = torch.tensor(seq['future_quaternion_pose'])
