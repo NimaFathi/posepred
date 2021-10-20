@@ -77,10 +77,9 @@ class CompPredPose(nn.Module):
 
         return outputs
 
-    def reparameterize(self, mu, logvar):
-        std = torch.exp(0.5 * logvar)
-        eps = torch.randn_like(std).to(self.args.device)
-        return eps.mul(std).add_(mu)
+    def reparameterize(self, mean, std):
+        eps = torch.randn_like(mean).to(self.args.device)
+        return eps.mul(torch.exp(0.5 * std)).add_(mean)
 
 
 class Encoder(nn.Module):
