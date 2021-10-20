@@ -26,7 +26,7 @@ class CompPredVel(nn.Module):
         final_comp = torch.where(mask == 1, model_outputs['comp_vel'], observed_vel)
         comp_vel_loss = self.mse2(final_comp, observed_vel)
 
-        comp_pose_ade = ADE(model_outputs['comp_pose'], input_data['ovserved_pose'][:, 1:, :], self.args.keypoint_dim)
+        comp_pose_ade = ADE(model_outputs['comp_pose'], input_data['observed_pose'][:, 1:, :], self.args.keypoint_dim)
 
         loss = self.args.pred_weight * pred_vel_loss + self.args.comp_weight * comp_vel_loss
         outputs = {'loss': loss, 'pred_vel_loss': pred_vel_loss, 'comp_vel_loss': comp_vel_loss,

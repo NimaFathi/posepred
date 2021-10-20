@@ -5,9 +5,9 @@ import numpy as np
 from utils.others import pose_from_vel
 
 
-class CompPredPose(nn.Module):
+class CompPredCenter(nn.Module):
     def __init__(self, args):
-        super(CompPredPose, self).__init__()
+        super(CompPredCenter, self).__init__()
         self.args = args
         input_size = output_size = int(args.keypoints_num * args.keypoint_dim)
 
