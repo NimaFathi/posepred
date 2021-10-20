@@ -6,7 +6,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-class NonInteractiveDataset(Dataset):
+class SolitaryDataset(Dataset):
     def __init__(self, dataset_path, keypoint_dim, is_testing, use_mask, is_visualizing, use_quaternion):
 
         tensor_keys = ['observed_pose', 'future_pose', 'observed_mask', 'future_mask']

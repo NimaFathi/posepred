@@ -3,7 +3,7 @@ import logging
 import hydra
 from omegaconf import DictConfig
 
-from data_loader.my_dataloader import get_dataloader
+from data_loader import get_dataloader
 from models import MODELS
 from factory.output_generator import Output_Generator
 from utils.save_load import load_snapshot, setup_testing_dir

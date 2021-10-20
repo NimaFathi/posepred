@@ -5,7 +5,7 @@ from omegaconf import DictConfig
 import random
 import torch
 
-from data_loader.my_dataloader import get_dataloader
+from data_loader import get_dataloader
 from data_loader import DATASETS
 from models import MODELS
 from utils.save_load import load_snapshot

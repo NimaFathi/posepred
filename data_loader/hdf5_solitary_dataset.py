@@ -6,7 +6,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-class NonInteractiveDataset(Dataset):
+class HDF5SolitaryDataset(Dataset):
     def __init__(self, dataset_path, keypoint_dim, is_testing, use_mask, is_visualizing, use_quaternion):
         self.data = h5py.File(dataset_path, 'r')
         self.keypoint_dim = keypoint_dim

@@ -3,7 +3,7 @@ import logging
 import hydra
 from omegaconf import DictConfig
 
-from data_loader.my_dataloader import get_dataloader
+from data_loader import get_dataloader
 from models import MODELS
 from losses import LOSSES
 from optimizers import OPTIMIZERS
