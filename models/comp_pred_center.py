@@ -75,7 +75,7 @@ class CompPredCenter(nn.Module):
         comp_pose = comp_pose_center + first_frame
 
         outputs = {'pred_pose': pred_pose, 'pred_pose_center': pred_pose_center, 'comp_pose': comp_pose,
-                   'comp_pose_center': comp_pose_center, 'mask': mask}
+                   'comp_pose_center': comp_pose_center, 'mean': mean, 'std': std}
 
         if self.args.use_mask:
             outputs['pred_mask'] = inputs['observed_mask'][:, -1:, :].repeat(1, self.args.pred_frames_num, 1)

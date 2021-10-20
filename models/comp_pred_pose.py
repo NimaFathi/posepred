@@ -70,7 +70,7 @@ class CompPredPose(nn.Module):
         # completion
         comp_pose = self.completion(noisy_pose, hidden_p, cell_p)
 
-        outputs = {'pred_pose': pred_pose, 'comp_pose': comp_pose, 'mask': mask}
+        outputs = {'pred_pose': pred_pose, 'comp_pose': comp_pose, 'mean': mean, 'std': std}
 
         if self.args.use_mask:
             outputs['pred_mask'] = inputs['observed_mask'][:, -1:, :].repeat(1, self.args.pred_frames_num, 1)
