@@ -12,7 +12,6 @@ from utils.others import dict_to_device
 from visualization.visualizer import Visualizer
 
 from path_definition import HYDRA_PATH
-from path_definition import ROOT_DIR
 
 logger = logging.getLogger(__name__)
 
