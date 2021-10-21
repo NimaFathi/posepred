@@ -41,7 +41,7 @@ class CompPredVel(nn.Module):
         if 'observed_noise' in inputs.keys():
             noise = inputs['observed_noise']
         else:
-            raise Exception("This model requires noise.")
+            raise Exception("This model requires noise. set is_noisy to True")
         vel = vel.reshape(bs, frames_n, self.args.keypoints_num, self.args.keypoint_dim)
         noise = noise.reshape(bs, frames_n, self.args.keypoints_num, 1).repeat(1, 1, 1, self.args.keypoint_dim)
         const = (torch.zeros_like(noise, dtype=torch.float) * (-1000)).to(self.args.device)
