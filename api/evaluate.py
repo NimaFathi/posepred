@@ -25,10 +25,8 @@ def evaluate(cfg: DictConfig):
     if cfg.load_path is not None:
         model, loss_module, _, _, _, _, _ = load_snapshot(cfg.load_path)
     else:
-        cfg.model.keypoint_dim = cfg.data.keypoint_dim
         cfg.model.pred_frames_num = dataloader.dataset.future_frames_num
         cfg.model.keypoints_num = dataloader.dataset.keypoints_num
-        cfg.model.use_mask = cfg.data.use_mask
         model = MODELS[cfg.model.type](cfg.model)
         loss_module = LOSSES[cfg.model.loss.type](cfg.model.loss)
         if cfg.model.type == 'nearest_neighbor':

@@ -21,7 +21,6 @@ class NoisySolitaryDataset(Dataset):
                         seq_tensor[k] = v
                 data.append(seq_tensor)
 
-        self.noise = torch.FloatTensor(len(data), self.obs_frames_num, self.keypoints_num).uniform_() < noise_rate
         self.data = data
         self.keypoint_dim = keypoint_dim
         self.is_testing = is_testing
@@ -36,6 +35,8 @@ class NoisySolitaryDataset(Dataset):
         if not self.is_testing:
             assert 'future_pose' in seq.keys(), 'dataset must include future_pose'
             self.future_frames_num = seq['future_pose'].shape[-2]
+
+        self.noise = torch.FloatTensor(len(data), self.obs_frames_num, self.keypoints_num).uniform_() < noise_rate
 
     def __len__(self):
         return len(self.data)
