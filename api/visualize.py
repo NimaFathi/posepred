@@ -135,8 +135,7 @@ def visualize(cfg: DictConfig):
         if m is not None and m.is_cuda:
             masks[i] = m.detach().cpu()
 
-    visualizer = Visualizer(dataset_name=cfg.dataset_type, parent_dir=os.getcwd(),
-                            images_dir=cfg.images_dir)
+    visualizer = Visualizer(dataset_name=cfg.dataset_type, parent_dir=os.getcwd(), images_dir=cfg.images_dir)
     gif_name = '_'.join((cfg.model.type, cfg.dataset.split("/")[-1], str(index)))
     if cfg.data.keypoint_dim == 2:
         visualizer.visualizer_2D(names, poses, masks, images_path, gif_name)
