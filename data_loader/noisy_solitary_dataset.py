@@ -64,7 +64,7 @@ class NoisySolitaryDataset(Dataset):
                 raise Exception('dataset must include ' + key)
 
         if self.noise_rate == 'mask':
-            if not self.use_mask:
+            if 'observed_mask' not in seq.keys():
                 raise Exception('data-mask is not available. assign a value to noise_rate to get a uniform noise.')
             outputs['observed_noise'] = seq['observed_mask']
         else:

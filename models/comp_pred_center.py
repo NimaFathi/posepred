@@ -32,19 +32,19 @@ class CompPredCenter(nn.Module):
 
     def forward(self, inputs):
         pose = inputs['observed_pose']
-        bs, frames_n, features_n = pose.shape
-        first_frame = pose[:, 0:1, :].repeat(1, frames_n, 1)
-        pose = pose - first_frame
+        bs, obs_frames_n, features_n = pose.shape
+        first_frame = pose[:, 0:1, :]
+        pose = pose - first_frame.repeat(1, obs_frames_n, 1)
 
         # make data noisy
         if 'observed_noise' in inputs.keys():
             noise = inputs['observed_noise']
         else:
             raise Exception("This model requires noise. set is_noisy to True")
-        pose = pose.reshape(bs, frames_n, self.args.keypoints_num, self.args.keypoint_dim)
-        noise = noise.reshape(bs, frames_n, self.args.keypoints_num, 1).repeat(1, 1, 1, self.args.keypoint_dim)
-        const = (torch.zeros_like(noise, dtype=torch.float) * (-1000)).to(self.args.device)
-        noisy_pose = torch.where(noise == 1, const, pose).reshape(bs, frames_n, -1)
+        pose = pose.reshape(bs, obs_frames_n, self.args.keypoints_num, self.args.keypoint_dim)
+        noise = noise.reshape(bs, obs_frames_n, self.args.keypoints_num, 1).repeat(1, 1, 1, self.args.keypoint_dim)
+        const = (torch.ones_like(noise, dtype=torch.float) * (-1000)).to(self.args.device)
+        noisy_pose = torch.where(noise == 1, const, pose).reshape(bs, obs_frames_n, -1)
 
         # velocity encoder
         (hidden_p, cell_p) = self.pose_encoder(noisy_pose.permute(1, 0, 2))
@@ -64,12 +64,12 @@ class CompPredCenter(nn.Module):
         # velocity decoder
         zeros = torch.zeros_like(cell_p)
         pred_pose_center = self.pose_decoder(noisy_pose[..., -1, :], hidden_p, zeros)
-        pred_pose = pred_pose_center + first_frame[:, :self.args.pred_frames_num, :]
+        pred_pose = pred_pose_center + first_frame.repeat(1, self.args.pred_frames_num, 1)
 
         # completion
         zeros = torch.zeros_like(cell_p)
         comp_pose_center = self.completion(noisy_pose, hidden_p, zeros)
-        comp_pose = comp_pose_center + first_frame
+        comp_pose = comp_pose_center + first_frame.repeat(1, obs_frames_n, 1)
 
         outputs = {'pred_pose': pred_pose, 'pred_pose_center': pred_pose_center, 'comp_pose': comp_pose,
                    'comp_pose_center': comp_pose_center, 'mean': mean, 'std': std, 'noise': noise}
