@@ -47,9 +47,6 @@ class CompPredVel(nn.Module):
         noise = noise.reshape(bs, frames_n, self.args.keypoints_num, 1).repeat(1, 1, 1, self.args.keypoint_dim)
         const = (torch.ones_like(noise, dtype=torch.float) * (-1000)).to(self.args.device)
         noisy_vel = torch.where(noise == 1, const, vel).reshape(bs, frames_n, -1)
-        print(torch.sum(noisy_vel == -1000) / torch.numel(noisy_vel))
-        print('-' * 100)
-        exit()
 
         # velocity encoder
         (hidden_vel, cell_vel) = self.vel_encoder(noisy_vel.permute(1, 0, 2))
