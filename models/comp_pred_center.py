@@ -1,8 +1,5 @@
 import torch
 import torch.nn as nn
-import numpy as np
-
-from utils.others import pose_from_vel
 
 
 class CompPredCenter(nn.Module):
@@ -40,16 +37,14 @@ class CompPredCenter(nn.Module):
         pose = pose - first_frame
 
         # make data noisy
-        if self.args.is_noisy:
-            mask = inputs['observed_noise']
-        elif self.args.use_mask:
-            mask = inputs['observed_mask']
+        if 'observed_noise' in inputs.keys():
+            noise = inputs['observed_noise']
         else:
-            raise Exception("Specific either data-mask or noise to run this model.")
+            raise Exception("This model requires noise.")
         pose = pose.reshape(bs, frames_n, self.args.keypoints_num, self.args.keypoint_dim)
-        mask = mask.reshape(bs, frames_n, self.args.keypoints_num, 1).repeat(1, 1, 1, self.args.keypoint_dim)
-        const = (torch.zeros_like(mask, dtype=torch.float) * (-1000)).to(self.args.device)
-        noisy_pose = torch.where(mask == 1, const, pose).reshape(bs, frames_n, -1)
+        noise = noise.reshape(bs, frames_n, self.args.keypoints_num, 1).repeat(1, 1, 1, self.args.keypoint_dim)
+        const = (torch.zeros_like(noise, dtype=torch.float) * (-1000)).to(self.args.device)
+        noisy_pose = torch.where(noise == 1, const, pose).reshape(bs, frames_n, -1)
 
         # velocity encoder
         (hidden_p, cell_p) = self.pose_encoder(noisy_pose.permute(1, 0, 2))
@@ -77,7 +72,7 @@ class CompPredCenter(nn.Module):
         comp_pose = comp_pose_center + first_frame
 
         outputs = {'pred_pose': pred_pose, 'pred_pose_center': pred_pose_center, 'comp_pose': comp_pose,
-                   'comp_pose_center': comp_pose_center, 'mean': mean, 'std': std, 'mask': mask}
+                   'comp_pose_center': comp_pose_center, 'mean': mean, 'std': std, 'noise': noise}
 
         if self.args.use_mask:
             outputs['pred_mask'] = inputs['observed_mask'][:, -1:, :].repeat(1, self.args.pred_frames_num, 1)

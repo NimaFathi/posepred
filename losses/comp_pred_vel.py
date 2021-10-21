@@ -24,8 +24,8 @@ class CompPredVel(nn.Module):
 
         # completion loss
         bs, frames_n, featurs_n = observed_vel.shape
-        mask = model_outputs['mask'].reshape(bs, frames_n, -1)
-        final_comp = torch.where(mask == 1, model_outputs['comp_vel'], observed_vel)
+        noise = model_outputs['noise'].reshape(bs, frames_n, -1)
+        final_comp = torch.where(noise == 1, model_outputs['comp_vel'], observed_vel)
         comp_vel_loss = self.mse2(final_comp, observed_vel)
         comp_pose_ade = ADE(model_outputs['comp_pose'], input_data['observed_pose'][:, 1:, :], self.args.keypoint_dim)
 

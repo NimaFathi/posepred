@@ -1,6 +1,5 @@
 import torch
 import torch.nn as nn
-import numpy as np
 
 from utils.others import pose_from_vel
 
@@ -39,16 +38,14 @@ class CompPredVel(nn.Module):
         bs, frames_n, features_n = vel.shape
 
         # make data noisy
-        if self.args.is_noisy:
-            mask = inputs['observed_noise'][:, 1:, :]
-        elif self.args.use_mask:
-            mask = inputs['observed_mask'][:, 1:, :]
+        if 'observed_noise' in inputs.keys():
+            noise = inputs['observed_noise']
         else:
-            raise Exception("Specific either data-mask or noise to run this model.")
+            raise Exception("This model requires noise.")
         vel = vel.reshape(bs, frames_n, self.args.keypoints_num, self.args.keypoint_dim)
-        mask = mask.reshape(bs, frames_n, self.args.keypoints_num, 1).repeat(1, 1, 1, self.args.keypoint_dim)
-        const = (torch.zeros_like(mask, dtype=torch.float) * (-1000)).to(self.args.device)
-        noisy_vel = torch.where(mask == 1, const, vel).reshape(bs, frames_n, -1)
+        noise = noise.reshape(bs, frames_n, self.args.keypoints_num, 1).repeat(1, 1, 1, self.args.keypoint_dim)
+        const = (torch.zeros_like(noise, dtype=torch.float) * (-1000)).to(self.args.device)
+        noisy_vel = torch.where(noise == 1, const, vel).reshape(bs, frames_n, -1)
 
         # velocity encoder
         (hidden_vel, cell_vel) = self.vel_encoder(noisy_vel.permute(1, 0, 2))
@@ -76,7 +73,7 @@ class CompPredVel(nn.Module):
         comp_pose = pose_from_vel(comp_vel, pose[..., 0, :])
 
         outputs = {'pred_pose': pred_pose, 'pred_vel': pred_vel, 'comp_pose': comp_pose, 'comp_vel': comp_vel,
-                   'mean': mean, 'std': std, 'mask': mask}
+                   'mean': mean, 'std': std, 'noise': noise}
 
         if self.args.use_mask:
             outputs['pred_mask'] = inputs['observed_mask'][:, -1:, :].repeat(1, self.args.pred_frames_num, 1)

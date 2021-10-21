@@ -1,6 +1,5 @@
 keypoint_dim: ${keypoint_dim}
 pred_frames_num:
 keypoints_num:
-is_noisy: ${is_noisy}
 use_mask: ${use_mask}
 device: ${device}

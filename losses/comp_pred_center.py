@@ -23,8 +23,8 @@ class CompPredCenter(nn.Module):
         # completion loss
         bs, frames_n, featurs_n = observed_pose.shape
         obs_pose_center = observed_pose - observed_pose[:, 0, :].repeat(1, frames_n.shape[1], 1)
-        mask = model_outputs['mask'].reshape(bs, frames_n, -1)
-        final_comp = torch.where(mask == 1, model_outputs['comp_pose_center'], obs_pose_center)
+        noise = model_outputs['noise'].reshape(bs, frames_n, -1)
+        final_comp = torch.where(noise == 1, model_outputs['comp_pose_center'], obs_pose_center)
         comp_pose_loss = self.mse2(final_comp, obs_pose_center)
         comp_pose_ade = ADE(model_outputs['comp_pose'], input_data['observed_pose'], self.args.keypoint_dim)
 
