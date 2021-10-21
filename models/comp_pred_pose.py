@@ -41,7 +41,7 @@ class CompPredPose(nn.Module):
             raise Exception("This model requires noise. set is_noisy to True")
         pose = pose.reshape(bs, frames_n, self.args.keypoints_num, self.args.keypoint_dim)
         noise = noise.reshape(bs, frames_n, self.args.keypoints_num, 1).repeat(1, 1, 1, self.args.keypoint_dim)
-        const = (torch.ones_like(noise, dtype=torch.float) * (-1000)).to(self.args.device)
+        const = (torch.ones_like(noise, dtype=torch.float) * (-1000))
         noisy_pose = torch.where(noise == 1, const, pose).reshape(bs, frames_n, -1)
 
         # velocity encoder

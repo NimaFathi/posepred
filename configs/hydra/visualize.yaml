@@ -1,6 +1,6 @@
 defaults:
   - data: main
-  - model:
+  - model: ???
   - _self_
 
 dataset: ???

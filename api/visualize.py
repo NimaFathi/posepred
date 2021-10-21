@@ -20,11 +20,6 @@ logger = logging.getLogger(__name__)
 @hydra.main(config_path=HYDRA_PATH, config_name="visualize")
 def visualize(cfg: DictConfig):
     assert cfg.dataset_type in DATASETS, 'dataset_type chioces: ' + str(DATASETS)
-    if cfg.load_path is None and cfg.model is None:
-        msg = 'either specify a load_path or config a model.'
-        logger.error(msg)
-        raise Exception(msg)
-
     showing = cfg.showing.strip().split('-')
     for k in showing:
         if k not in VISUALIZING_TYPES:
