@@ -40,7 +40,8 @@ def visualize(cfg: DictConfig):
     for key in ['observed_pose', 'future_pose', 'observed_mask', 'future_mask', 'observed_noise']:
         if key in data.keys():
             data[key] = data[key].unsqueeze(0)
-
+    print(data['video_section'])
+    exit()
     # prepare model
     if cfg.load_path is not None:
         model, _, _, _, _, _, _ = load_snapshot(cfg.load_path)

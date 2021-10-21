@@ -75,6 +75,8 @@ class NoisySolitaryDataset(Dataset):
             outputs['future_quaternion_pose'] = torch.tensor(seq['future_quaternion_pose'])
 
         if self.is_visualizing:
+            if 'video_section' in seq.keys():
+                outputs['video_section'] = seq['video_section']
             if 'observed_image_path' in seq.keys():
                 outputs['observed_image'] = seq['observed_image_path']
             if 'future_image_path' in seq.keys():
