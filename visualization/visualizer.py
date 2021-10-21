@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from matplotlib.pyplot import AutoLocator
-from pygifsicle import optimize
+# from pygifsicle import optimize
 
 from utils.save_load import setup_visualization_dir
 from visualization.color_generator import color_generator
@@ -179,7 +179,7 @@ class Visualizer:
                 writer.append_data(image)
         for filename in set(filenames):
             os.remove(filename)
-        optimize(os.path.join(save_dir, f'{gif_name}.gif'))
+        # optimize(os.path.join(save_dir, f'{gif_name}.gif'))
         logger.info("end 2D visualizing.")
 
     def __generate_3D_figure(self, all_poses, ax):
@@ -234,7 +234,7 @@ class Visualizer:
         y_mean = (max(axes_limit[1]) + min(axes_limit[1])) * 0.5
         z_mean = (max(axes_limit[2]) + min(axes_limit[2])) * 0.5
 
-        # axe.view_init(elev=rotation_3D[self.dataset_name][0], azim=rotation_3D[self.dataset_name][1])
+        axe.view_init(elev=rotation_3D[self.dataset_name][0], azim=rotation_3D[self.dataset_name][1])
         axe.set_xlim(xmin=x_mean - max_range, xmax=x_mean + max_range)
         axe.set_ylim(ymin=y_mean - max_range, ymax=y_mean + max_range)
         axe.set_zlim(zmin=z_mean - max_range, zmax=z_mean + max_range)
