@@ -39,7 +39,7 @@ class CompPredVel(nn.Module):
 
         # make data noisy
         if 'observed_noise' in inputs.keys():
-            noise = inputs['observed_noise']
+            noise = inputs['observed_noise'][:, 1:, :]
         else:
             raise Exception("This model requires noise. set is_noisy to True")
         vel = vel.reshape(bs, frames_n, self.args.keypoints_num, self.args.keypoint_dim)

@@ -37,7 +37,7 @@ class NoisySolitaryDataset(Dataset):
             self.future_frames_num = seq['future_pose'].shape[-2]
 
         self.noise_rate = noise_rate
-        if type(noise_rate) == 'float':
+        if isinstance(noise_rate, float):
             self.noise = torch.FloatTensor(len(data), self.obs_frames_num, self.keypoints_num).uniform_() < noise_rate
         elif noise_rate != 'mask':
             raise Exception('''noise_rate must be either a float number or the term 'mask' ''')
