@@ -33,7 +33,7 @@ class CompPredCenter(nn.Module):
     def forward(self, inputs):
         pose = inputs['observed_pose']
         bs, frames_n, features_n = pose.shape
-        first_frame = pose[:, 0, :].repeat(1, frames_n, 1)
+        first_frame = pose[:, 0:1, :].repeat(1, frames_n, 1)
         pose = pose - first_frame
 
         # make data noisy
@@ -64,7 +64,7 @@ class CompPredCenter(nn.Module):
         # velocity decoder
         zeros = torch.zeros_like(cell_p)
         pred_pose_center = self.pose_decoder(noisy_pose[..., -1, :], hidden_p, zeros)
-        pred_pose = pred_pose_center + first_frame
+        pred_pose = pred_pose_center + first_frame[:, :self.args.pred_frames_num, :]
 
         # completion
         zeros = torch.zeros_like(cell_p)
