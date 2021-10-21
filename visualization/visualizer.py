@@ -290,13 +290,17 @@ class Visualizer:
     @staticmethod
     def __clean_data(input_data: list):
         new_data = []
-        max_len = len(input_data[0])
+        max_len = 0
 
         for i in range(len(input_data)):
+            if input_data[i] is None:
+                continue
             if len(input_data[i]) > max_len:
                 max_len = len(input_data[i])
         for i, pose in enumerate(input_data):
-            if len(input_data[i]) < max_len:
+            if input_data[i] is None:
+                continue
+            elif len(input_data[i]) < max_len:
                 size = [1 for _ in range(len(pose.shape))]
                 size[0] = max_len - len(input_data[i])
                 last_row = pose[-1:]
@@ -308,6 +312,8 @@ class Visualizer:
         return new_data
 
     def __generate_images_path(self, images_paths):
+        if self.images_dir is None:
+            return []
         new_images_path = []
         max_len = len(images_paths[0])
         for i in range(len(images_paths)):
