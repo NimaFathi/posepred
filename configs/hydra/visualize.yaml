@@ -4,17 +4,17 @@ defaults:
   - _self_
 
 dataset: ???
-dataset_name: ???
-ground_truth: false
-device: cuda
+dataset_type: ???
 keypoint_dim: ???
+showing: future, predicted
 is_noisy: false
 use_mask: false
 pred_frames_num:
 load_path:
 index:
-completion: false
+device: cuda
 images_dir:
 save_dir:
+
 data:
   is_visualizing: true

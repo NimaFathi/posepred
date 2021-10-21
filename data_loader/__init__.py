@@ -8,6 +8,7 @@ from .noisy_solitary_dataset import NoisySolitaryDataset
 
 DATASETS = ['somof_posetrack', 'posetrack', 'somof_3dpw', '3dpw', 'jta', 'jaad', 'pie', 'human3.6m']
 DATA_TYPES = ['train', 'validation', 'test']
+VISUALIZING_TYPES = ['observed', 'future', 'predicted', 'completed']
 
 
 def get_dataloader(dataset_name, args):
