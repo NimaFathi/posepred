@@ -92,10 +92,10 @@ class Visualizer:
                 self.__generate_3D_figure(
                     i, all_poses=poses[i][j], ax=axarr[j][i]
                 )
-                for _ in range(4):
+                for _ in range(2):
                     filenames.append(os.path.join(save_dir, f'{j}.png'))
                 if j == len(poses[0]) - 1:
-                    for _ in range(5):
+                    for _ in range(3):
                         filenames.append(os.path.join(save_dir, f'{j}.png'))
                 plt.title(names[i])
                 plt.savefig(os.path.join(save_dir, f'{j}.png'), dpi=100)
@@ -162,10 +162,10 @@ class Visualizer:
                 axarr.append(fig.add_subplot(1, subfig_size, i + 1))
                 plt.title(names[i])
                 axarr[i].imshow(images[i][plt_index])
-            for i in range(4):
+            for _ in range(2):
                 filenames.append(os.path.join(save_dir, f'{plt_index}.png'))
             if plt_index == len(poses[0]) - 1:
-                for i in range(5):
+                for _ in range(3):
                     filenames.append(os.path.join(save_dir, f'{plt_index}.png'))
             plt.savefig(os.path.join(save_dir, f'{plt_index}.png'), dpi=100)
             plt.close(fig)
