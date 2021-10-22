@@ -222,11 +222,18 @@ class Visualizer:
         axe.xaxis.set_major_locator(AutoLocator())
         axe.yaxis.set_major_locator(AutoLocator())
         axe.zaxis.set_major_locator(AutoLocator())
+        range_axes = [(max_axes[i] - min_axes[i]) for i in range(len(max_axes))]
+        true_range = [
+            (min_axes[i] - (max(range_axes) - range_axes[i]) / 2, max_axes[i] + (max(range_axes) - range_axes[i]) / 2)
+            for i in range(len(max_axes))]
         axe.set_aspect('auto')
         axe.view_init(elev=rotation_3D[self.dataset_name][0], azim=rotation_3D[self.dataset_name][1])
-        axe.set_xlim(xmin=min_axes[0], xmax=max_axes[0])
-        axe.set_ylim(ymin=min_axes[2], ymax=max_axes[2])
-        axe.set_zlim(zmin=min_axes[1], zmax=max_axes[1])
+        axe.set_xlim(xmin=true_range[0][0],
+                     xmax=true_range[0][1])
+        axe.set_ylim(ymin=true_range[2][0],
+                     ymax=true_range[2][1])
+        axe.set_zlim(zmin=true_range[1][0],
+                     zmax=true_range[1][1])
 
     @staticmethod
     def __scene_to_image(pose, cam_ext, cam_int):
