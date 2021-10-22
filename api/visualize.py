@@ -1,18 +1,17 @@
-import os
 import logging
-import hydra
-from omegaconf import DictConfig
+import os
 import random
+
+import hydra
 import torch
+from omegaconf import DictConfig
 
 from data_loader import get_dataloader, DATASETS, VISUALIZING_TYPES
 from models import MODELS
-from utils.save_load import load_snapshot
-from utils.others import dict_to_device
-from visualization.visualizer import Visualizer
-
 from path_definition import HYDRA_PATH
-from path_definition import ROOT_DIR
+from utils.others import dict_to_device
+from utils.save_load import load_snapshot
+from visualization.visualizer import Visualizer
 
 logger = logging.getLogger(__name__)
 
