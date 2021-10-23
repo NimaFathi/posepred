@@ -129,8 +129,11 @@ def visualize(cfg: DictConfig):
         if m is not None and m.is_cuda:
             masks[i] = m.detach().cpu()
 
-    observed_noise = data['observed_noise'].squeeze(0) if cfg.data.is_interactive else data['observed_noise']
-    observed_noise = observed_noise.detach().cpu() if observed_noise.is_cuda else observed_noise
+    if cfg.is_noisy:
+        observed_noise = data['observed_noise'].squeeze(0) if cfg.data.is_interactive else data['observed_noise']
+        observed_noise = observed_noise.detach().cpu() if observed_noise.is_cuda else observed_noise
+    else:
+        observed_noise = None
 
     visualizer = Visualizer(dataset_name=cfg.dataset_type, parent_dir=os.getcwd(), images_dir=cfg.images_dir)
     gif_name = '_'.join((cfg.model.type, cfg.dataset.split("/")[-1], str(index)))
