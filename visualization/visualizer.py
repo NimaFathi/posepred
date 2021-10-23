@@ -148,6 +148,9 @@ class Visualizer:
             observed_noise = []
         else:
             observed_noise = self.__clean_data(observed_noise)
+        print(observed_noise.__len__())
+        print(observed_noise[0].shape)
+        exit()
         if images_paths is None or images_paths == []:
             images_paths = []
         else:
