@@ -76,7 +76,7 @@ class Visualizer:
                     new_group_pose.append(self.__generate_JTA_2D_pose(group_pose[j].unsqueeze(0)).tolist())
                 new_pose.append(torch.tensor(new_group_pose).squeeze(1))
             self.visualizer_2D(names=names, poses=new_pose, masks=[], images_paths=images_paths, fig_size=fig_size,
-                               gif_name=gif_name + "_2D_overlay")
+                               observed_noise=observed_noise, gif_name=gif_name + "_2D_overlay")
         logger.info("start 3D visualizing.")
         max_axes = []
         min_axes = []
