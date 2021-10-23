@@ -16,5 +16,5 @@ loss:
   type: comp_pred_center
   pred_weight: 1
   comp_weight: 1
-  kl_weight: 1
+  kl_weight: 0.001
   keypoint_dim: ${keypoint_dim}

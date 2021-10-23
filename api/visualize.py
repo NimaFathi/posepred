@@ -129,12 +129,15 @@ def visualize(cfg: DictConfig):
         if m is not None and m.is_cuda:
             masks[i] = m.detach().cpu()
 
+    observed_noise = data['observed_noise'].squeeze(0) if cfg.data.is_interactive else data['observed_noise']
+    observed_noise = observed_noise.detach().cpu() if observed_noise.is_cuda else observed_noise
+
     visualizer = Visualizer(dataset_name=cfg.dataset_type, parent_dir=os.getcwd(), images_dir=cfg.images_dir)
     gif_name = '_'.join((cfg.model.type, cfg.dataset.split("/")[-1], str(index)))
     if cfg.data.keypoint_dim == 2:
-        visualizer.visualizer_2D(names, poses, masks, images_path, gif_name)
+        visualizer.visualizer_2D(names, poses, masks, images_path, observed_noise, gif_name)
     else:
-        visualizer.visualizer_3D(names, poses, cam_exs, cam_in, images_path, gif_name)
+        visualizer.visualizer_3D(names, poses, cam_exs, cam_in, images_path, observed_noise, gif_name)
 
 
 if __name__ == '__main__':
