@@ -132,8 +132,8 @@ class Decoder(nn.Module):
 
 
 class Completion(nn.Module):
-    def __init__(self, input_size, output_size, hidden_size, n_layers, dropout, activation_type, autoregressive,
-                 hardtanh_limit=None, device='cpu'):
+    def __init__(self, input_size, output_size, hidden_size, n_layers, dropout, autoregressive, activation_type,
+                 hardtanh_limit, device):
         super().__init__()
         self.device = device
         self.autoregressive = autoregressive

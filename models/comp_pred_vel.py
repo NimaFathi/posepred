@@ -25,7 +25,7 @@ class CompPredVel(nn.Module):
             nn.Linear(args.hidden_size, args.hidden_size),
             nn.ReLU()
         )
-
+        assert args.activation_type in ['hardtanh', 'sigmoid', 'none'], 'invalid activation_function.'
         self.vel_decoder = Decoder(args.pred_frames_num, input_size, output_size, args.hidden_size, args.n_layers,
                                    args.dropout_pose_dec, args.activation_type, args.hardtanh_limit, device=args.device)
 
