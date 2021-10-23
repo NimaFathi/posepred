@@ -132,6 +132,7 @@ def visualize(cfg: DictConfig):
     if cfg.is_noisy:
         observed_noise = data['observed_noise'].squeeze(0) if cfg.data.is_interactive else data['observed_noise']
         observed_noise = observed_noise.detach().cpu() if observed_noise.is_cuda else observed_noise
+        observed_noise = observed_noise.squeeze(0)
     else:
         observed_noise = None
 
