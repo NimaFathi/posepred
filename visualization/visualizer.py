@@ -1,5 +1,4 @@
 import logging
-import math
 import os
 
 import cv2
@@ -8,11 +7,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from matplotlib.pyplot import AutoLocator
-from pygifsicle import optimize
 
 from utils.save_load import setup_visualization_dir
 from visualization.color_generator import color_generator
-from visualization.utils import keypoint_connections, jta_cam_int, rotation_3D
+from visualization.utils import keypoint_connections, jta_cam_int, rotation_3D, axes_order_3D
+
+# from pygifsicle import optimize
 
 logger = logging.getLogger(__name__)
 
@@ -76,12 +76,9 @@ class Visualizer:
         logger.info("start 3D visualizing.")
         max_axes = []
         min_axes = []
-        limit_axes = []
         for i in range(3):
-            max_axes.append(int(max(map(lambda sub_fig_pose: torch.max(sub_fig_pose[:, :, i::3]), poses))))
-            min_axes.append(int(min(map(lambda sub_fig_pose: torch.min(sub_fig_pose[:, :, i::3]), poses))))
-        for i in range(3):
-            limit_axes.append([-1 * math.fabs(min_axes[i]) - 1, math.fabs(max_axes[i]) + 1])
+            max_axes.append(int(max(map(lambda sub_fig_pose: torch.max(sub_fig_pose[:, :, i::3]) + 1, poses))))
+            min_axes.append(int(min(map(lambda sub_fig_pose: torch.min(sub_fig_pose[:, :, i::3]) - 1, poses))))
         comparison_number = len(poses)
         axarr = []
         filenames = []
@@ -91,15 +88,14 @@ class Visualizer:
             axarr.append([])
             for i in range(len(poses)):
                 axarr[j].append(fig.add_subplot(1, comparison_number, i + 1, projection='3d'))
-                self.__create_plot(axarr[j][i], limit_axes)
+                self.__create_plot(axarr[j][i], max_axes=max_axes, min_axes=min_axes)
                 self.__generate_3D_figure(
-                    all_poses=poses[i][j],
-                    ax=axarr[j][i]
+                    i, all_poses=poses[i][j], ax=axarr[j][i]
                 )
-                for _ in range(4):
+                for _ in range(2):
                     filenames.append(os.path.join(save_dir, f'{j}.png'))
                 if j == len(poses[0]) - 1:
-                    for _ in range(5):
+                    for _ in range(3):
                         filenames.append(os.path.join(save_dir, f'{j}.png'))
                 plt.title(names[i])
                 plt.savefig(os.path.join(save_dir, f'{j}.png'), dpi=100)
@@ -152,7 +148,7 @@ class Visualizer:
             for j, pose in enumerate(pose_group):
                 images[i].append(
                     self.__generate_2D_figure(
-                        all_poses=pose,
+                        color_num=i, all_poses=pose,
                         all_masks=masks[i][j] if i < len(masks) and j < len(masks[i]) else None,
                         image_path=images_paths[i][j] if i < len(images_paths) and j < len(images_paths[i]) else None
                     )
@@ -166,10 +162,10 @@ class Visualizer:
                 axarr.append(fig.add_subplot(1, subfig_size, i + 1))
                 plt.title(names[i])
                 axarr[i].imshow(images[i][plt_index])
-            for i in range(4):
+            for _ in range(2):
                 filenames.append(os.path.join(save_dir, f'{plt_index}.png'))
             if plt_index == len(poses[0]) - 1:
-                for i in range(5):
+                for _ in range(3):
                     filenames.append(os.path.join(save_dir, f'{plt_index}.png'))
             plt.savefig(os.path.join(save_dir, f'{plt_index}.png'), dpi=100)
             plt.close(fig)
@@ -179,27 +175,25 @@ class Visualizer:
                 writer.append_data(image)
         for filename in set(filenames):
             os.remove(filename)
-        optimize(os.path.join(save_dir, f'{gif_name}.gif'))
+        # optimize(os.path.join(save_dir, f'{gif_name}.gif'))
         logger.info("end 2D visualizing.")
 
-    def __generate_3D_figure(self, all_poses, ax):
+    def __generate_3D_figure(self, color_num, all_poses, ax):
         num_keypoints = all_poses.shape[-1] // 3
         poses = all_poses.reshape(all_poses.shape[0], num_keypoints, 3)
         visualizing_keypoints = np.array(np.unique(keypoint_connections[self.dataset_name]))
         for i, keypoints in enumerate(poses):
             for ie, edge in enumerate(keypoint_connections[self.dataset_name]):
-                m = ax.plot(xs=[keypoints[edge, 0][0], keypoints[edge, 0][1]],
-                            zs=[keypoints[edge, 1][0], keypoints[edge, 1][1]],
-                            ys=[keypoints[edge, 2][0], keypoints[edge, 2][1]], linewidth=2, label=r'$x=y=z$', zdir='z')
-            # m.set_xdata(keypoints[visualizing_keypoints, 1].detach().cpu().numpy())
-            # m.set_ydata(keypoints[visualizing_keypoints, 0].detach().cpu().numpy())
-            # m.set_3d_properties(keypoints[visualizing_keypoints, 2].detach().cpu().numpy(), zdir='z')
+                ax.plot(xs=[keypoints[edge, 0][0], keypoints[edge, 0][1]],
+                        zs=[keypoints[edge, 1][0], keypoints[edge, 1][1]],
+                        ys=[keypoints[edge, 2][0], keypoints[edge, 2][1]], linewidth=2, label=r'$x=y=z$',
+                        color=np.array(color_generator.get_color(color_num)) / 255)
+            ax.scatter(xs=keypoints[visualizing_keypoints, axes_order_3D[self.dataset_name][0]],
+                       ys=keypoints[visualizing_keypoints, axes_order_3D[self.dataset_name][1]],
+                       zs=keypoints[visualizing_keypoints, axes_order_3D[self.dataset_name][2]], s=2,
+                       color=np.array([105, 105, 105]) / 255)
 
-            ax.scatter(xs=keypoints[visualizing_keypoints, 0].detach().cpu().numpy(),
-                       zs=keypoints[visualizing_keypoints, 1].detach().cpu().numpy(),
-                       ys=keypoints[visualizing_keypoints, 2].detach().cpu().numpy(), s=2)
-
-    def __generate_2D_figure(self, all_poses, all_masks=None, image_path=None):
+    def __generate_2D_figure(self, color_num, all_poses, all_masks=None, image_path=None):
         num_keypoints = all_poses.shape[-1] // 2
         poses = all_poses.reshape(all_poses.shape[0], num_keypoints, 2)
         if image_path is None:
@@ -221,23 +215,25 @@ class Visualizer:
                         all_masks[i][edge[1]] != 0):
                     cv2.line(image, (int(keypoints[edge, 0][0]), int(keypoints[edge, 1][0])),
                              (int(keypoints[edge, 0][1]), int(keypoints[edge, 1][1])),
-                             color_generator.get_color(ie), 4, lineType=cv2.LINE_AA)
+                             color_generator.get_color(color_num), 4, lineType=cv2.LINE_AA)
         return image
 
-    def __create_plot(self, axe, axes_limit):
+    def __create_plot(self, axe, max_axes, min_axes):
         axe.xaxis.set_major_locator(AutoLocator())
         axe.yaxis.set_major_locator(AutoLocator())
         axe.zaxis.set_major_locator(AutoLocator())
+        range_axes = [(max_axes[i] - min_axes[i]) for i in range(len(max_axes))]
+        true_range = [
+            (min_axes[i] - (max(range_axes) - range_axes[i]) / 2, max_axes[i] + (max(range_axes) - range_axes[i]) / 2)
+            for i in range(len(max_axes))]
         axe.set_aspect('auto')
-        max_range = np.array([max(axes_limit[i]) - min(axes_limit[i]) for i in range(len(axes_limit))]).max() / 2.0
-        x_mean = (max(axes_limit[0]) + min(axes_limit[0])) * 0.5
-        y_mean = (max(axes_limit[1]) + min(axes_limit[1])) * 0.5
-        z_mean = (max(axes_limit[2]) + min(axes_limit[2])) * 0.5
-
-        # axe.view_init(elev=rotation_3D[self.dataset_name][0], azim=rotation_3D[self.dataset_name][1])
-        axe.set_xlim(xmin=x_mean - max_range, xmax=x_mean + max_range)
-        axe.set_ylim(ymin=y_mean - max_range, ymax=y_mean + max_range)
-        axe.set_zlim(zmin=z_mean - max_range, zmax=z_mean + max_range)
+        axe.view_init(elev=rotation_3D[self.dataset_name][0], azim=rotation_3D[self.dataset_name][1])
+        axe.set_xlim(xmin=true_range[0][0],
+                     xmax=true_range[0][1])
+        axe.set_ylim(ymin=true_range[2][0],
+                     ymax=true_range[2][1])
+        axe.set_zlim(zmin=true_range[1][0],
+                     zmax=true_range[1][1])
 
     @staticmethod
     def __scene_to_image(pose, cam_ext, cam_int):
