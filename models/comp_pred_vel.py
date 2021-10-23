@@ -71,7 +71,7 @@ class CompPredVel(nn.Module):
         # completion
         zeros = torch.zeros_like(cell_vel)
         comp_vel = self.completion(noisy_vel, hidden_vel, zeros)
-        comp_pose = pose.mount()
+        comp_pose = torch.clone(pose)
         for i in range(comp_pose.shape[-2]):
             comp_pose[..., i + 1, :] = comp_pose[..., i, :] + comp_vel[..., i, :]
 
