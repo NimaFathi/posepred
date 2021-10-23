@@ -65,7 +65,8 @@ class Visualizer:
                     new_group_pose.append(
                         self.__scene_to_image(group_pose[j].unsqueeze(0), cam_ext[i], cam_int).tolist())
                 new_pose.append(torch.tensor(new_group_pose).squeeze(1))
-            self.visualizer_2D(names=names, poses=new_pose, masks=[], images_paths=images_paths, fig_size=fig_size,
+            self.visualizer_2D(names=names, poses=new_pose, masks=[], images_paths=images_paths,
+                               observed_noise=observed_noise, fig_size=fig_size,
                                gif_name=gif_name + '_2D_overlay')
         if self.dataset_name == 'jta':
             new_pose = []
