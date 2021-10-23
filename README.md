@@ -3,10 +3,8 @@ Pospred is an open-source toolbox for pose prediction based on PyTorch. It is a 
 
 <p float="left">
   <img src="https://user-images.githubusercontent.com/33596552/138102754-5bef72df-ea48-4d17-a932-611293f0bc5a.gif" alt="observation" width="500">  
-  
-  <img src="https://userpip install hydra-images.githubusercontent.com/33596552/138102745-f6b5c7a0-ee14-40ef-907f-b3ebb98ae08f.gif" alt="prediction" width="500"> 
-  
-</p>
+  <img src="https://user-images.githubusercontent.com/33596552/138102745-f6b5c7a0-ee14-40ef-907f-b3ebb98ae08f.gif" alt="prediction" width="500">  
+</p> -->
 
 
 ```
