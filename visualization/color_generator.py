@@ -5,8 +5,8 @@ class ColorGenerator:
     def __init__(self):
         self.points = []
         self.colors = []
-        self.id_to_color = {0: [0, 191, 255], 1: [255, 69, 0], 2: [154, 205, 50], 3: [119, 136, 153], 4: [0, 255, 255],
-                            5: [255, 255, 224]}
+        self.id_to_color = {0: [0, 191, 255], 1: [90, 100, 100], 2: [154, 205, 50], 3: [119, 136, 153], 4: [0, 255, 255],
+                            5: [255, 69, 0]}
 
     def get_new_point(self):
         points = self.points
