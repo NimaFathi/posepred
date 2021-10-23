@@ -23,7 +23,7 @@ class Visualizer:
         self.images_dir = images_dir
         self.dataset_name = dataset_name
 
-    def visualizer_3D(self, names, poses, cam_ext, cam_int, images_paths, gif_name, fig_size=(16, 12)):
+    def visualizer_3D(self, names, poses, cam_ext, cam_int, images_paths, observed_noise, gif_name, fig_size=(16, 12)):
         """
             visualizer_3D(poses, images_paths, fig_size) -> None
                 @brief Draws a 3D figure with matplotlib (it can have multiple sub figures).
@@ -45,6 +45,9 @@ class Visualizer:
                     shape of images_paths is like: [num_comparisons, num_frames]
                     Ex: images_paths.shape = [3, 16] = means you want to compare 3 different groups of poses each have
                     16 images in it.
+                :param observed_noise: torch.Tensor or list of torch.Tensors
+                    shape of observed_noise is like: [nun_comparisons, num_frames (which we create gif upon it), num_persons(in each frame), num_keypoints]
+                    Ex: masks.shape = [3, 16, 5, 17] just like 'poses'. The only difference here: we have 1 noise for each joint
                 :param fig_size: tuple(size=2): size of matplotlib figure.
                     Ex: (8, 6)
                 :param gif_name: str: name of generated output .gif file
@@ -62,7 +65,8 @@ class Visualizer:
                     new_group_pose.append(
                         self.__scene_to_image(group_pose[j].unsqueeze(0), cam_ext[i], cam_int).tolist())
                 new_pose.append(torch.tensor(new_group_pose).squeeze(1))
-            self.visualizer_2D(names=names, poses=new_pose, masks=[], images_paths=images_paths, fig_size=fig_size,
+            self.visualizer_2D(names=names, poses=new_pose, masks=[], images_paths=images_paths,
+                               observed_noise=observed_noise, fig_size=fig_size,
                                gif_name=gif_name + '_2D_overlay')
         if self.dataset_name == 'jta':
             new_pose = []
@@ -72,8 +76,12 @@ class Visualizer:
                     new_group_pose.append(self.__generate_JTA_2D_pose(group_pose[j].unsqueeze(0)).tolist())
                 new_pose.append(torch.tensor(new_group_pose).squeeze(1))
             self.visualizer_2D(names=names, poses=new_pose, masks=[], images_paths=images_paths, fig_size=fig_size,
-                               gif_name=gif_name + "_2D_overlay")
+                               observed_noise=observed_noise, gif_name=gif_name + "_2D_overlay")
         logger.info("start 3D visualizing.")
+        if observed_noise is None or observed_noise == []:
+            observed_noise = []
+        else:
+            observed_noise = self.__clean_data(observed_noise)
         max_axes = []
         min_axes = []
         for i in range(3):
@@ -90,7 +98,7 @@ class Visualizer:
                 axarr[j].append(fig.add_subplot(1, comparison_number, i + 1, projection='3d'))
                 self.__create_plot(axarr[j][i], max_axes=max_axes, min_axes=min_axes)
                 self.__generate_3D_figure(
-                    i, all_poses=poses[i][j], ax=axarr[j][i]
+                    i, all_poses=poses[i][j], ax=axarr[j][i], all_noises=observed_noise[j] if j < len(observed_noise) else None
                 )
                 for _ in range(2):
                     filenames.append(os.path.join(save_dir, f'{j}.png'))
@@ -110,7 +118,7 @@ class Visualizer:
         # optimize(os.path.join(save_dir, f'{gif_name}.gif'))
         logger.info("end 3D visualizing.")
 
-    def visualizer_2D(self, names, poses, masks, images_paths, gif_name, fig_size=(24, 18)):
+    def visualizer_2D(self, names, poses, masks, images_paths, observed_noise, gif_name, fig_size=(24, 18)):
         """
              visualizer_2D(poses, masks, images_paths, fig_size) -> gif
                 @brief Draws a 2D figure with matplotlib (it can have multiple sub figures).
@@ -126,6 +134,9 @@ class Visualizer:
                     Ex: masks.shape = [3, 16, 5, 17] just like 'poses'. The only difference here: we have 1 mask for each joint
                 :param images_paths: list or numpy.array: paths to specified outputs (scenes).
                     Ex: images_paths.shape = [3, 16]
+                :param observed_noise: torch.Tensor or list of torch.Tensors
+                    shape of observed_noise is like: [1, num_frames (which we create gif upon it), num_keypoints]
+                    Ex: masks.shape = [16, 22] just like 'images_path'. The only difference here: we have 1 noise for each joint
                 :param fig_size: tuple(size=2): size of matplotlib figure.
                     Ex: (8.6)
                 :param gif_name: str: name of generated output .gif file
@@ -137,6 +148,10 @@ class Visualizer:
             masks = []
         else:
             masks = self.__clean_data(masks)
+        if observed_noise is None or observed_noise == []:
+            observed_noise = []
+        else:
+            observed_noise = self.__clean_data(observed_noise)
         if images_paths is None or images_paths == []:
             images_paths = []
         else:
@@ -150,6 +165,7 @@ class Visualizer:
                     self.__generate_2D_figure(
                         color_num=i, all_poses=pose,
                         all_masks=masks[i][j] if i < len(masks) and j < len(masks[i]) else None,
+                        all_noises=observed_noise[j] if j < len(observed_noise) else None,
                         image_path=images_paths[i][j] if i < len(images_paths) and j < len(images_paths[i]) else None
                     )
                 )
@@ -178,9 +194,11 @@ class Visualizer:
         # optimize(os.path.join(save_dir, f'{gif_name}.gif'))
         logger.info("end 2D visualizing.")
 
-    def __generate_3D_figure(self, color_num, all_poses, ax):
+    def __generate_3D_figure(self, color_num, all_poses, all_noises, ax):
         num_keypoints = all_poses.shape[-1] // 3
         poses = all_poses.reshape(all_poses.shape[0], num_keypoints, 3)
+        if all_noises is None or all_noises == []:
+            all_noises = torch.zeros(all_poses.shape[1] // 3)
         visualizing_keypoints = np.array(np.unique(keypoint_connections[self.dataset_name]))
         for i, keypoints in enumerate(poses):
             for ie, edge in enumerate(keypoint_connections[self.dataset_name]):
@@ -188,12 +206,14 @@ class Visualizer:
                         zs=[keypoints[edge, 1][0], keypoints[edge, 1][1]],
                         ys=[keypoints[edge, 2][0], keypoints[edge, 2][1]], linewidth=2, label=r'$x=y=z$',
                         color=np.array(color_generator.get_color(color_num)) / 255)
-            ax.scatter(xs=keypoints[visualizing_keypoints, axes_order_3D[self.dataset_name][0]],
-                       ys=keypoints[visualizing_keypoints, axes_order_3D[self.dataset_name][1]],
-                       zs=keypoints[visualizing_keypoints, axes_order_3D[self.dataset_name][2]], s=2,
-                       color=np.array([105, 105, 105]) / 255)
+            for k in visualizing_keypoints:
+                ax.scatter(xs=keypoints[k, axes_order_3D[self.dataset_name][0]],
+                           ys=keypoints[k, axes_order_3D[self.dataset_name][1]],
+                           zs=keypoints[k, axes_order_3D[self.dataset_name][2]], s=2,
+                           color=np.array([0, 255, 100]) / 255 if all_noises[k] == 0 else np.array(
+                               [255, 40, 0]) / 255)
 
-    def __generate_2D_figure(self, color_num, all_poses, all_masks=None, image_path=None):
+    def __generate_2D_figure(self, color_num, all_poses, all_masks=None, all_noises=None, image_path=None):
         num_keypoints = all_poses.shape[-1] // 2
         poses = all_poses.reshape(all_poses.shape[0], num_keypoints, 2)
         if image_path is None:
@@ -201,21 +221,25 @@ class Visualizer:
         else:
             image = cv2.imread(image_path)
         if all_masks is None:
-            all_masks = torch.ones(all_poses.shape[0], all_poses.shape[1] // 2)
+            all_masks = torch.zeros(all_poses.shape[0], all_poses.shape[1] // 2)
+        if all_noises is None or all_noises == []:
+            all_noises = torch.zeros(all_poses.shape[1] // 2)
         for i, keypoints in enumerate(poses):
             for keypoint in range(keypoints.shape[0]):
-                if all_masks[i][keypoint // 2] != 0:
+                for ie, edge in enumerate(keypoint_connections[self.dataset_name]):
+                    if not ((keypoints[edge, 0][0] <= 0 or keypoints[edge, 1][0] <= 0) or (
+                            keypoints[edge, 0][1] <= 0 or keypoints[edge, 1][1] <= 0)) and (
+                            all_masks[i][edge[0]] == 0) and (
+                            all_masks[i][edge[1]] == 0):
+                        ''
+                        cv2.line(image, (int(keypoints[edge, 0][0]), int(keypoints[edge, 1][0])),
+                                 (int(keypoints[edge, 0][1]), int(keypoints[edge, 1][1])),
+                                 color_generator.get_color(color_num), 4, lineType=cv2.LINE_AA)
+            for keypoint in range(keypoints.shape[0]):
+                if all_masks[i][keypoint // 2] == 0:
                     cv2.circle(image, (int(keypoints[keypoint, 0]), int(keypoints[keypoint, 1])), 3,
-                               (0, 255, 255), thickness=-1,
+                               (0, 255, 100) if all_noises[keypoint // 2] == 0 else (255, 50, 0), thickness=-1,
                                lineType=cv2.FILLED)
-            for ie, edge in enumerate(keypoint_connections[self.dataset_name]):
-                if not ((keypoints[edge, 0][0] <= 0 or keypoints[edge, 1][0] <= 0) or (
-                        keypoints[edge, 0][1] <= 0 or keypoints[edge, 1][1] <= 0)) and (
-                        all_masks[i][edge[0]] != 0) and (
-                        all_masks[i][edge[1]] != 0):
-                    cv2.line(image, (int(keypoints[edge, 0][0]), int(keypoints[edge, 1][0])),
-                             (int(keypoints[edge, 0][1]), int(keypoints[edge, 1][1])),
-                             color_generator.get_color(color_num), 4, lineType=cv2.LINE_AA)
         return image
 
     def __create_plot(self, axe, max_axes, min_axes):

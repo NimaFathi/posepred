@@ -23,10 +23,8 @@ class CompPredCenter(nn.Module):
         # completion loss
         bs, frames_n, featurs_n = observed_pose.shape
         obs_pose_center = observed_pose - observed_pose[:, 0:1, :].repeat(1, frames_n, 1)
-        noise = model_outputs['noise'].reshape(bs, frames_n, -1)
-        final_comp = torch.where(noise == 1, model_outputs['comp_pose_center'], obs_pose_center)
-        comp_pose_loss = self.mse2(final_comp, obs_pose_center)
-        comp_pose_ade = ADE(model_outputs['comp_pose'], input_data['observed_pose'], self.args.keypoint_dim)
+        comp_pose_loss = self.mse2(model_outputs['comp_pose_center'], obs_pose_center)
+        comp_ade = ADE(model_outputs['comp_pose'], input_data['observed_pose'], self.args.keypoint_dim)
 
         # KL_Divergence loss
         kl_loss = -0.5 * torch.sum(1 + model_outputs['std'] - model_outputs['mean'].pow(2) - model_outputs['std'].exp())
@@ -34,6 +32,6 @@ class CompPredCenter(nn.Module):
         loss = (self.args.pred_weight * pred_pose_loss) + (self.args.comp_weight * comp_pose_loss) + (
                 self.args.kl_weight * kl_loss)
         outputs = {'loss': loss, 'pred_pose_loss': pred_pose_loss, 'comp_pose_loss': comp_pose_loss, 'kl_loss': kl_loss,
-                   'comp_pose_ade': comp_pose_ade}
+                   'comp_ade': comp_ade}
 
         return outputs
