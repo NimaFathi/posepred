@@ -151,7 +151,7 @@ class Completion(nn.Module):
 
         output = dec_inputs[..., 0, :]
         for j in range(frames_n):
-            dec_input = output.detach() if self.autoregressive else dec_inputs[..., j, :]
+            dec_input = output.detach() if self.autoregressive else dec_inputs[..., j, :].detach()
             for i, lstm in enumerate(self.lstms):
                 if i == 0:
                     hiddens[i], cells[i] = lstm(dec_input, (hiddens.clone()[i], cells.clone()[i]))

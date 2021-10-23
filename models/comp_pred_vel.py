@@ -71,7 +71,9 @@ class CompPredVel(nn.Module):
         # completion
         zeros = torch.zeros_like(cell_vel)
         comp_vel = self.completion(noisy_vel, hidden_vel, zeros)
-        comp_pose = pose_from_vel(comp_vel, pose[..., 0, :])
+        comp_pose = pose.mount()
+        for i in range(comp_pose.shape[-2]):
+            comp_pose[..., i + 1, :] = comp_pose[..., i, :] + comp_vel[..., i, :]
 
         outputs = {'pred_pose': pred_pose, 'pred_vel': pred_vel, 'comp_pose': comp_pose, 'comp_vel': comp_vel,
                    'mean': mean, 'std': std, 'noise': noise}
@@ -158,7 +160,7 @@ class Completion(nn.Module):
 
         output = dec_inputs[..., 0, :]
         for j in range(frames_n):
-            dec_input = output.detach() if self.autoregressive else dec_inputs[..., j, :]
+            dec_input = output.detach() if self.autoregressive else dec_inputs[..., j, :].detach()
             for i, lstm in enumerate(self.lstms):
                 if i == 0:
                     hiddens[i], cells[i] = lstm(dec_input, (hiddens.clone()[i], cells.clone()[i]))
