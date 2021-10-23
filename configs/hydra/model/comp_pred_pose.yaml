@@ -4,6 +4,7 @@ defaults:
 
 type: comp_pred_pose
 autoregressive: false
+noise_value: -1000
 hidden_size: 200
 latent_dim: 10
 hardtanh_limit: 10
