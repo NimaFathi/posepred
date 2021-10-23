@@ -78,6 +78,10 @@ class Visualizer:
             self.visualizer_2D(names=names, poses=new_pose, masks=[], images_paths=images_paths, fig_size=fig_size,
                                observed_noise=observed_noise, gif_name=gif_name + "_2D_overlay")
         logger.info("start 3D visualizing.")
+        if observed_noise is None or observed_noise == []:
+            observed_noise = []
+        else:
+            observed_noise = self.__clean_data(observed_noise)
         max_axes = []
         min_axes = []
         for i in range(3):
@@ -94,7 +98,7 @@ class Visualizer:
                 axarr[j].append(fig.add_subplot(1, comparison_number, i + 1, projection='3d'))
                 self.__create_plot(axarr[j][i], max_axes=max_axes, min_axes=min_axes)
                 self.__generate_3D_figure(
-                    i, all_poses=poses[i][j], ax=axarr[j][i], all_noises=observed_noise[i][j]
+                    i, all_poses=poses[i][j], ax=axarr[j][i], all_noises=observed_noise[j] if j < len(observed_noise) else None
                 )
                 for _ in range(2):
                     filenames.append(os.path.join(save_dir, f'{j}.png'))
@@ -131,8 +135,8 @@ class Visualizer:
                 :param images_paths: list or numpy.array: paths to specified outputs (scenes).
                     Ex: images_paths.shape = [3, 16]
                 :param observed_noise: torch.Tensor or list of torch.Tensors
-                    shape of observed_noise is like: [nun_comparisons, num_frames (which we create gif upon it), num_persons(in each frame), num_keypoints]
-                    Ex: masks.shape = [3, 16, 5, 17] just like 'poses'. The only difference here: we have 1 noise for each joint
+                    shape of observed_noise is like: [1, num_frames (which we create gif upon it), num_keypoints]
+                    Ex: masks.shape = [16, 22] just like 'images_path'. The only difference here: we have 1 noise for each joint
                 :param fig_size: tuple(size=2): size of matplotlib figure.
                     Ex: (8.6)
                 :param gif_name: str: name of generated output .gif file
@@ -148,9 +152,6 @@ class Visualizer:
             observed_noise = []
         else:
             observed_noise = self.__clean_data(observed_noise)
-        print(observed_noise.__len__())
-        print(observed_noise[0].shape)
-        exit()
         if images_paths is None or images_paths == []:
             images_paths = []
         else:
@@ -164,8 +165,7 @@ class Visualizer:
                     self.__generate_2D_figure(
                         color_num=i, all_poses=pose,
                         all_masks=masks[i][j] if i < len(masks) and j < len(masks[i]) else None,
-                        all_noises=observed_noise[i][j] if i < len(observed_noise) and j < len(
-                            observed_noise[i]) else None,
+                        all_noises=observed_noise[j] if j < len(observed_noise) else None,
                         image_path=images_paths[i][j] if i < len(images_paths) and j < len(images_paths[i]) else None
                     )
                 )
@@ -197,6 +197,8 @@ class Visualizer:
     def __generate_3D_figure(self, color_num, all_poses, all_noises, ax):
         num_keypoints = all_poses.shape[-1] // 3
         poses = all_poses.reshape(all_poses.shape[0], num_keypoints, 3)
+        if all_noises is None:
+            all_noises = torch.zeros(all_poses.shape[0], all_poses.shape[1] // 3)
         visualizing_keypoints = np.array(np.unique(keypoint_connections[self.dataset_name]))
         for i, keypoints in enumerate(poses):
             for ie, edge in enumerate(keypoint_connections[self.dataset_name]):
@@ -208,8 +210,8 @@ class Visualizer:
                 ax.scatter(xs=keypoints[k, axes_order_3D[self.dataset_name][0]],
                            ys=keypoints[k, axes_order_3D[self.dataset_name][1]],
                            zs=keypoints[k, axes_order_3D[self.dataset_name][2]], s=2,
-                           color=np.array([105, 105, 105]) / 255 if all_noises[i][k] == 0 else np.array(
-                               [255, 255, 224]) / 255)
+                           color=np.array([0, 255, 100]) / 255 if all_noises[i][k] == 0 else np.array(
+                               [255, 40, 0]) / 255)
 
     def __generate_2D_figure(self, color_num, all_poses, all_masks=None, all_noises=None, image_path=None):
         num_keypoints = all_poses.shape[-1] // 2
@@ -219,21 +221,24 @@ class Visualizer:
         else:
             image = cv2.imread(image_path)
         if all_masks is None:
-            all_masks = torch.ones(all_poses.shape[0], all_poses.shape[1] // 2)
+            all_masks = torch.zeros(all_poses.shape[0], all_poses.shape[1] // 2)
+        if all_noises is None:
+            all_noises = torch.zeros(all_poses.shape[0], all_poses.shape[1] // 2)
         for i, keypoints in enumerate(poses):
             for keypoint in range(keypoints.shape[0]):
-                if all_masks[i][keypoint // 2] != 0:
+                for ie, edge in enumerate(keypoint_connections[self.dataset_name]):
+                    if not ((keypoints[edge, 0][0] <= 0 or keypoints[edge, 1][0] <= 0) or (
+                            keypoints[edge, 0][1] <= 0 or keypoints[edge, 1][1] <= 0)) and (
+                            all_masks[i][edge[0]] != 0) and (
+                            all_masks[i][edge[1]] != 0):
+                        cv2.line(image, (int(keypoints[edge, 0][0]), int(keypoints[edge, 1][0])),
+                                 (int(keypoints[edge, 0][1]), int(keypoints[edge, 1][1])),
+                                 color_generator.get_color(color_num), 4, lineType=cv2.LINE_AA)
+            for keypoint in range(keypoints.shape[0]):
+                if all_masks[i][keypoint // 2] == 0:
                     cv2.circle(image, (int(keypoints[keypoint, 0]), int(keypoints[keypoint, 1])), 3,
-                               (0, 255, 255) if all_noises[i][keypoint // 2] == 0 else (255, 255, 224), thickness=-1,
+                               (0, 255, 100) if all_noises[i][keypoint // 2] == 0 else (255, 50, 0), thickness=-1,
                                lineType=cv2.FILLED)
-            for ie, edge in enumerate(keypoint_connections[self.dataset_name]):
-                if not ((keypoints[edge, 0][0] <= 0 or keypoints[edge, 1][0] <= 0) or (
-                        keypoints[edge, 0][1] <= 0 or keypoints[edge, 1][1] <= 0)) and (
-                        all_masks[i][edge[0]] != 0) and (
-                        all_masks[i][edge[1]] != 0):
-                    cv2.line(image, (int(keypoints[edge, 0][0]), int(keypoints[edge, 1][0])),
-                             (int(keypoints[edge, 0][1]), int(keypoints[edge, 1][1])),
-                             color_generator.get_color(color_num), 4, lineType=cv2.LINE_AA)
         return image
 
     def __create_plot(self, axe, max_axes, min_axes):
