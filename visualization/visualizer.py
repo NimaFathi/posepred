@@ -197,8 +197,8 @@ class Visualizer:
     def __generate_3D_figure(self, color_num, all_poses, all_noises, ax):
         num_keypoints = all_poses.shape[-1] // 3
         poses = all_poses.reshape(all_poses.shape[0], num_keypoints, 3)
-        if all_noises is None:
-            all_noises = torch.zeros(all_poses.shape[0], all_poses.shape[1] // 3)
+        if all_noises is None or all_noises == []:
+            all_noises = torch.zeros(all_poses.shape[1] // 3)
         visualizing_keypoints = np.array(np.unique(keypoint_connections[self.dataset_name]))
         for i, keypoints in enumerate(poses):
             for ie, edge in enumerate(keypoint_connections[self.dataset_name]):
@@ -210,7 +210,7 @@ class Visualizer:
                 ax.scatter(xs=keypoints[k, axes_order_3D[self.dataset_name][0]],
                            ys=keypoints[k, axes_order_3D[self.dataset_name][1]],
                            zs=keypoints[k, axes_order_3D[self.dataset_name][2]], s=2,
-                           color=np.array([0, 255, 100]) / 255 if all_noises[i][k] == 0 else np.array(
+                           color=np.array([0, 255, 100]) / 255 if all_noises[k] == 0 else np.array(
                                [255, 40, 0]) / 255)
 
     def __generate_2D_figure(self, color_num, all_poses, all_masks=None, all_noises=None, image_path=None):
@@ -222,7 +222,7 @@ class Visualizer:
             image = cv2.imread(image_path)
         if all_masks is None:
             all_masks = torch.zeros(all_poses.shape[0], all_poses.shape[1] // 2)
-        if all_noises is None:
+        if all_noises is None or all_noises == []:
             all_noises = torch.zeros(all_poses.shape[1] // 2)
         for i, keypoints in enumerate(poses):
             for keypoint in range(keypoints.shape[0]):
