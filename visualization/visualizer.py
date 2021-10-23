@@ -229,8 +229,9 @@ class Visualizer:
                 for ie, edge in enumerate(keypoint_connections[self.dataset_name]):
                     if not ((keypoints[edge, 0][0] <= 0 or keypoints[edge, 1][0] <= 0) or (
                             keypoints[edge, 0][1] <= 0 or keypoints[edge, 1][1] <= 0)) and (
-                            all_masks[i][edge[0]] != 0) and (
-                            all_masks[i][edge[1]] != 0):
+                            all_masks[i][edge[0]] == 0) and (
+                            all_masks[i][edge[1]] == 0):
+                        ''
                         cv2.line(image, (int(keypoints[edge, 0][0]), int(keypoints[edge, 1][0])),
                                  (int(keypoints[edge, 0][1]), int(keypoints[edge, 1][1])),
                                  color_generator.get_color(color_num), 4, lineType=cv2.LINE_AA)
