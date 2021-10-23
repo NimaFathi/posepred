@@ -223,7 +223,7 @@ class Visualizer:
         if all_masks is None:
             all_masks = torch.zeros(all_poses.shape[0], all_poses.shape[1] // 2)
         if all_noises is None:
-            all_noises = torch.zeros(all_poses.shape[0], all_poses.shape[1] // 2)
+            all_noises = torch.zeros(all_poses.shape[1] // 2)
         for i, keypoints in enumerate(poses):
             for keypoint in range(keypoints.shape[0]):
                 for ie, edge in enumerate(keypoint_connections[self.dataset_name]):
@@ -237,7 +237,7 @@ class Visualizer:
             for keypoint in range(keypoints.shape[0]):
                 if all_masks[i][keypoint // 2] == 0:
                     cv2.circle(image, (int(keypoints[keypoint, 0]), int(keypoints[keypoint, 1])), 3,
-                               (0, 255, 100) if all_noises[i][keypoint // 2] == 0 else (255, 50, 0), thickness=-1,
+                               (0, 255, 100) if all_noises[keypoint // 2] == 0 else (255, 50, 0), thickness=-1,
                                lineType=cv2.FILLED)
         return image
 
