@@ -141,7 +141,7 @@ def visualize(cfg: DictConfig):
     if cfg.data.keypoint_dim == 2:
         visualizer.visualizer_2D(names, poses, masks, images_path, observed_noise, gif_name)
     else:
-        visualizer.visualizer_3D(names, poses, cam_exs, cam_in, images_path, observed_noise, gif_name)
+        visualizer.visualizer_3D(names, poses, masks, cam_exs, cam_in, images_path, observed_noise, gif_name)
 
 
 if __name__ == '__main__':
