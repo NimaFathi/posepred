@@ -4,7 +4,7 @@ Pospred is an open-source toolbox for pose prediction based on PyTorch. It is a 
 <p float="left">
   <img src="https://user-images.githubusercontent.com/33596552/138102754-5bef72df-ea48-4d17-a932-611293f0bc5a.gif" alt="observation" width="500">  
   <img src="https://user-images.githubusercontent.com/33596552/138102745-f6b5c7a0-ee14-40ef-907f-b3ebb98ae08f.gif" alt="prediction" width="500">  
-</p> -->
+</p>
 
 
 ```
@@ -124,7 +124,7 @@ In order to generate .gif outputs you can run `visualize.py‍‍‍‍` like be
   
 Example:  
 ```bash  
-python -m api.visualize model=<model_name> dataset=<path_to_dataset> dataset_type=jta keypoint_dim=3 is_noisy=true load_path=<path_to_model> index=25 showing=observed-future
+python -m api.visualize model=<model_name> dataset=<path_to_dataset> dataset_type=jta keypoint_dim=2 is_noisy=true load_path=<path_to_model> index=25 showing=observed-future
 ```  
   
 Sample output:  
@@ -141,7 +141,7 @@ If we have camera extrinsic and intrinsic parameters and image paths, we would c
   
 Example:  
 ```bash  
-python -m api.visualize --dataset=<dataset_name> --model=<model_name> --keypoint_dim=3 --load_path=<path_to_model>
+python -m api.visualize model=<model_name> dataset=<path_to_dataset> dataset_type=jta keypoint_dim=3 is_noisy=true load_path=<path_to_model> index=25 showing=observed-future
 ```  
   
 Sample outputs:  
