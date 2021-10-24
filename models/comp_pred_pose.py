@@ -25,10 +25,10 @@ class CompPredPose(nn.Module):
         )
 
         self.pose_decoder = Decoder(args.pred_frames_num, input_size, output_size, args.hidden_size, args.n_layers,
-                                    args.dropout_pose_dec, 'hardtanh', args.hardtanh_limit, args.device)
+                                    args.dropout_pose_dec, args.activation_type, args.hardtanh_limit, args.device)
 
         self.completion = Completion(input_size, output_size, args.hidden_size, args.n_layers, args.dropout_pose_dec,
-                                     args.autoregressive, 'hardtanh', args.hardtanh_limit, args.device)
+                                     args.autoregressive, args.activation_type, args.hardtanh_limit, args.device)
 
     def forward(self, inputs):
         pose = inputs['observed_pose']
@@ -91,7 +91,7 @@ class Encoder(nn.Module):
 
 class Decoder(nn.Module):
     def __init__(self, outputs_num, input_size, output_size, hidden_size, n_layers, dropout, activation_type,
-                 hardtanh_limit=None, device='cpu'):
+                 hardtanh_limit, device):
         super().__init__()
         self.device = device
         self.outputs_num = outputs_num
@@ -103,8 +103,12 @@ class Decoder(nn.Module):
         self.fc_out = nn.Linear(in_features=hidden_size, out_features=output_size)
         if activation_type == 'hardtanh':
             self.activation = nn.Hardtanh(min_val=-1 * hardtanh_limit, max_val=hardtanh_limit, inplace=False)
-        else:
+        elif activation_type == 'sigmiod':
             self.activation = nn.Sigmoid()
+        elif activation_type == 'none':
+            self.activation = None
+        else:
+            raise Exception("invalid activation_type.")
 
     def forward(self, inputs, hiddens, cells):
         dec_inputs = self.dropout(inputs)
@@ -118,15 +122,18 @@ class Decoder(nn.Module):
                     hiddens[i], cells[i] = lstm(dec_inputs, (hiddens.clone()[i], cells.clone()[i]))
                 else:
                     hiddens[i], cells[i] = lstm(hiddens.clone()[i - 1], (hiddens.clone()[i], cells.clone()[i]))
-            output = self.activation(self.fc_out(hiddens.clone()[-1]))
+            if self.activation is not None:
+                output = self.activation(self.fc_out(hiddens.clone()[-1]))
+            else:
+                output = self.fc_out(hiddens.clone()[-1])
             dec_inputs = output.detach()
             outputs = torch.cat((outputs, output.unsqueeze(1)), 1)
         return outputs
 
 
 class Completion(nn.Module):
-    def __init__(self, input_size, output_size, hidden_size, n_layers, dropout, activation_type, autoregressive,
-                 hardtanh_limit=None, device='cpu'):
+    def __init__(self, input_size, output_size, hidden_size, n_layers, dropout, autoregressive, activation_type,
+                 hardtanh_limit, device):
         super().__init__()
         self.device = device
         self.autoregressive = autoregressive
@@ -138,8 +145,12 @@ class Completion(nn.Module):
         self.fc_out = nn.Linear(in_features=hidden_size, out_features=output_size)
         if activation_type == 'hardtanh':
             self.activation = nn.Hardtanh(min_val=-1 * hardtanh_limit, max_val=hardtanh_limit, inplace=False)
-        else:
+        elif activation_type == 'sigmiod':
             self.activation = nn.Sigmoid()
+        elif activation_type == 'none':
+            self.activation = None
+        else:
+            raise Exception("invalid activation_type.")
 
     def forward(self, inputs, hiddens, cells):
         frames_n = inputs.shape[-2]
@@ -157,7 +168,10 @@ class Completion(nn.Module):
                     hiddens[i], cells[i] = lstm(dec_input, (hiddens.clone()[i], cells.clone()[i]))
                 else:
                     hiddens[i], cells[i] = lstm(hiddens.clone()[i - 1], (hiddens.clone()[i], cells.clone()[i]))
-            output = self.activation(self.fc_out(hiddens.clone()[-1]))
+            if self.activation is not None:
+                output = self.activation(self.fc_out(hiddens.clone()[-1]))
+            else:
+                output = self.fc_out(hiddens.clone()[-1])
             outputs = torch.cat((outputs, output.unsqueeze(1)), 1)
         return outputs
 
