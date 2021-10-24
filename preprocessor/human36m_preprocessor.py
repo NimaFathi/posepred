@@ -1,6 +1,9 @@
+import csv
 import logging
 import os
+import zipfile
 from glob import glob
+from urllib.request import urlretrieve
 
 import cdflib
 import jsonlines
@@ -47,7 +50,8 @@ class PreprocessorHuman36m(Processor):
             logger.info("handling subject: {}".format(subject))
             subject_pose_path = os.path.join(self.dataset_path, subject, 'MyPoseFeatures/D3_Positions/*.cdf')
             file_list_pose = glob(subject_pose_path)
-            assert len(file_list_pose) == 30, "Expected 30 files for subject " + subject + ", got " + str(len(file_list_pose))
+            assert len(file_list_pose) == 30, "Expected 30 files for subject " + subject + ", got " + str(
+                len(file_list_pose))
             for f in file_list_pose:
                 action = os.path.splitext(os.path.basename(f))[0]
 
@@ -58,10 +62,7 @@ class PreprocessorHuman36m(Processor):
                 hf = cdflib.CDF(f)
                 positions = hf['Pose'].reshape(-1, 96)
                 positions /= 1000
-                data = positions.reshape(positions.shape[0], -1, 3)
-                quat = expmap_to_quaternion(-data)
-                quat = qfix(quat)
-                quat = quat.reshape(-1, 32 * 4)
+                quat = self.quaternion_rep(f, subject)
                 total_frame_num = self.obs_frame_num + self.pred_frame_num
                 section_range = positions.shape[0] // (
                         total_frame_num * (self.skip_frame_num + 1)) if self.use_video_once is False else 1
@@ -102,3 +103,50 @@ class PreprocessorHuman36m(Processor):
                             'future_image_path': video_data['future_image_path']
                         })
         self.save_meta_data(self.meta_data, self.output_dir, True, data_type)
+        self.delete_redundant_files()
+
+    def quaternion_rep(self, file_path, subject):
+        output_directory = os.path.join(PREPROCESSED_DATA_DIR, 'H3.6m_rotations')
+        os.makedirs(output_directory, exist_ok=True)
+        h36m_rotations_dataset_url = 'http://www.cs.stanford.edu/people/ashesh/h3.6m.zip'
+        h36m_path = os.path.join(output_directory, 'h3.6m')
+
+        if not os.path.exists(h36m_path):
+            zip_path = h36m_path + ".zip"
+
+            logger.info('Downloading Human3.6M dataset (it may take a while)...')
+            if not os.path.exists(zip_path):
+                urlretrieve(h36m_rotations_dataset_url, zip_path)
+            if not os.path.exists(os.path.join(h36m_path, 'dataset')):
+                logger.info('Extracting Human3.6M dataset...')
+                with zipfile.ZipFile(zip_path, 'r') as archive:
+                    archive.extractall(output_directory)
+        data = self.__read_file(file_path, h36m_path, subject)
+        quat = expmap_to_quaternion(-data)
+        quat = qfix(quat)
+        return quat.reshape(-1, 32 * 4)
+
+    @staticmethod
+    def __read_file(file_path, rot_dir_path, subject):
+        '''
+        Read an individual file in expmap format,
+        and return a NumPy tensor with shape (sequence length, number of joints, 3).
+        '''
+        action = os.path.splitext(os.path.basename(file_path))[0].replace('WalkTogether', 'WalkingTogether')
+        action_number = 1 if len(action.split(" ")) == 2 else 2
+        path_to_read = os.path.join(rot_dir_path, 'dataset', subject,
+                                    f'{action.split(" ")[0].lower()}_{action_number}.txt')
+        data = []
+        with open(path_to_read, 'r') as csvfile:
+            reader = csv.reader(csvfile, delimiter=',')
+            for row in reader:
+                data.append(row)
+        data = np.array(data, dtype='float64')
+        return data.reshape(data.shape[0], -1, 3)[:, 1:]
+
+    @staticmethod
+    def delete_redundant_files():
+        output_directory = os.path.join(PREPROCESSED_DATA_DIR, 'H3.6m_rotations')
+        h36_folder = os.path.join(output_directory, 'h3.6m')
+        os.remove(h36_folder + ".zip")
+        # rmtree(h36_folder)
