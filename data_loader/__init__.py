@@ -22,7 +22,7 @@ def get_dataloader(dataset_name, args):
     else:
         if args.is_noisy:
             dataset = NoisySolitaryDataset(dataset_path, args.keypoint_dim, args.is_testing, args.use_mask,
-                                           args.is_visualizing, args.use_quaternion, args.noise_rate)
+                                           args.is_visualizing, args.use_quaternion, args.noise_rate, args.overfit)
         else:
             dataset = SolitaryDataset(dataset_path, args.keypoint_dim, args.is_testing, args.use_mask,
                                       args.is_visualizing, args.use_quaternion)

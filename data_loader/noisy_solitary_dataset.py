@@ -7,7 +7,8 @@ logger = logging.getLogger(__name__)
 
 
 class NoisySolitaryDataset(Dataset):
-    def __init__(self, dataset_path, keypoint_dim, is_testing, use_mask, is_visualizing, use_quaternion, noise_rate):
+    def __init__(self, dataset_path, keypoint_dim, is_testing, use_mask, is_visualizing, use_quaternion, noise_rate,
+                 overfit=None):
 
         tensor_keys = ['observed_pose', 'future_pose', 'observed_mask', 'future_mask']
         data = list()
@@ -20,6 +21,9 @@ class NoisySolitaryDataset(Dataset):
                     else:
                         seq_tensor[k] = v
                 data.append(seq_tensor)
+
+        if overfit is not None:
+            data = [data[overfit]]
 
         self.data = data
         self.keypoint_dim = keypoint_dim
