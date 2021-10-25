@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 class NoisySolitaryDataset(Dataset):
     def __init__(self, dataset_path, keypoint_dim, is_testing, use_mask, is_visualizing, use_quaternion, noise_rate,
-                 overfit=None):
+                 overfit=None, noise_keypoint=None):
 
         tensor_keys = ['observed_pose', 'future_pose', 'observed_mask', 'future_mask']
         data = list()
@@ -40,9 +40,13 @@ class NoisySolitaryDataset(Dataset):
             assert 'future_pose' in seq.keys(), 'dataset must include future_pose'
             self.future_frames_num = seq['future_pose'].shape[-2]
 
+        self.noise = None
         self.noise_rate = noise_rate
         if isinstance(noise_rate, float):
             self.noise = torch.FloatTensor(len(data), self.obs_frames_num, self.keypoints_num).uniform_() < noise_rate
+        elif noise_keypoint is not None:
+            self.noise = torch.zeros((len(data), self.obs_frames_num, self.keypoints_num))
+            self.noise[:, :, noise_keypoint] = True
         elif noise_rate != 'mask':
             raise Exception('''noise_rate must be either a float number or the term 'mask' ''')
 
@@ -67,12 +71,12 @@ class NoisySolitaryDataset(Dataset):
             else:
                 raise Exception('dataset must include ' + key)
 
-        if self.noise_rate == 'mask':
+        if self.noise is not None:
+            outputs['observed_noise'] = self.noise[index]
+        else:
             if 'observed_mask' not in seq.keys():
                 raise Exception('data-mask is not available. assign a value to noise_rate to get a uniform noise.')
             outputs['observed_noise'] = seq['observed_mask']
-        else:
-            outputs['observed_noise'] = self.noise[index]
 
         if self.use_quaternion:
             outputs['observed_quaternion_pose'] = torch.tensor(seq['observed_quaternion_pose'])
