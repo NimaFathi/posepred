@@ -103,7 +103,7 @@ class Decoder(nn.Module):
         self.fc_out = nn.Linear(in_features=hidden_size, out_features=output_size)
         if activation_type == 'hardtanh':
             self.activation = nn.Hardtanh(min_val=-1 * hardtanh_limit, max_val=hardtanh_limit, inplace=False)
-        elif activation_type == 'sigmiod':
+        elif activation_type == 'sigmoid':
             self.activation = nn.Sigmoid()
         elif activation_type == 'none':
             self.activation = None
@@ -145,7 +145,7 @@ class Completion(nn.Module):
         self.fc_out = nn.Linear(in_features=hidden_size, out_features=output_size)
         if activation_type == 'hardtanh':
             self.activation = nn.Hardtanh(min_val=-1 * hardtanh_limit, max_val=hardtanh_limit, inplace=False)
-        elif activation_type == 'sigmiod':
+        elif activation_type == 'sigmoid':
             self.activation = nn.Sigmoid()
         elif activation_type == 'none':
             self.activation = None
