@@ -4,9 +4,9 @@ import torch.nn as nn
 from utils.others import pose_from_vel
 
 
-class PVLSTMNoisy(nn.Module):
+class PVLSTMComp(nn.Module):
     def __init__(self, args):
-        super(PVLSTMNoisy, self).__init__()
+        super(PVLSTMComp, self).__init__()
         self.args = args
         input_size = output_size = int(args.keypoints_num * args.keypoint_dim)
         self.pose_encoder = Encoder(input_size, args.hidden_size, args.n_layers, args.dropout_enc)
