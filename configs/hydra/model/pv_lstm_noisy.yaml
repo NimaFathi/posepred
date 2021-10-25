@@ -3,7 +3,9 @@ defaults:
   - common
 
 type: pv_lstm_noisy
+noise_value: -1000
 hidden_size: 200
+activation_type: 'hardtanh'
 hardtanh_limit: 10
 n_layers: 1
 dropout_enc: 0
@@ -13,3 +15,4 @@ dropout_mask_dec: 0
 loss:
   type: mse_vel
   mask_weight: 0
+  keypoint_dim: ${keypoint_dim}
