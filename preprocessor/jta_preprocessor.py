@@ -40,6 +40,8 @@ class JTAPreprocessor(Processor):
             os.makedirs(self.output_dir)
         self.meta_data = {
             'avg_person': [],
+            'max_pose': np.zeros(3) if self.is_3d else np.zeros(2),
+            'min_pose': np.array([1000.0, 1000.0, 1000.0]) if self.is_3d else np.zeros(2),
             'count': 0,
             'sum2_pose': np.zeros(3) if self.is_3d else np.zeros(2),
             'sum_pose': np.zeros(3) if self.is_3d else np.zeros(2)
@@ -80,6 +82,8 @@ class JTAPreprocessor(Processor):
         return obs_frames, future_frames
 
     def normal(self, data_type='train'):
+        count_total_data = 0
+        count_mask_data = 0
         logger.info('start creating JTA normal static data ... ')
         if self.custom_name:
             output_file_name = f'{data_type}_{self.obs_frame_num}_{self.pred_frame_num}_{self.skip_frame_num}_{self.custom_name}.jsonl'
@@ -129,6 +133,8 @@ class JTAPreprocessor(Processor):
                             for masking_state in range(9, 10):
                                 masked += pose[masking_state]
                             frame_data['mask'][pose[1]].append(1 if masked > 0 else 0)
+                            count_mask_data += 1 if masked else  0
+                            count_total_data += 1
                         for p_id in frame_data['pose'].keys():
                             if j <= self.obs_frame_num * (self.skip_frame_num + 1):
                                 video_data['obs_pose'][p_id].append(frame_data['pose'][p_id])
@@ -171,4 +177,6 @@ class JTAPreprocessor(Processor):
                             'observed_image_path': data_row[5],
                             'future_image_path': data_row[6]
                         })
+        print("mask percentage: {}".format(count_mask_data / count_total_data))
+        self.meta_data['mask_percentage'] = count_mask_data / count_total_data
         self.save_meta_data(self.meta_data, self.output_dir, self.is_3d, data_type)
