@@ -1,3 +1,7 @@
+import json
+import os
+import pathlib
+
 import torch
 from torch.utils.data import Dataset
 from numpy import random
@@ -8,8 +12,11 @@ logger = logging.getLogger(__name__)
 
 
 class InteractiveDataset(Dataset):
-    def __init__(self, dataset_path, keypoint_dim, persons_num, is_testing, use_mask, is_visualizing, use_quaternion):
-
+    def __init__(self, dataset_path, keypoint_dim, persons_num, is_testing, use_mask, is_visualizing, use_quaternion, normalize):
+        self.normalize = normalize
+        if self.normalize:
+            with open(os.path.join(pathlib.Path(dataset_path).parent.resolve(), f'{keypoint_dim}D_meta.json')) as meta_file:
+                self.meta_data = json.load(meta_file)
         tensor_keys = ['observed_pose', 'future_pose', 'observed_mask', 'future_mask']
         data = list()
         with jsonlines.open(dataset_path) as reader:
@@ -29,7 +36,7 @@ class InteractiveDataset(Dataset):
         self.use_mask = use_mask
         self.is_visualizing = is_visualizing
         self.use_quaternion = use_quaternion
-
+        self.normalized_indices = []
         seq = self.data[0]
         assert 'observed_pose' in seq.keys(), 'dataset must include observed_pose'
         self.keypoints_num = int(seq['observed_pose'].shape[-1] / self.keypoint_dim)
@@ -37,6 +44,17 @@ class InteractiveDataset(Dataset):
         if not self.is_testing:
             assert 'future_pose' in seq.keys(), 'dataset must include future_pose'
             self.future_frames_num = seq['future_pose'].shape[-2]
+
+    def normalize_data(self, output, index):
+        if index in self.normalized_indices:
+            return output
+        obs = output['observed_pose'].view(*output['observed_pose'].shape[:-1], -1, self.keypoint_dim)
+        future = output['future_pose'].view(*output['future_pose'].shape[:-1], -1, self.keypoint_dim)
+        for i in range(self.keypoint_dim):
+            obs[:, :, i] = (obs[:, :, i] - self.meta_data['avg_pose'][i]) / self.meta_data['std_pose'][i]
+            future[:, :, i] = (future[:, :, i] - self.meta_data['avg_pose'][i]) / self.meta_data['std_pose'][i]
+        self.normalized_indices.append(index)
+        return output
 
     def __len__(self):
         return len(self.data)
@@ -65,6 +83,8 @@ class InteractiveDataset(Dataset):
             if self.use_mask:
                 future_mask = self.fix_persons(seq, 'future_mask', persons_in_seq)
                 outputs['future_mask'] = future_mask
+        if self.normalize:
+            outputs = self.normalize_data(outputs, index)
 
         if self.is_visualizing:
             if 'observed_image_path' in seq.keys():

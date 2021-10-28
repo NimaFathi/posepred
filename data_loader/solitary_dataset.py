@@ -1,4 +1,7 @@
 import torch
+import json
+import pathlib
+import os
 from torch.utils.data import Dataset
 import jsonlines
 import logging
@@ -7,7 +10,12 @@ logger = logging.getLogger(__name__)
 
 
 class SolitaryDataset(Dataset):
-    def __init__(self, dataset_path, keypoint_dim, is_testing, use_mask, is_visualizing, use_quaternion):
+    def __init__(self, dataset_path, keypoint_dim, is_testing, use_mask, is_visualizing, use_quaternion, normalize):
+        self.normalize = normalize
+        if self.normalize:
+            with open(os.path.join(pathlib.Path(dataset_path).parent.resolve(),
+                                   f'{keypoint_dim}D_meta.json')) as meta_file:
+                self.meta_data = json.load(meta_file)
 
         tensor_keys = ['observed_pose', 'future_pose', 'observed_mask', 'future_mask']
         data = list()
@@ -27,6 +35,7 @@ class SolitaryDataset(Dataset):
         self.use_mask = use_mask
         self.is_visualizing = is_visualizing
         self.use_quaternion = use_quaternion
+        self.normalized_indices = []
 
         seq = self.data[0]
         assert 'observed_pose' in seq.keys(), 'dataset must include observed_pose'
@@ -35,6 +44,17 @@ class SolitaryDataset(Dataset):
         if not self.is_testing:
             assert 'future_pose' in seq.keys(), 'dataset must include future_pose'
             self.future_frames_num = seq['future_pose'].shape[-2]
+
+    def normalize_data(self, output, index):
+        if index in self.normalized_indices:
+            return output
+        obs = output['observed_pose'].view(*output['observed_pose'].shape[:-1], -1, self.keypoint_dim)
+        future = output['future_pose'].view(*output['future_pose'].shape[:-1], -1, self.keypoint_dim)
+        for i in range(self.keypoint_dim):
+            obs[:, :, i] = (obs[:, :, i] - self.meta_data['avg_pose'][i]) / self.meta_data['std_pose'][i]
+            future[:, :, i] = (future[:, :, i] - self.meta_data['avg_pose'][i]) / self.meta_data['std_pose'][i]
+        self.normalized_indices.append(index)
+        return output
 
     def __len__(self):
         return len(self.data)
@@ -60,6 +80,9 @@ class SolitaryDataset(Dataset):
         if self.use_quaternion:
             outputs['observed_quaternion_pose'] = torch.tensor(seq['observed_quaternion_pose'])
             outputs['future_quaternion_pose'] = torch.tensor(seq['future_quaternion_pose'])
+
+        if self.normalize:
+            outputs = self.normalize_data(outputs, index)
 
         if self.is_visualizing:
             if 'observed_image_path' in seq.keys():
