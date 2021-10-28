@@ -8,6 +8,7 @@ from .his_rep_itself_loss import HisRepItselfLoss
 from .comp_pred_vel import CompPredVel
 from .comp_pred_pose import CompPredPose
 from .comp_pred_center import CompPredCenter
+from .comp_pred_vel_dct import CompPredVelDCT
 from .trans_cvae import TRANS_CVAE
 from .pv_lstm_comp import PVLSTMComp
 
@@ -19,6 +20,7 @@ LOSSES = {'mse_vel': MSEVel,
           'derpof': DeRPoFLoss,
           'his_rep_itself': HisRepItselfLoss,
           'comp_pred_vel': CompPredVel,
+          'comp_pred_vel_dct': CompPredVelDCT,
           'comp_pred_pose': CompPredPose,
           'comp_pred_center': CompPredCenter,
           'trans_cvae': TRANS_CVAE,
