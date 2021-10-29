@@ -35,19 +35,22 @@ class PVLSTMNoisy(nn.Module):
         const = (torch.ones_like(noise, dtype=torch.float) * self.args.noise_value)
         noisy_vel = torch.where(noise == 1, const, vel).reshape(bs, frames_n, -1)
 
-        # vel encoder
+        # vel_encoder
         (hidden_vel, cell_vel) = self.vel_encoder(vel.permute(1, 0, 2))
         hidden_vel = hidden_vel.squeeze(0)
         cell_vel = cell_vel.squeeze(0)
 
-        # pose encoder
+        # pose_encoder
         (hidden_pose, cell_pose) = self.pose_encoder(pose.permute(1, 0, 2))
         hidden_pose = hidden_pose.squeeze(0)
         cell_pose = cell_pose.squeeze(0)
 
+        # hidden and cell for decoders
         vel_dec_input = vel[:, -1, :]
         hidden_dec = hidden_pose + hidden_vel
         cell_dec = cell_pose + cell_vel
+
+        # vel_decoder
         pred_vel = self.vel_decoder(vel_dec_input, hidden_dec, cell_dec)
         pred_pose = pose_from_vel(pred_vel, pose[..., -1, :])
 
