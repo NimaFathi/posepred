@@ -72,7 +72,7 @@ class CompPredCenter(nn.Module):
         comp_pose = comp_pose_center + first_frame.repeat(1, obs_frames_n, 1)
 
         outputs = {'pred_pose': pred_pose, 'pred_pose_center': pred_pose_center, 'comp_pose': comp_pose,
-                   'comp_pose_center': comp_pose_center, 'mean': mean, 'std': std, 'noise': noise}
+                   'comp_pose_center': comp_pose_center, 'mean': mean, 'std': std}
 
         if self.args.use_mask:
             outputs['pred_mask'] = inputs['observed_mask'][:, -1:, :].repeat(1, self.args.pred_frames_num, 1)
@@ -108,8 +108,6 @@ class Decoder(nn.Module):
         self.fc_out = nn.Linear(in_features=hidden_size, out_features=output_size)
         if activation_type == 'hardtanh':
             self.activation = nn.Hardtanh(min_val=-1 * hardtanh_limit, max_val=hardtanh_limit, inplace=False)
-        elif activation_type == 'sigmoid':
-            self.activation = nn.Sigmoid()
         elif activation_type == 'none':
             self.activation = None
         else:
@@ -150,8 +148,6 @@ class Completion(nn.Module):
         self.fc_out = nn.Linear(in_features=hidden_size, out_features=output_size)
         if activation_type == 'hardtanh':
             self.activation = nn.Hardtanh(min_val=-1 * hardtanh_limit, max_val=hardtanh_limit, inplace=False)
-        elif activation_type == 'sigmoid':
-            self.activation = nn.Sigmoid()
         elif activation_type == 'none':
             self.activation = None
         else:
