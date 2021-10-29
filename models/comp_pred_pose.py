@@ -1,6 +1,8 @@
 import torch
 import torch.nn as nn
 
+from utils.others import destabilize, get_matadata
+
 
 class CompPredPose(nn.Module):
     def __init__(self, args):
@@ -29,9 +31,13 @@ class CompPredPose(nn.Module):
 
         self.completion = Completion(input_size, output_size, args.hidden_size, args.n_layers, args.dropout_pose_dec,
                                      args.autoregressive, args.activation_type, args.hardtanh_limit, args.device)
+        if self.args.normalize:
+            assert self.args.metadata_path, "you should define path to metadata when normalize is true"
+            self.meta_data = get_matadata(self.args.metadata_path)
 
     def forward(self, inputs):
         pose = inputs['observed_pose']
+
         bs, frames_n, features_n = pose.shape
 
         # make data noisy
@@ -62,13 +68,14 @@ class CompPredPose(nn.Module):
         # velocity decoder
         zeros = torch.zeros_like(cell_p)
         pred_pose = self.pose_decoder(noisy_pose[..., -1, :], hidden_p, zeros)
-
         # completion
         zeros = torch.zeros_like(cell_p)
         comp_pose = self.completion(noisy_pose, hidden_p, zeros)
-
+        if self.args.normalize:
+            pred_pose = destabilize(self.meta_data, self.args.keypoint_dim, pred_pose)
+            comp_pose = destabilize(self.meta_data, self.args.keypoint_dim, comp_pose)
+            inputs['observed_pose'] = destabilize(self.meta_data, self.args.keypoint_dim, inputs['observed_pose'])
         outputs = {'pred_pose': pred_pose, 'comp_pose': comp_pose, 'mean': mean, 'std': std, 'noise': noise}
-
         if self.args.use_mask:
             outputs['pred_mask'] = inputs['observed_mask'][:, -1:, :].repeat(1, self.args.pred_frames_num, 1)
 

@@ -49,10 +49,8 @@ class InteractiveDataset(Dataset):
         if index in self.normalized_indices:
             return output
         obs = output['observed_pose'].view(*output['observed_pose'].shape[:-1], -1, self.keypoint_dim)
-        future = output['future_pose'].view(*output['future_pose'].shape[:-1], -1, self.keypoint_dim)
         for i in range(self.keypoint_dim):
             obs[:, :, i] = (obs[:, :, i] - self.meta_data['avg_pose'][i]) / self.meta_data['std_pose'][i]
-            future[:, :, i] = (future[:, :, i] - self.meta_data['avg_pose'][i]) / self.meta_data['std_pose'][i]
         self.normalized_indices.append(index)
         return output
 

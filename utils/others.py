@@ -1,5 +1,8 @@
 import numpy as np
 import torch
+import os
+import json
+from path_definition import PREPROCESSED_DATA_DIR
 
 
 def pose_from_vel(velocity, last_obs_pose, stay_in_frame=False):
@@ -129,3 +132,17 @@ def qeuler(q, order, epsilon=0):
         raise
 
     return torch.stack((x, y, z), dim=1).view(original_shape)
+
+
+def destabilize(metadata, keypoint_dim, pose):
+    org_shape = pose.shape
+    pose = pose.view(*org_shape[:-1], -1, keypoint_dim)
+    for i in range(keypoint_dim):
+        pose[..., i] = (pose[..., i] * metadata['std_pose'][i]) + metadata['avg_pose'][i]
+    return pose.view(org_shape)
+
+
+def get_matadata(metadata_path):
+    with open(os.path.join(PREPROCESSED_DATA_DIR, metadata_path)) as meta_file:
+        meta_data = json.load(meta_file)
+    return meta_data
