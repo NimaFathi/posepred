@@ -28,19 +28,19 @@ class PVLSTMNoisy(nn.Module):
 
         # make vel noisy
         bs, frames_n, features_n = vel.shape
-        vel = vel.reshape(bs, frames_n, self.args.keypoints_num, self.args.keypoint_dim)
+        vel_ = vel.reshape(bs, frames_n, self.args.keypoints_num, self.args.keypoint_dim)
         vel_noise = inputs['observed_noise'][:, 1:, :].reshape(bs, frames_n, self.args.keypoints_num, 1)
         vel_noise = vel_noise.repeat(1, 1, 1, self.args.keypoint_dim)
         const = (torch.ones_like(vel_noise, dtype=torch.float) * self.args.noise_value)
-        noisy_vel = torch.where(vel_noise == 1, const, vel).reshape(bs, frames_n, -1)
+        noisy_vel = torch.where(vel_noise == 1, const, vel_).reshape(bs, frames_n, -1)
 
         # make pose noisy
         bs, frames_n, features_n = pose.shape
-        pose = pose.reshape(bs, frames_n, self.args.keypoints_num, self.args.keypoint_dim)
+        pose_ = pose.reshape(bs, frames_n, self.args.keypoints_num, self.args.keypoint_dim)
         pose_noise = inputs['observed_noise'].reshape(bs, frames_n, self.args.keypoints_num, 1)
         pose_noise = pose_noise.repeat(1, 1, 1, self.args.keypoint_dim)
         const = (torch.ones_like(pose_noise, dtype=torch.float) * self.args.noise_value)
-        noisy_pose = torch.where(pose_noise == 1, const, pose).reshape(bs, frames_n, -1)
+        noisy_pose = torch.where(pose_noise == 1, const, pose_).reshape(bs, frames_n, -1)
 
         # vel_encoder
         (hidden_vel, cell_vel) = self.vel_encoder(noisy_vel.permute(1, 0, 2))
