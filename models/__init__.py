@@ -10,7 +10,6 @@ from .comp_pred_pose import CompPredPose
 from .comp_pred_center import CompPredCenter
 from .trans_cvae import TRANS_CVAE
 from .pv_lstm_noisy import PVLSTMNoisy
-from .pv_lstm_comp import PVLSTMComp
 
 MODELS = {'zero_vel': ZeroVel,
           'nearest_neighbor': NearestNeighbor,
@@ -24,5 +23,4 @@ MODELS = {'zero_vel': ZeroVel,
           'comp_pred_center': CompPredCenter,
           'trans_cvae': TRANS_CVAE,
           'pv_lstm_noisy': PVLSTMNoisy,
-          'pv_lstm_comp': PVLSTMComp,
           }
