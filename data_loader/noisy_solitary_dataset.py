@@ -41,8 +41,7 @@ class NoisySolitaryDataset(Dataset):
             self.future_frames_num = seq['future_pose'].shape[-2]
 
         self.noise = None
-        self.noise_rate = noise_rate
-        if isinstance(noise_rate, float):
+        if isinstance(noise_rate, float) or isinstance(noise_rate, int):
             self.noise = torch.FloatTensor(len(data), self.obs_frames_num, self.keypoints_num).uniform_() < noise_rate
         elif noise_keypoint is not None:
             self.noise = torch.zeros((len(data), self.obs_frames_num, self.keypoints_num))
