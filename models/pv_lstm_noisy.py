@@ -22,36 +22,42 @@ class PVLSTMNoisy(nn.Module):
     def forward(self, inputs):
         pose = inputs['observed_pose']
         vel = pose[..., 1:, :] - pose[..., :-1, :]
-        bs, frames_n, features_n = vel.shape
 
-        # make data noisy
-        if 'observed_noise' in inputs.keys():
-            noise = inputs['observed_noise'][:, 1:, :]
-        else:
+        if 'observed_noise' not in inputs.keys():
             raise Exception("This model requires noise. set is_noisy to True")
 
+        # make vel noisy
+        bs, frames_n, features_n = vel.shape
         vel = vel.reshape(bs, frames_n, self.args.keypoints_num, self.args.keypoint_dim)
-        noise = noise.reshape(bs, frames_n, self.args.keypoints_num, 1).repeat(1, 1, 1, self.args.keypoint_dim)
-        const = (torch.ones_like(noise, dtype=torch.float) * self.args.noise_value)
-        noisy_vel = torch.where(noise == 1, const, vel).reshape(bs, frames_n, -1)
+        vel_noise = inputs['observed_noise'][:, 1:, :].reshape(bs, frames_n, self.args.keypoints_num, 1)
+        vel_noise = vel_noise.repeat(1, 1, 1, self.args.keypoint_dim)
+        const = (torch.ones_like(vel_noise, dtype=torch.float) * self.args.noise_value)
+        noisy_vel = torch.where(vel_noise == 1, const, vel).reshape(bs, frames_n, -1)
+
+        # make pose noisy
+        bs, frames_n, features_n = pose.shape
+        pose = pose.reshape(bs, frames_n, self.args.keypoints_num, self.args.keypoint_dim)
+        pose_noise = inputs['observed_noise'].reshape(bs, frames_n, self.args.keypoints_num, 1)
+        pose_noise = pose_noise.repeat(1, 1, 1, self.args.keypoint_dim)
+        const = (torch.ones_like(pose_noise, dtype=torch.float) * self.args.noise_value)
+        noisy_pose = torch.where(pose_noise == 1, const, pose).reshape(bs, frames_n, -1)
 
         # vel_encoder
-        (hidden_vel, cell_vel) = self.vel_encoder(vel.permute(1, 0, 2))
+        (hidden_vel, cell_vel) = self.vel_encoder(noisy_vel.permute(1, 0, 2))
         hidden_vel = hidden_vel.squeeze(0)
         cell_vel = cell_vel.squeeze(0)
 
         # pose_encoder
-        (hidden_pose, cell_pose) = self.pose_encoder(pose.permute(1, 0, 2))
+        (hidden_pose, cell_pose) = self.pose_encoder(noisy_pose.permute(1, 0, 2))
         hidden_pose = hidden_pose.squeeze(0)
         cell_pose = cell_pose.squeeze(0)
 
         # hidden and cell for decoders
-        vel_dec_input = vel[:, -1, :]
         hidden_dec = hidden_pose + hidden_vel
         cell_dec = cell_pose + cell_vel
 
         # vel_decoder
-        pred_vel = self.vel_decoder(vel_dec_input, hidden_dec, cell_dec)
+        pred_vel = self.vel_decoder(noisy_vel[:, -1, :], hidden_dec, cell_dec)
         pred_pose = pose_from_vel(pred_vel, pose[..., -1, :])
 
         # completion
