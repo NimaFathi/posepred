@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+
 from utils.others import get_metadata, get_dct_matrix, denormalize
 
 
@@ -38,9 +39,6 @@ class CompPredCenter(nn.Module):
         pose = inputs['observed_pose']
         bs, obs_frames_n, features_n = pose.shape
         first_frame = pose[:, 0:1, :]
-        print(first_frame.shape)
-        print(first_frame.repeat(1, obs_frames_n, 1).shape)
-        exit()
         pose = pose - first_frame.repeat(1, obs_frames_n, 1)
 
         # make data noisy

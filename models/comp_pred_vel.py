@@ -50,7 +50,7 @@ class CompPredVel(nn.Module):
 
         if self.args.use_dct:
             dct_c, idct_c = get_dct_matrix(obs_frames_n)
-            dct_v, idct_v = get_dct_matrix(self.args.pred_frames_num + obs_frames_n)
+            dct_v, idct_v = get_dct_matrix(self.args.pred_frames_num)
             dct_c = torch.from_numpy(dct_c).float().to(self.args.device)
             dct_v = torch.from_numpy(dct_v).float().to(self.args.device)
             idct_c = torch.from_numpy(idct_c).float().to(self.args.device)
