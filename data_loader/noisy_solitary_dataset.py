@@ -1,24 +1,24 @@
-import json
 import logging
-import os
-import pathlib
 
 import jsonlines
 import torch
 from torch.utils.data import Dataset
+
+from utils.others import get_metadata
 
 logger = logging.getLogger(__name__)
 
 
 class NoisySolitaryDataset(Dataset):
     def __init__(self, dataset_path, keypoint_dim, is_testing, use_mask, is_visualizing, use_quaternion, noise_rate,
-                 overfit=None, noise_keypoint=None, normalize=False):
+                 overfit=None, noise_keypoint=None, normalize=False, metadata_path=None):
         self.normalize = normalize
         tensor_keys = ['observed_pose', 'future_pose', 'observed_mask', 'future_mask']
         data = list()
         if self.normalize:
-            with open(os.path.join(pathlib.Path(dataset_path).parent.resolve(), f'{keypoint_dim}D_meta.json')) as meta_file:
-                self.meta_data = json.load(meta_file)
+            assert metadata_path, "you should define path to metadata when normalize is true"
+            self.meta_data = get_metadata(metadata_path)
+
         with jsonlines.open(dataset_path) as reader:
             for seq in reader:
                 seq_tensor = {}

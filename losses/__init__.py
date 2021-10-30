@@ -10,6 +10,7 @@ from .comp_pred_pose import CompPredPose
 from .comp_pred_center import CompPredCenter
 from .trans_cvae import TRANS_CVAE
 from .pv_lstm_comp import PVLSTMComp
+from .comp_pred import CompPred
 
 LOSSES = {'mse_vel': MSEVel,
           'mae_vel': MAEVel,
@@ -18,10 +19,11 @@ LOSSES = {'mse_vel': MSEVel,
           'elbo': ELBO,
           'derpof': DeRPoFLoss,
           'his_rep_itself': HisRepItselfLoss,
+          'comp_pred_root': CompPred,
           'comp_pred_vel': CompPredVel,
           'comp_pred_pose': CompPredPose,
           'comp_pred_pose_normal': CompPredPose,
-          'comp_pred_center': CompPredCenter,
+          'comp_pred_center': CompPred,
           'trans_cvae': TRANS_CVAE,
           'pv_lstm_comp': PVLSTMComp,
           }

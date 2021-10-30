@@ -4,7 +4,7 @@ defaults:
 
 type: comp_pred_vel
 autoregressive: false
-noise_value: -1000
+noise_value: 0
 hidden_size: 200
 latent_dim: 10
 activation_type: 'none'
@@ -13,6 +13,7 @@ n_layers: 1
 dropout_enc: 0
 dropout_pose_dec: 0
 dropout_mask_dec: 0
+use_dct: ???
 
 loss:
   type: comp_pred_vel

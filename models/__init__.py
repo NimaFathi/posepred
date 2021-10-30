@@ -8,6 +8,7 @@ from .mix_and_match import MixAndMatch
 from .comp_pred_vel import CompPredVel
 from .comp_pred_pose import CompPredPose
 from .comp_pred_center import CompPredCenter
+from .comp_pred_root import CompPredRoot
 from .trans_cvae import TRANS_CVAE
 from .pv_lstm_noisy import PVLSTMNoisy
 from .pv_lstm_comp import PVLSTMComp
@@ -23,6 +24,7 @@ MODELS = {'zero_vel': ZeroVel,
           'comp_pred_pose': CompPredPose,
           'comp_pred_pose_normal': CompPredPose,
           'comp_pred_center': CompPredCenter,
+          'comp_pred_root': CompPredRoot,
           'trans_cvae': TRANS_CVAE,
           'pv_lstm_noisy': PVLSTMNoisy,
           'pv_lstm_comp': PVLSTMComp,

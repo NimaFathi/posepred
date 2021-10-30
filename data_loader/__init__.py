@@ -18,15 +18,15 @@ def get_dataloader(dataset_name, args):
     dataset_path = os.path.join(data_folder, dataset_name + '.jsonl')
     if args.is_interactive:
         dataset = InteractiveDataset(dataset_path, args.keypoint_dim, args.persons_num, args.is_testing, args.use_mask,
-                                     args.is_visualizing, args.use_quaternion, args.normalize)
+                                     args.is_visualizing, args.use_quaternion, args.normalize, args.metadata_path)
     else:
         if args.is_noisy:
             dataset = NoisySolitaryDataset(dataset_path, args.keypoint_dim, args.is_testing, args.use_mask,
                                            args.is_visualizing, args.use_quaternion, args.noise_rate, args.overfit,
-                                           args.noise_keypoint, args.normalize)
+                                           args.noise_keypoint, args.normalize, args.metadata_path)
         else:
             dataset = SolitaryDataset(dataset_path, args.keypoint_dim, args.is_testing, args.use_mask,
-                                      args.is_visualizing, args.use_quaternion, args.normalize)
+                                      args.is_visualizing, args.use_quaternion, args.normalize, args.metadata_path)
     dataloader = DataLoader(dataset, batch_size=args.batch_size, shuffle=args.shuffle, pin_memory=args.pin_memory,
                             num_workers=args.num_workers)
 

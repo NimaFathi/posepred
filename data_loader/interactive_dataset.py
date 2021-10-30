@@ -1,22 +1,22 @@
-import json
-import os
-import pathlib
-
-import torch
-from torch.utils.data import Dataset
-from numpy import random
-import jsonlines
 import logging
+
+import jsonlines
+import torch
+from numpy import random
+from torch.utils.data import Dataset
+
+from utils.others import get_metadata
 
 logger = logging.getLogger(__name__)
 
 
 class InteractiveDataset(Dataset):
-    def __init__(self, dataset_path, keypoint_dim, persons_num, is_testing, use_mask, is_visualizing, use_quaternion, normalize):
+    def __init__(self, dataset_path, keypoint_dim, persons_num, is_testing, use_mask, is_visualizing, use_quaternion,
+                 normalize, metadata_path):
         self.normalize = normalize
         if self.normalize:
-            with open(os.path.join(pathlib.Path(dataset_path).parent.resolve(), f'{keypoint_dim}D_meta.json')) as meta_file:
-                self.meta_data = json.load(meta_file)
+            assert metadata_path, "you should define path to metadata when normalize is true"
+            self.meta_data = get_metadata(metadata_path)
         tensor_keys = ['observed_pose', 'future_pose', 'observed_mask', 'future_mask']
         data = list()
         with jsonlines.open(dataset_path) as reader:

@@ -1,16 +1,16 @@
 import torch
 import torch.nn as nn
 
-from utils.others import pose_from_vel, get_dct_matrix
+from utils.others import get_dct_matrix, get_metadata, denormalize
 
 
-class CompPredVel(nn.Module):
+class CompPredRoot(nn.Module):
     def __init__(self, args):
-        super(CompPredVel, self).__init__()
+        super(CompPredRoot, self).__init__()
         self.args = args
         input_size = output_size = int(args.keypoints_num * args.keypoint_dim)
 
-        self.vel_encoder = Encoder(input_size, args.hidden_size, args.n_layers, args.dropout_enc)
+        self.pose_encoder = Encoder(input_size, args.hidden_size, args.n_layers, args.dropout_enc)
 
         self.res_block1 = ResidualBlock(input_size=args.hidden_size, embedding_size=args.hidden_size)
         self.mean = nn.Linear(args.hidden_size, args.latent_dim)
@@ -25,71 +25,76 @@ class CompPredVel(nn.Module):
             nn.Linear(args.hidden_size, args.hidden_size),
             nn.ReLU()
         )
-        assert args.activation_type in ['hardtanh', 'sigmoid', 'none'], 'invalid activation_function.'
-        self.vel_decoder = Decoder(args.pred_frames_num, input_size, output_size, args.hidden_size, args.n_layers,
-                                   args.dropout_pose_dec, args.activation_type, args.hardtanh_limit, device=args.device)
+
+        self.pose_decoder = Decoder(args.pred_frames_num, input_size, output_size, args.hidden_size, args.n_layers,
+                                    args.dropout_pose_dec, args.activation_type, args.hardtanh_limit, args.device)
 
         self.completion = Completion(input_size, output_size, args.hidden_size, args.n_layers, args.dropout_pose_dec,
-                                     args.autoregressive, args.activation_type, args.hardtanh_limit, device=args.device)
+                                     args.autoregressive, args.activation_type, args.hardtanh_limit, args.device)
+        if self.args.normalize:
+            assert self.args.metadata_path, "you should define path to metadata when normalize is true"
+            self.meta_data = get_metadata(self.args.metadata_path)
 
     def forward(self, inputs):
         pose = inputs['observed_pose']
-        vel = pose[..., 1:, :] - pose[..., :-1, :]
-        bs, obs_frames_n, features_n = vel.shape
-
-        # make data noisy
+        bs, obs_frames_n, features_n = pose.shape
+        root_joint = pose[:, 0:1, 2:3]
+        pose = pose - root_joint.repeat(1, obs_frames_n, 1)
         if 'observed_noise' in inputs.keys():
-            noise = inputs['observed_noise'][:, 1:, :]
+            noise = inputs['observed_noise']
         else:
             raise Exception("This model requires noise. set is_noisy to True")
-
-        vel = vel.reshape(bs, obs_frames_n, self.args.keypoints_num, self.args.keypoint_dim)
+        pose = pose.reshape(bs, obs_frames_n, self.args.keypoints_num, self.args.keypoint_dim)
         noise = noise.reshape(bs, obs_frames_n, self.args.keypoints_num, 1).repeat(1, 1, 1, self.args.keypoint_dim)
         const = (torch.ones_like(noise, dtype=torch.float) * self.args.noise_value)
-        noisy_vel = torch.where(noise == 1, const, vel).reshape(bs, obs_frames_n, -1)
+        noisy_pose = torch.where(noise == 1, const, pose).reshape(bs, obs_frames_n, -1)
 
         if self.args.use_dct:
             dct_c, idct_c = get_dct_matrix(obs_frames_n)
-            dct_v, idct_v = get_dct_matrix(self.args.pred_frames_num + obs_frames_n)
+            dct_p, idct_p = get_dct_matrix(self.args.pred_frames_num)
             dct_c = torch.from_numpy(dct_c).float().to(self.args.device)
-            dct_v = torch.from_numpy(dct_v).float().to(self.args.device)
+            dct_p = torch.from_numpy(dct_p).float().to(self.args.device)
             idct_c = torch.from_numpy(idct_c).float().to(self.args.device)
-            idct_v = torch.from_numpy(idct_v).float().to(self.args.device)
-            noisy_vel = torch.matmul(dct_c.unsqueeze(0), noisy_vel)
+            idct_p = torch.from_numpy(idct_p).float().to(self.args.device)
+            noisy_pose = torch.matmul(dct_c.unsqueeze(0), noisy_pose)
 
         # velocity encoder
-        (hidden_vel, cell_vel) = self.vel_encoder(noisy_vel.permute(1, 0, 2))
-        hidden_vel = hidden_vel.squeeze(0)
-        cell_vel = cell_vel.squeeze(0)
+        (hidden_p, cell_p) = self.pose_encoder(noisy_pose.permute(1, 0, 2))
+        hidden_p = hidden_p.squeeze(0)
+        cell_p = cell_p.squeeze(0)
 
         # VAE encoder
-        fusion1 = self.res_block1(hidden_vel, nn.ReLU())
+        fusion1 = self.res_block1(hidden_p, nn.ReLU())
         mean = self.mean(fusion1)
         std = self.std(fusion1)
 
         # VAE decoder
         latent = self.reparameterize(mean, std)
         fusion2 = self.decode_latent(latent)
-        hidden_vel = self.res_block2(fusion2, nn.ReLU())
+        hidden_p = self.res_block2(fusion2, nn.ReLU())
 
-        # velocity decoder
-        zeros = torch.zeros_like(cell_vel)
-        pred_vel = self.vel_decoder(noisy_vel[..., -1, :], hidden_vel, zeros)
+        # pose decoder
+        zeros = torch.zeros_like(cell_p)
+        pred_pose_root = self.pose_decoder(noisy_pose[..., -1, :], hidden_p, zeros)
         if self.args.use_dct:
-            pred_vel = torch.matmul(idct_v.unsqueeze(0), pred_vel)
-        pred_pose = pose_from_vel(pred_vel, pose[..., -1, :])
+            pred_pose_root = torch.matmul(idct_p.unsqueeze(0), pred_pose_root)
+        pred_pose = pred_pose_root + root_joint.repeat(1, self.args.pred_frames_num, 1)
 
         # completion
-        zeros = torch.zeros_like(cell_vel)
-        comp_vel = self.completion(noisy_vel, hidden_vel, zeros)
-        if self.args.use_dct:
-            comp_vel = torch.matmul(idct_c.unsqueeze(0), comp_vel)
-        comp_pose = torch.clone(pose)
-        for i in range(comp_vel.shape[-2]):
-            comp_pose[..., i + 1, :] = comp_pose[..., i, :] + comp_vel[..., i, :]
+        zeros = torch.zeros_like(cell_p)
+        comp_pose_root = self.completion(noisy_pose, hidden_p, zeros)
 
-        outputs = {'pred_pose': pred_pose, 'pred_vel': pred_vel, 'comp_pose': comp_pose, 'comp_vel': comp_vel,
-                   'mean': mean, 'std': std, 'noise': noise}
+        if self.args.use_dct:
+            comp_pose_root = torch.matmul(idct_c.unsqueeze(0), comp_pose_root)
+        comp_pose = comp_pose_root + root_joint.repeat(1, obs_frames_n, 1)
+
+        # denormalizing
+        if self.args.normalize:
+            pred_pose = denormalize(self.meta_data, self.args.keypoint_dim, pred_pose)
+            comp_pose = denormalize(self.meta_data, self.args.keypoint_dim, comp_pose)
+            inputs['observed_pose'] = denormalize(self.meta_data, self.args.keypoint_dim, inputs['observed_pose'])
+
+        outputs = {'pred_pose': pred_pose, 'comp_pose': comp_pose, 'mean': mean, 'std': std, 'noise': noise}
 
         if self.args.use_mask:
             outputs['pred_mask'] = inputs['observed_mask'][:, -1:, :].repeat(1, self.args.pred_frames_num, 1)

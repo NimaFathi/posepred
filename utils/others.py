@@ -134,7 +134,7 @@ def qeuler(q, order, epsilon=0):
     return torch.stack((x, y, z), dim=1).view(original_shape)
 
 
-def destabilize(metadata, keypoint_dim, pose):
+def denormalize(metadata, keypoint_dim, pose):
     org_shape = pose.shape
     pose = pose.view(*org_shape[:-1], -1, keypoint_dim)
     for i in range(keypoint_dim):
@@ -142,7 +142,7 @@ def destabilize(metadata, keypoint_dim, pose):
     return pose.view(org_shape)
 
 
-def get_matadata(metadata_path):
+def get_metadata(metadata_path):
     with open(os.path.join(PREPROCESSED_DATA_DIR, metadata_path)) as meta_file:
         meta_data = json.load(meta_file)
     return meta_data
