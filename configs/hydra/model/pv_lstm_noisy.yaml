@@ -3,7 +3,7 @@ defaults:
   - common
 
 type: pv_lstm_noisy
-noise_value: -1000
+noise_value: 0
 hidden_size: 200
 activation_type: 'hardtanh'
 hardtanh_limit: 10
