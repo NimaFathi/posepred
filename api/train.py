@@ -33,6 +33,7 @@ def train(cfg: DictConfig):
         cfg.save_dir = cfg.load_path[:cfg.load_path.rindex('snapshots/')]
     else:
         cfg.model.pred_frames_num = train_dataloader.dataset.future_frames_num
+        cfg.model.obs_frames_num = train_dataloader.dataset.obs_frames_num
         cfg.model.keypoints_num = train_dataloader.dataset.keypoints_num
         model = MODELS[cfg.model.type](cfg.model)
         loss_module = LOSSES[cfg.model.loss.type](cfg.model.loss)
