@@ -1,9 +1,12 @@
+import os
 import logging
 
+import json
 import jsonlines
 import torch
 from torch.utils.data import Dataset
 
+from path_definition import PREPROCESSED_DATA_DIR
 
 logger = logging.getLogger(__name__)
 
@@ -11,13 +14,20 @@ logger = logging.getLogger(__name__)
 class SolitaryDataset(Dataset):
     def __init__(self, dataset_path, keypoint_dim, is_testing, use_mask, is_visualizing, use_quaternion, normalize,
                  metadata_path):
-        self.normalize = normalize
-        if self.normalize:
-            assert metadata_path, "you should define path to metadata when normalize is true"
-            self.meta_data = get_metadata(metadata_path)
 
-        tensor_keys = ['observed_pose', 'future_pose', 'observed_mask', 'future_mask']
+        self.normalize = normalize
+        if normalize:
+            assert metadata_path, "Specify metadata_path when normalize is true."
+            with open(os.path.join(PREPROCESSED_DATA_DIR, metadata_path)) as meta_file:
+                meta_data = json.load(meta_file)
+                self.mean_pose = torch.tensor(meta_data['avg_pose'])
+                self.std_pose = torch.tensor(meta_data['std_pose'])
+        else:
+            self.mean_pose = None
+            self.std_pose = None
+
         data = list()
+        tensor_keys = ['observed_pose', 'future_pose', 'observed_mask', 'future_mask']
         with jsonlines.open(dataset_path) as reader:
             for seq in reader:
                 seq_tensor = {}
@@ -26,6 +36,11 @@ class SolitaryDataset(Dataset):
                         seq_tensor[k] = torch.tensor(v, dtype=torch.float32)
                     else:
                         seq_tensor[k] = v
+                    if normalize and k == 'observed_pose':
+                        frame_n, feature_n = seq_tensor['observed_pose'].shape
+                        mean = self.mean_pose.unsqueeze(0).repeat(frame_n, feature_n // keypoint_dim)
+                        std = self.std_pose.unsqueeze(0).repeat(frame_n, feature_n // keypoint_dim)
+                        seq_tensor['observed_pose'] = (seq_tensor['observed_pose'] - mean) / std
                 data.append(seq_tensor)
 
         self.data = data
@@ -34,7 +49,6 @@ class SolitaryDataset(Dataset):
         self.use_mask = use_mask
         self.is_visualizing = is_visualizing
         self.use_quaternion = use_quaternion
-        self.normalized_indices = []
 
         seq = self.data[0]
         assert 'observed_pose' in seq.keys(), 'dataset must include observed_pose'
@@ -43,15 +57,6 @@ class SolitaryDataset(Dataset):
         if not self.is_testing:
             assert 'future_pose' in seq.keys(), 'dataset must include future_pose'
             self.future_frames_num = seq['future_pose'].shape[-2]
-
-    def normalize_data(self, output, index):
-        if index in self.normalized_indices:
-            return output
-        obs = output['observed_pose'].view(*output['observed_pose'].shape[:-1], -1, self.keypoint_dim)
-        for i in range(self.keypoint_dim):
-            obs[:, :, i] = (obs[:, :, i] - self.meta_data['avg_pose'][i]) / self.meta_data['std_pose'][i]
-        self.normalized_indices.append(index)
-        return output
 
     def __len__(self):
         return len(self.data)
@@ -77,9 +82,6 @@ class SolitaryDataset(Dataset):
         if self.use_quaternion:
             outputs['observed_quaternion_pose'] = torch.tensor(seq['observed_quaternion_pose'])
             outputs['future_quaternion_pose'] = torch.tensor(seq['future_quaternion_pose'])
-
-        if self.normalize:
-            outputs = self.normalize_data(outputs, index)
 
         if self.is_visualizing:
             if 'observed_image_path' in seq.keys():
