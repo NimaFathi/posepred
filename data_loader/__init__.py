@@ -29,23 +29,4 @@ def get_dataloader(dataset_name, args):
                                       args.is_visualizing, args.use_quaternion, args.normalize, args.metadata_path)
     dataloader = DataLoader(dataset, batch_size=args.batch_size, shuffle=args.shuffle, pin_memory=args.pin_memory,
                             num_workers=args.num_workers)
-
     return dataloader
-
-# class Args:
-#     def __init__(self):
-#         self.is_interactive = False
-#         self.keypoint_dim = 3
-#         self.is_testing = False
-#         self.use_mask = True
-#         self.is_visualizing = False
-#         self.use_quaternion = False
-#         self.batch_size = 32
-#         self.shuffle = True
-#         self.pin_memory = False
-#         self.num_workers = 0
-#
-#
-# dl = get_dataloader('JTA_3D_train', Args())
-# for i, data in enumerate(dl):
-#     pass
