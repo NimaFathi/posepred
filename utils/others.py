@@ -1,8 +1,5 @@
 import numpy as np
 import torch
-import os
-import json
-from path_definition import PREPROCESSED_DATA_DIR
 
 
 def pose_from_vel(velocity, last_obs_pose, stay_in_frame=False):
@@ -140,3 +137,7 @@ def denormalize(mean, std, keypoint_dim, pose):
     for i in range(keypoint_dim):
         pose[..., i] = (pose[..., i] * metadata['std_pose'][i]) + metadata['avg_pose'][i]
     return pose.view(org_shape)
+
+
+def normalize(mean, std, keypoint_dim, pose):
+    pass

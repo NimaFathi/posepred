@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 
-from utils.others import denormalize, get_metadata, get_dct_matrix
+from utils.others import denormalize, normalize, get_dct_matrix
 
 
 class CompPredPose(nn.Module):
@@ -31,9 +31,6 @@ class CompPredPose(nn.Module):
 
         self.completion = Completion(input_size, output_size, args.hidden_size, args.n_layers, args.dropout_pose_dec,
                                      args.autoregressive, args.activation_type, args.hardtanh_limit, args.device)
-        if self.args.normalize:
-            assert self.args.metadata_path, "you should define path to metadata when normalize is true"
-            self.meta_data = get_metadata(self.args.metadata_path)
 
         if self.args.use_dct:
             dct_c, idct_c = get_dct_matrix(self.args.obs_frames_num)
@@ -45,7 +42,8 @@ class CompPredPose(nn.Module):
 
     def forward(self, inputs):
         pose = inputs['observed_pose']
-
+        if self.args.normalize:
+            pose = normalize(self.args.mean_pose, self.args.std_pose, self.args.keypoint_dim, pose)
         bs, obs_frames_n, features_n = pose.shape
         # make data noisy
         if 'observed_noise' in inputs.keys():
@@ -89,9 +87,8 @@ class CompPredPose(nn.Module):
 
         # denormalizing
         if self.args.normalize:
-            pred_pose = denormalize(self.meta_data, self.args.keypoint_dim, pred_pose)
-            comp_pose = denormalize(self.meta_data, self.args.keypoint_dim, comp_pose)
-            inputs['observed_pose'] = denormalize(self.meta_data, self.args.keypoint_dim, inputs['observed_pose'])
+            pred_pose = denormalize(self.args.mean_pose, self.args.std_pose, self.args.keypoint_dim, pred_pose)
+            comp_pose = denormalize(self.args.mean_pose, self.args.std_pose, self.args.keypoint_dim, comp_pose)
 
         outputs = {'pred_pose': pred_pose, 'comp_pose': comp_pose, 'mean': mean, 'std': std, 'noise': noise}
         if self.args.use_mask:
