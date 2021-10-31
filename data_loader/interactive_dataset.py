@@ -5,7 +5,6 @@ import torch
 from numpy import random
 from torch.utils.data import Dataset
 
-from utils.others import get_metadata
 
 logger = logging.getLogger(__name__)
 

@@ -140,9 +140,3 @@ def denormalize(metadata, keypoint_dim, pose):
     for i in range(keypoint_dim):
         pose[..., i] = (pose[..., i] * metadata['std_pose'][i]) + metadata['avg_pose'][i]
     return pose.view(org_shape)
-
-
-def get_metadata(metadata_path):
-    with open(os.path.join(PREPROCESSED_DATA_DIR, metadata_path)) as meta_file:
-        meta_data = json.load(meta_file)
-    return meta_data

@@ -1,7 +1,7 @@
 import os
 from torch.utils.data import DataLoader
 
-from path_definition import ROOT_DIR
+from path_definition import ROOT_DIR, PREPROCESSED_DATA_DIR
 from .interactive_dataset import InteractiveDataset
 from .solitary_dataset import SolitaryDataset
 from .noisy_solitary_dataset import NoisySolitaryDataset
@@ -16,14 +16,15 @@ def get_dataloader(dataset_name, args):
         return None
     data_folder = os.path.join(ROOT_DIR, 'preprocessed_data')
     dataset_path = os.path.join(data_folder, dataset_name + '.jsonl')
+
     if args.is_interactive:
         dataset = InteractiveDataset(dataset_path, args.keypoint_dim, args.persons_num, args.is_testing, args.use_mask,
                                      args.is_visualizing, args.use_quaternion, args.normalize, args.metadata_path)
     else:
         if args.is_noisy:
             dataset = NoisySolitaryDataset(dataset_path, args.keypoint_dim, args.is_testing, args.use_mask,
-                                           args.is_visualizing, args.use_quaternion, args.noise_rate, args.overfit,
-                                           args.noise_keypoint, args.normalize, args.metadata_path)
+                                           args.is_visualizing, args.use_quaternion, args.normalize, args.metadata_path,
+                                           args.noise_rate, args.noise_keypoint, args.overfit)
         else:
             dataset = SolitaryDataset(dataset_path, args.keypoint_dim, args.is_testing, args.use_mask,
                                       args.is_visualizing, args.use_quaternion, args.normalize, args.metadata_path)
