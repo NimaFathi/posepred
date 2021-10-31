@@ -1,7 +1,8 @@
 import torch
 import torch.nn as nn
 
-from utils.others import get_dct_matrix, denormalize, normalize
+from utils.others import get_dct_matrix
+from utils.normal import normalize, denormalize
 
 
 class CompPredCenter(nn.Module):
@@ -42,7 +43,7 @@ class CompPredCenter(nn.Module):
     def forward(self, inputs):
         pose = inputs['observed_pose']
         if self.args.normalize:
-            pose = normalize(self.args.mean_pose, self.args.std_pose, self.args.keypoint_dim, pose)
+            pose = normalize(pose, self.args.mean_pose, self.args.std_pose)
         bs, obs_frames_n, features_n = pose.shape
         first_frame = pose[:, 0:1, :]
         pose = pose - first_frame.repeat(1, obs_frames_n, 1)
@@ -91,8 +92,8 @@ class CompPredCenter(nn.Module):
 
         # denormalizing
         if self.args.normalize:
-            pred_pose = denormalize(self.args.mean_pose, self.args.std_pose, self.args.keypoint_dim, pred_pose)
-            comp_pose = denormalize(self.args.mean_pose, self.args.std_pose, self.args.keypoint_dim, comp_pose)
+            pred_pose = denormalize(pred_pose, self.args.mean_pose, self.args.std_pose)
+            comp_pose = denormalize(comp_pose, self.args.mean_pose, self.args.std_pose)
 
         outputs = {'pred_pose': pred_pose, 'comp_pose': comp_pose, 'pred_pose_center': pred_pose_center,
                    'comp_pose_center': comp_pose_center, 'mean': mean, 'std': std, 'noise': noise}
