@@ -38,11 +38,6 @@ class InteractiveDataset(Dataset):
                         seq_tensor[k] = torch.tensor(v, dtype=torch.float32)
                     else:
                         seq_tensor[k] = v
-                    if normalize and k == 'observed_pose':
-                        person_n, frame_n, feature_n = seq_tensor['observed_pose'].shape
-                        mean = self.mean_pose.unsqueeze(0).repeat(person_n, frame_n, feature_n // keypoint_dim)
-                        std = self.std_pose.unsqueeze(0).repeat(person_n, frame_n, feature_n // keypoint_dim)
-                        seq_tensor['observed_pose'] = (seq_tensor['observed_pose'] - mean) / std
                 data.append(seq_tensor)
 
         self.data = data
