@@ -36,7 +36,7 @@ class CompPredPose(nn.Module):
             self.meta_data = get_metadata(self.args.metadata_path)
 
         if self.args.use_dct:
-            dct_c, idct_c = get_dct_matrix(16)
+            dct_c, idct_c = get_dct_matrix(self.args.obs_frames_num)
             dct_p, idct_p = get_dct_matrix(self.args.pred_frames_num)
             self.dct_c = torch.from_numpy(dct_c).float().to(self.args.device)
             self.dct_p = torch.from_numpy(dct_p).float().to(self.args.device)

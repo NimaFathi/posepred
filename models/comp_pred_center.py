@@ -34,6 +34,13 @@ class CompPredCenter(nn.Module):
         if self.args.normalize:
             assert self.args.metadata_path, "you should define path to metadata when normalize is true"
             self.meta_data = get_metadata(self.args.metadata_path)
+        if self.args.use_dct:
+            dct_c, idct_c = get_dct_matrix(self.args.obs_frames_num)
+            dct_p, idct_p = get_dct_matrix(self.args.pred_frames_num)
+            self.dct_c = torch.from_numpy(dct_c).float().to(self.args.device)
+            self.dct_p = torch.from_numpy(dct_p).float().to(self.args.device)
+            self.idct_c = torch.from_numpy(idct_c).float().to(self.args.device)
+            self.idct_p = torch.from_numpy(idct_p).float().to(self.args.device)
 
     def forward(self, inputs):
         pose = inputs['observed_pose']
@@ -50,15 +57,8 @@ class CompPredCenter(nn.Module):
         noise = noise.reshape(bs, obs_frames_n, self.args.keypoints_num, 1).repeat(1, 1, 1, self.args.keypoint_dim)
         const = (torch.ones_like(noise, dtype=torch.float) * self.args.noise_value)
         noisy_pose = torch.where(noise == 1, const, pose).reshape(bs, obs_frames_n, -1)
-
         if self.args.use_dct:
-            dct_c, idct_c = get_dct_matrix(obs_frames_n)
-            dct_p, idct_p = get_dct_matrix(self.args.pred_frames_num)
-            dct_c = torch.from_numpy(dct_c).float().to(self.args.device)
-            dct_p = torch.from_numpy(dct_p).float().to(self.args.device)
-            idct_c = torch.from_numpy(idct_c).float().to(self.args.device)
-            idct_p = torch.from_numpy(idct_p).float().to(self.args.device)
-            noisy_pose = torch.matmul(dct_c.unsqueeze(0), noisy_pose)
+            noisy_pose = torch.matmul(self.dct_c.unsqueeze(0), noisy_pose)
 
         # velocity encoder
         (hidden_p, cell_p) = self.pose_encoder(noisy_pose.permute(1, 0, 2))
@@ -79,7 +79,7 @@ class CompPredCenter(nn.Module):
         zeros = torch.zeros_like(cell_p)
         pred_pose_center = self.pose_decoder(noisy_pose[..., -1, :], hidden_p, zeros)
         if self.args.use_dct:
-            pred_pose_center = torch.matmul(idct_p.unsqueeze(0), pred_pose_center)
+            pred_pose_center = torch.matmul(self.idct_p.unsqueeze(0), pred_pose_center)
 
         pred_pose = pred_pose_center + first_frame.repeat(1, self.args.pred_frames_num, 1)
 
@@ -87,7 +87,7 @@ class CompPredCenter(nn.Module):
         zeros = torch.zeros_like(cell_p)
         comp_pose_center = self.completion(noisy_pose, hidden_p, zeros)
         if self.args.use_dct:
-            comp_pose_center = torch.matmul(idct_c.unsqueeze(0), comp_pose_center)
+            comp_pose_center = torch.matmul(self.idct_c.unsqueeze(0), comp_pose_center)
         comp_pose = comp_pose_center + first_frame.repeat(1, obs_frames_n, 1)
 
         # denormalizing
