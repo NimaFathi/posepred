@@ -20,8 +20,8 @@ class SolitaryDataset(Dataset):
             assert metadata_path, "Specify metadata_path when normalize is true."
             with open(os.path.join(PREPROCESSED_DATA_DIR, metadata_path)) as meta_file:
                 meta_data = json.load(meta_file)
-                self.mean_pose = torch.tensor(meta_data['avg_pose'])
-                self.std_pose = torch.tensor(meta_data['std_pose'])
+                self.mean_pose = list(meta_data['avg_pose'])
+                self.std_pose = list(meta_data['std_pose'])
         else:
             self.mean_pose = None
             self.std_pose = None
