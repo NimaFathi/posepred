@@ -91,9 +91,6 @@ def visualize(cfg: DictConfig):
     if 'completed' in showing:
         names.append('completed')
         pose = data['comp_pose'].squeeze(0) if cfg.data.is_interactive else data['comp_pose']
-        if cfg.data.normalize:
-            metadata = get_metadata(cfg.data.metadata_path)
-            pose = denormalize(metadata, cfg.data.keypoint_dim, pose)
         poses.append(pose.permute(1, 0, 2))
         masks.append(None)
         image_path = data['observed_image'] if 'observed_image' in data.keys() else None
