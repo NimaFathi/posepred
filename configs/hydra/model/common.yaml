@@ -4,3 +4,5 @@ obs_frames_num:
 keypoints_num:
 use_mask: ${use_mask}
 device: ${device}
+mean_pose:
+std_pose:

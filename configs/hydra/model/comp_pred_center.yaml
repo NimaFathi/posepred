@@ -14,8 +14,7 @@ dropout_enc: 0
 dropout_pose_dec: 0
 dropout_mask_dec: 0
 normalize: ${data.normalize}
-metadata_path: ${data.metadata_path}
-use_dct: ???
+use_dct:
 
 loss:
   type: comp_pred_center

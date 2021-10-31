@@ -134,7 +134,7 @@ def qeuler(q, order, epsilon=0):
     return torch.stack((x, y, z), dim=1).view(original_shape)
 
 
-def denormalize(metadata, keypoint_dim, pose):
+def denormalize(mean, std, keypoint_dim, pose):
     org_shape = pose.shape
     pose = pose.view(*org_shape[:-1], -1, keypoint_dim)
     for i in range(keypoint_dim):
