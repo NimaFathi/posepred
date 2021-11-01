@@ -1,0 +1,22 @@
+defaults:
+  - _self_
+  - common
+
+type: comp_pred_vel_concat
+autoregressive: true
+noise_value: 0
+hidden_size: 200
+latent_dim: 10
+activation_type: 'none'
+hardtanh_limit: 10
+n_layers: 1
+dropout_enc: 0
+dropout_pose_dec: 0
+dropout_mask_dec: 0
+
+loss:
+  type: comp_pred
+  pred_weight: 1
+  comp_weight: 1
+  kl_weight: 0.001
+  keypoint_dim: ${keypoint_dim}
