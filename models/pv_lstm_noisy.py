@@ -18,16 +18,6 @@ class PVLSTMNoisy(nn.Module):
                                    args.dropout_pose_dec, args.activation_type, args.hardtanh_limit, device=args.device)
         self.completion = Completion(input_size, output_size, args.hidden_size, args.n_layers, args.dropout_pose_dec,
                                      args.autoregressive, args.activation_type, args.hardtanh_limit, device=args.device)
-        if self.args.use_dct:
-            dct_vel_c, idct_vel_c = get_dct_matrix(self.args.obs_frames_num - 1)
-            dct_pose_c, idct_pose_c = get_dct_matrix(self.args.obs_frames_num)
-            dct_p, idct_p = get_dct_matrix(self.args.pred_frames_num)
-            self.dct_vel_c = torch.from_numpy(dct_vel_c).float().to(self.args.device)
-            self.dct_pose_c = torch.from_numpy(dct_pose_c).float().to(self.args.device)
-            self.dct_p = torch.from_numpy(dct_p).float().to(self.args.device)
-            self.idct_pose_c = torch.from_numpy(idct_pose_c).float().to(self.args.device)
-            self.idct_vel_c = torch.from_numpy(idct_vel_c).float().to(self.args.device)
-            self.idct_p = torch.from_numpy(idct_p).float().to(self.args.device)
 
         if self.args.use_dct:
             # observed_vel
@@ -51,7 +41,8 @@ class PVLSTMNoisy(nn.Module):
         # make vel noisy
         bs, frames_n, features_n = vel.shape
         vel_ = vel.reshape(bs, frames_n, self.args.keypoints_num, self.args.keypoint_dim)
-        vel_noise = inputs['observed_noise'][:, 1:, :].reshape(bs, frames_n, self.args.keypoints_num, 1)
+        vel_noise = torch.logical_or(inputs['observed_noise'][:, :-1, :], inputs['observed_noise'][:, 1:, :]).reshape(
+            bs, frames_n, self.args.keypoints_num, 1)
         vel_noise = vel_noise.repeat(1, 1, 1, self.args.keypoint_dim)
         const = (torch.ones_like(vel_noise, dtype=torch.float) * self.args.noise_value)
         noisy_vel = torch.where(vel_noise == 1, const, vel_).reshape(bs, frames_n, -1)
