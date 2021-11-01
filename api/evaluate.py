@@ -27,6 +27,10 @@ def evaluate(cfg: DictConfig):
     else:
         cfg.model.pred_frames_num = dataloader.dataset.future_frames_num
         cfg.model.keypoints_num = dataloader.dataset.keypoints_num
+        cfg.model.obs_frames_num = dataloader.dataset.obs_frames_num
+        cfg.model.mean_pose = dataloader.dataset.mean_pose
+        cfg.model.std_pose = dataloader.dataset.std_pose
+
         model = MODELS[cfg.model.type](cfg.model)
         loss_module = LOSSES[cfg.model.loss.type](cfg.model.loss)
         if cfg.model.type == 'nearest_neighbor':

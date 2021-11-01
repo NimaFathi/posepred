@@ -1,6 +1,7 @@
-import os
 import json
+import os
 from json import JSONEncoder
+
 import numpy as np
 
 
@@ -33,10 +34,19 @@ class Processor:
         np_data = np.array(new_data)
         if len(np_data.shape) == 2:
             np_data = np.expand_dims(np_data, axis=0)
+
         meta_data['avg_person'].append(np_data.shape[0])
         meta_data['count'] += np_data.size // dim
         meta_data['sum2_pose'] += np.array([np.sum(np.square(np_data[:, :, i::dim])) for i in range(dim)])
         meta_data['sum_pose'] += np.array([np.sum(np_data[:, :, i::dim]) for i in range(dim)])
+        np_data = np_data.reshape(*np_data.shape[:-1], np_data.shape[-1] // dim, 3)
+        new_max = [np.max(np_data[:, :, :, i]) for i in range(3)]
+        new_min = [np.min(np_data[:, :, :, i]) for i in range(3)]
+        for i in range(3):
+            if new_max[i] > meta_data['max_pose'][i]:
+                meta_data['max_pose'][i] = new_max[i]
+            if new_min[i] < meta_data['min_pose'][i]:
+                meta_data['min_pose'][i] = new_min[i]
 
     @staticmethod
     def save_meta_data(meta_data, outputdir, is_3d, data_type):
@@ -54,6 +64,9 @@ class Processor:
             'avg_person': np.mean(np.array(meta_data['avg_person'])),
             'std_person': np.std(np.array(meta_data['avg_person'])),
             'avg_pose': meta_data['sum_pose'] / meta_data['count'],
+            'max_pose': meta_data['max_pose'],
+            'min_pose': meta_data['min_pose'],
+            'mask_percentage': meta_data['mask_percentage'],
             'std_pose': np.sqrt(
                 ((meta_data['sum2_pose'] - (np.square(meta_data['sum_pose']) / meta_data['count'])) /
                  meta_data['count']))

@@ -8,7 +8,7 @@ import torch
 from data_loader import get_dataloader, DATASETS, VISUALIZING_TYPES
 from models import MODELS
 from utils.save_load import load_snapshot
-from utils.others import dict_to_device
+from utils.others import dict_to_device, denormalize, get_metadata
 from visualization.visualizer import Visualizer
 
 from path_definition import HYDRA_PATH
@@ -19,6 +19,8 @@ logger = logging.getLogger(__name__)
 @hydra.main(config_path=HYDRA_PATH, config_name="visualize")
 def visualize(cfg: DictConfig):
     assert cfg.dataset_type in DATASETS, 'dataset_type chioces: ' + str(DATASETS)
+    if cfg.data.normalize:
+        assert cfg.data.metadata_path, 'given normalized data, metadata_path should be given'
     showing = cfg.showing.strip().split('-')
     for k in showing:
         if k not in VISUALIZING_TYPES:
@@ -29,6 +31,7 @@ def visualize(cfg: DictConfig):
 
     # prepare data
     dataloader = get_dataloader(cfg.dataset, cfg.data)
+
     index = random.randint(0, dataloader.dataset.__len__() - 1) if cfg.index is None else cfg.index
     data = dataloader.dataset.__getitem__(index)
     for key in ['observed_pose', 'future_pose', 'observed_mask', 'future_mask', 'observed_noise']:
@@ -70,6 +73,10 @@ def visualize(cfg: DictConfig):
     if 'observed' in showing:
         names.append('observed')
         pose = data['observed_pose'].squeeze(0) if cfg.data.is_interactive else data['observed_pose']
+        # print(pose.shape)
+        if cfg.data.normalize:
+            metadata = get_metadata(cfg.data.metadata_path)
+            pose = denormalize(metadata, cfg.data.keypoint_dim, pose)
         poses.append(pose.permute(1, 0, 2))
         if 'observed_mask' in data.keys():
             mask = data['observed_mask'].squeeze(0) if cfg.data.is_interactive else data['observed_mask']

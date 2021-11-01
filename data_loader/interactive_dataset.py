@@ -1,17 +1,35 @@
-import torch
-from torch.utils.data import Dataset
-from numpy import random
-import jsonlines
+import os
 import logging
+
+import json
+import jsonlines
+import torch
+from numpy import random
+from torch.utils.data import Dataset
+
+from path_definition import PREPROCESSED_DATA_DIR
 
 logger = logging.getLogger(__name__)
 
 
 class InteractiveDataset(Dataset):
-    def __init__(self, dataset_path, keypoint_dim, persons_num, is_testing, use_mask, is_visualizing, use_quaternion):
+    def __init__(self, dataset_path, keypoint_dim, persons_num, is_testing, use_mask, is_visualizing, use_quaternion,
+                 normalize, metadata_path):
+        self.normalize = normalize
+        if normalize:
+            assert metadata_path, "Specify metadata_path when normalize is true."
+            with open(os.path.join(PREPROCESSED_DATA_DIR, metadata_path)) as meta_file:
+                meta_data = json.load(meta_file)
+                self.mean_pose = list(meta_data['avg_pose'])
+                self.std_pose = list(meta_data['std_pose'])
+                self.mean_person = int(meta_data['avg_person'])
+        else:
+            self.mean_pose = None
+            self.std_pose = None
+            self.mean_person = None
 
-        tensor_keys = ['observed_pose', 'future_pose', 'observed_mask', 'future_mask']
         data = list()
+        tensor_keys = ['observed_pose', 'future_pose', 'observed_mask', 'future_mask']
         with jsonlines.open(dataset_path) as reader:
             for seq in reader:
                 seq_tensor = {}
@@ -24,12 +42,12 @@ class InteractiveDataset(Dataset):
 
         self.data = data
         self.keypoint_dim = keypoint_dim
-        self.persons_num = persons_num
+        self.persons_num = self.mean_person if persons_num is None else persons_num
         self.is_testing = is_testing
         self.use_mask = use_mask
         self.is_visualizing = is_visualizing
         self.use_quaternion = use_quaternion
-
+        self.normalized_indices = []
         seq = self.data[0]
         assert 'observed_pose' in seq.keys(), 'dataset must include observed_pose'
         self.keypoints_num = int(seq['observed_pose'].shape[-1] / self.keypoint_dim)

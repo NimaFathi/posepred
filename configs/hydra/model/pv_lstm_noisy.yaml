@@ -3,8 +3,8 @@ defaults:
   - common
 
 type: pv_lstm_noisy
-autoregressive: false
-noise_value: -1000
+autoregressive: true
+noise_value: 0
 hidden_size: 200
 activation_type: 'none'
 hardtanh_limit: 10

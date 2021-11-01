@@ -2,11 +2,12 @@ import torch
 import torch.nn as nn
 
 from utils.others import get_dct_matrix
+from utils.normal import normalize, denormalize
 
 
-class CompPredCenterDCT(nn.Module):
+class CompPredRoot(nn.Module):
     def __init__(self, args):
-        super(CompPredCenterDCT, self).__init__()
+        super(CompPredRoot, self).__init__()
         self.args = args
         input_size = output_size = int(args.keypoints_num * args.keypoint_dim)
 
@@ -31,15 +32,22 @@ class CompPredCenterDCT(nn.Module):
 
         self.completion = Completion(input_size, output_size, args.hidden_size, args.n_layers, args.dropout_pose_dec,
                                      args.autoregressive, args.activation_type, args.hardtanh_limit, args.device)
+        if self.args.use_dct:
+            dct_c, idct_c = get_dct_matrix(self.args.obs_frames_num)
+            dct_p, idct_p = get_dct_matrix(self.args.pred_frames_num)
+            self.dct_c = torch.from_numpy(dct_c).float().to(self.args.device)
+            self.dct_p = torch.from_numpy(dct_p).float().to(self.args.device)
+            self.idct_c = torch.from_numpy(idct_c).float().to(self.args.device)
+            self.idct_p = torch.from_numpy(idct_p).float().to(self.args.device)
 
     def forward(self, inputs):
         pose = inputs['observed_pose']
-        torch.set_printoptions(threshold=10_000)
+        if self.args.normalize:
+            pose = normalize(pose, self.args.mean_pose, self.args.std_pose)
 
         bs, obs_frames_n, features_n = pose.shape
-        first_frame = pose[:, 0:1, :]
-        pose = pose - first_frame.repeat(1, obs_frames_n, 1)
-        # make data noisy
+        root_joint = pose[:, 0:1, 2:3]
+        pose = pose - root_joint.repeat(1, obs_frames_n, 1)
         if 'observed_noise' in inputs.keys():
             noise = inputs['observed_noise']
         else:
@@ -48,14 +56,12 @@ class CompPredCenterDCT(nn.Module):
         noise = noise.reshape(bs, obs_frames_n, self.args.keypoints_num, 1).repeat(1, 1, 1, self.args.keypoint_dim)
         const = (torch.ones_like(noise, dtype=torch.float) * self.args.noise_value)
         noisy_pose = torch.where(noise == 1, const, pose).reshape(bs, obs_frames_n, -1)
-        dct_m, idct_m = get_dct_matrix(obs_frames_n)
-        _, idct_p = get_dct_matrix(self.args.pred_frames_num)
-        dct_m = torch.from_numpy(dct_m).float().to(self.args.device)
-        idct_m = torch.from_numpy(idct_m).float().to(self.args.device)
-        idct_p = torch.from_numpy(idct_p).float().to(self.args.device)
-        noisy_dct_pose = torch.matmul(dct_m.unsqueeze(0), noisy_pose)
+
+        if self.args.use_dct:
+            noisy_pose = torch.matmul(self.dct_c.unsqueeze(0), noisy_pose)
+
         # velocity encoder
-        (hidden_p, cell_p) = self.pose_encoder(noisy_dct_pose.permute(1, 0, 2))
+        (hidden_p, cell_p) = self.pose_encoder(noisy_pose.permute(1, 0, 2))
         hidden_p = hidden_p.squeeze(0)
         cell_p = cell_p.squeeze(0)
 
@@ -69,25 +75,27 @@ class CompPredCenterDCT(nn.Module):
         fusion2 = self.decode_latent(latent)
         hidden_p = self.res_block2(fusion2, nn.ReLU())
 
-        # velocity decoder
+        # pose decoder
         zeros = torch.zeros_like(cell_p)
-        pred_dct_pose_center = self.pose_decoder(noisy_dct_pose[..., -1, :], hidden_p, zeros)
-        # print(pred_dct_pose_center.shape)
-        # print(idct_m.unsqueeze(0).shape)
-        # exit()
-        pred_pose_center = torch.matmul(idct_p.unsqueeze(0), pred_dct_pose_center)
-        # pred_pose_center = torch.tensor(idct(pred_dct_pose_center.detach().cpu().numpy(), norm='ortho', axis=1)).to(self.args.device)
-        pred_pose = pred_pose_center + first_frame.repeat(1, self.args.pred_frames_num, 1)
+        pred_pose_root = self.pose_decoder(noisy_pose[..., -1, :], hidden_p, zeros)
+        if self.args.use_dct:
+            pred_pose_root = torch.matmul(self.idct_p.unsqueeze(0), pred_pose_root)
+        pred_pose = pred_pose_root + root_joint.repeat(1, self.args.pred_frames_num, 1)
 
         # completion
         zeros = torch.zeros_like(cell_p)
-        comp_dct_pose_center = self.completion(noisy_dct_pose, hidden_p, zeros)
-        comp_pose_center = torch.matmul(idct_m.unsqueeze(0), comp_dct_pose_center)
-        # comp_pose_center = torch.tensor(idct(comp_dct_pose_center.detach().cpu().numpy(), norm='ortho', axis=1)).to(self.args.device)
-        comp_pose = comp_pose_center + first_frame.repeat(1, obs_frames_n, 1)
+        comp_pose_root = self.completion(noisy_pose, hidden_p, zeros)
 
-        outputs = {'pred_pose': pred_pose, 'pred_pose_center': pred_pose_center, 'comp_pose': comp_pose,
-                   'comp_pose_center': comp_pose_center, 'mean': mean, 'std': std, 'noise': noise}
+        if self.args.use_dct:
+            comp_pose_root = torch.matmul(self.idct_c.unsqueeze(0), comp_pose_root)
+        comp_pose = comp_pose_root + root_joint.repeat(1, obs_frames_n, 1)
+
+        # denormalizing
+        if self.args.normalize:
+            pred_pose = denormalize(pred_pose, self.args.mean_pose, self.args.std_pose)
+            comp_pose = denormalize(comp_pose, self.args.mean_pose, self.args.std_pose)
+
+        outputs = {'pred_pose': pred_pose, 'comp_pose': comp_pose, 'mean': mean, 'std': std, 'noise': noise}
 
         if self.args.use_mask:
             outputs['pred_mask'] = inputs['observed_mask'][:, -1:, :].repeat(1, self.args.pred_frames_num, 1)
