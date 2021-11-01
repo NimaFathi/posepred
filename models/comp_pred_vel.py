@@ -32,13 +32,14 @@ class CompPredVel(nn.Module):
         self.completion = Completion(input_size, output_size, args.hidden_size, args.n_layers, args.dropout_pose_dec,
                                      args.autoregressive, args.activation_type, args.hardtanh_limit, device=args.device)
         if self.args.use_dct:
-            dct_c, idct_c = get_dct_matrix(self.args.obs_frames_num - 1)
-            dct_v, idct_v = get_dct_matrix(self.args.pred_frames_num)
-            self.dct_c = torch.from_numpy(dct_c).float().to(self.args.device)
-            self.dct_v = torch.from_numpy(dct_v).float().to(self.args.device)
-            self.idct_c = torch.from_numpy(idct_c).float().to(self.args.device)
-            self.idct_v = torch.from_numpy(idct_v).float().to(self.args.device)
+            # observed_vel
+            dct_obs_vel, idct_obs_vel = get_dct_matrix(self.args.obs_frames_num - 1)
+            self.dct_obs_vel = torch.from_numpy(dct_obs_vel).float().to(self.args.device)
+            self.idct_obs_vel = torch.from_numpy(idct_obs_vel).float().to(self.args.device)
 
+            # future_vel
+            _, idct_future_vel = get_dct_matrix(self.args.pred_frames_num)
+            self.idct_future_vel = torch.from_numpy(idct_future_vel).float().to(self.args.device)
 
     def forward(self, inputs):
         pose = inputs['observed_pose']
@@ -57,7 +58,7 @@ class CompPredVel(nn.Module):
         noisy_vel = torch.where(noise == 1, const, vel).reshape(bs, obs_frames_n, -1)
 
         if self.args.use_dct:
-            noisy_vel = torch.matmul(self.dct_c.unsqueeze(0), noisy_vel)
+            noisy_vel = torch.matmul(self.dct_obs_vel.unsqueeze(0), noisy_vel)
 
         # velocity encoder
         (hidden_vel, cell_vel) = self.vel_encoder(noisy_vel.permute(1, 0, 2))
@@ -77,17 +78,15 @@ class CompPredVel(nn.Module):
         # velocity decoder
         zeros = torch.zeros_like(cell_vel)
         pred_vel = self.vel_decoder(noisy_vel[..., -1, :], hidden_vel, zeros)
-
         if self.args.use_dct:
-            pred_vel = torch.matmul(self.idct_v.unsqueeze(0), pred_vel)
-
+            pred_vel = torch.matmul(self.idct_future_vel.unsqueeze(0), pred_vel)
         pred_pose = pose_from_vel(pred_vel, pose[..., -1, :])
 
         # completion
         zeros = torch.zeros_like(cell_vel)
         comp_vel = self.completion(noisy_vel, hidden_vel, zeros)
         if self.args.use_dct:
-            comp_vel = torch.matmul(self.idct_c.unsqueeze(0), comp_vel)
+            comp_vel = torch.matmul(self.idct_obs_vel.unsqueeze(0), comp_vel)
         comp_pose = torch.clone(pose)
         for i in range(comp_vel.shape[-2]):
             comp_pose[..., i + 1, :] = comp_pose[..., i, :] + comp_vel[..., i, :]
