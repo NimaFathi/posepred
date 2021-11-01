@@ -30,12 +30,20 @@ class PVLSTMNoisy(nn.Module):
             self.idct_vel_c = torch.from_numpy(idct_vel_c).float().to(self.args.device)
             self.idct_p = torch.from_numpy(idct_p).float().to(self.args.device)
 
+        if self.args.use_dct:
+            # observed_vel
+            dct_obs_vel, idct_obs_vel = get_dct_matrix(self.args.obs_frames_num - 1)
+            self.dct_obs_vel = torch.from_numpy(dct_obs_vel).float().to(self.args.device)
+            self.idct_obs_vel = torch.from_numpy(idct_obs_vel).float().to(self.args.device)
+            # observed_pose
+            dct_obs_pose, _ = get_dct_matrix(self.args.obs_frames_num)
+            self.dct_obs_pose = torch.from_numpy(dct_obs_pose).float().to(self.args.device)
+            # future_vel
+            _, idct_future_vel = get_dct_matrix(self.args.pred_frames_num)
+            self.idct_future_vel = torch.from_numpy(idct_future_vel).float().to(self.args.device)
+
     def forward(self, inputs):
         pose = inputs['observed_pose']
-
-        if self.args.normalize:
-            pose = normalize(pose, self.args.mean_pose, self.args.std_pose)
-
         vel = pose[..., 1:, :] - pose[..., :-1, :]
 
         if 'observed_noise' not in inputs.keys():
@@ -49,9 +57,6 @@ class PVLSTMNoisy(nn.Module):
         const = (torch.ones_like(vel_noise, dtype=torch.float) * self.args.noise_value)
         noisy_vel = torch.where(vel_noise == 1, const, vel_).reshape(bs, frames_n, -1)
 
-        if self.args.use_dct:
-            noisy_vel = torch.matmul(self.dct_vel_c.unsqueeze(0), noisy_vel)
-
         # make pose noisy
         bs, frames_n, features_n = pose.shape
         pose_ = pose.reshape(bs, frames_n, self.args.keypoints_num, self.args.keypoint_dim)
@@ -61,8 +66,9 @@ class PVLSTMNoisy(nn.Module):
         noisy_pose = torch.where(pose_noise == 1, const, pose_).reshape(bs, frames_n, -1)
 
         if self.args.use_dct:
-            noisy_pose = torch.matmul(self.dct_pose_c.unsqueeze(0), noisy_pose)
-            # TODO: for prediction with dct shoudl have 16 + 60 as input size
+            noisy_vel = torch.matmul(self.dct_obs_vel.unsqueeze(0), noisy_vel)
+            noisy_pose = torch.matmul(self.dct_obs_pose.unsqueeze(0), noisy_pose)
+
         # vel_encoder
         (hidden_vel, cell_vel) = self.vel_encoder(noisy_vel.permute(1, 0, 2))
         hidden_vel = hidden_vel.squeeze(0)
@@ -79,23 +85,17 @@ class PVLSTMNoisy(nn.Module):
 
         # vel_decoder
         pred_vel = self.vel_decoder(noisy_vel[:, -1, :], hidden_dec, cell_dec)
+        if self.args.use_dct:
+            pred_vel = torch.matmul(self.idct_future_vel.unsqueeze(0), pred_vel)
+        pred_pose = pose_from_vel(pred_vel, pose[..., -1, :])
 
         # completion
         comp_vel = self.completion(noisy_vel, hidden_dec, cell_dec)
-
         if self.args.use_dct:
-            pred_vel = torch.matmul(self.idct_p.unsqueeze(0), pred_vel)
-            comp_vel = torch.matmul(self.idct_vel_c.unsqueeze(0), comp_vel)
-
+            comp_vel = torch.matmul(self.idct_obs_vel.unsqueeze(0), comp_vel)
         comp_pose = torch.clone(pose)
         for i in range(comp_vel.shape[-2]):
             comp_pose[..., i + 1, :] = comp_pose[..., i, :] + comp_vel[..., i, :]
-
-        pred_pose = pose_from_vel(pred_vel, pose[..., -1, :])
-
-        if self.args.normalize:
-            comp_pose = denormalize(comp_pose, self.args.mean_pose, self.args.std_pose)
-            pred_pose = denormalize(pred_pose, self.args.mean_pose, self.args.std_pose)
 
         outputs = {'pred_pose': pred_pose, 'pred_vel': pred_vel, 'comp_pose': comp_pose, 'comp_vel': comp_vel}
 
