@@ -67,7 +67,7 @@ class CompPredPose(nn.Module):
         zeros = torch.zeros_like(cell_p)
         comp_pose = self.completion(noisy_pose, hidden_p, zeros)
 
-        outputs = {'pred_pose': pred_pose, 'comp_pose': comp_pose, 'mean': mean, 'std': std, 'noise': noise}
+        outputs = {'pred_pose': pred_pose, 'comp_pose': comp_pose, 'mean': mean, 'std': std}
 
         if self.args.use_mask:
             outputs['pred_mask'] = inputs['observed_mask'][:, -1:, :].repeat(1, self.args.pred_frames_num, 1)
@@ -103,8 +103,6 @@ class Decoder(nn.Module):
         self.fc_out = nn.Linear(in_features=hidden_size, out_features=output_size)
         if activation_type == 'hardtanh':
             self.activation = nn.Hardtanh(min_val=-1 * hardtanh_limit, max_val=hardtanh_limit, inplace=False)
-        elif activation_type == 'sigmoid':
-            self.activation = nn.Sigmoid()
         elif activation_type == 'none':
             self.activation = None
         else:
@@ -145,8 +143,6 @@ class Completion(nn.Module):
         self.fc_out = nn.Linear(in_features=hidden_size, out_features=output_size)
         if activation_type == 'hardtanh':
             self.activation = nn.Hardtanh(min_val=-1 * hardtanh_limit, max_val=hardtanh_limit, inplace=False)
-        elif activation_type == 'sigmoid':
-            self.activation = nn.Sigmoid()
         elif activation_type == 'none':
             self.activation = None
         else:

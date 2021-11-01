@@ -25,7 +25,7 @@ class CompPredVel(nn.Module):
             nn.Linear(args.hidden_size, args.hidden_size),
             nn.ReLU()
         )
-        assert args.activation_type in ['hardtanh', 'sigmoid', 'none'], 'invalid activation_function.'
+        assert args.activation_type in ['hardtanh', 'none'], 'invalid activation_function.'
         self.vel_decoder = Decoder(args.pred_frames_num, input_size, output_size, args.hidden_size, args.n_layers,
                                    args.dropout_pose_dec, args.activation_type, args.hardtanh_limit, device=args.device)
 
@@ -76,7 +76,7 @@ class CompPredVel(nn.Module):
             comp_pose[..., i + 1, :] = comp_pose[..., i, :] + comp_vel[..., i, :]
 
         outputs = {'pred_pose': pred_pose, 'pred_vel': pred_vel, 'comp_pose': comp_pose, 'comp_vel': comp_vel,
-                   'mean': mean, 'std': std, 'noise': noise}
+                   'mean': mean, 'std': std}
 
         if self.args.use_mask:
             outputs['pred_mask'] = inputs['observed_mask'][:, -1:, :].repeat(1, self.args.pred_frames_num, 1)
@@ -112,8 +112,6 @@ class Decoder(nn.Module):
         self.fc_out = nn.Linear(in_features=hidden_size, out_features=output_size)
         if activation_type == 'hardtanh':
             self.activation = nn.Hardtanh(min_val=-1 * hardtanh_limit, max_val=hardtanh_limit, inplace=False)
-        elif activation_type == 'sigmoid':
-            self.activation = nn.Sigmoid()
         elif activation_type == 'none':
             self.activation = None
         else:
@@ -154,8 +152,6 @@ class Completion(nn.Module):
         self.fc_out = nn.Linear(in_features=hidden_size, out_features=output_size)
         if activation_type == 'hardtanh':
             self.activation = nn.Hardtanh(min_val=-1 * hardtanh_limit, max_val=hardtanh_limit, inplace=False)
-        elif activation_type == 'sigmoid':
-            self.activation = nn.Sigmoid()
         elif activation_type == 'none':
             self.activation = None
         else:
