@@ -3,7 +3,7 @@ pred_frames_num:
 obs_frames_num:
 keypoints_num:
 use_mask: ${use_mask}
-use_dct: false
+use_dct: ${use_dct}
 normalize: ${normalize}
 mean_pose:
 std_pose:
