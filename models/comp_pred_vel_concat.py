@@ -8,10 +8,10 @@ class CompPredVelConcat(nn.Module):
     def __init__(self, args):
         super(CompPredVelConcat, self).__init__()
         self.args = args
-        input_size = int(args.keypoints_num * (args.keypoint_dim + 1))
-        output_size = int(args.keypoints_num * args.keypoint_dim)
+        input_size = output_size = int(args.keypoints_num * args.keypoint_dim)
+        input_size_concat = int(args.keypoints_num * (args.keypoint_dim + 1))
 
-        self.vel_encoder = Encoder(input_size, args.hidden_size, args.n_layers, args.dropout_enc)
+        self.vel_encoder = Encoder(input_size_concat, args.hidden_size, args.n_layers, args.dropout_enc)
 
         self.res_block1 = ResidualBlock(input_size=args.hidden_size, embedding_size=args.hidden_size)
         self.mean = nn.Linear(args.hidden_size, args.latent_dim)
@@ -56,13 +56,16 @@ class CompPredVelConcat(nn.Module):
         noise = noise.reshape(bs, obs_frames_n, self.args.keypoints_num, 1).repeat(1, 1, 1, self.args.keypoint_dim)
         const = (torch.ones_like(noise, dtype=torch.float) * self.args.noise_value)
         noisy_vel = torch.where(noise == 1, const, vel)
-        noisy_vel = torch.cat((noisy_vel, noise), -1).reshape(bs, obs_frames_n, -1)
+        noisy_vel_concat = torch.cat(
+            (noisy_vel, inputs['observed_noise'][:, 1:, :].reshape(bs, obs_frames_n, self.args.keypoints_num, 1)),
+            -1).reshape(bs, obs_frames_n, -1)
+        noisy_vel = noisy_vel.reshape(bs, obs_frames_n, -1)
 
         if self.args.use_dct:
-            noisy_vel = torch.matmul(self.dct_obs_vel.unsqueeze(0), noisy_vel)
+            noisy_vel_concat = torch.matmul(self.dct_obs_vel.unsqueeze(0), noisy_vel_concat)
 
         # velocity encoder
-        (hidden_vel, cell_vel) = self.vel_encoder(noisy_vel.permute(1, 0, 2))
+        (hidden_vel, cell_vel) = self.vel_encoder(noisy_vel_concat.permute(1, 0, 2))
         hidden_vel = hidden_vel.squeeze(0)
         cell_vel = cell_vel.squeeze(0)
 
