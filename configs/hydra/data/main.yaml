@@ -13,5 +13,5 @@ pin_memory: false
 num_workers: 0
 overfit:
 noise_keypoint:
-normalize: false
+normalize: ${normalize}
 metadata_path:

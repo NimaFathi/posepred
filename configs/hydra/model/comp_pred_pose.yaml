@@ -3,7 +3,7 @@ defaults:
   - common
 
 type: comp_pred_pose
-autoregressive: false
+autoregressive: true
 noise_value: 0
 hidden_size: 200
 latent_dim: 10
@@ -13,8 +13,6 @@ n_layers: 1
 dropout_enc: 0
 dropout_pose_dec: 0
 dropout_mask_dec: 0
-normalize: ${data.normalize}
-use_dct:
 
 loss:
   type: comp_pred
