@@ -4,6 +4,7 @@ import torch.nn as nn
 from utils.others import pose_from_vel, get_dct_matrix
 from utils.normal import normalize, denormalize
 
+
 class PVLSTMNoisy(nn.Module):
     def __init__(self, args):
         super(PVLSTMNoisy, self).__init__()

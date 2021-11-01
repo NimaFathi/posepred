@@ -36,7 +36,6 @@ class CompPredVel(nn.Module):
             dct_obs_vel, idct_obs_vel = get_dct_matrix(self.args.obs_frames_num - 1)
             self.dct_obs_vel = torch.from_numpy(dct_obs_vel).float().to(self.args.device)
             self.idct_obs_vel = torch.from_numpy(idct_obs_vel).float().to(self.args.device)
-
             # future_vel
             _, idct_future_vel = get_dct_matrix(self.args.pred_frames_num)
             self.idct_future_vel = torch.from_numpy(idct_future_vel).float().to(self.args.device)
