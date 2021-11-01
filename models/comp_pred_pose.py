@@ -77,13 +77,13 @@ class CompPredPose(nn.Module):
         # pose decoder
         zeros = torch.zeros_like(cell_p)
         pred_pose = self.pose_decoder(noisy_pose[..., -1, :], hidden_p, zeros)
-        if self.args.use_dct:
-            pred_pose = torch.matmul(self.idct_p.unsqueeze(0), pred_pose)
 
         # completion
         zeros = torch.zeros_like(cell_p)
         comp_pose = self.completion(noisy_pose, hidden_p, zeros)
+
         if self.args.use_dct:
+            pred_pose = torch.matmul(self.idct_p.unsqueeze(0), pred_pose)
             comp_pose = torch.matmul(self.idct_c.unsqueeze(0), comp_pose)
 
         # denormalizing

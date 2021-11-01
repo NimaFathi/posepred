@@ -32,7 +32,7 @@ class CompPredVel(nn.Module):
         self.completion = Completion(input_size, output_size, args.hidden_size, args.n_layers, args.dropout_pose_dec,
                                      args.autoregressive, args.activation_type, args.hardtanh_limit, device=args.device)
         if self.args.use_dct:
-            dct_c, idct_c = get_dct_matrix(self.args.obs_frames_num)
+            dct_c, idct_c = get_dct_matrix(self.args.obs_frames_num - 1)
             dct_v, idct_v = get_dct_matrix(self.args.pred_frames_num)
             self.dct_c = torch.from_numpy(dct_c).float().to(self.args.device)
             self.dct_v = torch.from_numpy(dct_v).float().to(self.args.device)
@@ -77,8 +77,10 @@ class CompPredVel(nn.Module):
         # velocity decoder
         zeros = torch.zeros_like(cell_vel)
         pred_vel = self.vel_decoder(noisy_vel[..., -1, :], hidden_vel, zeros)
+
         if self.args.use_dct:
             pred_vel = torch.matmul(self.idct_v.unsqueeze(0), pred_vel)
+
         pred_pose = pose_from_vel(pred_vel, pose[..., -1, :])
 
         # completion

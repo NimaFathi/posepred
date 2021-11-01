@@ -78,17 +78,17 @@ class CompPredCenter(nn.Module):
         # pose decoder
         zeros = torch.zeros_like(cell_p)
         pred_pose_center = self.pose_decoder(noisy_pose[..., -1, :], hidden_p, zeros)
-        if self.args.use_dct:
-            pred_pose_center = torch.matmul(self.idct_p.unsqueeze(0), pred_pose_center)
-
-        pred_pose = pred_pose_center + first_frame.repeat(1, self.args.pred_frames_num, 1)
 
         # completion
         zeros = torch.zeros_like(cell_p)
         comp_pose_center = self.completion(noisy_pose, hidden_p, zeros)
+
         if self.args.use_dct:
+            pred_pose_center = torch.matmul(self.idct_p.unsqueeze(0), pred_pose_center)
             comp_pose_center = torch.matmul(self.idct_c.unsqueeze(0), comp_pose_center)
+
         comp_pose = comp_pose_center + first_frame.repeat(1, obs_frames_n, 1)
+        pred_pose = pred_pose_center + first_frame.repeat(1, self.args.pred_frames_num, 1)
 
         # denormalizing
         if self.args.normalize:
