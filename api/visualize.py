@@ -37,7 +37,6 @@ def visualize(cfg: DictConfig):
         index = random.randint(0, dataloader.dataset.__len__() - 1) if cfg.index is None else cfg.index
         indices = [index]
     for index in indices:
-        print(index)
         data = dataloader.dataset.__getitem__(index)
         for key in ['observed_pose', 'future_pose', 'observed_mask', 'future_mask', 'observed_noise']:
             if key in data.keys():
