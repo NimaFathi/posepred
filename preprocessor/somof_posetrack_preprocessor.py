@@ -25,6 +25,8 @@ class SoMoFPoseTrackPreprocessor(Processor):
             os.makedirs(self.output_dir)
         self.meta_data = {
             'avg_person': [],
+            'max_pose': np.zeros(2),
+            'min_pose': np.array([1000.0, 1000.0]),
             'count': 0,
             'sum2_pose': np.zeros(2),
             'sum_pose': np.zeros(2)

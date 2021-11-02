@@ -66,7 +66,6 @@ class Processor:
             'avg_pose': meta_data['sum_pose'] / meta_data['count'],
             'max_pose': meta_data['max_pose'],
             'min_pose': meta_data['min_pose'],
-            'mask_percentage': meta_data['mask_percentage'],
             'std_pose': np.sqrt(
                 ((meta_data['sum2_pose'] - (np.square(meta_data['sum_pose']) / meta_data['count'])) /
                  meta_data['count']))

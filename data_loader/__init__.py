@@ -1,12 +1,13 @@
 import os
+
 from torch.utils.data import DataLoader
 
-from path_definition import ROOT_DIR, PREPROCESSED_DATA_DIR
+from path_definition import ROOT_DIR
 from .interactive_dataset import InteractiveDataset
-from .solitary_dataset import SolitaryDataset
 from .noisy_solitary_dataset import NoisySolitaryDataset
+from .solitary_dataset import SolitaryDataset
 
-DATASETS = ['somof_posetrack', 'posetrack', 'somof_3dpw', '3dpw', 'jta', 'jaad', 'pie', 'human3.6m']
+DATASETS = ['somof_posetrack', 'posetrack', 'somof_3dpw', '3dpw', 'jta', 'jaad', 'pie', 'human3.6m', 'human3.6_walking']
 DATA_TYPES = ['train', 'validation', 'test']
 VISUALIZING_TYPES = ['observed', 'future', 'predicted', 'completed']
 

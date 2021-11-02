@@ -15,6 +15,12 @@ from utils.others import expmap_to_quaternion, qfix
 
 logger = logging.getLogger(__name__)
 
+SPLIT = {
+    'train': ['S1', 'S5', 'S6', 'S7', 'S8'],
+    'validation': ['S1', 'S5', 'S6', 'S7', 'S8'],
+    'test': ['S9', 'S11']
+}
+
 
 class PreprocessorHuman36m(Processor):
     def __init__(self, dataset_path, is_interactive, obs_frame_num, pred_frame_num, skip_frame_num,
@@ -30,6 +36,8 @@ class PreprocessorHuman36m(Processor):
             os.makedirs(self.output_dir)
         self.meta_data = {
             'avg_person': [],
+            'max_pose': np.zeros(3),
+            'min_pose': np.array([1000.0, 1000.0, 1000.0]),
             'count': 0,
             'sum2_pose': np.zeros(3),
             'sum_pose': np.zeros(3)
@@ -37,6 +45,7 @@ class PreprocessorHuman36m(Processor):
         self.subjects = ['S1', 'S5', 'S6', 'S7', 'S8', 'S9', 'S11']
 
     def normal(self, data_type='train'):
+        self.subjects = SPLIT[data_type]
         logger.info('start creating Human3.6m normal static data from original Human3.6m dataset (CDF files) ... ')
         if self.custom_name:
             output_file_name = f'{data_type}_{self.obs_frame_num}_{self.pred_frame_num}_{self.skip_frame_num}_{self.custom_name}.jsonl'
@@ -54,15 +63,19 @@ class PreprocessorHuman36m(Processor):
                 len(file_list_pose))
             for f in file_list_pose:
                 action = os.path.splitext(os.path.basename(f))[0]
-
+                print(action)
                 if subject == 'S11' and action == 'Directions':
                     continue  # Discard corrupted video
                 canonical_name = action.replace('TakingPhoto', 'Photo') \
                     .replace('WalkingDog', 'WalkDog')
                 hf = cdflib.CDF(f)
                 positions = hf['Pose'].reshape(-1, 96)
+                if data_type == 'train':
+                    positions = positions[:95 * positions.shape[0] // 100]
+                elif data_type == 'validation':
+                    positions = positions[95 * positions.shape[0] // 100:]
                 positions /= 1000
-                quat = self.quaternion_rep(f, subject)
+                quat = self.quaternion_rep(f, subject,data_type)
                 total_frame_num = self.obs_frame_num + self.pred_frame_num
                 section_range = positions.shape[0] // (
                         total_frame_num * (self.skip_frame_num + 1)) if self.use_video_once is False else 1
@@ -103,9 +116,9 @@ class PreprocessorHuman36m(Processor):
                             'future_image_path': video_data['future_image_path']
                         })
         self.save_meta_data(self.meta_data, self.output_dir, True, data_type)
-        self.delete_redundant_files()
+        # self.delete_redundant_files()
 
-    def quaternion_rep(self, file_path, subject):
+    def quaternion_rep(self, file_path, subject, data_type):
         output_directory = os.path.join(PREPROCESSED_DATA_DIR, 'H3.6m_rotations')
         os.makedirs(output_directory, exist_ok=True)
         h36m_rotations_dataset_url = 'http://www.cs.stanford.edu/people/ashesh/h3.6m.zip'
@@ -121,13 +134,14 @@ class PreprocessorHuman36m(Processor):
                 logger.info('Extracting Human3.6M dataset...')
                 with zipfile.ZipFile(zip_path, 'r') as archive:
                     archive.extractall(output_directory)
-        data = self.__read_file(file_path, h36m_path, subject)
+        data = self.__read_file(file_path, h36m_path, subject, data_type)
         quat = expmap_to_quaternion(-data)
         quat = qfix(quat)
+        quat = quat.reshape(-1, 32 * 4)
         return quat.reshape(-1, 32 * 4)
 
     @staticmethod
-    def __read_file(file_path, rot_dir_path, subject):
+    def __read_file(file_path, rot_dir_path, subject, data_type):
         '''
         Read an individual file in expmap format,
         and return a NumPy tensor with shape (sequence length, number of joints, 3).
@@ -142,6 +156,10 @@ class PreprocessorHuman36m(Processor):
             for row in reader:
                 data.append(row)
         data = np.array(data, dtype='float64')
+        if data_type == 'train':
+            data = data[:95 * data.shape[0] // 100]
+        elif data_type == 'validation':
+            data = data[95 * data.shape[0] // 100:]
         return data.reshape(data.shape[0], -1, 3)[:, 1:]
 
     @staticmethod

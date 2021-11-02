@@ -27,6 +27,8 @@ class Preprocessor3DPW(Processor):
             os.makedirs(self.output_dir)
         self.meta_data = {
             'avg_person': [],
+            'max_pose': np.zeros(3),
+            'min_pose': np.array([1000.0, 1000.0, 1000.0]),
             'count': 0,
             'sum2_pose': np.zeros(3),
             'sum_pose': np.zeros(3)
