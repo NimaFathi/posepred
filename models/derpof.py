@@ -14,17 +14,18 @@ class DeRPoF(nn.Module):
 
         # global
         self.global_model = LSTM_g(pose_dim=self.features_num, embedding_dim=args.embedding_dim, h_dim=args.hidden_dim,
-                                   dropout=args.dropout).double()
+                                   dropout=args.dropout)
 
         # local
         encoder = Encoder(pose_dim=self.features_num, h_dim=args.hidden_dim, latent_dim=args.latent_dim,
                           dropout=args.dropout)
         decoder = Decoder(pose_dim=self.features_num, h_dim=args.hidden_dim, latent_dim=args.latent_dim,
                           dropout=args.dropout)
-        self.local_model = VAE(Encoder=encoder, Decoder=decoder).double()
+        self.local_model = VAE(Encoder=encoder, Decoder=decoder)
 
     def forward(self, inputs):
         pose = inputs['observed_pose']
+        # print(pose.dtype)
         vel = (pose[..., 1:, :] - pose[..., :-1, :]).permute(1, 0, 2)
         frames_num, bs, _ = vel.shape
 
@@ -32,26 +33,24 @@ class DeRPoF(nn.Module):
         global_vel = 0.5 * (vel.view(frames_num, bs, self.keypoints_num, self.keypoint_dim)[:, :, 0]
                             + vel.view(frames_num, bs, self.keypoints_num, self.keypoint_dim)[:, :, 1])
 
+        global_vel = global_vel
+
         # local
         local_vel = (vel.view(frames_num, bs, self.keypoints_num, self.keypoint_dim)
                      - global_vel.view(frames_num, bs, 1, self.keypoint_dim)).view(frames_num, bs, self.features_num)
-
         # predict
-        global_vel_out = self.global_model(global_vel, self.args.pred_frames_num).view(frames_num, bs, 1,
-                                                                                       self.keypoint_dim)
+        global_vel_out = self.global_model(global_vel, self.args.pred_frames_num).view(self.args.pred_frames_num, bs, 1, self.keypoint_dim)
         local_vel_out, mean, log_var = self.local_model(local_vel, self.args.pred_frames_num)
-        local_vel_out = local_vel_out.view(frames_num, bs, self.keypoints_num, self.keypoint_dim)
-
+        local_vel_out = local_vel_out.view(self.args.pred_frames_num, bs, self.keypoints_num, self.keypoint_dim)
         # merge local and global velocity
         vel_out = (global_vel_out + local_vel_out)
-        pred_vel = vel_out.view(frames_num, bs, self.features_num).permute(1, 0, 2)
+        pred_vel = vel_out.view(self.args.pred_frames_num, bs, self.features_num).permute(1, 0, 2)
         pred_pose = pose_from_vel(pred_vel, pose[..., -1, :])
         outputs = {'pred_pose': pred_pose, 'pred_vel_global': global_vel_out, 'pred_vel_local': local_vel_out,
                    'mean': mean, 'log_var': log_var}
 
         if self.args.use_mask:
             outputs['pred_mask'] = inputs['observed_mask'][:, -1:, :].repeat(1, self.args.pred_frames_num, 1)
-
         return outputs
 
 
@@ -63,21 +62,22 @@ class LSTM_g(nn.Module):
         self.h_dim = h_dim
         self.num_layers = num_layers
 
-        self.embedding_fn = nn.Sequential(nn.Linear(3, embedding_dim), nn.Tanh())
+        self.embedding_fn = nn.Sequential(nn.Linear(3, embedding_dim), nn.ReLU())
         self.encoder_g = nn.LSTM(embedding_dim, h_dim, num_layers, dropout=dropout)
         self.decoder_g = nn.LSTM(embedding_dim, h_dim, num_layers, dropout=dropout)
         self.hidden2g = nn.Sequential(nn.Linear(h_dim, 3))
 
     def forward(self, global_s, pred_len):
         seq_len, batch, l = global_s.shape
-        state_tuple_g = (torch.zeros(self.num_layers, batch, self.h_dim, device='cpu', dtype=torch.float64),
-                         torch.zeros(self.num_layers, batch, self.h_dim, device='cpu', dtype=torch.float64))
+        state_tuple_g = (torch.zeros(self.num_layers, batch, self.h_dim, device=global_s.device, dtype=torch.float32),
+                         torch.zeros(self.num_layers, batch, self.h_dim, device=global_s.device, dtype=torch.float32))
 
         global_s = global_s.contiguous()
+
         output_g, state_tuple_g = self.encoder_g(
             self.embedding_fn(global_s.view(-1, 3)).view(seq_len, batch, self.embedding_dim), state_tuple_g)
 
-        pred_s_g = torch.tensor([], device='cpu')
+        pred_s_g = torch.tensor([], device=global_s.device)
         last_s_g = global_s[-1].unsqueeze(0)
         for _ in range(pred_len):
             output_g, state_tuple_g = self.decoder_g(
@@ -85,7 +85,6 @@ class LSTM_g(nn.Module):
             curr_s_g = self.hidden2g(output_g.view(-1, self.h_dim))
             pred_s_g = torch.cat((pred_s_g, curr_s_g.unsqueeze(0)), dim=0)
             last_s_g = curr_s_g.unsqueeze(0)
-
         return pred_s_g
 
 
@@ -109,7 +108,7 @@ class VAE(nn.Module):
 
 
 class Encoder(nn.Module):
-    def __init__(self, pose_dim, h_dim=32, latent_dim=16, num_layers=2, dropout=0.3):
+    def __init__(self, pose_dim, h_dim=32, latent_dim=16, num_layers=1, dropout=0.2):
         super(Encoder, self).__init__()
 
         self.pose_dim = pose_dim
@@ -123,8 +122,8 @@ class Encoder(nn.Module):
 
     def forward(self, obs_s):
         batch = obs_s.size(1)
-        state_tuple = (torch.zeros(self.num_layers, batch, self.h_dim, device='cpu', dtype=torch.float64),
-                       torch.zeros(self.num_layers, batch, self.h_dim, device='cpu', dtype=torch.float64))
+        state_tuple = (torch.zeros(self.num_layers, batch, self.h_dim, device=obs_s.device, dtype=torch.float32),
+                       torch.zeros(self.num_layers, batch, self.h_dim, device=obs_s.device, dtype=torch.float32))
         output, state_tuple = self.encoder(obs_s, state_tuple)
         out = output[-1]
         mean = self.FC_mean(out)
@@ -133,7 +132,7 @@ class Encoder(nn.Module):
 
 
 class Decoder(nn.Module):
-    def __init__(self, pose_dim, h_dim=32, latent_dim=16, num_layers=1, dropout=0.3):
+    def __init__(self, pose_dim, h_dim=32, latent_dim=16, num_layers=1, dropout=0.2):
         super(Decoder, self).__init__()
         self.pose_dim = pose_dim
         self.h_dim = h_dim
@@ -146,13 +145,13 @@ class Decoder(nn.Module):
 
     def forward(self, obs_s, latent, pred_len):
         batch = obs_s.size(1)
-        decoder_c = torch.zeros(self.num_layers, batch, self.h_dim, device='cpu', dtype=torch.float64)
+        decoder_c = torch.zeros(self.num_layers, batch, self.h_dim, device=obs_s.device, dtype=torch.float32)
         last_s = obs_s[-1].unsqueeze(0)
         decoder_h = self.FC(latent).unsqueeze(0)
         decoder_h = decoder_h.repeat(self.num_layers, 1, 1)
         state_tuple = (decoder_h, decoder_c)
 
-        preds_s = torch.tensor([], device='cpu')
+        preds_s = torch.tensor([], device=obs_s.device)
         for _ in range(pred_len):
             output, state_tuple = self.decoder(last_s, state_tuple)
             curr_s = self.mlp(output.view(-1, self.h_dim))

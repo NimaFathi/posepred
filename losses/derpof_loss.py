@@ -16,17 +16,16 @@ class DeRPoFLoss(nn.Module):
         future_pose = input_data['future_pose']
         future_vel = torch.cat(((future_pose[..., 0, :] - observed_pose[..., -1, :]).unsqueeze(-2),
                                 future_pose[..., 1:, :] - future_pose[..., :-1, :]), -2)
-        frames_num, bs, _ = future_vel.shape
+        bs, frames_num, features = future_vel.shape
 
         # global velocity
         future_vel_global = 0.5 * (
-                future_vel.view(frames_num, bs, self.keypoints_num, self.keypoint_dim)[:, :, 0] + future_vel.view(
-            frames_num, bs, self.keypoints_num, self.keypoint_dim)[:, :, 1])
-
+                future_vel.view(bs, frames_num, features // 3, 3)[:, :, 0] + future_vel.view(
+            bs, frames_num, features // 3, 3)[:, :, 1]).reshape(frames_num, bs, 1, 3)
         # local velocity
+
         future_vel_local = (
-                future_vel.view(frames_num, bs, self.keypoints_num, self.keypoint_dim) - future_vel_global.view(
-            frames_num, bs, 1, self.keypoint_dim)).view(frames_num, bs, self.features_num)
+                future_vel.view(frames_num, bs, features // 3, 3) - future_vel_global)
 
         loss_global = self.mse(future_vel_global, model_outputs['pred_vel_global'])
         loss_local = vae_loss_function(future_vel_local, model_outputs['pred_vel_local'], model_outputs['mean'],
@@ -38,7 +37,6 @@ class DeRPoFLoss(nn.Module):
         if 'pred_mask' in model_outputs.keys():
             mask_loss = self.bce(model_outputs['pred_mask'], input_data['future_mask'])
             outputs['mask_loss'] = mask_loss
-
         return outputs
 
 
