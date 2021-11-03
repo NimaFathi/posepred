@@ -42,6 +42,10 @@ class NoisySolitaryDataset(Dataset):
             data = [data[overfit]]
 
         self.data = data
+        print('-' * 100)
+        print(len(self.data))
+        print(self.data[0]['observed_pose'].shape)
+        exit()
         self.keypoint_dim = keypoint_dim
         self.is_testing = is_testing
         self.use_mask = use_mask
