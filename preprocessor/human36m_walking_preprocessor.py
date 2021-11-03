@@ -69,6 +69,7 @@ class PreprocessorHuman36mWalking(Processor):
                     .replace('WalkingDog', 'WalkDog')
                 hf = cdflib.CDF(f)
                 positions = hf['Pose'].reshape(-1, 96)
+                print(positions.shape)
                 if data_type == 'train':
                     positions = positions[:95 * positions.shape[0] // 100]
                 elif data_type == 'validation':
@@ -145,7 +146,8 @@ class PreprocessorHuman36mWalking(Processor):
         Read an individual file in expmap format,
         and return a NumPy tensor with shape (sequence length, number of joints, 3).
         '''
-        action = os.path.splitext(os.path.basename(file_path))[0].replace('WalkTogether', 'WalkingTogether')
+        action = os.path.splitext(os.path.basename(file_path))[0]
+
         action_number = 1 if len(action.split(" ")) == 2 else 2
         path_to_read = os.path.join(rot_dir_path, 'dataset', subject,
                                     f'{action.split(" ")[0].lower()}_{action_number}.txt')
