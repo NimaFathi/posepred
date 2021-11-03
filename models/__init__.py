@@ -12,6 +12,7 @@ from .comp_pred_root import CompPredRoot
 from .trans_cvae import TRANS_CVAE
 from .pv_lstm_noisy import PVLSTMNoisy
 from .comp_pred_vel_concat import CompPredVelConcat
+from .v_lstm_noisy import VLSTMNoisy
 
 MODELS = {'zero_vel': ZeroVel,
           'nearest_neighbor': NearestNeighbor,
@@ -27,4 +28,5 @@ MODELS = {'zero_vel': ZeroVel,
           'trans_cvae': TRANS_CVAE,
           'pv_lstm_noisy': PVLSTMNoisy,
           'comp_pred_vel_concat': CompPredVelConcat,
+          'v_lstm_noisy': VLSTMNoisy,
           }
