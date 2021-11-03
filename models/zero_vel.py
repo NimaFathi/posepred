@@ -12,16 +12,12 @@ class ZeroVel(torch.nn.Module):
         last_frame = obs_pose[..., -1, :].unsqueeze(-2)
         ndims = len(obs_pose.shape)
         pred_pose = last_frame.repeat([1 for _ in range(ndims - 2)] + [self.args.pred_frames_num, 1])
-        pred_vel = torch.zeros_like(pred_pose)
-
-        device = 'cuda' if obs_pose.is_cuda else 'cpu'
-        outputs = {'pred_pose': pred_pose.to(device), 'pred_vel': pred_vel.to(device)}
+        outputs = {'pred_pose': pred_pose}
 
         if self.args.use_mask:
             obs_mask = inputs['observed_mask']
             last_frame = obs_mask[..., -1, :].unsqueeze(-2)
             ndims = len(obs_mask.shape)
-            pred_mask = last_frame.repeat([1 for _ in range(ndims - 2)] + [self.args.pred_frames_num, 1])
-            outputs['pred_mask'] = pred_mask.to(device)
+            outputs['pred_mask'] = last_frame.repeat([1 for _ in range(ndims - 2)] + [self.args.pred_frames_num, 1])
 
         return outputs

@@ -7,8 +7,10 @@ dataset: ???
 dataset_type: ???
 keypoint_dim: ???
 showing: future, predicted
+normalize: false
 is_noisy: false
 use_mask: false
+use_dct: false
 pred_frames_num:
 load_path:
 index:

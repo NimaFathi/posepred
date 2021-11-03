@@ -1,8 +1,6 @@
 import torch
 from torch import nn
 
-from utils.others import pose_from_vel
-
 
 class NearestNeighbor(nn.Module):
     def __init__(self, args):
@@ -13,34 +11,30 @@ class NearestNeighbor(nn.Module):
 
     def forward(self, inputs):
         min_distance = None
-        best_pred_vel = None
+        best_pred_pose = None
         best_pred_mask = None
 
         obs_pose = inputs['observed_pose']
+        assert obs_pose.shape[0] == 1, "only support batch_size 1 in nearest neighbor"
         in_vel = (obs_pose[..., 1:, :] - obs_pose[..., :-1, :]).view(1, -1)
-        assert in_vel.shape[0] == 1, "only support batch_size 1 in nearest neighbor"
-
-        device = 'cuda' if obs_pose.is_cuda else 'cpu'
 
         for data in self.train_dataloader:
-            obs_vel = data[1].to(device)
+            pose = inputs['observed_pose']
+            obs_vel = pose[..., 1:, :] - pose[..., :-1, :]
             bs = obs_vel.shape[0]
             dis = self.distance(in_vel.repeat(bs, 1), obs_vel.view(bs, -1)).sum(1)
             value, ind = torch.min(dis, 0, out=None)
             if min_distance is None or value < min_distance:
                 min_distance = value
                 if self.args.use_mask:
-                    best_pred_vel = data[4][ind]
-                    best_pred_mask = data[5][ind]
+                    best_pred_pose = data['future_pose'][ind]
+                    best_pred_mask = data['future_mask'][ind]
                 else:
-                    best_pred_vel = data[3][ind]
+                    best_pred_pose = data['future_pose'][ind]
 
-        pred_vel = best_pred_vel.unsqueeze(0).to(device)
-        pred_pose = pose_from_vel(pred_vel, obs_pose[..., -1, :])
-        outputs = {'pred_pose': pred_pose, 'pred_vel': pred_vel}
+        outputs = {'pred_pose': best_pred_pose.unsqueeze(0)}
 
         if self.args.use_mask:
-            pred_mask = best_pred_mask.unsqueeze(0).to(device)
-            outputs['pred_mask'] = pred_mask
+            outputs['pred_mask'] = best_pred_mask.unsqueeze(0)
 
         return outputs

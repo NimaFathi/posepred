@@ -5,5 +5,5 @@ defaults:
 type: zero_vel
 
 loss:
-  type: mse_vel
+  type: mse_pose
   mask_weight: 0

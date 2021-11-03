@@ -6,5 +6,5 @@ type: nearest_neighbor
 train_dataset: ???
 
 loss:
-  type: mse_vel
+  type: mse_pose
   mask_weight: 0

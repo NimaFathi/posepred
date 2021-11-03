@@ -6,8 +6,10 @@ defaults:
 
 dataset: ???
 keypoint_dim: ???
+normalize: false
 is_noisy: false
 use_mask: false
+use_dct: false
 load_path:
 rounds_num: 1
 device: cuda

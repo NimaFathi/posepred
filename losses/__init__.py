@@ -1,4 +1,5 @@
 from .mse_vel import MSEVel
+from .mse_pose import MSEPose
 from .mae_vel import MAEVel
 from .kl_divergence import KLDivergenceLoss
 from .mix_and_match_loss import MixAndMatchLoss
@@ -13,6 +14,7 @@ from .trans_cvae import TRANS_CVAE
 from .pv_lstm_noisy import PVLSTMNoisy
 
 LOSSES = {'mse_vel': MSEVel,
+          'mse_pose': MSEPose,
           'mae_vel': MAEVel,
           'kl_loss': KLDivergenceLoss,
           'm&m': MixAndMatchLoss,
