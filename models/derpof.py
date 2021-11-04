@@ -55,7 +55,7 @@ class DeRPoF(nn.Module):
 
 
 class LSTM_g(nn.Module):
-    def __init__(self, pose_dim, embedding_dim=8, h_dim=16, num_layers=1, dropout=0.2):
+    def __init__(self, pose_dim, embedding_dim=8, h_dim=16, num_layers=2, dropout=0.1):
         super(LSTM_g, self).__init__()
         self.pose_dim = pose_dim
         self.embedding_dim = embedding_dim
@@ -108,7 +108,7 @@ class VAE(nn.Module):
 
 
 class Encoder(nn.Module):
-    def __init__(self, pose_dim, h_dim=32, latent_dim=16, num_layers=1, dropout=0.2):
+    def __init__(self, pose_dim, h_dim=32, latent_dim=16, num_layers=2, dropout=0.2):
         super(Encoder, self).__init__()
 
         self.pose_dim = pose_dim
@@ -132,7 +132,7 @@ class Encoder(nn.Module):
 
 
 class Decoder(nn.Module):
-    def __init__(self, pose_dim, h_dim=32, latent_dim=16, num_layers=1, dropout=0.2):
+    def __init__(self, pose_dim, h_dim=32, latent_dim=16, num_layers=2, dropout=0.2):
         super(Decoder, self).__init__()
         self.pose_dim = pose_dim
         self.h_dim = h_dim
