@@ -26,19 +26,20 @@ class CompPredVel(nn.Module):
             nn.ReLU()
         )
         assert args.activation_type in ['hardtanh', 'none'], 'invalid activation_function.'
-        self.vel_decoder = Decoder(args.pred_frames_num, input_size, output_size, args.hidden_size, args.n_layers,
-                                   args.dropout_pose_dec, args.activation_type, args.hardtanh_limit, device=args.device)
+        self.vel_decoder = Decoder(args.obs_frames_num + args.pred_frames_num - 1, input_size, output_size,
+                                   args.hidden_size, args.n_layers, args.dropout_pose_dec, args.activation_type,
+                                   args.hardtanh_limit, device=args.device)
 
         self.completion = Completion(input_size, output_size, args.hidden_size, args.n_layers, args.dropout_pose_dec,
                                      args.autoregressive, args.activation_type, args.hardtanh_limit, device=args.device)
         if self.args.use_dct:
-            # observed_vel
-            dct_obs_vel, idct_obs_vel = get_dct_matrix(self.args.obs_frames_num - 1)
-            self.dct_obs_vel = torch.from_numpy(dct_obs_vel).float().to(self.args.device)
-            self.idct_obs_vel = torch.from_numpy(idct_obs_vel).float().to(self.args.device)
-            # future_vel
-            _, idct_future_vel = get_dct_matrix(self.args.pred_frames_num)
-            self.idct_future_vel = torch.from_numpy(idct_future_vel).float().to(self.args.device)
+            # pred dct
+            dct_vel, idct_vel = get_dct_matrix(self.args.obs_frames_num + self.args.pred_frames_num - 1)
+            self.dct_vel = torch.from_numpy(dct_vel).float().to(self.args.device)
+            self.idct_vel = torch.from_numpy(idct_vel).float().to(self.args.device)
+            # comp dct
+            _, idct_comp_vel = get_dct_matrix(self.args.obs_frames_num - 1)
+            self.idct_comp_vel = torch.from_numpy(idct_comp_vel).float().to(self.args.device)
 
     def forward(self, inputs):
         pose = inputs['observed_pose']
@@ -56,8 +57,10 @@ class CompPredVel(nn.Module):
         const = (torch.ones_like(noise, dtype=torch.float) * self.args.noise_value)
         noisy_vel = torch.where(noise == 1, const, vel).reshape(bs, obs_frames_n, -1)
 
+        init_future = torch.zeros_like(noisy_vel[:, 0:1, :]).repeat(1, self.args.pred_frames_num, 1)
+        noisy_vel = torch.cat((noisy_vel, init_future), dim=1)
         if self.args.use_dct:
-            noisy_vel = torch.matmul(self.dct_obs_vel.unsqueeze(0), noisy_vel)
+            noisy_vel = torch.matmul(self.dct_vel.unsqueeze(0), noisy_vel)
 
         # velocity encoder
         (hidden_vel, cell_vel) = self.vel_encoder(noisy_vel.permute(1, 0, 2))
@@ -76,21 +79,21 @@ class CompPredVel(nn.Module):
 
         # velocity decoder
         zeros = torch.zeros_like(cell_vel)
-        pred_vel = self.vel_decoder(noisy_vel[..., -1, :], hidden_vel, zeros)
+        pred_vel = self.vel_decoder(noisy_vel[..., self.args.obs_frames_num - 2, :], hidden_vel, zeros)
         if self.args.use_dct:
-            pred_vel = torch.matmul(self.idct_future_vel.unsqueeze(0), pred_vel)
-        pred_pose = pose_from_vel(pred_vel, pose[..., -1, :])
+            pred_vel = torch.matmul(self.idct_vel.unsqueeze(0), pred_vel)
+        pred_pose = torch.cat((pose[..., 0, :], pose_from_vel(pred_vel, pose[..., 0, :])), dim=-2)
 
         # completion
         zeros = torch.zeros_like(cell_vel)
         comp_vel = self.completion(noisy_vel, hidden_vel, zeros)
         if self.args.use_dct:
-            comp_vel = torch.matmul(self.idct_obs_vel.unsqueeze(0), comp_vel)
+            comp_vel = torch.matmul(self.idct_comp_vel.unsqueeze(0), comp_vel)
         comp_pose = torch.clone(pose)
         for i in range(comp_vel.shape[-2]):
             comp_pose[..., i + 1, :] = comp_pose[..., i, :] + comp_vel[..., i, :]
 
-        outputs = {'pred_pose': pred_pose, 'pred_vel': pred_vel, 'comp_pose': comp_pose, 'comp_vel': comp_vel,
+        outputs = {'pred_pose': pred_pose[self.args.obs_frames_num:], 'seq_pose': pred_pose, 'comp_pose': comp_pose,
                    'mean': mean, 'std': std}
 
         if self.args.use_mask:

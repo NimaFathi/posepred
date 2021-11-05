@@ -14,7 +14,8 @@ class CompPred(nn.Module):
 
     def forward(self, model_outputs, input_data):
         # prediction loss
-        pred_pose_loss = self.mse1(model_outputs['pred_pose'], input_data['future_pose'])
+        pred_pose_loss = self.mse1(model_outputs['seq_pose'],
+                                   torch.cat((input_data['observed_pose'], input_data['future_pose']), dim=-2))
 
         # completion loss
         comp_pose_loss = self.mse2(model_outputs['comp_pose'], input_data['observed_pose'])
