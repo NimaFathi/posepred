@@ -82,18 +82,18 @@ class CompPredVel(nn.Module):
         pred_vel = self.vel_decoder(torch.zeros_like(noisy_vel[..., 0, :]), hidden_vel, zeros)
         if self.args.use_dct:
             pred_vel = torch.matmul(self.idct_vel.unsqueeze(0), pred_vel)
-        pred_pose = torch.cat((pose[..., 0, :], pose_from_vel(pred_vel, pose[..., 0, :])), dim=-2)
+        pred_pose = torch.cat((pose[..., 0:1, :], pose_from_vel(pred_vel, pose[..., 0, :])), dim=-2)
 
         # completion
         zeros = torch.zeros_like(cell_vel)
-        comp_vel = self.completion(noisy_vel, hidden_vel, zeros)
+        comp_vel = self.completion(noisy_vel[:, :self.args.obs_frames_num - 1], hidden_vel, zeros)
         if self.args.use_dct:
             comp_vel = torch.matmul(self.idct_comp_vel.unsqueeze(0), comp_vel)
         comp_pose = torch.clone(pose)
         for i in range(comp_vel.shape[-2]):
             comp_pose[..., i + 1, :] = comp_pose[..., i, :] + comp_vel[..., i, :]
 
-        outputs = {'pred_pose': pred_pose[self.args.obs_frames_num:], 'seq_pose': pred_pose, 'comp_pose': comp_pose,
+        outputs = {'pred_pose': pred_pose[:, self.args.obs_frames_num:], 'seq_pose': pred_pose, 'comp_pose': comp_pose,
                    'mean': mean, 'std': std}
 
         if self.args.use_mask:
