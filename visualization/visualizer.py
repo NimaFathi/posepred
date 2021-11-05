@@ -102,11 +102,12 @@ class Visualizer:
             fig = plt.figure(figsize=fig_size, dpi=100)
             axarr.append([])
             for i in range(len(poses)):
+                noise = observed_noise if len(observed_noise) == len(poses[i]) else []
                 axarr[j].append(fig.add_subplot(1, comparison_number, i + 1, projection='3d'))
                 self.__create_plot(axarr[j][i], max_axes=max_axes, min_axes=min_axes)
                 self.__generate_3D_figure(
                     i, all_poses=poses[i][j], all_masks=masks[i][j] if i < len(masks) and j < len(masks[i]) else None,
-                    all_noises=observed_noise[j] if j < len(observed_noise) else None,
+                    all_noises=noise[j] if j < len(noise) else None,
                     ax=axarr[j][i]
                 )
                 for _ in range(2):
