@@ -79,7 +79,7 @@ class CompPredVel(nn.Module):
 
         # velocity decoder
         zeros = torch.zeros_like(cell_vel)
-        pred_vel = self.vel_decoder(noisy_vel[..., self.args.obs_frames_num - 2, :], hidden_vel, zeros)
+        pred_vel = self.vel_decoder(torch.zeros_like(noisy_vel[..., 0, :]), hidden_vel, zeros)
         if self.args.use_dct:
             pred_vel = torch.matmul(self.idct_vel.unsqueeze(0), pred_vel)
         pred_pose = torch.cat((pose[..., 0, :], pose_from_vel(pred_vel, pose[..., 0, :])), dim=-2)

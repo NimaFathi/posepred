@@ -20,7 +20,7 @@ class PVLSTMNoisy(nn.Module):
                                 future_pose[..., 1:, :] - future_pose[..., :-1, :]), -2)
 
         # prediction loss
-        pred_vel_loss = self.mse1(model_outputs['pred_vel'], future_vel)
+        pred_vel_loss = self.mse1(model_outputs['pred_vel'], torch.cat((observed_vel, future_vel), dim=-2))
 
         # completion loss
         comp_vel_loss = self.mse2(model_outputs['comp_vel'], observed_vel)
