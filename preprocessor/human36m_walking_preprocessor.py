@@ -81,6 +81,7 @@ class PreprocessorHuman36mWalking(Processor):
                 section_range = positions.shape[0] // (
                         total_frame_num * (self.skip_frame_num + 1)) if self.use_video_once is False else 1
                 counter += section_range
+                print(section_range)
                 for i in range(section_range):
                     video_data = {
                         'observed_pose': list(),
