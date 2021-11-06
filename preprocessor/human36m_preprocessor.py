@@ -93,15 +93,15 @@ class PreprocessorHuman36m(Processor):
                         if j < (self.skip_frame_num + 1) * self.obs_frame_num:
                             video_data['observed_pose'].append(
                                 positions[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
-                            video_data['observed_quaternion_pose'].append(
-                                quat[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
+                            # video_data['observed_quaternion_pose'].append(
+                            #     quat[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
                             video_data['observed_image_path'].append(
                                 f'{os.path.basename(f).split(".cdf")[0]}_{i * total_frame_num * (self.skip_frame_num + 1) + j:05}')
                         else:
                             video_data['future_pose'].append(
                                 positions[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
-                            video_data['future_quaternion_pose'].append(
-                                quat[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
+                            # video_data['future_quaternion_pose'].append(
+                            #     quat[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
                             video_data['future_image_path'].append(
                                 f'{os.path.basename(f).split(".cdf")[0]}_{i * total_frame_num * (self.skip_frame_num + 1) + j:05}'
                             )
@@ -111,8 +111,8 @@ class PreprocessorHuman36m(Processor):
                             'video_section': f'{subject}-{canonical_name}-{i}',
                             'observed_pose': video_data['observed_pose'],
                             'future_pose': video_data['future_pose'],
-                            'observed_quaternion_pose': video_data['observed_quaternion_pose'],
-                            'future_quaternion_pose': video_data['future_quaternion_pose'],
+                            # 'observed_quaternion_pose': video_data['observed_quaternion_pose'],
+                            # 'future_quaternion_pose': video_data['future_quaternion_pose'],
                             'observed_image_path': video_data['observed_image_path'],
                             'future_image_path': video_data['future_image_path']
                         })
@@ -148,6 +148,8 @@ class PreprocessorHuman36m(Processor):
         and return a NumPy tensor with shape (sequence length, number of joints, 3).
         '''
         action = os.path.splitext(os.path.basename(file_path))[0].replace('WalkTogether', 'WalkingTogether').replace('WalkDog', 'WalkingDog')
+        if subject == 'S5' and action.lower().__contains__('photo'):
+            action = 'TakingPhoto'
         action_number = 1 if len(action.split(" ")) == 2 else 2
         path_to_read = os.path.join(rot_dir_path, 'dataset', subject,
                                     f'{action.split(" ")[0].lower()}_{action_number}.txt')
