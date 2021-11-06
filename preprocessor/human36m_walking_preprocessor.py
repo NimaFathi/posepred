@@ -45,6 +45,7 @@ class PreprocessorHuman36mWalking(Processor):
         self.subjects = ['S1', 'S5', 'S6', 'S7', 'S8', 'S9', 'S11']
 
     def normal(self, data_type='train'):
+        counter = 0
         self.subjects = SPLIT[data_type]
         logger.info('start creating Human3.6m normal static data from original Human3.6m dataset (CDF files) ... ')
         if self.custom_name:
@@ -79,6 +80,7 @@ class PreprocessorHuman36mWalking(Processor):
                 total_frame_num = self.obs_frame_num + self.pred_frame_num
                 section_range = positions.shape[0] // (
                         total_frame_num * (self.skip_frame_num + 1)) if self.use_video_once is False else 1
+                counter += section_range
                 for i in range(section_range):
                     video_data = {
                         'observed_pose': list(),
@@ -116,6 +118,7 @@ class PreprocessorHuman36mWalking(Processor):
                             'future_image_path': video_data['future_image_path']
                         })
         self.save_meta_data(self.meta_data, self.output_dir, True, data_type)
+        print(section_range)
         # self.delete_redundant_files()
 
     def quaternion_rep(self, file_path, subject, data_type):
