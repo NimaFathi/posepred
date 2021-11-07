@@ -202,8 +202,8 @@ if __name__ == '__main__':
     dataset.normalize_data()
     for i, data in enumerate(generator):
         data = data.reshape(-1, 51)
-        obs_data = data[:100, :]
-        future_data = data[100:, :]
+        obs_data = data[:25, :]
+        future_data = data[25:, :]
         with jsonlines.open(os.path.join(PREPROCESSED_DATA_DIR, 'human36m', 'test_h17.jsonl'), mode='a') as writer:
             count += 1
             writer.write({
