@@ -6,6 +6,12 @@ import torch
 logger = logging.getLogger(__name__)
 
 
+def MPJPE(pred, target, dim, mask=None):
+    mse = torch.nn.MSELoss()
+    mpjpe = mse(pred, target)
+    return mpjpe
+
+
 def ADE(pred, target, dim, mask=None):
     keypoints_num = int(pred.shape[-1] / dim)
     pred = torch.reshape(pred, pred.shape[:-1] + (keypoints_num, dim))
