@@ -76,7 +76,7 @@ class PreprocessorHuman36m(Processor):
                     positions = positions[95 * positions.shape[0] // 100:]
                 positions /= 1000
                 print(subject, action, positions.shape)
-                quat = self.quaternion_rep(f, subject, data_type)
+                # quat = self.quaternion_rep(f, subject, data_type)
                 total_frame_num = self.obs_frame_num + self.pred_frame_num
                 section_range = positions.shape[0] // (
                         total_frame_num * (self.skip_frame_num + 1)) if self.use_video_once is False else 1
