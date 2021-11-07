@@ -197,14 +197,14 @@ class DatasetH36M(Dataset):
 
 if __name__ == '__main__':
     count = 0
-    dataset = DatasetH36M('train', actions='all')
-    generator = dataset.sampling_generator()
+    dataset = DatasetH36M('test', actions='all')
+    generator = dataset.iter_generator(step=25)
     dataset.normalize_data()
     for i, data in enumerate(generator):
         data = data.reshape(-1, 51)
         obs_data = data[:100, :]
         future_data = data[100:, :]
-        with jsonlines.open(os.path.join(PREPROCESSED_DATA_DIR, 'human36m', 'train_h17.jsonl'), mode='a') as writer:
+        with jsonlines.open(os.path.join(PREPROCESSED_DATA_DIR, 'human36m', 'test_h17.jsonl'), mode='a') as writer:
             count += 1
             writer.write({
                 'observed_pose': obs_data.tolist(),
