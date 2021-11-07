@@ -64,7 +64,6 @@ class PreprocessorHuman36m(Processor):
                 len(file_list_pose))
             for f in file_list_pose:
                 action = os.path.splitext(os.path.basename(f))[0]
-                print(action)
                 if subject == 'S11' and action == 'Directions':
                     continue  # Discard corrupted video
                 canonical_name = action.replace('TakingPhoto', 'Photo') \
@@ -76,8 +75,8 @@ class PreprocessorHuman36m(Processor):
                 elif data_type == 'validation':
                     positions = positions[95 * positions.shape[0] // 100:]
                 positions /= 1000
+                print(subject, action, positions.shape)
                 quat = self.quaternion_rep(f, subject, data_type)
-                print(positions.shape, quat.shape)
                 total_frame_num = self.obs_frame_num + self.pred_frame_num
                 section_range = positions.shape[0] // (
                         total_frame_num * (self.skip_frame_num + 1)) if self.use_video_once is False else 1
