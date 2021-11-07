@@ -1,9 +1,9 @@
 import os
 
-import numpy
 import numpy as np
 import jsonlines
 from path_definition import PREPROCESSED_DATA_DIR
+
 
 class Skeleton:
     def __init__(self, parents, joints_left, joints_right):
@@ -131,7 +131,7 @@ class Dataset:
         traj = seq[fr_start: fr_end]
         return traj[None, ...]
 
-    def sampling_generator(self, num_samples=10000, batch_size=1):
+    def sampling_generator(self, num_samples=25000, batch_size=1):
         for i in range(num_samples // batch_size):
             sample = []
             for i in range(batch_size):
@@ -158,7 +158,7 @@ class DatasetH36M(Dataset):
             self.traj_dim += 3
 
     def prepare_data(self):
-        self.data_file = '/home/nima/EPFL/Human3.6m/data_3d_h36m.npz'
+        self.data_file = '/home/fathi/posepred/preprocessed_data/data_3d_h36m.npz'
         self.subjects_split = {'train': [1, 5, 6, 7, 8],
                                'test': [9, 11]}
         self.subjects = ['S%d' % x for x in self.subjects_split[self.mode]]
@@ -196,15 +196,18 @@ class DatasetH36M(Dataset):
 
 
 if __name__ == '__main__':
+    count = 0
     dataset = DatasetH36M('train', actions='all')
     generator = dataset.sampling_generator()
     dataset.normalize_data()
     for i, data in enumerate(generator):
-        data = data.reshape(125, 51)
+        data = data.reshape(-1, 51)
         obs_data = data[:100, :]
         future_data = data[100:, :]
-        with jsonlines.open(os.path.join(PREPROCESSED_DATA_DIR, 'human36m', 'train_h17.json'), mode='a') as writer:
+        with jsonlines.open(os.path.join(PREPROCESSED_DATA_DIR, 'human36m', 'train_h17.jsonl'), mode='a') as writer:
+            count += 1
             writer.write({
                 'observed_pose': obs_data.tolist(),
                 'future_pose': future_data.tolist(),
             })
+    print(count)
