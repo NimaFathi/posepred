@@ -20,6 +20,7 @@ SPLIT = {
     'validation': ['S1', 'S5', 'S6', 'S7', 'S8'],
     'test': ['S9', 'S11']
 }
+removed_joints = [4, 5, 9, 10, 11, 16, 20, 21, 22, 23, 24, 28, 29, 30, 31]
 
 
 class PreprocessorHuman36m(Processor):
@@ -90,9 +91,16 @@ class PreprocessorHuman36m(Processor):
                         'future_image_path': list()
                     }
                     for j in range(0, total_frame_num * (self.skip_frame_num + 1), self.skip_frame_num + 1):
+                        seventeen_joints_pos = []
+                        for k in range(32):
+                            if k in removed_joints:
+                                continue
+                            for l in range(3):
+
+                                seventeen_joints_pos.append(
+                                    positions[i * total_frame_num * (self.skip_frame_num + 1) + j][3 * k + l].tolist())
                         if j < (self.skip_frame_num + 1) * self.obs_frame_num:
-                            video_data['observed_pose'].append(
-                                positions[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
+                            video_data['observed_pose'].append(seventeen_joints_pos)
                             # video_data['observed_quaternion_pose'].append(
                             #     quat[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
                             video_data['observed_image_path'].append(
