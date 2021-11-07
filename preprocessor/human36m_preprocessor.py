@@ -43,7 +43,7 @@ class PreprocessorHuman36m(Processor):
             'sum2_pose': np.zeros(3),
             'sum_pose': np.zeros(3)
         }
-        self.subjects = ['S1', 'S5', 'S6', 'S7', 'S8', 'S9', 'S11']
+        self.subjects = []
 
     def normal(self, data_type='train'):
         self.subjects = SPLIT[data_type]
@@ -106,8 +106,7 @@ class PreprocessorHuman36m(Processor):
                             video_data['observed_image_path'].append(
                                 f'{os.path.basename(f).split(".cdf")[0]}_{i * total_frame_num * (self.skip_frame_num + 1) + j:05}')
                         else:
-                            video_data['future_pose'].append(
-                                positions[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
+                            video_data['future_pose'].append(seventeen_joints_pos)
                             # video_data['future_quaternion_pose'].append(
                             #     quat[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
                             video_data['future_image_path'].append(
