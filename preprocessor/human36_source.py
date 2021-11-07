@@ -131,7 +131,7 @@ class Dataset:
         traj = seq[fr_start: fr_end]
         return traj[None, ...]
 
-    def sampling_generator(self, num_samples=25000, batch_size=1):
+    def sampling_generator(self, num_samples=30000, batch_size=1):
         for i in range(num_samples // batch_size):
             sample = []
             for i in range(batch_size):
