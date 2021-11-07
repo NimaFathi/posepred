@@ -131,7 +131,7 @@ class Dataset:
         traj = seq[fr_start: fr_end]
         return traj[None, ...]
 
-    def sampling_generator(self, num_samples=30000, batch_size=1):
+    def sampling_generator(self, num_samples=15000, batch_size=1):
         for i in range(num_samples // batch_size):
             sample = []
             for i in range(batch_size):
@@ -204,7 +204,7 @@ if __name__ == '__main__':
         data = data.reshape(-1, 51)
         obs_data = data[:25, :]
         future_data = data[25:, :]
-        with jsonlines.open(os.path.join(PREPROCESSED_DATA_DIR, 'human36m', 'train_h17.jsonl'), mode='a') as writer:
+        with jsonlines.open(os.path.join(PREPROCESSED_DATA_DIR, 'human36m', 'valid_h17.jsonl'), mode='a') as writer:
             count += 1
             writer.write({
                 'observed_pose': obs_data.tolist(),
