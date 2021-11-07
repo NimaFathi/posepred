@@ -16,7 +16,7 @@ from utils.others import expmap_to_quaternion, qfix
 logger = logging.getLogger(__name__)
 
 SPLIT = {
-    'train': ['S1', 'S5', 'S6', 'S7', 'S8'],
+    'train': ['S1'],
     'validation': ['S1', 'S5', 'S6', 'S7', 'S8'],
     'test': ['S9', 'S11']
 }
@@ -47,6 +47,7 @@ class PreprocessorHuman36m(Processor):
 
     def normal(self, data_type='train'):
         counter = 0
+        sec_counter = 0
         self.subjects = SPLIT[data_type]
         logger.info('start creating Human3.6m normal static data from original Human3.6m dataset (CDF files) ... ')
         if self.custom_name:
@@ -115,6 +116,7 @@ class PreprocessorHuman36m(Processor):
                             )
                     self.update_meta_data(self.meta_data, video_data['observed_pose'], 3)
                     with jsonlines.open(os.path.join(self.output_dir, output_file_name), mode='a') as writer:
+                        sec_counter += 1
                         writer.write({
                             'video_section': f'{subject}-{canonical_name}-{i}',
                             'observed_pose': video_data['observed_pose'],
@@ -127,6 +129,7 @@ class PreprocessorHuman36m(Processor):
         self.save_meta_data(self.meta_data, self.output_dir, True, data_type)
         print(counter)
         print(counter / 125)
+        print(sec_counter)
         # self.delete_redundant_files()
 
     def quaternion_rep(self, file_path, subject, data_type):
