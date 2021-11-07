@@ -46,6 +46,7 @@ class PreprocessorHuman36m(Processor):
         self.subjects = []
 
     def normal(self, data_type='train'):
+        counter = 0
         self.subjects = SPLIT[data_type]
         logger.info('start creating Human3.6m normal static data from original Human3.6m dataset (CDF files) ... ')
         if self.custom_name:
@@ -75,6 +76,7 @@ class PreprocessorHuman36m(Processor):
                 elif data_type == 'validation':
                     positions = positions[95 * positions.shape[0] // 100:]
                 positions /= 1000
+                counter += positions.shape[0]
                 print(subject, action, positions.shape)
                 # quat = self.quaternion_rep(f, subject, data_type)
                 total_frame_num = self.obs_frame_num + self.pred_frame_num
@@ -123,6 +125,8 @@ class PreprocessorHuman36m(Processor):
                             'future_image_path': video_data['future_image_path']
                         })
         self.save_meta_data(self.meta_data, self.output_dir, True, data_type)
+        print(counter)
+        print(counter / 125)
         # self.delete_redundant_files()
 
     def quaternion_rep(self, file_path, subject, data_type):
