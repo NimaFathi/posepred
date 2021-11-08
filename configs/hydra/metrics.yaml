@@ -1,5 +1,4 @@
 pose_metrics:
-  - MPJPE
   - ADE
   - FDE
 #  - VIM
