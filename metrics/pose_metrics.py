@@ -28,6 +28,26 @@ def FDE(pred, target, dim, mask=None):
     return fde
 
 
+def local_ade(pred, target, dim, mask=None):
+    bs, frames, feat = pred.shape
+    keypoints = feat // dim
+    pred_pose = pred.reshape(bs, frames, keypoints, dim)
+    local_pred_pose = pred_pose - pred_pose[:, :, 0:1, :].repeat(1, 1, keypoints, 1)
+    target_pose = target.reshape(bs, frames, keypoints, dim)
+    local_target_pose = target_pose - target_pose[:, :, 0:1, :].repeat(1, 1, keypoints, 1)
+    return ADE(local_pred_pose, local_target_pose, dim)
+
+
+def local_fde(pred, target, dim, mask=None):
+    bs, frames, feat = pred.shape
+    keypoints = feat // dim
+    pred_pose = pred.reshape(bs, frames, keypoints, dim)
+    local_pred_pose = pred_pose - pred_pose[:, :, 0:1, :].repeat(1, 1, keypoints, 1)
+    target_pose = target.reshape(bs, frames, keypoints, dim)
+    local_target_pose = target_pose - target_pose[:, :, 0:1, :].repeat(1, 1, keypoints, 1)
+    return FDE(local_pred_pose, local_target_pose, dim)
+
+
 def VIM(pred, target, dim, mask):
     """
     Visibilty Ignored Metric

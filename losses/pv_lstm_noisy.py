@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from metrics import ADE
+from metrics import ADE, FDE
 
 
 class PVLSTMNoisy(nn.Module):
@@ -27,6 +27,6 @@ class PVLSTMNoisy(nn.Module):
         comp_ade = ADE(model_outputs['comp_pose'], input_data['observed_pose'], self.args.keypoint_dim)
 
         loss = (self.args.pred_weight * pred_vel_loss) + (self.args.comp_weight * comp_vel_loss)
-        outputs = {'loss': loss, 'pred_vel_loss': pred_vel_loss, 'comp_vel_loss': comp_vel_loss, 'comp_ade': comp_ade}
+        outputs = {'loss': loss, 'pred_vel_loss': pred_vel_loss, 'comp_vel_loss': comp_vel_loss, 'comp_ade': comp_ade,}
 
         return outputs
