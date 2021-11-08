@@ -26,12 +26,13 @@ class PVLSTMPro(nn.Module):
         # completion loss
         comp_vel_loss = self.mse2(model_outputs['comp_vel'], observed_vel)
         comp_ade = ADE(model_outputs['comp_pose'], input_data['observed_pose'], self.args.keypoint_dim)
+        comp_ade_noise_only = ADE(model_outputs['comp_pose_noise_only'], observed_pose, self.args.keypoint_dim)
 
         sim_preds = self.mse3(model_outputs['pred_vel2'], model_outputs['pred_vel'])
 
         loss = (self.args.pred_weight * pred_vel_loss) + (self.args.comp_weight * comp_vel_loss) + (
                 self.args.sim_weight * sim_preds)
         outputs = {'loss': loss, 'pred_vel_loss': pred_vel_loss, 'comp_vel_loss': comp_vel_loss, 'comp_ade': comp_ade,
-                   'sim_preds': sim_preds}
+                   'sim_preds': sim_preds, 'comp_ade_noise_only': comp_ade_noise_only}
 
         return outputs

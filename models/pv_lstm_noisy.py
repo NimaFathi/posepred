@@ -87,7 +87,11 @@ class PVLSTMNoisy(nn.Module):
         for i in range(comp_vel.shape[-2]):
             comp_pose[..., i + 1, :] = comp_pose[..., i, :] + comp_vel[..., i, :]
 
-        outputs = {'pred_pose': pred_pose, 'pred_vel': pred_vel, 'comp_pose': comp_pose, 'comp_vel': comp_vel}
+        bs, frames_n, feat = comp_pose.shape
+        comp_pose_noise_only = torch.where(pose_noise.view(bs, frames_n, feat) == 1, comp_pose, pose)
+
+        outputs = {'pred_pose': pred_pose, 'pred_vel': pred_vel, 'comp_pose': comp_pose, 'comp_vel': comp_vel,
+                   'comp_pose_noise_only': comp_pose_noise_only}
 
         if self.args.use_mask:
             outputs['pred_mask'] = inputs['observed_mask'][:, -1:, :].repeat(1, self.args.pred_frames_num, 1)
