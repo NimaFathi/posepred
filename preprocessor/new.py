@@ -72,8 +72,6 @@ class PreprocessorHuman36mWalkingNew(Processor):
             subject_pose_path = os.path.join(self.dataset_path, subject,
                                              f'MyPoseFeatures/D3_Positions/{"Walking 1"}.cdf')
         file_list_pose = glob(subject_pose_path)
-        print('here', file_list_pose)
-        print(subject, file_no)
         for file in file_list_pose:
             hf = cdflib.CDF(file)
             positions = hf['Pose'].reshape(-1, 96)
@@ -82,7 +80,6 @@ class PreprocessorHuman36mWalkingNew(Processor):
                 positions.shape[0] - (self.skip_frame_num + 1) * (self.pred_frame_num + self.obs_frame_num))
             fr_end = fr_start + (self.skip_frame_num + 1) * (self.pred_frame_num + self.obs_frame_num)
             traj = positions[fr_start: fr_end: (self.skip_frame_num + 1)]
-            print(traj.shape)
             return traj
 
     def normal(self, data_type='train'):
