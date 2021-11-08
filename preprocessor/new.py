@@ -1,9 +1,6 @@
-import csv
 import logging
 import os
-import zipfile
 from glob import glob
-from urllib.request import urlretrieve
 
 import cdflib
 import jsonlines
@@ -11,7 +8,6 @@ import numpy as np
 
 from path_definition import PREPROCESSED_DATA_DIR
 from preprocessor.preprocessor import Processor
-from utils.others import expmap_to_quaternion, qfix
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +22,8 @@ class PreprocessorHuman36mWalkingNew(Processor):
     def __init__(self, dataset_path, is_interactive, obs_frame_num, pred_frame_num, skip_frame_num,
                  use_video_once, custom_name):
         super(PreprocessorHuman36mWalkingNew, self).__init__(dataset_path, is_interactive, obs_frame_num,
-                                                          pred_frame_num, skip_frame_num, use_video_once, custom_name)
+                                                             pred_frame_num, skip_frame_num, use_video_once,
+                                                             custom_name)
         assert self.is_interactive is False, 'human3.6m is not interactive'
         self.output_dir = os.path.join(
             PREPROCESSED_DATA_DIR, 'human36m_walking_interactive') if self.is_interactive else os.path.join(
@@ -55,8 +52,11 @@ class PreprocessorHuman36mWalkingNew(Processor):
             hf = cdflib.CDF(f)
             positions = hf['Pose'].reshape(-1, 96)
             positions /= 1000
-            for i in range(0, positions.shape[0] - (self.skip_frame_num + 1) * (self.pred_frame_num + self.obs_frame_num), self.obs_frame_num):
-                sample = positions[i: i + (self.skip_frame_num + 1) * (self.obs_frame_num + self.pred_frame_num):(self.skip_frame_num + 1)]
+            for i in range(0,
+                           positions.shape[0] - (self.skip_frame_num + 1) * (self.pred_frame_num + self.obs_frame_num),
+                           self.obs_frame_num):
+                sample = positions[i: i + (self.skip_frame_num + 1) * (self.obs_frame_num + self.pred_frame_num):(
+                            self.skip_frame_num + 1)]
                 num_create_samples += 1
                 if num_create_samples > num_samples / 2:
                     break
@@ -69,15 +69,20 @@ class PreprocessorHuman36mWalkingNew(Processor):
         if file_no == 0:
             subject_pose_path = os.path.join(self.dataset_path, subject, f'MyPoseFeatures/D3_Positions/{"Walking"}.cdf')
         else:
-            subject_pose_path = os.path.join(self.dataset_path, subject, f'MyPoseFeatures/D3_Positions/{"Walking 1"}.cdf')
+            subject_pose_path = os.path.join(self.dataset_path, subject,
+                                             f'MyPoseFeatures/D3_Positions/{"Walking 1"}.cdf')
         file_list_pose = glob(subject_pose_path)
+        print('here', file_list_pose)
+        print(subject, file_no)
         for file in file_list_pose:
             hf = cdflib.CDF(file)
             positions = hf['Pose'].reshape(-1, 96)
             positions /= 1000
-            fr_start = np.random.randint(positions.shape[0] - (self.skip_frame_num + 1) * (self.pred_frame_num + self.obs_frame_num))
+            fr_start = np.random.randint(
+                positions.shape[0] - (self.skip_frame_num + 1) * (self.pred_frame_num + self.obs_frame_num))
             fr_end = fr_start + (self.skip_frame_num + 1) * (self.pred_frame_num + self.obs_frame_num)
             traj = positions[fr_start: fr_end: (self.skip_frame_num + 1)]
+            print(traj.shape)
             return traj
 
     def normal(self, data_type='train'):
@@ -111,4 +116,3 @@ class PreprocessorHuman36mWalkingNew(Processor):
                         'observed_pose': sample[:self.obs_frame_num, :].tolist(),
                         'future_pose': sample[self.obs_frame_num:, :].tolist(),
                     })
-
