@@ -92,7 +92,11 @@ class PreprocessorHuman36mWalkingNew(Processor):
             output_file_name
         )) is False, f"preprocessed file exists at {os.path.join(self.output_dir, output_file_name)}"
         if data_type == 'train' or data_type == 'validation':
-            for i in range(2000):
+            if data_type == 'train':
+                samples_num = 2000
+            else:
+                samples_num = 256
+            for i in range(samples_num):
                 pose = self.sample()
                 with jsonlines.open(os.path.join(self.output_dir, output_file_name), mode='a') as writer:
                     writer.write({
