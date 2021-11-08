@@ -13,6 +13,7 @@ from preprocessor.posetrack_preprocessor import PoseTrackPreprocessor
 from preprocessor.somof_3dpw_preprocessor import SoMoF3DPWPreprocessor
 from preprocessor.somof_posetrack_preprocessor import SoMoFPoseTrackPreprocessor
 from preprocessor.human36m_walking_preprocessor import PreprocessorHuman36mWalking
+from preprocessor.new import PreprocessorHuman36mWalkingNew
 from data_loader import DATASETS, DATA_TYPES
 
 logger = logging.getLogger(__name__)
@@ -81,6 +82,12 @@ def preprocess(cfg: DictConfig):
         )
     elif cfg.dataset == 'human3.6_walking':
         preprocessor = PreprocessorHuman36mWalking(
+            dataset_path=cfg.official_annotation_path,
+            obs_frame_num=cfg.obs_frames_num, custom_name=cfg.output_name, is_interactive=cfg.interactive,
+            pred_frame_num=cfg.pred_frames_num, skip_frame_num=cfg.skip_num, use_video_once=cfg.use_video_once
+        )
+    elif cfg.dataset == 'human_walking':
+        preprocessor = PreprocessorHuman36mWalkingNew(
             dataset_path=cfg.official_annotation_path,
             obs_frame_num=cfg.obs_frames_num, custom_name=cfg.output_name, is_interactive=cfg.interactive,
             pred_frame_num=cfg.pred_frames_num, skip_frame_num=cfg.skip_num, use_video_once=cfg.use_video_once

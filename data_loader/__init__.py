@@ -7,7 +7,9 @@ from .interactive_dataset import InteractiveDataset
 from .noisy_solitary_dataset import NoisySolitaryDataset
 from .solitary_dataset import SolitaryDataset
 
-DATASETS = ['somof_posetrack', 'posetrack', 'somof_3dpw', '3dpw', 'jta', 'jaad', 'pie', 'human3.6m', 'human3.6_walking']
+DATASETS = ['somof_posetrack', 'posetrack', 'somof_3dpw', '3dpw', 'jta', 'jaad', 'pie', 'human3.6m', 'human3.6_walking',
+            'human_walking'
+            ]
 DATA_TYPES = ['train', 'validation', 'test']
 VISUALIZING_TYPES = ['observed', 'future', 'predicted', 'completed']
 
