@@ -23,7 +23,7 @@ class NearestNeighbor(nn.Module):
             obs_vel = pose[..., 1:, :] - pose[..., :-1, :]
             bs = obs_vel.shape[0]
             dis = self.distance(in_vel.repeat(bs, 1), obs_vel.view(bs, -1)).sum(1)
-            value, ind = torch.min(dis, 0, out=None)
+            value, ind = torch.min(dis, torch.zeros_like(dis), out=None)
             if min_distance is None or value < min_distance:
                 min_distance = value
                 if self.args.use_mask:
