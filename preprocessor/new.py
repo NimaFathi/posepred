@@ -12,8 +12,8 @@ from preprocessor.preprocessor import Processor
 logger = logging.getLogger(__name__)
 
 SPLIT = {
-    'train': ['S1', 'S6', 'S7', 'S8', 'S9', 'S11'],
-    'validation': ['S1', 'S6', 'S7', 'S8', 'S9', 'S11'],
+    'train': ['S1', 'S6', 'S7', 'S8', 'S9'],
+    'validation': ['S1', 'S6', 'S7', 'S8', 'S9'],
     'test': ['S5']
 }
 
@@ -87,7 +87,7 @@ class PreprocessorHuman36mCategorical(Processor):
         return traj
 
     def normal(self, data_type='train'):
-        category = 'Greeting'
+        category = 'Walking'
         self.subjects = SPLIT[data_type]
         logger.info('start creating Human3.6m normal static data from original Human3.6m dataset (CDF files) ... ')
         if self.custom_name:
