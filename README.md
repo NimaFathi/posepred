@@ -64,7 +64,8 @@ To get started as quickly as possible, follow the instructions in this section. 
 Make sure you have the following dependencies installed before proceeding:  
 - Python 3.7+ distribution  
 - PyTorch >= 1.7.0  
-- CUDA >= 10.0.0  
+- CUDA >= 10.0.0 
+- pip >= 21.3.1 
 ### Virtualenv  
 You can create and activate virtual environment like below:  
 ```bash  
