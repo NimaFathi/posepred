@@ -93,7 +93,7 @@ class PreprocessorHuman36mCategorical(Processor):
         return traj
 
     def normal(self, data_type='train'):
-        category = 'Purchases'
+        category = 'Sitting'
         self.subjects = SPLIT[data_type]
         logger.info('start creating Human3.6m normal static data from original Human3.6m dataset (CDF files) ... ')
         if self.custom_name:
