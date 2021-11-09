@@ -68,9 +68,14 @@ Make sure you have the following dependencies installed before proceeding:
 ### Virtualenv  
 You can create and activate virtual environment like below:  
 ```bash  
-virtualenv <venvname>  
-  
+
+pip install --upgrade virtualenv
+
+virtualenv -p python3.7 <venvname>  
+
 source <venvname>/bin/activate  
+
+pip install --upgrade pip
 ```  
 ### Requirements  
 Furthermore, you just have to install all the packages you need:  
