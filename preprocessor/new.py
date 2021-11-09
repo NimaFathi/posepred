@@ -66,22 +66,25 @@ class PreprocessorHuman36mCategorical(Processor):
 
     def sample(self, category):
         subject = np.random.choice(self.subjects)
-        file_no = np.random.choice([0, 1])
-        if file_no == 0:
-            subject_pose_path = os.path.join(self.dataset_path, subject, f'MyPoseFeatures/D3_Positions/{category}.cdf')
-        else:
-            subject_pose_path = os.path.join(self.dataset_path, subject,
-                                             f'MyPoseFeatures/D3_Positions/{category} 1.cdf')
-        file_list_pose = glob(subject_pose_path)
-        for file in file_list_pose:
-            hf = cdflib.CDF(file)
-            positions = hf['Pose'].reshape(-1, 96)
-            positions /= 1000
-            fr_start = np.random.randint(
-                positions.shape[0] - (self.skip_frame_num + 1) * (self.pred_frame_num + self.obs_frame_num))
-            fr_end = fr_start + (self.skip_frame_num + 1) * (self.pred_frame_num + self.obs_frame_num)
-            traj = positions[fr_start: fr_end: (self.skip_frame_num + 1)]
-            return traj
+        subject_pose_paths = []
+        for file_no in range(0, 5):
+            possible_path = os.path.join(self.dataset_path, subject,
+                                         f'MyPoseFeatures/D3_Positions/{category} {file_no}.cdf')
+            if os.path.exists(possible_path):
+                subject_pose_paths.append(possible_path)
+        if os.path.exists(
+                os.path.join(self.dataset_path, subject, f'MyPoseFeatures/D3_Positions/{category}.cdf')):
+            subject_pose_paths.append(
+                os.path.join(self.dataset_path, subject, f'MyPoseFeatures/D3_Positions/{category}.cdf'))
+        file = np.random.choice(subject_pose_paths)
+        hf = cdflib.CDF(file)
+        positions = hf['Pose'].reshape(-1, 96)
+        positions /= 1000
+        fr_start = np.random.randint(
+            positions.shape[0] - (self.skip_frame_num + 1) * (self.pred_frame_num + self.obs_frame_num))
+        fr_end = fr_start + (self.skip_frame_num + 1) * (self.pred_frame_num + self.obs_frame_num)
+        traj = positions[fr_start: fr_end: (self.skip_frame_num + 1)]
+        return traj
 
     def normal(self, data_type='train'):
         category = 'Directions'
