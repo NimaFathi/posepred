@@ -18,16 +18,17 @@ SPLIT = {
 }
 
 
-class PreprocessorHuman36mWalkingNew(Processor):
+class PreprocessorHuman36mCategorical(Processor):
     def __init__(self, dataset_path, is_interactive, obs_frame_num, pred_frame_num, skip_frame_num,
                  use_video_once, custom_name):
-        super(PreprocessorHuman36mWalkingNew, self).__init__(dataset_path, is_interactive, obs_frame_num,
-                                                             pred_frame_num, skip_frame_num, use_video_once,
-                                                             custom_name)
+        super(PreprocessorHuman36mCategorical, self).__init__(
+            dataset_path, is_interactive, obs_frame_num,
+            pred_frame_num, skip_frame_num, use_video_once, custom_name
+        )
         assert self.is_interactive is False, 'human3.6m is not interactive'
         self.output_dir = os.path.join(
-            PREPROCESSED_DATA_DIR, 'human36m_walking_interactive') if self.is_interactive else os.path.join(
-            PREPROCESSED_DATA_DIR, 'human36m_walking'
+            PREPROCESSED_DATA_DIR, 'human36m_categorical_interactive') if self.is_interactive else os.path.join(
+            PREPROCESSED_DATA_DIR, 'human36m_categorical'
         )
         if not os.path.exists(self.output_dir):
             os.makedirs(self.output_dir)
@@ -40,14 +41,14 @@ class PreprocessorHuman36mWalkingNew(Processor):
             'sum_pose': np.zeros(3)
         }
 
-    def create_test(self, num_samples):
+    def create_test(self, num_samples, category):
         samples = []
         subject_pose_path = os.path.join(self.dataset_path, self.subjects[0], 'MyPoseFeatures/D3_Positions/*.cdf')
         file_list_pose = glob(subject_pose_path)
         for f in file_list_pose:
             num_create_samples = 0
             action = os.path.splitext(os.path.basename(f))[0]
-            if not action.lower().split(" ")[0] == 'walking':
+            if not action.lower().split(" ")[0] == category.lower():
                 continue
             hf = cdflib.CDF(f)
             positions = hf['Pose'].reshape(-1, 96)
@@ -56,21 +57,21 @@ class PreprocessorHuman36mWalkingNew(Processor):
                            positions.shape[0] - (self.skip_frame_num + 1) * (self.pred_frame_num + self.obs_frame_num),
                            self.obs_frame_num):
                 sample = positions[i: i + (self.skip_frame_num + 1) * (self.obs_frame_num + self.pred_frame_num):(
-                            self.skip_frame_num + 1)]
+                        self.skip_frame_num + 1)]
                 num_create_samples += 1
                 if num_create_samples > num_samples / 2:
                     break
                 samples.append(sample)
         return samples
 
-    def sample(self):
+    def sample(self, category):
         subject = np.random.choice(self.subjects)
         file_no = np.random.choice([0, 1])
         if file_no == 0:
-            subject_pose_path = os.path.join(self.dataset_path, subject, f'MyPoseFeatures/D3_Positions/{"Walking"}.cdf')
+            subject_pose_path = os.path.join(self.dataset_path, subject, f'MyPoseFeatures/D3_Positions/{category}.cdf')
         else:
             subject_pose_path = os.path.join(self.dataset_path, subject,
-                                             f'MyPoseFeatures/D3_Positions/{"Walking 1"}.cdf')
+                                             f'MyPoseFeatures/D3_Positions/{category} 1.cdf')
         file_list_pose = glob(subject_pose_path)
         for file in file_list_pose:
             hf = cdflib.CDF(file)
@@ -83,12 +84,13 @@ class PreprocessorHuman36mWalkingNew(Processor):
             return traj
 
     def normal(self, data_type='train'):
+        category = 'Directions'
         self.subjects = SPLIT[data_type]
         logger.info('start creating Human3.6m normal static data from original Human3.6m dataset (CDF files) ... ')
         if self.custom_name:
-            output_file_name = f'{data_type}_{self.obs_frame_num}_{self.pred_frame_num}_{self.skip_frame_num}_{self.custom_name}.jsonl'
+            output_file_name = f'{data_type}_{self.obs_frame_num}_{self.pred_frame_num}_{self.skip_frame_num}_{self.custom_name}_{category}.jsonl'
         else:
-            output_file_name = f'{data_type}_{self.obs_frame_num}_{self.pred_frame_num}_{self.skip_frame_num}_human3.6m_walking.jsonl'
+            output_file_name = f'{data_type}_{self.obs_frame_num}_{self.pred_frame_num}_{self.skip_frame_num}_human3.6m_categorical_{category}.jsonl'
         assert os.path.exists(os.path.join(
             self.output_dir,
             output_file_name
@@ -99,14 +101,14 @@ class PreprocessorHuman36mWalkingNew(Processor):
             else:
                 samples_num = 256
             for i in range(samples_num):
-                pose = self.sample()
+                pose = self.sample(category)
                 with jsonlines.open(os.path.join(self.output_dir, output_file_name), mode='a') as writer:
                     writer.write({
                         'observed_pose': pose[:self.obs_frame_num, :].tolist(),
                         'future_pose': pose[self.obs_frame_num:, :].tolist(),
                     })
         else:
-            samples = self.create_test(256)
+            samples = self.create_test(256, category)
             with jsonlines.open(os.path.join(self.output_dir, output_file_name), mode='a') as writer:
                 for sample in samples:
                     writer.write({
