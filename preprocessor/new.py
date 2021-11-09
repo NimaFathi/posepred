@@ -67,15 +67,21 @@ class PreprocessorHuman36mCategorical(Processor):
     def sample(self, category):
         subject = np.random.choice(self.subjects)
         subject_pose_paths = []
-        for file_no in range(0, 5):
-            possible_path = os.path.join(self.dataset_path, subject,
-                                         f'MyPoseFeatures/D3_Positions/{category} {file_no}.cdf')
-            if os.path.exists(possible_path):
-                subject_pose_paths.append(possible_path)
-        if os.path.exists(
-                os.path.join(self.dataset_path, subject, f'MyPoseFeatures/D3_Positions/{category}.cdf')):
-            subject_pose_paths.append(
-                os.path.join(self.dataset_path, subject, f'MyPoseFeatures/D3_Positions/{category}.cdf'))
+        categories = [category]
+        if category == 'Photo':
+            categories.append('TakingPhoto')
+        elif category == 'WalkDog':
+            categories.append('WalkingDog')
+        for cat in categories:
+            for file_no in range(0, 5):
+                possible_path = os.path.join(self.dataset_path, subject,
+                                             f'MyPoseFeatures/D3_Positions/{cat} {file_no}.cdf')
+                if os.path.exists(possible_path):
+                    subject_pose_paths.append(possible_path)
+            if os.path.exists(
+                    os.path.join(self.dataset_path, subject, f'MyPoseFeatures/D3_Positions/{cat}.cdf')):
+                subject_pose_paths.append(
+                    os.path.join(self.dataset_path, subject, f'MyPoseFeatures/D3_Positions/{cat}.cdf'))
         file = np.random.choice(subject_pose_paths)
         hf = cdflib.CDF(file)
         positions = hf['Pose'].reshape(-1, 96)
@@ -87,7 +93,7 @@ class PreprocessorHuman36mCategorical(Processor):
         return traj
 
     def normal(self, data_type='train'):
-        category = 'Phoning'
+        category = 'Posing'
         self.subjects = SPLIT[data_type]
         logger.info('start creating Human3.6m normal static data from original Human3.6m dataset (CDF files) ... ')
         if self.custom_name:
