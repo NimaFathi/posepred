@@ -1,6 +1,6 @@
 TASK='comp_pred'
 JOINT_NAME='neck'
-JOINT_NUM='2'
+JOINT_NUM=2
 EPOCHS=200
 PRED_W=1
 COMP_W=1
