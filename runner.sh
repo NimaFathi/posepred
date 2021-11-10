@@ -30,8 +30,8 @@ echo 'start noisefree visualization.' &&
 python -m api.visualize model='pv_lstm_noisy' keypoint_dim=3  dataset=$TEST_DATASET load_path=$LOAD_PATH dataset_type=$DATASET_TYPE pred_frames_num=60 index=$INDEX showing=$SHOWING is_noisy=true hydra.run.dir="outputs/${JOINT_NAME}/${TASK}/vis/noisefree" data.noise_rate=0 device=$DEVICE &&
 echo 'finish noisefree visualization.' &&
 
-echo 'start noisy evaluation.' &&
+echo 'start noisy visualization.' &&
 python -m api.visualize model='pv_lstm_noisy' keypoint_dim=3  dataset=$TEST_DATASET load_path=$LOAD_PATH dataset_type=$DATASET_TYPE pred_frames_num=60 index=$INDEX showing=$SHOWING is_noisy=true hydra.run.dir="outputs/${JOINT_NAME}/${TASK}/vis/noisy" data.noise_keypoint=$JOINT_NUM device=$DEVICE &&
-echo 'finish noisy evaluation.' &&
+echo 'finish noisy visualization.' &&
 
 echo 'all done.'
