@@ -36,7 +36,7 @@ def save_snapshot(model, loss_module, optimizer, optimizer_args, epoch, train_re
         'train_reporter': train_reporter,
         'valid_reporter': valid_reporter
     }
-    torch.save(snapshot, os.path.join(save_path, 'snapshots', '%03d.pt' % epoch))
+    torch.save(snapshot, os.path.join(save_path, 'snapshots', '%d.pt' % epoch))
     del snapshot
 
 
