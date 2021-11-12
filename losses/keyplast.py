@@ -8,9 +8,7 @@ class Keyplast(nn.Module):
         super().__init__()
 
         self.args = args
-        self.mse1 = nn.MSELoss()
-        self.mse2 = nn.MSELoss()
-        self.mse3 = nn.MSELoss()
+        self.mse = nn.MSELoss()
 
     def forward(self, model_outputs, input_data):
         # completion loss

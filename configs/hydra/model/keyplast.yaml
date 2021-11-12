@@ -6,3 +6,4 @@ type: keyplast
 
 loss:
   type: keyplast
+  keypoint_dim: ${keypoint_dim}
