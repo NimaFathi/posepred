@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from metrics import ADE, FDE
+from metrics import ADE
 
 
 class PVLSTMNoisy(nn.Module):

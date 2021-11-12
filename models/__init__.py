@@ -15,6 +15,7 @@ from .comp_pred_vel_concat import CompPredVelConcat
 from .v_lstm_noisy import VLSTMNoisy
 from .p_lstm_noisy import PLSTMNoisy
 from .pv_lstm_pro import PVLSTMPro
+from .keyplast import Keyplast
 
 MODELS = {'zero_vel': ZeroVel,
           'nearest_neighbor': NearestNeighbor,
@@ -33,4 +34,5 @@ MODELS = {'zero_vel': ZeroVel,
           'v_lstm_noisy': VLSTMNoisy,
           'p_lstm_noisy': PLSTMNoisy,
           'pv_lstm_pro': PVLSTMPro,
+          'keyplast': Keyplast,
           }
