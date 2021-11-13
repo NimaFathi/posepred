@@ -13,7 +13,7 @@ from preprocessor.posetrack_preprocessor import PoseTrackPreprocessor
 from preprocessor.somof_3dpw_preprocessor import SoMoF3DPWPreprocessor
 from preprocessor.somof_posetrack_preprocessor import SoMoFPoseTrackPreprocessor
 from preprocessor.human36m_walking_preprocessor import PreprocessorHuman36mWalking
-from preprocessor.new import PreprocessorHuman36mCategorical
+from preprocessor.human36m_categorical import PreprocessorHuman36mCategorical
 from data_loader import DATASETS, DATA_TYPES
 
 logger = logging.getLogger(__name__)

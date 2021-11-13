@@ -12,10 +12,16 @@ from preprocessor.preprocessor import Processor
 logger = logging.getLogger(__name__)
 
 SPLIT = {
-    'train': ['S1', 'S6', 'S7', 'S8', 'S9', 'S11'],
-    'validation': ['S1', 'S6', 'S7', 'S8', 'S9', 'S11'],
+    'train': ['S1', 'S6', 'S7', 'S8', 'S9'],
+    'validation': ['S1'],
     'test': ['S5']
 }
+
+ALL_CATEGORIES = [
+                'Photo', 'TakingPhoto', 'WalkDog', 'WalkingDog', 'Directions',
+                'Discussion', 'Eating', 'Greeting', 'Phoning', 'Posing', 'Purchases',
+                'Sitting', 'SittingDown', 'Smoking', 'Waiting', 'Walking', 'WalkTogether'
+            ]
 
 
 class PreprocessorHuman36mCategorical(Processor):
@@ -42,13 +48,18 @@ class PreprocessorHuman36mCategorical(Processor):
         }
 
     def create_test(self, num_samples, category):
+        categories = [category]
+        if category == 'Photo':
+            categories.append('TakingPhoto')
+        elif category == 'WalkDog':
+            categories.append('WalkingDog')
         samples = []
         subject_pose_path = os.path.join(self.dataset_path, self.subjects[0], 'MyPoseFeatures/D3_Positions/*.cdf')
         file_list_pose = glob(subject_pose_path)
         for f in file_list_pose:
             num_create_samples = 0
             action = os.path.splitext(os.path.basename(f))[0]
-            if not action.lower().split(" ")[0] == category.lower():
+            if not action.split(" ")[0] in categories:
                 continue
             hf = cdflib.CDF(f)
             positions = hf['Pose'].reshape(-1, 96)
@@ -68,6 +79,8 @@ class PreprocessorHuman36mCategorical(Processor):
         subject = np.random.choice(self.subjects)
         subject_pose_paths = []
         categories = [category]
+        if category == 'all':
+            categories = ALL_CATEGORIES
         if category == 'Photo':
             categories.append('TakingPhoto')
         elif category == 'WalkDog':
@@ -90,10 +103,11 @@ class PreprocessorHuman36mCategorical(Processor):
             positions.shape[0] - (self.skip_frame_num + 1) * (self.pred_frame_num + self.obs_frame_num))
         fr_end = fr_start + (self.skip_frame_num + 1) * (self.pred_frame_num + self.obs_frame_num)
         traj = positions[fr_start: fr_end: (self.skip_frame_num + 1)]
+
         return traj
 
     def normal(self, data_type='train'):
-        category = 'WalkTogether'
+        category = 'all'
         self.subjects = SPLIT[data_type]
         logger.info('start creating Human3.6m normal static data from original Human3.6m dataset (CDF files) ... ')
         if self.custom_name:
@@ -104,11 +118,11 @@ class PreprocessorHuman36mCategorical(Processor):
             self.output_dir,
             output_file_name
         )) is False, f"preprocessed file exists at {os.path.join(self.output_dir, output_file_name)}"
-        if data_type == 'train' or data_type == 'validation':
-            if data_type == 'train':
-                samples_num = 2000
+        if data_type == 'train':
+            if category == 'all':
+                samples_num = 25000
             else:
-                samples_num = 256
+                samples_num = 2000
             for i in range(samples_num):
                 pose = self.sample(category)
                 with jsonlines.open(os.path.join(self.output_dir, output_file_name), mode='a') as writer:
@@ -117,10 +131,20 @@ class PreprocessorHuman36mCategorical(Processor):
                         'future_pose': pose[self.obs_frame_num:, :].tolist(),
                     })
         else:
-            samples = self.create_test(256, category)
-            with jsonlines.open(os.path.join(self.output_dir, output_file_name), mode='a') as writer:
-                for sample in samples:
-                    writer.write({
-                        'observed_pose': sample[:self.obs_frame_num, :].tolist(),
-                        'future_pose': sample[self.obs_frame_num:, :].tolist(),
-                    })
+            if category == 'all':
+                for category in ALL_CATEGORIES:
+                    samples = self.create_test(256, category)
+                    with jsonlines.open(os.path.join(self.output_dir, output_file_name), mode='a') as writer:
+                        for sample in samples:
+                            writer.write({
+                                'observed_pose': sample[:self.obs_frame_num, :].tolist(),
+                                'future_pose': sample[self.obs_frame_num:, :].tolist(),
+                            })
+            else:
+                samples = self.create_test(256, category)
+                with jsonlines.open(os.path.join(self.output_dir, output_file_name), mode='a') as writer:
+                    for sample in samples:
+                        writer.write({
+                            'observed_pose': sample[:self.obs_frame_num, :].tolist(),
+                            'future_pose': sample[self.obs_frame_num:, :].tolist(),
+                        })
