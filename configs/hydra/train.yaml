@@ -9,7 +9,7 @@ defaults:
 train_dataset: ???
 valid_dataset:
 epochs: ???
-snapshot_interval: ${epochs}
+snapshot_interval: 25
 start_epoch: 0
 device: cuda
 keypoint_dim: ???
