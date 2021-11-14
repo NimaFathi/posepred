@@ -1,18 +1,25 @@
-import os
-import logging
-
 import json
+import logging
+import os
+
 import jsonlines
-import torch
 import numpy as np
+import torch
 from torch.utils.data import Dataset
 
 from path_definition import PREPROCESSED_DATA_DIR
 
 logger = logging.getLogger(__name__)
 
+dim_used_22 = np.array(
+    [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 36, 37, 38, 39, 40, 41,
+     42, 43, 44, 45, 46, 47, 51, 52, 53, 54, 55, 56, 57, 58, 59, 63, 64, 65, 66, 67, 68, 75, 76, 77, 78, 79, 80, 81, 82,
+     83, 87, 88, 89, 90, 91, 92])
 
-dim_used = np.array([6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 51, 52, 53, 54, 55, 56, 57, 58, 59, 63, 64, 65, 66, 67, 68, 75, 76, 77, 78, 79, 80, 81, 82, 83, 87, 88, 89, 90, 91, 92])
+dim_used_17 = np.array(
+    [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 18, 19, 20, 21, 22, 23, 24, 25, 26, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45,
+     46, 47, 51, 52, 53, 54, 55, 56, 57, 58, 59, 75, 76, 77, 78, 79, 80, 81, 82, 83])
+
 
 class NoisySolitaryDataset(Dataset):
     def __init__(self, dataset_path, keypoint_dim, is_testing, use_mask, is_visualizing, use_quaternion, normalize,
@@ -36,7 +43,7 @@ class NoisySolitaryDataset(Dataset):
                 seq_tensor = {}
                 for k, v in seq.items():
                     if k in tensor_keys:
-                        seq_tensor[k] = torch.tensor(v, dtype=torch.float32)[:, dim_used]
+                        seq_tensor[k] = torch.tensor(v, dtype=torch.float32)[:, dim_used_17]
                     else:
                         seq_tensor[k] = v
                 data.append(seq_tensor)
