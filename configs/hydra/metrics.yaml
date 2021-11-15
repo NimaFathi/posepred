@@ -1,13 +1,13 @@
 pose_metrics:
   - ADE
   - FDE
-  - ade_80
-  - ade_160
-  - ade_320
-  - ade_560
-  - ade_720
-  - ade_880
-  - local_ade
+  - ade_200
+  - ade_400
+  - ade_600
+  - ade_800
+#  - ade_1000
+#  - ade_880
+#  - local_ade
 #  - local_fde
 #  - VIM
 #  - VAM

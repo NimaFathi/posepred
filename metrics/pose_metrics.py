@@ -38,6 +38,42 @@ def local_ade(pred, target, dim, mask=None):
     return ADE(local_pred_pose, local_target_pose, dim)
 
 
+def local_ade_200ms(pred, target, dim, mask=None):
+    if pred.shape[1] < 6:
+        return 0
+    return local_ade(pred[:, :6, :], target[:, :6, :], dim)
+
+
+def local_ade_400ms(pred, target, dim, mask=None):
+    if pred.shape[1] < 12:
+        return 0
+    return local_ade(pred[:, :12, :], target[:, :12, :], dim)
+
+
+def local_ade_600ms(pred, target, dim, mask=None):
+    if pred.shape[1] < 18:
+        return 0
+    return local_ade(pred[:, :18, :], target[:, :18, :], dim)
+
+
+def local_ade_800ms(pred, target, dim, mask=None):
+    if pred.shape[1] < 24:
+        return 0
+    return local_ade(pred[:, :24, :], target[:, :24, :], dim)
+
+
+def local_ade_1000ms(pred, target, dim, mask=None):
+    if pred.shape[1] < 30:
+        return 0
+    return local_ade(pred[:, :30, :], target[:, :30, :], dim)
+
+
+def local_ade_80ms(pred, target, dim, mask=None):
+    if pred.shape[1] < 2:
+        return 0
+    return local_ade(pred[:, :2, :], target[:, :2, :], dim)
+
+
 def local_ade_80ms(pred, target, dim, mask=None):
     if pred.shape[1] < 2:
         return 0
