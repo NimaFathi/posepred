@@ -43,7 +43,7 @@ class NoisySolitaryDataset(Dataset):
                 seq_tensor = {}
                 for k, v in seq.items():
                     if k in tensor_keys:
-                        seq_tensor[k] = torch.tensor(v, dtype=torch.float32)[:, dim_used_17]
+                        seq_tensor[k] = torch.tensor(v, dtype=torch.float32)[:, dim_used_22]
                     else:
                         seq_tensor[k] = v
                 data.append(seq_tensor)

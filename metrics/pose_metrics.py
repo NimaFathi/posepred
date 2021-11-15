@@ -37,14 +37,41 @@ def local_ade(pred, target, dim, mask=None):
     local_target_pose = target_pose - target_pose[:, :, 0:1, :].repeat(1, 1, keypoints, 1)
     return ADE(local_pred_pose, local_target_pose, dim)
 
-def new_local_ade(pred, target, dim, mask=None):
-    bs, frames, feat = pred.shape
-    keypoints = feat // dim
-    pred_pose = pred.reshape(bs, frames, keypoints, dim)
-    local_pred_pose = pred_pose - pred_pose[:, :, 0:1, :].repeat(1, 1, keypoints, 1)
-    target_pose = target.reshape(bs, frames, keypoints, dim)
-    local_target_pose = target_pose - target_pose[:, :, 0:1, :].repeat(1, 1, keypoints, 1)
-    return ADE(local_pred_pose[3:], local_target_pose[3:], dim)
+
+def local_ade_80ms(pred, target, dim, mask=None):
+    if pred.shape[1] < 2:
+        return 0
+    return local_ade(pred[:, :2, :], target[:, :2, :], dim)
+
+
+def local_ade_160ms(pred, target, dim, mask=None):
+    if pred.shape[1] < 4:
+        return 0
+    return local_ade(pred[:, :4, :], target[:, :4, :], dim)
+
+
+def local_ade_320ms(pred, target, dim, mask=None):
+    if pred.shape[1] < 8:
+        return 0
+    return local_ade(pred[:, :8, :], target[:, :8, :], dim)
+
+
+def local_ade_560ms(pred, target, dim, mask=None):
+    if pred.shape[1] < 14:
+        return 0
+    return local_ade(pred[:, :14, :], target[:, :14, :], dim)
+
+
+def local_ade_720ms(pred, target, dim, mask=None):
+    if pred.shape[1] < 18:
+        return 0
+    return local_ade(pred[:, :18, :], target[:, :18, :], dim)
+
+
+def local_ade_880ms(pred, target, dim, mask=None):
+    if pred.shape[1] < 22:
+        return 0
+    return local_ade(pred[:, :22, :], target[:, :22, :], dim)
 
 
 def local_fde(pred, target, dim, mask=None):
