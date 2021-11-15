@@ -2,6 +2,7 @@ pose_metrics:
   - ADE
   - FDE
   - local_ade
+  - new_local_ade
   - local_fde
 #  - VIM
 #  - VAM
