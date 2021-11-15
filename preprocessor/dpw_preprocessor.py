@@ -35,9 +35,6 @@ class Preprocessor3DPW(Processor):
         }
 
     def normal(self, data_type='train'):
-        if data_type == 'test':
-            org_obs_frame_num = self.obs_frame_num
-            self.obs_frame_num = 50
         logger.info('start creating 3DPW normal static data ... ')
         total_frame_num = self.obs_frame_num + self.pred_frame_num
 
@@ -49,6 +46,10 @@ class Preprocessor3DPW(Processor):
             self.output_dir,
             output_file_name
         )) is False, f"preprocessed file exists at {os.path.join(self.output_dir, output_file_name)}"
+        if data_type == 'test':
+            org_obs_frame_num = self.obs_frame_num
+            self.obs_frame_num = 50
+
         for entry in os.scandir(self.dataset_path):
             if not entry.name.endswith('.pkl'):
                 continue
