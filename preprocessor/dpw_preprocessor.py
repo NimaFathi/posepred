@@ -53,46 +53,20 @@ class Preprocessor3DPW(Processor):
             pickle_obj = pd.read_pickle(entry.path)
             video_name = re.search('(\w+).pkl', entry.name).group(1)
             pose_data = np.array(pickle_obj['jointPositions'])
-            frame_ids_data = pickle_obj['img_frame_ids']
-            cam_extrinsic = pickle_obj['cam_poses'][:, :3]
-            cam_intrinsic = pickle_obj['cam_intrinsics'].tolist()
-            section_range = pose_data.shape[1] // (
-                    total_frame_num * (self.skip_frame_num + 1)) if self.use_video_once is False else 1
             data = []
-            for i in range(section_range):
+            data_range = [np.arange(i, i + total_frame_num) for i in range(pose_data.shape[1] - total_frame_num + 1)]
+            for i, frame_list in enumerate(data_range):
                 video_data = {
                     'obs_pose': defaultdict(list),
                     'future_pose': defaultdict(list),
-                    'obs_frames': defaultdict(list),
-                    'future_frames': defaultdict(list),
-                    'obs_cam_ext': list(),
-                    'future_cam_ext': list()
-                }
-                for j in range(1, total_frame_num * (self.skip_frame_num + 1) + 1, self.skip_frame_num + 1):
-                    for p_id in range(pose_data.shape[0]):
-                        if j <= (self.skip_frame_num + 1) * self.obs_frame_num:
-                            video_data['obs_pose'][p_id].append(
-                                pose_data[p_id, i * total_frame_num * (self.skip_frame_num + 1) + j - 1, :].tolist()
-                            )
-                            video_data['obs_frames'][p_id].append(
-                                f'{video_name}/image_{i * total_frame_num * (self.skip_frame_num + 1) + j - 1:05}.jpg'
-                            )
-                            if p_id == 0:
-                                video_data['obs_cam_ext'].append(
-                                    cam_extrinsic[i * total_frame_num * (self.skip_frame_num + 1) + j - 1].tolist()
-                                )
-                        else:
-                            video_data['future_pose'][p_id].append(
-                                pose_data[p_id, i * total_frame_num * (self.skip_frame_num + 1) + j - 1, :].tolist()
-                            )
-                            video_data['future_frames'][p_id].append(
-                                f'{video_name}/image_{i * total_frame_num * (self.skip_frame_num + 1) + j - 1:05}.jpg'
-                            )
-                            if p_id == 0:
-                                video_data['future_cam_ext'].append(
-                                    cam_extrinsic[i * total_frame_num * (self.skip_frame_num + 1) + j - 1].tolist()
-                                )
 
+                }
+                for frame in frame_list:
+                    for p_id in range(pose_data.shape[0]):
+                        if frame - min(frame_list) < self.obs_frame_num:
+                            video_data['obs_pose'][p_id].append(pose_data[p_id, frame, :].tolist())
+                        else:
+                            video_data['future_pose'][p_id].append(pose_data[p_id, frame, :].tolist())
                 if len(list(video_data['obs_pose'].values())) > 0:
                     if data_type == 'train':
                         self.update_meta_data(self.meta_data, list(video_data['obs_pose'].values()), 3)
@@ -100,16 +74,12 @@ class Preprocessor3DPW(Processor):
                         for p_id in range(len(pose_data)):
                             data.append([
                                 '%s-%d' % (video_name, i),
-                                video_data['obs_pose'][p_id], video_data['future_pose'][p_id],
-                                video_data['obs_frames'][p_id], video_data['future_frames'][p_id],
-                                video_data['obs_cam_ext'], video_data['future_cam_ext'], cam_intrinsic
+                                list(video_data['obs_pose'][p_id]), list(video_data['future_pose'][p_id]),
                             ])
                     else:
                         data.append([
                             '%s-%d' % (video_name, i),
-                            list(video_data['obs_pose'].values()), list(video_data['future_pose'].values()),
-                            video_data['obs_frames'][0], video_data['future_frames'][0],
-                            video_data['obs_cam_ext'], video_data['future_cam_ext'], cam_intrinsic
+                            video_data['obs_pose'].values(), video_data['future_pose'].values(),
                         ])
             with jsonlines.open(os.path.join(self.output_dir, output_file_name), 'a') as writer:
                 for data_row in data:
@@ -117,10 +87,5 @@ class Preprocessor3DPW(Processor):
                         'video_section': data_row[0],
                         'observed_pose': data_row[1],
                         'future_pose': data_row[2],
-                        'observed_image_path': data_row[3],
-                        'future_image_path': data_row[4],
-                        'observed_cam_extrinsic': data_row[5],
-                        'future_cam_extrinsic': data_row[6],
-                        'cam_intrinsic': data_row[7]
                     })
         self.save_meta_data(self.meta_data, self.output_dir, True, data_type)
