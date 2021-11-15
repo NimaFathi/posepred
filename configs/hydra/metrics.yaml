@@ -1,6 +1,6 @@
 pose_metrics:
-#  - ADE
-#  - FDE
+  - ADE
+  - FDE
   - ade_80
   - ade_160
   - ade_320
