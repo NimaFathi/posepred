@@ -35,6 +35,9 @@ class Preprocessor3DPW(Processor):
         }
 
     def normal(self, data_type='train'):
+        if data_type == 'test':
+            org_obs_frame_num = self.obs_frame_num
+            self.obs_frame_num = 50
         logger.info('start creating 3DPW normal static data ... ')
         total_frame_num = self.obs_frame_num + self.pred_frame_num
 
@@ -64,7 +67,8 @@ class Preprocessor3DPW(Processor):
                 for frame in frame_list:
                     for p_id in range(pose_data.shape[0]):
                         if frame - min(frame_list) < self.obs_frame_num:
-                            video_data['obs_pose'][p_id].append(pose_data[p_id, frame, :].tolist())
+                            if data_type == 'test' and frame - min(frame_list) >= self.obs_frame_num - org_obs_frame_num:
+                                video_data['obs_pose'][p_id].append(pose_data[p_id, frame, :].tolist())
                         else:
                             video_data['future_pose'][p_id].append(pose_data[p_id, frame, :].tolist())
                 if len(list(video_data['obs_pose'].values())) > 0:
