@@ -5,7 +5,7 @@ pose_metrics:
   - ade_400
   - ade_600
   - ade_800
-#  - ade_1000
+  - ade_1000
 #  - ade_880
 #  - local_ade
 #  - local_fde
