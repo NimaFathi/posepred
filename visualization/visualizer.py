@@ -266,7 +266,7 @@ class Visualizer:
             (min_axes[i] - (max(range_axes) - range_axes[i]) / 2, max_axes[i] + (max(range_axes) - range_axes[i]) / 2)
             for i in range(len(max_axes))]
         axe.set_axis_off()
-        # axe.set_box_aspect((max_axes[0] - min_axes[0], max_axes[1] - min_axes[1], max_axes[2] - min_axes[2]))
+        true_range = [(-2, 2), (-2, 2), (-1, 3)]
         axe.set_aspect('auto')
         axe.view_init(elev=rotation_3D[self.dataset_name][0], azim=rotation_3D[self.dataset_name][1])
         axe.set_xlim(xmin=true_range[0][0],
