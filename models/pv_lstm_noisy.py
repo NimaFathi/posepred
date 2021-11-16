@@ -77,13 +77,13 @@ class PVLSTMNoisy(nn.Module):
         pred_vel = self.vel_decoder(noisy_vel[:, -1, :], hidden_dec, cell_dec)
         if self.args.use_dct:
             pred_vel = torch.matmul(self.idct_future_vel.unsqueeze(0), pred_vel)
-        pred_pose = pose_from_vel(pred_vel, pose[..., -1, :])
+        pred_pose = pose_from_vel(pred_vel, noisy_pose[..., -1, :])
 
         # completion
         comp_vel = self.completion(noisy_vel, hidden_dec, cell_dec)
         if self.args.use_dct:
             comp_vel = torch.matmul(self.idct_obs_vel.unsqueeze(0), comp_vel)
-        comp_pose = torch.clone(pose)
+        comp_pose = torch.clone(noisy_pose)
         for i in range(comp_vel.shape[-2]):
             comp_pose[..., i + 1, :] = comp_pose[..., i, :] + comp_vel[..., i, :]
 
