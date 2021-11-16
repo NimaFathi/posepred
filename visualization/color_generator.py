@@ -4,7 +4,7 @@ NAME_TO_COLOR = {
     'observed': [190, 77, 37],
     'future': [190, 77, 37],
     'predicted': [37, 150, 190],
-    'zero_vel': [190, 169, 37]
+    'predicted2': [190, 169, 37]
 }
 
 
