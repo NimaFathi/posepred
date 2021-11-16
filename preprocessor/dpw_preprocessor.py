@@ -67,8 +67,11 @@ class Preprocessor3DPW(Processor):
                 }
                 for frame in frame_list:
                     for p_id in range(pose_data.shape[0]):
-                        if frame - min(frame_list) < self.obs_frame_num:
+                        if frame - min(frame_list) < org_obs_frame_num:
                             if data_type == 'test' and frame - min(frame_list) >= self.obs_frame_num - org_obs_frame_num:
+                                # print(frame, self.obs_frame_num, org_obs_frame_num)
+                                video_data['obs_pose'][p_id].append(pose_data[p_id, frame, :].tolist())
+                            else:
                                 video_data['obs_pose'][p_id].append(pose_data[p_id, frame, :].tolist())
                         else:
                             video_data['future_pose'][p_id].append(pose_data[p_id, frame, :].tolist())
