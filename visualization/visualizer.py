@@ -9,7 +9,7 @@ import torch
 from matplotlib.pyplot import AutoLocator
 
 from utils.save_load import setup_visualization_dir
-from visualization.color_generator import color_generator
+from visualization.color_generator import color_generator, NAME_TO_COLOR
 from visualization.utils import keypoint_connections, jta_cam_int, rotation_3D, axes_order_3D
 
 # from pygifsicle import optimize
@@ -105,11 +105,10 @@ class Visualizer:
             fig = plt.figure(figsize=fig_size, dpi=100)
             axarr.append([])
             for i in range(len(poses)):
-                # noise = observed_noise if len(observed_noise) == len(poses[i]) else []
                 axarr[j].append(fig.add_subplot(1, comparison_number, i + 1, projection='3d'))
                 self.__create_plot(axarr[j][i], max_axes=max_axes, min_axes=min_axes)
                 self.__generate_3D_figure(
-                    i, all_poses=poses[i][j], all_masks=masks[i][j] if i < len(masks) and j < len(masks[i]) else None,
+                    names[i], all_poses=poses[i][j], all_masks=masks[i][j] if i < len(masks) and j < len(masks[i]) else None,
                     all_noises=noises[i][j] if j < len(noises[i]) else None,
                     ax=axarr[j][i]
                 )
@@ -118,7 +117,7 @@ class Visualizer:
                 if j == len(poses[0]) - 1:
                     for _ in range(3):
                         filenames.append(os.path.join(save_dir, f'{j}.png'))
-                plt.title(names[i])
+                # plt.title(names[i])
                 plt.savefig(os.path.join(save_dir, f'{j}.png'), dpi=100)
             plt.close(fig)
         with imageio.get_writer(os.path.join(save_dir, f'{gif_name}.gif'), mode='I') as writer:
@@ -126,8 +125,8 @@ class Visualizer:
                 image = imageio.imread(filename)
                 writer.append_data(image)
 
-        for filename in set(filenames):
-            os.remove(filename)
+        # for filename in set(filenames):
+        #     os.remove(filename)
         # optimize(os.path.join(save_dir, f'{gif_name}.gif'))
         logger.info("end 3D visualizing.")
 
@@ -207,7 +206,8 @@ class Visualizer:
         # optimize(os.path.join(save_dir, f'{gif_name}.gif'))
         logger.info("end 2D visualizing.")
 
-    def __generate_3D_figure(self, color_num, all_poses, all_masks, all_noises, ax):
+    def __generate_3D_figure(self, name, all_poses, all_masks, all_noises, ax):
+        ax.set_axis_off()
         num_keypoints = all_poses.shape[-1] // 3
         poses = all_poses.reshape(all_poses.shape[0], num_keypoints, 3)
         if all_noises is None or all_noises == []:
@@ -221,12 +221,12 @@ class Visualizer:
                     ax.plot(xs=[keypoints[edge, 0][0], keypoints[edge, 0][1]],
                             zs=[keypoints[edge, 1][0], keypoints[edge, 1][1]],
                             ys=[keypoints[edge, 2][0], keypoints[edge, 2][1]], linewidth=2, label=r'$x=y=z$',
-                            color=np.array(color_generator.get_color(color_num)) / 255)
+                            color=np.array(NAME_TO_COLOR[name]) / 255)
             for k in visualizing_keypoints:
                 ax.scatter(xs=keypoints[k, axes_order_3D[self.dataset_name][0]],
                            ys=keypoints[k, axes_order_3D[self.dataset_name][1]],
                            zs=keypoints[k, axes_order_3D[self.dataset_name][2]], s=2,
-                           color=np.array([0, 255, 100]) / 255 if all_noises[k] == 0 else np.array(
+                           color=np.array(NAME_TO_COLOR[name]) / 255 if all_noises[k] == 0 else np.array(
                                [255, 40, 0]) / 255)
 
     def __generate_2D_figure(self, color_num, all_poses, all_masks=None, all_noises=None, image_path=None):

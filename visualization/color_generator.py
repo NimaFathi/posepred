@@ -1,11 +1,19 @@
 import random
 
+NAME_TO_COLOR = {
+    'observed': [190, 77, 37],
+    'future': [190, 77, 37],
+    'predicted': [37, 150, 190],
+    'zero_vel': [190, 169, 37]
+}
+
 
 class ColorGenerator:
     def __init__(self):
         self.points = []
         self.colors = []
-        self.id_to_color = {0: [0, 191, 255], 1: [90, 100, 100], 2: [154, 205, 50], 3: [119, 136, 153], 4: [0, 255, 255],
+        self.id_to_color = {0: [37, 150, 190], 1: [90, 100, 100], 2: [154, 205, 50], 3: [119, 136, 153],
+                            4: [0, 255, 255],
                             5: [255, 69, 0]}
 
     def get_new_point(self):
