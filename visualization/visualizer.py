@@ -267,7 +267,7 @@ class Visualizer:
             for i in range(len(max_axes))]
         axe.set_axis_off()
         axe.set_box_aspect((max_axes[0] - min_axes[0], max_axes[1] - min_axes[1], max_axes[2] - min_axes[2]))
-        # axe.set_aspect('auto')
+        axe.set_aspect('auto')
         axe.view_init(elev=rotation_3D[self.dataset_name][0], azim=rotation_3D[self.dataset_name][1])
         # axe.set_xlim(xmin=true_range[0][0],
         #              xmax=true_range[0][1])
