@@ -47,6 +47,7 @@ class Preprocessor3DPW(Processor):
             output_file_name
         )) is False, f"preprocessed file exists at {os.path.join(self.output_dir, output_file_name)}"
         if data_type == 'test':
+            print('FALSE')
             org_obs_frame_num = self.obs_frame_num
             self.obs_frame_num = 50
             for entry in os.scandir(self.dataset_path):
@@ -96,6 +97,7 @@ class Preprocessor3DPW(Processor):
                             'future_pose': data_row[2],
                         })
         else:
+            print('TRUEE')
             dataset_paths = ['/work/vita/JTA_dataset/Original_JTA_dataset/annotations/train',
                              '/work/vita/JTA_dataset/Original_JTA_dataset/annotations/val'
                              ]
