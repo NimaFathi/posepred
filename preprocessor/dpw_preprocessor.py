@@ -49,51 +49,96 @@ class Preprocessor3DPW(Processor):
         if data_type == 'test':
             org_obs_frame_num = self.obs_frame_num
             self.obs_frame_num = 50
+            for entry in os.scandir(self.dataset_path):
+                if not entry.name.endswith('.pkl'):
+                    continue
+                logger.info(f'file name: {entry.name}')
+                pickle_obj = pd.read_pickle(entry.path)
+                video_name = re.search('(\w+).pkl', entry.name).group(1)
+                pose_data = np.array(pickle_obj['jointPositions'])
+                data = []
+                data_range = [np.arange(i, i + total_frame_num) for i in range(pose_data.shape[1] - total_frame_num + 1)]
+                for i, frame_list in enumerate(data_range):
+                    video_data = {
+                        'obs_pose': defaultdict(list),
+                        'future_pose': defaultdict(list),
 
-        for entry in os.scandir(self.dataset_path):
-            if not entry.name.endswith('.pkl'):
-                continue
-            logger.info(f'file name: {entry.name}')
-            pickle_obj = pd.read_pickle(entry.path)
-            video_name = re.search('(\w+).pkl', entry.name).group(1)
-            pose_data = np.array(pickle_obj['jointPositions'])
-            data = []
-            data_range = [np.arange(i, i + total_frame_num) for i in range(pose_data.shape[1] - total_frame_num + 1)]
-            for i, frame_list in enumerate(data_range):
-                video_data = {
-                    'obs_pose': defaultdict(list),
-                    'future_pose': defaultdict(list),
-
-                }
-                for frame in frame_list:
-                    for p_id in range(pose_data.shape[0]):
-                        if frame - min(frame_list) < org_obs_frame_num:
-                            if data_type == 'test' and frame - min(frame_list) >= self.obs_frame_num - org_obs_frame_num:
-                                # print(frame, self.obs_frame_num, org_obs_frame_num)
-                                video_data['obs_pose'][p_id].append(pose_data[p_id, frame, :].tolist())
+                    }
+                    for frame in frame_list:
+                        for p_id in range(pose_data.shape[0]):
+                            if frame - min(frame_list) < org_obs_frame_num:
+                                if data_type == 'test' and frame - min(frame_list) >= self.obs_frame_num - org_obs_frame_num:
+                                    # print(frame, self.obs_frame_num, org_obs_frame_num)
+                                    video_data['obs_pose'][p_id].append(pose_data[p_id, frame, :].tolist())
+                                else:
+                                    video_data['obs_pose'][p_id].append(pose_data[p_id, frame, :].tolist())
                             else:
-                                video_data['obs_pose'][p_id].append(pose_data[p_id, frame, :].tolist())
+                                video_data['future_pose'][p_id].append(pose_data[p_id, frame, :].tolist())
+                    if len(list(video_data['obs_pose'].values())) > 0:
+                        if data_type == 'train':
+                            self.update_meta_data(self.meta_data, list(video_data['obs_pose'].values()), 3)
+                        if not self.is_interactive:
+                            for p_id in range(len(pose_data)):
+                                data.append([
+                                    '%s-%d' % (video_name, i),
+                                    list(video_data['obs_pose'][p_id]), list(video_data['future_pose'][p_id]),
+                                ])
                         else:
-                            video_data['future_pose'][p_id].append(pose_data[p_id, frame, :].tolist())
-                if len(list(video_data['obs_pose'].values())) > 0:
-                    if data_type == 'train':
-                        self.update_meta_data(self.meta_data, list(video_data['obs_pose'].values()), 3)
-                    if not self.is_interactive:
-                        for p_id in range(len(pose_data)):
                             data.append([
                                 '%s-%d' % (video_name, i),
-                                list(video_data['obs_pose'][p_id]), list(video_data['future_pose'][p_id]),
+                                video_data['obs_pose'].values(), video_data['future_pose'].values(),
                             ])
-                    else:
-                        data.append([
-                            '%s-%d' % (video_name, i),
-                            video_data['obs_pose'].values(), video_data['future_pose'].values(),
-                        ])
-            with jsonlines.open(os.path.join(self.output_dir, output_file_name), 'a') as writer:
-                for data_row in data:
-                    writer.write({
-                        'video_section': data_row[0],
-                        'observed_pose': data_row[1],
-                        'future_pose': data_row[2],
-                    })
-        self.save_meta_data(self.meta_data, self.output_dir, True, data_type)
+                with jsonlines.open(os.path.join(self.output_dir, output_file_name), 'a') as writer:
+                    for data_row in data:
+                        writer.write({
+                            'video_section': data_row[0],
+                            'observed_pose': data_row[1],
+                            'future_pose': data_row[2],
+                        })
+        else:
+            dataset_paths = ['/work/vita/JTA_dataset/Original_JTA_dataset/annotations/train',
+                             '/work/vita/JTA_dataset/Original_JTA_dataset/annotations/val'
+                             ]
+            for data_path in dataset_paths:
+                for entry in os.scandir(data_path):
+                    if not entry.name.endswith('.pkl'):
+                        continue
+                    logger.info(f'file name: {entry.name}')
+                    pickle_obj = pd.read_pickle(entry.path)
+                    video_name = re.search('(\w+).pkl', entry.name).group(1)
+                    pose_data = np.array(pickle_obj['jointPositions'])
+                    data = []
+                    data_range = [np.arange(i, i + total_frame_num) for i in
+                                  range(pose_data.shape[1] - total_frame_num + 1)]
+                    for i, frame_list in enumerate(data_range):
+                        video_data = {
+                            'obs_pose': defaultdict(list),
+                            'future_pose': defaultdict(list),
+
+                        }
+                        for frame in frame_list:
+                            for p_id in range(pose_data.shape[0]):
+                                if frame - min(frame_list) < self.obs_frame_num:
+                                    video_data['obs_pose'][p_id].append(pose_data[p_id, frame, :].tolist())
+                                else:
+                                    video_data['future_pose'][p_id].append(pose_data[p_id, frame, :].tolist())
+                        if len(list(video_data['obs_pose'].values())) > 0:
+                            if not self.is_interactive:
+                                for p_id in range(len(pose_data)):
+                                    data.append([
+                                        '%s-%d' % (video_name, i),
+                                        list(video_data['obs_pose'][p_id]), list(video_data['future_pose'][p_id]),
+                                    ])
+                            else:
+                                data.append([
+                                    '%s-%d' % (video_name, i),
+                                    video_data['obs_pose'].values(), video_data['future_pose'].values(),
+                                ])
+                    with jsonlines.open(os.path.join(self.output_dir, output_file_name), 'a') as writer:
+                        for data_row in data:
+                            writer.write({
+                                'video_section': data_row[0],
+                                'observed_pose': data_row[1],
+                                'future_pose': data_row[2],
+                            })
+        # self.save_meta_data(self.meta_data, self.output_dir, True, data_type)
