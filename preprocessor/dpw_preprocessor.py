@@ -103,6 +103,7 @@ class Preprocessor3DPW(Processor):
                 for entry in os.scandir(data_path):
                     if not entry.name.endswith('.pkl'):
                         continue
+                    print('entry')
                     logger.info(f'file name: {entry.name}')
                     pickle_obj = pd.read_pickle(entry.path)
                     video_name = re.search('(\w+).pkl', entry.name).group(1)
