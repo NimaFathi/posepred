@@ -96,7 +96,7 @@ class Preprocessor3DPW(Processor):
                             'future_pose': data_row[2],
                         })
         else:
-            dataset_paths = ['/work/vita/datasets/3DPW/sequenceFilestrain',
+            dataset_paths = ['/work/vita/datasets/3DPW/sequenceFiles/train',
                              '/work/vita/datasets/3DPW/sequenceFiles/validation'
                              ]
             for data_path in dataset_paths:
