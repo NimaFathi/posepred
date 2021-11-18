@@ -120,13 +120,12 @@ class PreprocessorHuman36mCategorical(Processor):
             else:
                 output_file_name = f'{data_type}_{self.obs_frame_num}_{self.pred_frame_num}_{self.skip_frame_num}_human3.6m_categorical_{category}.jsonl'
             if os.path.exists(os.path.join(
-                self.output_dir,
-                output_file_name)):
+                output_dir, output_file_name)):
                 continue
-            assert os.path.exists(os.path.join(
-                self.output_dir,
-                output_file_name
-            )) is False, f"preprocessed file exists at {os.path.join(self.output_dir, output_file_name)}"
+            # assert os.path.exists(os.path.join(
+            #     self.output_dir,
+            #     output_file_name
+            # )) is False, f"preprocessed file exists at {os.path.join(self.output_dir, output_file_name)}"
             if data_type == 'train':
                 if category == 'all':
                     samples_num = 25000
