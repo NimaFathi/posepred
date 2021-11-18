@@ -132,7 +132,7 @@ class PreprocessorHuman36mCategorical(Processor):
         # )) is False, f"preprocessed file exists at {os.path.join(self.output_dir, output_file_name)}"
         if data_type == 'train':
             if category == 'all' or category == 'best':
-                samples_num = 15000
+                samples_num = 25000
             else:
                 samples_num = 2000
             for i in range(samples_num):
