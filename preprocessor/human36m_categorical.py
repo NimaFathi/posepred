@@ -1,3 +1,4 @@
+import errno
 import logging
 import os
 from glob import glob
@@ -18,7 +19,7 @@ SPLIT = {
 }
 
 ALL_CATEGORIES = [
-                'Photo', 'TakingPhoto', 'WalkDog', 'WalkingDog', 'Directions',
+                'Photo', 'TakingPhoto', 'WalkDog', 'Directions',
                 'Discussion', 'Eating', 'Greeting', 'Phoning', 'Posing', 'Purchases',
                 'Sitting', 'SittingDown', 'Smoking', 'Waiting', 'Walking', 'WalkTogether'
             ]
@@ -80,7 +81,7 @@ class PreprocessorHuman36mCategorical(Processor):
         subject_pose_paths = []
         categories = [category]
         if category == 'all':
-            categories = ALL_CATEGORIES
+            categories = ALL_CATEGORIES + ['TakingPhoto', 'WalkingDog']
         if category == 'Photo':
             categories.append('TakingPhoto')
         elif category == 'WalkDog':
@@ -111,6 +112,7 @@ class PreprocessorHuman36mCategorical(Processor):
         # category = 'all'
         for category in ALL_CATEGORIES:
             print(category)
+            output_dir = os.path.join(self.output_dir, category)
             self.subjects = SPLIT[data_type]
             logger.info('start creating Human3.6m normal static data from original Human3.6m dataset (CDF files) ... ')
             if self.custom_name:
@@ -141,7 +143,13 @@ class PreprocessorHuman36mCategorical(Processor):
                 if category == 'all':
                     for category in ALL_CATEGORIES:
                         samples = self.create_test(256, category)
-                        with jsonlines.open(os.path.join(self.output_dir, output_file_name), mode='a') as writer:
+                        if not os.path.exists(output_dir):
+                            try:
+                                os.makedirs(output_dir)
+                            except OSError as exc:
+                                if exc.errno != errno.EEXIST:
+                                    raise
+                        with jsonlines.open(os.path.join(output_dir, output_file_name), mode='a') as writer:
                             for sample in samples:
                                 writer.write({
                                     'observed_pose': sample[:self.obs_frame_num, :].tolist(),
@@ -149,7 +157,13 @@ class PreprocessorHuman36mCategorical(Processor):
                                 })
                 else:
                     samples = self.create_test(256, category)
-                    with jsonlines.open(os.path.join(self.output_dir, output_file_name), mode='a') as writer:
+                    if not os.path.exists(output_dir):
+                        try:
+                            os.makedirs(output_dir)
+                        except OSError as exc:
+                            if exc.errno != errno.EEXIST:
+                                raise
+                    with jsonlines.open(os.path.join(output_dir, output_file_name), mode='a') as writer:
                         for sample in samples:
                             writer.write({
                                 'observed_pose': sample[:self.obs_frame_num, :].tolist(),
