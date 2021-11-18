@@ -24,6 +24,8 @@ ALL_CATEGORIES = [
                 'Sitting', 'SittingDown', 'Smoking', 'Waiting', 'Walking', 'WalkTogether'
             ]
 
+BEST_CATEGORIES = ['Waiting', 'Discussion', 'Smoking', 'Phoning', 'Eating', 'Walking', 'WalkTogether']
+
 
 class PreprocessorHuman36mCategorical(Processor):
     def __init__(self, dataset_path, is_interactive, obs_frame_num, pred_frame_num, skip_frame_num,
@@ -82,7 +84,9 @@ class PreprocessorHuman36mCategorical(Processor):
         categories = [category]
         if category == 'all':
             categories = ALL_CATEGORIES + ['TakingPhoto', 'WalkingDog']
-        if category == 'Photo':
+        elif category == 'best':
+            categories = BEST_CATEGORIES
+        elif category == 'Photo':
             categories.append('TakingPhoto')
         elif category == 'WalkDog':
             categories.append('WalkingDog')
@@ -109,58 +113,44 @@ class PreprocessorHuman36mCategorical(Processor):
 
     def normal(self, data_type='train'):
         """if you want to create a combined file just delete the for loop and put category = 'all'"""
-        # category = 'all'
-        for category in ALL_CATEGORIES:
-            print(category)
-            output_dir = os.path.join(self.output_dir, category)
-            self.subjects = SPLIT[data_type]
-            logger.info('start creating Human3.6m normal static data from original Human3.6m dataset (CDF files) ... ')
-            if self.custom_name:
-                output_file_name = f'{data_type}_{self.obs_frame_num}_{self.pred_frame_num}_{self.skip_frame_num}_{self.custom_name}_{category}.jsonl'
+        category = 'best'
+    # for category in ALL_CATEGORIES:
+        print(category)
+        output_dir = os.path.join(self.output_dir, category)
+        self.subjects = SPLIT[data_type]
+        logger.info('start creating Human3.6m normal static data from original Human3.6m dataset (CDF files) ... ')
+        if self.custom_name:
+            output_file_name = f'{data_type}_{self.obs_frame_num}_{self.pred_frame_num}_{self.skip_frame_num}_{self.custom_name}_{category}.jsonl'
+        else:
+            output_file_name = f'{data_type}_{self.obs_frame_num}_{self.pred_frame_num}_{self.skip_frame_num}_human3.6m_categorical_{category}.jsonl'
+        # if os.path.exists(os.path.join(
+        #     output_dir, output_file_name)):
+        #     continue
+        # assert os.path.exists(os.path.join(
+        #     self.output_dir,
+        #     output_file_name
+        # )) is False, f"preprocessed file exists at {os.path.join(self.output_dir, output_file_name)}"
+        if data_type == 'train':
+            if category == 'all' or category == 'best':
+                samples_num = 25000
             else:
-                output_file_name = f'{data_type}_{self.obs_frame_num}_{self.pred_frame_num}_{self.skip_frame_num}_human3.6m_categorical_{category}.jsonl'
-            if os.path.exists(os.path.join(
-                output_dir, output_file_name)):
-                continue
-            # assert os.path.exists(os.path.join(
-            #     self.output_dir,
-            #     output_file_name
-            # )) is False, f"preprocessed file exists at {os.path.join(self.output_dir, output_file_name)}"
-            if data_type == 'train':
-                if category == 'all':
-                    samples_num = 25000
-                else:
-                    samples_num = 2000
-                for i in range(samples_num):
-                    pose = self.sample(category)
-                    if not os.path.exists(output_dir):
-                        try:
-                            os.makedirs(output_dir)
-                        except OSError as exc:
-                            if exc.errno != errno.EEXIST:
-                                raise
-                    with jsonlines.open(os.path.join(output_dir, output_file_name), mode='a') as writer:
-                        writer.write({
-                            'observed_pose': pose[:self.obs_frame_num, :].tolist(),
-                            'future_pose': pose[self.obs_frame_num:, :].tolist(),
-                        })
-            else:
-                if category == 'all':
-                    for category in ALL_CATEGORIES:
-                        samples = self.create_test(256, category)
-                        if not os.path.exists(output_dir):
-                            try:
-                                os.makedirs(output_dir)
-                            except OSError as exc:
-                                if exc.errno != errno.EEXIST:
-                                    raise
-                        with jsonlines.open(os.path.join(output_dir, output_file_name), mode='a') as writer:
-                            for sample in samples:
-                                writer.write({
-                                    'observed_pose': sample[:self.obs_frame_num, :].tolist(),
-                                    'future_pose': sample[self.obs_frame_num:, :].tolist(),
-                                })
-                else:
+                samples_num = 2000
+            for i in range(samples_num):
+                pose = self.sample(category)
+                if not os.path.exists(output_dir):
+                    try:
+                        os.makedirs(output_dir)
+                    except OSError as exc:
+                        if exc.errno != errno.EEXIST:
+                            raise
+                with jsonlines.open(os.path.join(output_dir, output_file_name), mode='a') as writer:
+                    writer.write({
+                        'observed_pose': pose[:self.obs_frame_num, :].tolist(),
+                        'future_pose': pose[self.obs_frame_num:, :].tolist(),
+                    })
+        else:
+            if category == 'all':
+                for category in ALL_CATEGORIES:
                     samples = self.create_test(256, category)
                     if not os.path.exists(output_dir):
                         try:
@@ -174,3 +164,32 @@ class PreprocessorHuman36mCategorical(Processor):
                                 'observed_pose': sample[:self.obs_frame_num, :].tolist(),
                                 'future_pose': sample[self.obs_frame_num:, :].tolist(),
                             })
+            elif category == 'best':
+                for category in BEST_CATEGORIES:
+                    samples = self.create_test(256, category)
+                    if not os.path.exists(output_dir):
+                        try:
+                            os.makedirs(output_dir)
+                        except OSError as exc:
+                            if exc.errno != errno.EEXIST:
+                                raise
+                    with jsonlines.open(os.path.join(output_dir, output_file_name), mode='a') as writer:
+                        for sample in samples:
+                            writer.write({
+                                'observed_pose': sample[:self.obs_frame_num, :].tolist(),
+                                'future_pose': sample[self.obs_frame_num:, :].tolist(),
+                            })
+            else:
+                samples = self.create_test(256, category)
+                if not os.path.exists(output_dir):
+                    try:
+                        os.makedirs(output_dir)
+                    except OSError as exc:
+                        if exc.errno != errno.EEXIST:
+                            raise
+                with jsonlines.open(os.path.join(output_dir, output_file_name), mode='a') as writer:
+                    for sample in samples:
+                        writer.write({
+                            'observed_pose': sample[:self.obs_frame_num, :].tolist(),
+                            'future_pose': sample[self.obs_frame_num:, :].tolist(),
+                        })
