@@ -13,7 +13,7 @@ from preprocessor.preprocessor import Processor
 logger = logging.getLogger(__name__)
 
 SPLIT = {
-    'train': ['S1', 'S6', 'S7', 'S8', 'S9'],
+    'train': ['S1', ],
     'validation': ['S11'],
     'test': ['S5']
 }
@@ -133,7 +133,13 @@ class PreprocessorHuman36mCategorical(Processor):
                     samples_num = 2000
                 for i in range(samples_num):
                     pose = self.sample(category)
-                    with jsonlines.open(os.path.join(self.output_dir, output_file_name), mode='a') as writer:
+                    if not os.path.exists(output_dir):
+                        try:
+                            os.makedirs(output_dir)
+                        except OSError as exc:
+                            if exc.errno != errno.EEXIST:
+                                raise
+                    with jsonlines.open(os.path.join(output_dir, output_file_name), mode='a') as writer:
                         writer.write({
                             'observed_pose': pose[:self.obs_frame_num, :].tolist(),
                             'future_pose': pose[self.obs_frame_num:, :].tolist(),
