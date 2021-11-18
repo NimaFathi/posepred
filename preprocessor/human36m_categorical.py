@@ -19,7 +19,7 @@ SPLIT = {
 }
 
 ALL_CATEGORIES = [
-                'Photo', 'TakingPhoto', 'WalkDog', 'Directions',
+                'Photo', 'WalkDog', 'Directions',
                 'Discussion', 'Eating', 'Greeting', 'Phoning', 'Posing', 'Purchases',
                 'Sitting', 'SittingDown', 'Smoking', 'Waiting', 'Walking', 'WalkTogether'
             ]
