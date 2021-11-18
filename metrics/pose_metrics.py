@@ -38,51 +38,59 @@ def local_ade(pred, target, dim, mask=None):
     return ADE(local_pred_pose, local_target_pose, dim)
 
 
-# def local_ade_80ms(pred, target, dim, mask=None):
-#     if pred.shape[1] < 2:
-#         return 0
-#     return local_ade(pred[:, :2, :], target[:, :2, :], dim)
-#
-#
-# def local_ade_160ms(pred, target, dim, mask=None):
-#     if pred.shape[1] < 4:
-#         return 0
-#     return local_ade(pred[:, :4, :], target[:, :4, :], dim)
-#
-#
-# def local_ade_320ms(pred, target, dim, mask=None):
-#     if pred.shape[1] < 8:
-#         return 0
-#     return local_ade(pred[:, :8, :], target[:, :8, :], dim)
-#
-#
-# def local_ade_560ms(pred, target, dim, mask=None):
-#     if pred.shape[1] < 14:
-#         return 0
-#     return local_ade(pred[:, :14, :], target[:, :14, :], dim)
-#
-#
-# def local_ade_720ms(pred, target, dim, mask=None):
-#     if pred.shape[1] < 18:
-#         return 0
-#     return local_ade(pred[:, :18, :], target[:, :18, :], dim)
-#
-#
-# def local_ade_880ms(pred, target, dim, mask=None):
-#     if pred.shape[1] < 22:
-#         return 0
-#     return local_ade(pred[:, :22, :], target[:, :22, :], dim)
-
-def local_ade_400(pred, target, dim, mask=None):
-    return local_ade(pred[:, :16, :], target[:, :16, :], dim, mask)
-
-def local_ade_1000(pred, target, dim, mask=None):
-    return local_ade(pred[:, :30, :], target[:, :30, :], dim, mask)
-
-def local_ade_2000(pred, target, dim, mask=None):
-    return local_ade(pred[:, :60, :], target[:, :60, :], dim, mask)
+def local_ade_80ms(pred, target, dim, mask=None):
+    if pred.shape[1] < 2:
+        return 0
+    return local_ade(pred[:, :2, :], target[:, :2, :], dim)
 
 
+def local_ade_160ms(pred, target, dim, mask=None):
+    if pred.shape[1] < 4:
+        return 0
+    return local_ade(pred[:, :4, :], target[:, :4, :], dim)
+
+
+def local_ade_320ms(pred, target, dim, mask=None):
+    if pred.shape[1] < 8:
+        return 0
+    return local_ade(pred[:, :8, :], target[:, :8, :], dim)
+
+def local_ade_400ms(pred, target, dim, mask=None):
+    if pred.shape[1] < 10:
+        return 0
+    return local_ade(pred[:, :10 , :], target[:, :10, :], dim)
+
+def local_ade_560ms(pred, target, dim, mask=None):
+    if pred.shape[1] < 14:
+        return 0
+    return local_ade(pred[:, :14, :], target[:, :14, :], dim)
+
+
+def local_ade_720ms(pred, target, dim, mask=None):
+    if pred.shape[1] < 18:
+        return 0
+    return local_ade(pred[:, :18, :], target[:, :18, :], dim)
+
+
+def local_ade_880ms(pred, target, dim, mask=None):
+    if pred.shape[1] < 22:
+        return 0
+    return local_ade(pred[:, :22, :], target[:, :22, :], dim)
+
+
+def local_ade_1000ms(pred, target, dim, mask=None):
+    if pred.shape[1] < 25:
+        return 0
+    return local_ade(pred[:, :25, :], target[:, :25, :], dim)
+
+# def local_ade_400(pred, target, dim, mask=None):
+#     return local_ade(pred[:, :16, :], target[:, :16, :], dim, mask)
+#
+# def local_ade_1000(pred, target, dim, mask=None):
+#     return local_ade(pred[:, :30, :], target[:, :30, :], dim, mask)
+#
+# def local_ade_2000(pred, target, dim, mask=None):
+#     return local_ade(pred[:, :60, :], target[:, :60, :], dim, mask)
 
 def local_fde(pred, target, dim, mask=None):
     bs, frames, feat = pred.shape
