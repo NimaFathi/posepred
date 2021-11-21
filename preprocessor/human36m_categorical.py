@@ -19,12 +19,16 @@ SPLIT = {
 }
 
 ALL_CATEGORIES = [
-                'Photo', 'WalkDog', 'Directions',
-                'Discussion', 'Eating', 'Greeting', 'Phoning', 'Posing', 'Purchases',
-                'Sitting', 'SittingDown', 'Smoking', 'Waiting', 'Walking', 'WalkTogether'
-            ]
+    'Photo', 'WalkDog', 'Directions',
+    'Discussion', 'Eating', 'Greeting', 'Phoning', 'Posing', 'Purchases',
+    'Sitting', 'SittingDown', 'Smoking', 'Waiting', 'Walking', 'WalkTogether'
+]
 
-BEST_CATEGORIES = ['Waiting', 'Discussion', 'Smoking', 'Phoning', 'Eating', 'Walking', 'WalkTogether']
+BEST_CATEGORIES2 = ['Waiting', 'Discussion', 'Smoking', 'Phoning', 'Eating', 'Walking', 'WalkTogether']
+
+BEST_CATEGORIES = ['Photo', 'WalkDog', 'Directions',
+                   'Discussion', 'Eating', 'Phoning', 'Posing', 'Purchases',
+                   'Smoking', 'Waiting', 'Walking', 'WalkTogether']
 
 
 class PreprocessorHuman36mCategorical(Processor):
@@ -66,7 +70,7 @@ class PreprocessorHuman36mCategorical(Processor):
                 continue
             hf = cdflib.CDF(f)
             positions = hf['Pose'].reshape(-1, 96)
-            positions /= 1000
+            # positions /= 1000
             for i in range(0,
                            positions.shape[0] - (self.skip_frame_num + 1) * (self.pred_frame_num + self.obs_frame_num),
                            self.obs_frame_num):
@@ -114,7 +118,7 @@ class PreprocessorHuman36mCategorical(Processor):
     def normal(self, data_type='train'):
         """if you want to create a combined file just delete the for loop and put category = 'all'"""
         category = 'best'
-    # for category in ALL_CATEGORIES:
+        # for category in ALL_CATEGORIES:
         print(category)
         output_dir = os.path.join(self.output_dir, category)
         self.subjects = SPLIT[data_type]
