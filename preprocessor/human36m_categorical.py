@@ -70,7 +70,7 @@ class PreprocessorHuman36mCategorical(Processor):
                 continue
             hf = cdflib.CDF(f)
             positions = hf['Pose'].reshape(-1, 96)
-            # positions /= 1000
+            positions /= 1000
             for i in range(0,
                            positions.shape[0] - (self.skip_frame_num + 1) * (self.pred_frame_num + self.obs_frame_num),
                            self.obs_frame_num):
