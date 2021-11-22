@@ -65,7 +65,7 @@ class SoMoFPoseTrackPreprocessor(Processor):
                     ])
             else:
                 for vid_id in range(len(processed_data['obs_pose'])):
-                    for p_id in range(len(processed_data['future_pose'][vid_id])):
+                    for p_id in range(len(processed_data['obs_pose'][vid_id])):
                         data.append([
                             '%d-%d' % (vid_id, 0), processed_data['obs_pose'][vid_id][p_id],
                             processed_data['obs_mask'][vid_id][p_id],
