@@ -37,16 +37,6 @@ def local_ade(pred, target, dim, mask=None):
     local_target_pose = target_pose - target_pose[:, :, 0:1, :].repeat(1, 1, keypoints, 1)
     return ADE(local_pred_pose, local_target_pose, dim)
 
-def local_ade_400(pred, target, dim, mask=None):
-    return local_ade(pred[:, :16, :], target[:, :16, :], dim, mask)
-
-def local_ade_1000(pred, target, dim, mask=None):
-    return local_ade(pred[:, :30, :], target[:, :30, :], dim, mask)
-
-def local_ade_2000(pred, target, dim, mask=None):
-    return local_ade(pred[:, :60, :], target[:, :60, :], dim, mask)
-
-
 
 def local_fde(pred, target, dim, mask=None):
     bs, frames, feat = pred.shape
