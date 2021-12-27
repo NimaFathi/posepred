@@ -62,15 +62,15 @@ Folder Location: 'configs/hydra/optimizer'
 `adam.yaml`
 ```
 type                        type=adam for adam optimizer (str)
-lr                          shows learning_rate value (float) (default=0.001)
+lr                          learning rate (float) (default=0.001)
 ```
 `sgd.yaml`
 ```
 type                        type=sgd for stochastic gradient descent (str)
-lr                          Shows learning_rate value (float) (default=0.001)
-momentum                    Shows momentum value in sgd optimizer (float) (default=0)
-dampening                   Shows dampening value in sgd optimizer (float) (default=0)
-nesterov                    Shows nesterov value in sgd optimizer (bool) (default=False)
+lr                          learning rate (float) (default=0.001)
+momentum                    momentum factor in sgd optimizer (float) (default=0)
+dampening                   dampening for momentum in sgd optimizer (float) (default=0)
+nesterov                    enables Nesterov momentum (bool) (default=False)
 ```
 
 #### scheduler
@@ -84,7 +84,7 @@ mode                        One of `min`, `max`. In `min` mode, lr will be reduc
 factor                      actor by which the learning rate will be reduced. new_lr = lr * factor (float) (default=0.5)
 patience                    Number of epochs with no improvement after which learning rate will be reduced. (int) (default=20)
 threshold                   Threshold for measuring the new optimum, to only focus on significant changes (float) (default=le-3)
-verbose                     If True, prints a message to stdout for each update. (bool) (default=True)
+verbose                     If True, prints a message to stdout for each update. (bool) (defaulTrue)
 ```
 `step_lr.yaml`
 ```
