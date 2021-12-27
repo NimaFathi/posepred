@@ -3,12 +3,13 @@ This is a description to provide details about arguments of Posepred API.
 Pospred is an open-source toolbox for pose prediction in PyTorch. It is a part of the VitaLab project.  
   
 ## Preprocessing   
-
+Preprocessing config file: "configs/hydra/preprocess.yaml"
+Also you can change preprocessor via commandline like below:
 ```  
-usage: python -m api.preprocess [-h] [--dataset_name] [--dataset_path] [--data_usage]                          	
-	                             [--obs_frames_num] [--pred_frames_num] [--keypoint_dim]
-				     [--interactive] [--use_mask] [--skip_num]  
-	                             [--use_video_once] [--output_name] [--annotaion]
+usage: python -m api.preprocess  [official_annotation_path] [dataset] [data_type]                          	
+	                             [obs_frames_num] [pred_frames_num] [use_video_once]
+				                 [annotate_openpifpaf] [image_dir] [keypoint_dim]  
+	                             [skip_num] [interactive] [output_name]
   
 mandatory arguments:  
   --dataset_name        Name of using dataset Ex: 'posetrack' or '3dpw' (str)  
