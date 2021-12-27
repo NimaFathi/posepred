@@ -39,10 +39,10 @@ class Processor:
         meta_data['count'] += np_data.size // dim
         meta_data['sum2_pose'] += np.array([np.sum(np.square(np_data[:, :, i::dim])) for i in range(dim)])
         meta_data['sum_pose'] += np.array([np.sum(np_data[:, :, i::dim]) for i in range(dim)])
-        np_data = np_data.reshape(*np_data.shape[:-1], np_data.shape[-1] // dim, 3)
-        new_max = [np.max(np_data[:, :, :, i]) for i in range(3)]
-        new_min = [np.min(np_data[:, :, :, i]) for i in range(3)]
-        for i in range(3):
+        np_data = np_data.reshape(*np_data.shape[:-1], np_data.shape[-1] // dim, dim)
+        new_max = [np.max(np_data[:, :, :, i]) for i in range(dim)]
+        new_min = [np.min(np_data[:, :, :, i]) for i in range(dim)]
+        for i in range(dim):
             if new_max[i] > meta_data['max_pose'][i]:
                 meta_data['max_pose'][i] = new_max[i]
             if new_min[i] < meta_data['min_pose'][i]:

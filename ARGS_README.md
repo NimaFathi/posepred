@@ -1,39 +1,145 @@
 # Arguments
 This is a description to provide details about arguments of Posepred API.
 Pospred is an open-source toolbox for pose prediction in PyTorch. It is a part of the VitaLab project.  
-  
+
+# Hydra
+```
+posepred
+├── configs
+│   ├── hydra                     
+|      ├── data
+|         └── main.yaml                 -- main config file for data module (Essentially responsible for creating dataloader)             
+|      ├── model
+|         ├── ARMIN PUT FILES HERE
+|         └──                    
+|      ├── optimizer
+|         ├── adam.yaml                 -- config file for adam optimizer
+|         └── sgd.yaml                  -- config file for stochastic gradient descent optimizer
+|      ├── scheduler
+|         ├── reduce_lr_on_plateau.yaml -- config file for reducing learning_rate on plateau technique arguments
+|         └── step_lr.yaml              -- config file for step of scheduler arguments                               
+|      ├── visualize.yaml               -- config file for visualizer API arguments
+|      ├── evaluate.yaml                -- config file for evaluate API arguments 
+|      ├── preprocess.yaml              -- config file for preprocess API arguments
+|      ├── train.yaml                   -- config file for train API arguments
+|      ├── generate_output.yaml         -- config file for generate_output API arguments       
+|      └── metrics.yaml                 -- config file for metrics
+|                    
+└─── logging.conf                 -- logging configurations
+```
+Now we will precisely explain each module.
+#### data
+Location: 'configs/hydra/data'
+
+`Main.yaml`:
+```
+Mandatory arguments:
+keypoint_dim:               Number of dim data should have Ex: 2 for 2D and 3 for 3D (int)  
+is_interactive:             Use interactions between persons (bool) (default: False)
+is_noisy:                   Use noisy data_loader `data_loader/noisy_solitary_dataset.py` (bool) (default: False) 
+noise_rate:                 A float number to indicate percentage of uniform noisy values or 'mask' to use mask values as noise (float or str) (default: mask)
+use_mask:                   Set True To use mask in dataloader and model (bool)
+use_quaternion:             Set True To use quaternion representation (based on model) (bool) (default: False)
+is_testing:                 Set True to configure the dataloader for testing (bool) (default: False)
+is_visualizing:             Set True to configure dataloader for visualizing (bool) (default: False)
+batch_size:                 Indicates size of batch size (int) (default: 256)
+shuffle:                    Indicates shuffling the data in dataloader (bool) (default: False)
+pin_memory:                 Using pin memory or not in dataloader (bool) (default: False)  
+num_workers:                Number of workers (int)
+normalize:                  Set True to normalize the data in dataloader (bool)
+
+optional arguments: 
+overfit:                    Set True to create a dataloader with small size for testing overfitting (bool)
+noise_keypoint:             Index of specific keypoint you want to make noisy. (int)
+metadata_path:              path to metadata, obligatory when normalize=True
+```
+#### model
+Folder Location: 'configs/hydra/model'
+
+#### optimizer
+Folder Location: 'configs/hydra/optimizer'
+
+`adam.yaml`
+```
+type                        type=adam for adam optimizer (str)
+lr                          shows learning_rate value (float) (default=0.001)
+```
+`sgd.yaml`
+```
+type                        type=sgd for stochastic gradient descent (str)
+lr                          Shows learning_rate value (float) (default=0.001)
+momentum                    Shows momentum value in sgd optimizer (float) (default=0)
+dampening                   Shows dampening value in sgd optimizer (float) (default=0)
+nesterov                    Shows nesterov value in sgd optimizer (bool) (default=False)
+```
+
+#### scheduler
+Folder Location: 'configs/hydra/scheduler'
+
+`reduce_lr_on_plateau.yaml`
+```
+type                        type=reduce_lr_on_plateau to use this technique (str)
+mode                        One of `min`, `max`. In `min` mode, lr will be reduced when the quantity monitored has stopped
+                            decreasing; in `max` mode it will be reduced when the quantity monitored has stopped increasing (str) (default=min)     
+factor                      actor by which the learning rate will be reduced. new_lr = lr * factor (float) (default=0.5)
+patience                    Number of epochs with no improvement after which learning rate will be reduced. (int) (default=20)
+threshold                   Threshold for measuring the new optimum, to only focus on significant changes (float) (default=le-3)
+verbose                     If True, prints a message to stdout for each update. (bool) (default=True)
+```
+`step_lr.yaml`
+```
+type                        type=step_lr to use this technique
+step_size                   Period of learning rate decay (int) (default=50)
+gamma                       Multiplicative factor of learning rate decay. (float) (default=0.5)
+last_epoch                  The index of last epoch (int) (default=-1)
+verbose                     If True, prints a message to stdout for each update (bool) (default=False)
+```
+#### metrics
+File Location: 'configs/hydra/metrics.yaml'
+
+#### evaluate
+File Location: 'configs/hydra/evaluate.yaml'
+#### train
+File Location: 'configs/hydra/train.yaml'
+#### visualize
+File Location: 'configs/hydra/visualize.yaml
+#### preprocess
+File Location: 'configs/hydra/preprocess.yaml
+#### generate_output
+File Location: 'configs/hydra/generate_output.yaml
 ## Preprocessing   
-Preprocessing config file: "configs/hydra/preprocess.yaml"
-Also you can change preprocessor via commandline like below:
+Check preprocessing config file: "configs/hydra/preprocess.yaml" for more details.
+
+You can change preprocessor via commandline like below:
 ```  
 usage: python -m api.preprocess  [official_annotation_path] [dataset] [data_type]                          	
-	                             [obs_frames_num] [pred_frames_num] [use_video_once]
-				                 [annotate_openpifpaf] [image_dir] [keypoint_dim]  
-	                             [skip_num] [interactive] [output_name]
+	                             [obs_frames_num] [pred_frames_num] [keypoint_dim]
+				                 [use_video_once] [skip_num] [interactive]  
+	                             [annotate_openpifpaf] [annotate] [image_dir]
+	                             [output_name]
   
 mandatory arguments:  
-  --dataset_name        Name of using dataset Ex: 'posetrack' or '3dpw' (str)  
-  --dataset_path        Path to dataset (str)  
-  --data_usage          Type of data to use Ex: 'train', 'validation' or 'test' (str)  
-  --obs_frames_num      Number of frames to observe (int)  
-  --pred_frames_num     Number of frames to predict (int)    
-  --keypoint_dim        Number of dim data should have Ex: 2 for 2D and 3 for 3D (int)  
+  official_annotation_path        Name of using dataset Ex: 'posetrack' or '3dpw' (str)  
+  dataset             Name of Dataset []  
+  data_type          Type of data to use Ex: 'train', 'validation' or 'test' (str)  
+  obs_frames_num      Number of frames to observe (int)  
+  pred_frames_num     Number of frames to predict (int)    
+  keypoint_dim        Number of dim data should have Ex: 2 for 2D and 3 for 3D (int)  
     
 optional arguments:  
-  -h, --help            Show this help message and exit  
-  --interactive         Use interactions between persons (bool)
-  --use_mask            Use visibility mask for dataloader (bool)
-  --annotaion		Implies that to use dataset_path as annotation path or a path to images. in this context, we generate annotations using openpifpaf then 			create static files afterward. 
+  interactive         Use interactions between persons (bool)
+  annotate		    (only for JAAD and PIE) Implies that to use dataset_path as annotation path or a path to images. in this context, we generate annotations using openpifpaf then create static files afterward. (bool)
+  image_dir           (only for JAAd and PIE) define this parameter if annotate = True and it implies the directory for images to creat annotation based on. (str)
+  annotation_path     (only for JAAD and PIE) define this parameter if annotate = False and it indicates the path to annotations. (str)  
+  skip_num        	Number of frame to skip between each two used frames (int) (0 implies no skip) (str)
+  use_video_once      Use whole video just once or use until last frame (bool) (default: false)  
+  output_name         Name of generated csv file (str) (for default we have specific conventions for each dataset)
   
-  --skip_num        	Number of frame to skip between each two used frames (int)
-  --use_video_once      Use whole video just once or use until last frame (bool)  
-  --output_name         Name of generated csv file (str)
-  --annotation
 ```  
 Example:  
-```bash  
-python -m api.preprocess --dataset_name=<dataset_name> --dataset_path=<path_to_dataset> --data_usage='train' --obs_frames_num=16 --pred_frames_num=14 --use_mask  
-```  
+```bash
+python3 -m api.preprocess dataset=<dataset_name> official_annotation_path=<path_to_dataset> skip_num=<skip_number> obs_frames_num=<number_of_observed_frames> pred_frames_num=<number_of_predicted_frames> keypoint_dim=<number_of_keypoints> data_type=<data_type> interactive=<interactive_true_or_false>
+```
   
 ## Training
 
@@ -157,29 +263,33 @@ python -m api.predict --dataset=<dataset_name> --model=<model_name> --keypoint_d
 ```  
     
 ## Visualization  
+You can directly change config file: "congifs/hydra/visualize.yaml". Note that you need your model and data: "configs/hydra/data/main.yaml" configs but the default ones should be fine.
 
+Also, all essential changes you need are defined below:
 ```  
-usage: python -m api.visualize [-h] [--dataset] [--model] [--keypoint_dim] [--images_dir]
-                               	    [--persons_num] [--index] [--load_path] [--ground_truth]
-                              	    [--pred_frames_num] [--interactive] [--use_mask][--skip_num]  
-  
+usage: python -m api.visualize [dataset_type] [dataset] [model]
+                               [images_dir] [save_dir] [index] [normalize] [is_noisy] [use_mask]
+                               [pred_frames_num] [load_path] [device] [skip_num]
+                               [data.is_visualizing]  
+                               [data.X for all arguments in configs/hydra/data]
+                               
 mandatory arguments:  
-  --dataset 	    	Name of using dataset. (str)  
-  --model        	Name of desired model. (str)  
-  --keypoint_dim      	Number of dim data should have Ex: 2 for 2D and 3 for 3D (int)  
-  --images_dir 		Path to existing images on your local computer (str)
-
+    dataset_type 	    Name of using dataset. (str) (['somof_posetrack', 'posetrack', 'somof_3dpw', '3dpw', 'jta', 'jaad', 'pie', 'human3.6m', 'human3.6_walking'])  
+    model        	    Name of desired model. (str) (['zero_vel','nearest_neighbor', 'pv_lstm', 'disentangled', 'derpof', 'history_repeats_itself', 'mix_and_match', 'comp_pred_vel', 'comp_pred_pose','comp_pred_center', 'comp_pred_root','trans_cvae','pv_lstm_noisy', 'comp_pred_vel_concat', 'v_lstm_noisy', 'p_lstm_noisy', 'pv_lstm_pro', 'keyplast'])  
+    images_dir 		    Path to existing images on your local computer (str)
+    showing             Indicates which images we want to show (dash(-) separated list) ([observed, future, predicted, completed])   
+    index             Index of a sequence in dataset to visualize. (int)
+    data.normalize      If data.normalize = True, we have to pass <data.metadata_path>. (bool)
+    data.metadata_path  Path to metadata of dataset. (str)
+    data.is_visualizing Essentially indicates if we are using visualizer, MUST be True for this part (bool) (default: True)
+    
     
 optional arguments:  
-  -h, --help            Show this help message and exit.  
-  --index               Index of a sequence in dataset to visualize. (int)  
-  --ground_truth        Visualize ground-truth future frames as well. (bool)  
-  --load_path           Path to pretrained model. (str)  
-  --pred_frames_num 	Number of frames to predict. Mandatory if load_path is None. (int)
-  --interactive         To consider interaction or not. (bool)  
-  --persons_num         Number of people in each sequence. Mandatory if interactive is selected. (int)
-  --use_mask            Use visibility mask if possible for dataloader. (bool)  
-  --skip_num     	Number of frame to skip between each two used frames. (int)
+  load_path             Path to pretrained model. Mandatory if using a training-based model (str)  
+  pred_frames_num 	Number of frames to predict. Mandatory if load_path is None. (int)
+  interactive         To consider interaction or not. (bool)  
+  use_mask            Use visibility mask if possible for dataloader. (bool)  
+  skip_num     	Number of frame to skip between each two used frames. (int)
 ```  
   
 ### 2D Visualization  

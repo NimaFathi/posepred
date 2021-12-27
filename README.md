@@ -84,8 +84,20 @@ Furthermore, you just have to install all the packages you need:
 ```bash  
 pip install -r requirements.txt  
 ```  
-  
-## Preprocessing  
+Before moving forward you need to install Hydra and know its basic functions to run different modules and APIs.  
+hydra is A framework for elegantly configuring complex applications with hierarchical structure.
+
+To understand Hydra better read the official [documentation](https://hydra.cc/). It is not essential stage  to work with our library, but we encourage you to do.
+
+## Hydra
+In order to have a better structure and understanding of our arguments we use Hydra to  dynamically create a hierarchical configuration by composition and override it through config files and the command line.
+If you have any issues and errors install hydra like below:
+```bash
+pip install hydra-core --upgrade
+```
+for more information about Hydra and modules please visit [here](https://github.com/vita-epfl/posepred/blob/master/ARGS_README.md#Hydra)
+
+## Preprocessing
 We need to create clean static file to enhance dataloader and speed-up other parts.  
 To fulfill mentioned purpose You should run preprocessing api called `preprocess.py` like below:  
 

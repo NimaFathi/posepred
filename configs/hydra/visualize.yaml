@@ -5,9 +5,8 @@ defaults:
 
 dataset: ???
 dataset_type: ???
-keypoint_dim: ???
+#keypoint_dim: ???
 showing: future, predicted
-normalize: false
 is_noisy: false
 use_mask: false
 pred_frames_num:
