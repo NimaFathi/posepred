@@ -11,18 +11,18 @@ Pospred is an open-source toolbox for pose prediction based on PyTorch. It is a 
 posepred
 ├── api
 |   ├── preprocess.py                   -- script to run the preprocessor module
-|   ├── train.py                        -- script to train the models
-│   ├── evaluate.py                     -- script to evaluate the models
+|   ├── train.py                        -- script to train the models, runs factory.trainer.py
+│   ├── evaluate.py                     -- script to evaluate the models, runs factory.evaluator.py
 |   ├── visualize.py                    -- script to run the visualization module
-|   └── generate_final_output.py        -- script to predict generate and save the outputs of the models.
+|   └── generate_final_output.py        -- script to generate and save the outputs of the models, runs factory.output_generator.py
 ├── data_loader
 |   ├── solitary_dataset.py             -- handles dataloader for non-interactive data
 |   ├── noisy_solitary_dataset.py       -- handles dataloader for noisy non-interactive data
 |   └── interactive_dataset.py          -- handles dataloader for interactive data
 ├── factory
+|   ├── trainer.py                      -- base code for training
 │   ├── evaluator.py                    -- base code for evaluation 
-|   ├── predictor.py                    -- base code for testing
-|   └── trainer.py                      -- base code for training
+|   └── output_generator.py             -- base code for testing
 ├── models
 │   ├── decoder.py                      -- base code for decoder
 |   ├── encoder.py                      -- base code for encoder
