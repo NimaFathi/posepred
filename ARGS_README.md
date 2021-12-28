@@ -167,7 +167,7 @@ python3 -m api.preprocess dataset=<dataset_name> official_annotation_path=<path_
 ## Training
 Check training config file: "configs/hydra/train.yaml" for more details.
 
-You can change training args via commandline like below:
+You can change training args via command line like below:
 ```  
 usage: python -m api.train      [data] [model] [optimizer] [scheduler]
 				[train_dataset] [valid_dataset] [keypoint_dim] 
@@ -207,7 +207,7 @@ python -m api.train model=<model_name> keypoint_dim=3 train_dataset=<path_to_dat
 ## Evaluation
 Check evaluation config file: "configs/hydra/evaluate.yaml" for more details.
 
-You can change evaluation args via commandline like below:
+You can change evaluation args via command line like below:
 ``` 
 usage: python -m api.evaluate      [data] [model] [dataset] [keypoint_dim] 
                               	   [use_mask] [normalize] [is_noisy]
@@ -232,39 +232,35 @@ Example:
 python -m api.evaluate model=<model_name> dataset=<path_to_dataset> keypoint_dim=3 data.shuffle=True rounds_num=5 load_path=<path_to_model> device=gpu
 ```  
 
-## Prediction
+## Generating Output
 
 ```  
-usage: python -m api.predict [-h] [--dataset] [--model] [--keypoint_dim] [--load_path]
-                             	  [--use_mask] [--interactive] [--persons_num]
-                             	  [--pred_frames_num] [--batch_size] [--skip_num]
-                             	  [--shuffle] [--pin_memory] [--num_workers]
-							 
+usage: python -m api.generate_final_output	[data] [model] [dataset] 
+						[pred_frames_num] [keypoint_dim] [load_path]
+                             	  		[use_mask] [normalize] [is_noisy]
+                             	  		[device] [save_dir]
+                             	  								 
 mandatory arguments:
-  --dataset        	Name of dataset eg: 'posetrack' or '3dpw' (str)  
-  --model         	Name of desired model. Mandatory if load_path is None. (str)  
-  --keypoint_dim        Number of dim data should have eg: 2 for 2D and 3 for 3D (int)  
-  --load_path  		Path to load a model (str)
-  --pred_frames_num 	Number of frames to predict. Mandatory if load_path is None. (int)
+  data			Name of the dataloader yaml file, default is main dataloader (str)
+  model			Name of the model yaml file (str)
+  dataset    		Name of dataset Ex: 'posetrack' or '3dpw' (str)    
+  keypoint_dim          Number of dim data should have Ex: 2 for 2D and 3 for 3D (int)  
+  load_path  		Path to load a model (str)  
+  pred_frames_num 	Number of frames to predict. Mandatory if load_path is None. (int)
 						   
 optional arguments:
-  -h, --help            Show this help message and exit  
-  --use_mask 		Consider visibility mask (bool)
-  --interactive 	Consider interaction between persons (bool)
-  --persons_num 	Number of persons in each sequence (int)
-  --batch_size 		Batch_size (int)
-  --skip_num    	Number of frames to skip in reading dataset (int)
-  --shuffle 		Shuffle dataset (bool)
-  --pin_memory		Pin memory (bool)
-  --num_workers  	Number of workers (int)
+  use_mask 		Consider visibility mask (bool)
+  normalize		Normalize the data or not (bool)
+  is_noisy		Whether data is noisy or not (bool)
+  device		Choose either 'cpu' or 'gpu' (str)
 ```  
 
 Example:
 ```bash  
-python -m api.predict --dataset=<dataset_name> --keypoint_dim=2 --load_path=<path_to_model> 
+python -m api.predict dataset=<dataset_name> keypoint_dim=2 load_path=<path_to_model> 
 ```  
 ```bash  
-python -m api.predict --dataset=<dataset_name> --model=<model_name> --keypoint_dim=2 --pred_frames_num=<pred_frames_num>
+python -m api.predict dataset=<dataset_name> model=<model_name> keypoint_dim=2 pred_frames_num=<pred_frames_num>
 ```  
     
 ## Visualization  
