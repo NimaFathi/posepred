@@ -35,7 +35,7 @@ Now we will precisely explain each module.
 #### data
 Location: 'configs/hydra/data'
 
-`Main.yaml`:
+`main.yaml`:
 ```
 Mandatory arguments:
 keypoint_dim:               Number of dim data should have Ex: 2 for 2D and 3 for 3D (int)  
@@ -59,6 +59,17 @@ metadata_path:              path to metadata, obligatory when normalize=True
 ```
 #### model
 Folder Location: 'configs/hydra/model'
+
+`common.yaml`:
+```
+Mandatory arguments:
+keypoint_dim:               Number of dim data should have Ex: 2 for 2D and 3 for 3D (int)  
+pred_frames_num:	    Number of frames to predict, obligatory when ground-truth is not available (int)
+use_mask:                   Set True To use mask in dataloader and model (bool)
+use_dct:                    Set True to use discrete cosine transform (bool)
+normalize:                  Set True to normalize the data in dataloader (bool)
+```
+
 
 #### optimizer
 Folder Location: 'configs/hydra/optimizer'
