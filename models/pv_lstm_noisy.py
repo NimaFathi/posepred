@@ -35,25 +35,28 @@ class PVLSTMNoisy(nn.Module):
         pose = inputs['observed_pose']
         vel = pose[..., 1:, :] - pose[..., :-1, :]
 
-        if 'observed_noise' not in inputs.keys():
-            raise Exception("This model requires noise. set is_noisy to True")
+        noisy_pose = pose.clone()
+        noisy_vel = vel.clone()
 
-        # make vel noisy
-        bs, frames_n, features_n = vel.shape
-        vel_ = vel.reshape(bs, frames_n, self.args.keypoints_num, self.args.keypoint_dim)
-        vel_noise = torch.logical_or(inputs['observed_noise'][:, :-1, :], inputs['observed_noise'][:, 1:, :]).reshape(
-            bs, frames_n, self.args.keypoints_num, 1)
-        vel_noise = vel_noise.repeat(1, 1, 1, self.args.keypoint_dim)
-        const = (torch.ones_like(vel_noise, dtype=torch.float) * self.args.noise_value)
-        noisy_vel = torch.where(vel_noise == 1, const, vel_).reshape(bs, frames_n, -1)
-
-        # make pose noisy
-        bs, frames_n, features_n = pose.shape
-        pose_ = pose.reshape(bs, frames_n, self.args.keypoints_num, self.args.keypoint_dim)
-        pose_noise = inputs['observed_noise'].reshape(bs, frames_n, self.args.keypoints_num, 1)
-        pose_noise = pose_noise.repeat(1, 1, 1, self.args.keypoint_dim)
-        const = (torch.ones_like(pose_noise, dtype=torch.float) * self.args.noise_value)
-        noisy_pose = torch.where(pose_noise == 1, const, pose_).reshape(bs, frames_n, -1)
+        # if 'observed_noise' not in inputs.keys():
+        #     raise Exception("This model requires noise. set is_noisy to True")
+        #
+        # # make vel noisy
+        # bs, frames_n, features_n = vel.shape
+        # vel_ = vel.reshape(bs, frames_n, self.args.keypoints_num, self.args.keypoint_dim)
+        # vel_noise = torch.logical_or(inputs['observed_noise'][:, :-1, :], inputs['observed_noise'][:, 1:, :]).reshape(
+        #     bs, frames_n, self.args.keypoints_num, 1)
+        # vel_noise = vel_noise.repeat(1, 1, 1, self.args.keypoint_dim)
+        # const = (torch.ones_like(vel_noise, dtype=torch.float) * self.args.noise_value)
+        # noisy_vel = torch.where(vel_noise == 1, const, vel_).reshape(bs, frames_n, -1)
+        #
+        # # make pose noisy
+        # bs, frames_n, features_n = pose.shape
+        # pose_ = pose.reshape(bs, frames_n, self.args.keypoints_num, self.args.keypoint_dim)
+        # pose_noise = inputs['observed_noise'].reshape(bs, frames_n, self.args.keypoints_num, 1)
+        # pose_noise = pose_noise.repeat(1, 1, 1, self.args.keypoint_dim)
+        # const = (torch.ones_like(pose_noise, dtype=torch.float) * self.args.noise_value)
+        # noisy_pose = torch.where(pose_noise == 1, const, pose_).reshape(bs, frames_n, -1)
 
         if self.args.use_dct:
             noisy_vel = torch.matmul(self.dct_obs_vel.unsqueeze(0), noisy_vel)
@@ -88,7 +91,7 @@ class PVLSTMNoisy(nn.Module):
             comp_pose[..., i + 1, :] = comp_pose[..., i, :] + comp_vel[..., i, :]
 
         bs, frames_n, feat = comp_pose.shape
-        comp_pose_noise_only = torch.where(pose_noise.view(bs, frames_n, feat) == 1, comp_pose, pose)
+        comp_pose_noise_only = pose.clone()
 
         outputs = {'pred_pose': pred_pose, 'pred_vel': pred_vel, 'comp_pose': comp_pose, 'comp_vel': comp_vel,
                    'comp_pose_noise_only': comp_pose_noise_only}
