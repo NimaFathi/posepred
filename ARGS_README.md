@@ -71,6 +71,8 @@ normalize:                  Set True to normalize the data in dataloader (bool)
 ```
 
 `<model-name>.yaml`:
+
+For each model you implement, you should provide a yaml file to configure its argumants.
 ```
 Mandatory arguments:
 type:                       Name of the model (str)
