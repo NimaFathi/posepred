@@ -135,11 +135,11 @@ Check preprocessing config file: "configs/hydra/preprocess.yaml" for more detail
 
 You can change preprocessor via commandline like below:
 ```  
-usage: python -m api.preprocess  [official_annotation_path] [dataset] [data_type]                          	
-	                             [obs_frames_num] [pred_frames_num] [keypoint_dim]
-				                 [use_video_once] [skip_num] [interactive]  
-	                             [annotate_openpifpaf] [annotate] [image_dir]
-	                             [output_name]
+usage: python -m api.preprocess  	[official_annotation_path] [dataset] [data_type]                          	
+	                                [obs_frames_num] [pred_frames_num] [keypoint_dim]
+				        [use_video_once] [skip_num] [interactive]  
+	                             	[annotate_openpifpaf] [annotate] [image_dir]
+	                             	[output_name]
   
 mandatory arguments:  
   official_annotation_path        Name of using dataset Ex: 'posetrack' or '3dpw' (str)  
@@ -175,12 +175,11 @@ usage: python -m api.train      [data] [model] [optimizer] [scheduler]
                            	[use_mask] [use_dct] [normalize] [is_noisy]
 				[snapshot_interval] [load_path] [save_dir] 
 
-
 mandatory arguments:
-  data			Name of the dataloader yaml file, default is main dataloader
-  model			Name of the model yaml file
-  optimizer		Name of the optimizer yaml file, default is adam
-  scheduler		Name of the scheduler yaml file, default is reduce_lr_on_plateau
+  data			Name of the dataloader yaml file, default is main dataloader (str)
+  model			Name of the model yaml file (str)
+  optimizer		Name of the optimizer yaml file, default is adam (str)
+  scheduler		Name of the scheduler yaml file, default is reduce_lr_on_plateau (str)
   train_dataset         Name of train dataset Ex: 'posetrack' or '3dpw' (str)   
   keypoint_dim          Dimension of the data Ex: 2 for 2D and 3 for 3D (int)  
   epochs 	      	Number of training epochs (int)
@@ -206,35 +205,31 @@ python -m api.train model=<model_name> keypoint_dim=3 train_dataset=<path_to_dat
 ```  
 
 ## Evaluation
+Check evaluation config file: "configs/hydra/evaluate.yaml" for more details.
 
+You can change evaluation args via commandline like below:
 ``` 
-usage: python -m api.evaluate [-h] [--dataset] [--model] [--keypoint_dim] [--load_path]
-                              	   [--use_mask] [--interactive] [--persons_num]
-                              	   [--batch_size] [--distance_loss] [--skip_num]
-                                   [--shuffle] [--pin_memory] [--num_workers] 
+usage: python -m api.evaluate      [data] [model] [dataset] [keypoint_dim] 
+                              	   [use_mask] [normalize] [is_noisy]
+                              	   [device] [rounds_num] [load_path]
 
 mandatory arguments:
-  --dataset    		Name of dataset Ex: 'posetrack' or '3dpw' (str)  
-  --model          	Name of model (str)  
-  --keypoint_dim        Number of dim data should have Ex: 2 for 2D and 3 for 3D (int)  
-  --load_path  		Path to load a model (str)
+  data			Name of the dataloader yaml file, default is main dataloader (str)
+  model			Name of the model yaml file (str)
+  dataset    		Name of dataset Ex: 'posetrack' or '3dpw' (str)    
+  keypoint_dim          Number of dim data should have Ex: 2 for 2D and 3 for 3D (int)  
+  load_path  		Path to load a model (str)
 						   
 optional arguments:
-  -h, --help            Show this help message and exit  
-  --use_mask 		Consider visibility mask (bool)
-  --interactive 	Consider interaction between persons (bool)
-  --persons_num 	Number of persons in each sequence (int)
-  --batch_size 		Batch_size (int)
-  --distance_loss 	Name of distance loss. (str)
-  --skip_num 		Number of frames to skip in reading dataset (int)
-  --shuffle 		Shuffle dataset (bool)
-  --pin_memory		Pin memory (bool)
-  --num_workers  	Number of workers (int)
+  use_mask 		Consider visibility mask (bool)
+  normalize		Normalize the data or not (bool)
+  is_noisy		Whether data is noisy or not (bool)
+  device		Choose either 'cpu' or 'gpu' (str)
 ```  
 
 Example:
 ```bash  
-python -m api.evaluate --dataset=<dataset_name> --model=<model_name> --keypoint_dim=2 --load_path=<path_to_model>
+python -m api.evaluate model=<model_name> dataset=<path_to_dataset> keypoint_dim=3 data.shuffle=True rounds_num=5 load_path=<path_to_model> device=gpu
 ```  
 
 ## Prediction
