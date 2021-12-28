@@ -165,57 +165,44 @@ python3 -m api.preprocess dataset=<dataset_name> official_annotation_path=<path_
 ```
   
 ## Training
+Check training config file: "configs/hydra/train.yaml" for more details.
 
+You can change training args via commandline like below:
 ```  
-usage: python -m api.train [-h] [--train_dataset] [--valid_dataset] [--model] 
-                           	[--keypoint_dim] [--epochs] [--start_epoch] 
-                           	[--use_mask] [--interactive] [--persons_num]
-                           	[--distance_loss] [--mask_loss_weight] [--skip_num]
-                           	[--lr] [--decay_factor] [--decay_patience]
-                           	[--snapshot_interval] [--load_path]
-                           	[--batch_size] [--num_workers] [--shuffle] [--pin_memory]
-                           	[--hidden_size] [--n_layers] [--hardtanh_limit] 
-                           	[--dropout_enc] [--dropout_pose_dec] [--dropout_mask_dec]
+usage: python -m api.train      [data] [model] [optimizer] [scheduler]
+				[train_dataset] [valid_dataset] [keypoint_dim] 
+                           	[epochs] [start_epoch] [device]
+                           	[use_mask] [use_dct] [normalize] [is_noisy]
+				[snapshot_interval] [load_path] [save_dir] 
+
 
 mandatory arguments:
-  --train_dataset       Name of train dataset Ex: 'posetrack' or '3dpw' (str)  
-  --valid_dataset       Name of validation dataset Ex: 'posetrack' or '3dpw' (str)  
-  --model            	Name of desired model (str)  
-  --keypoint_dim        Number of dim data should have Ex: 2 for 2D and 3 for 3D (int)  
-  --epochs 	      	Number of training epochs (int)
+  data			Name of the dataloader yaml file, default is main dataloader
+  model			Name of the model yaml file
+  optimizer		Name of the optimizer yaml file, default is adam
+  scheduler		Name of the scheduler yaml file, default is reduce_lr_on_plateau
+  train_dataset         Name of train dataset Ex: 'posetrack' or '3dpw' (str)   
+  keypoint_dim          Dimension of the data Ex: 2 for 2D and 3 for 3D (int)  
+  epochs 	      	Number of training epochs (int)
 						   
 optional arguments:
-  -h, --help            Show this help message and exit  
-  --lr			Learning rate (int)
-  --batch_size 		Batch_size (int)
-  --use_mask 		Consider visibility mask (bool)
-  --interactive 	Consider interaction between persons (bool)
-  --persons_num 	Number of persons in each sequence (int)
-  --snapshot_interval 	Save snapshot every N epochs (int)
-  --load_path  		Path to load a model (str)
-  --distance_loss 	Name of distance loss. (str)
-  --mask_loss_weight	Weight of mask-loss (float)
-  --decay_factor  	Decay_factor for learning_rate (float)
-  --decay_patience 	Decay_patience for learning_rate (int)
-  --skip_num 		Number of frames to skip in reading dataset (int)
-  --start_epoch  	Start epoch (int)
-  --shuffle 		Shuffle dataset (bool)
-  --pin_memory		Pin memory (bool)
-  --num_workers  	Number of workers (int)
-  --n_layers		Number of layers for LSTMs (int)
-  --hidden_size		Hidden size for LSTMs (int)
-  --hardtanh_limit	Param for hardtanh activation function (float)
-  --dropout_enc	     	Dropout rate for encoder (float)
-  --dropout_pose_dec	Dropout rate for pose decoder (float)
-  --dropout_mask_dec	Droput rate for mask decoder (float)
+  valid_dataset       Name of validation dataset Ex: 'posetrack' or '3dpw' (str)    
+  use_mask 		Consider visibility mask (bool)
+  use_dct 		Consider using dct (bool)
+  normalize		Normalize the data or not (bool)
+  is_noisy		Whether data is noisy or not (bool)
+  snapshot_interval 	Save snapshot every N epochs (int)
+  load_path  		Path to load a model (str) 
+  start_epoch	  	Start epoch (int)
+  device		Choose either 'cpu' or 'gpu' (str)
 ```  
 
 Example:
 ```bash  
-python -m api.train --train_dataset=<dataset_name> --model=<model_name> --keypoint_dim=2 --epochs=100 --interactive --persons_num=<perons_num>
+python -m api.train model=<model_name> keypoint_dim=3 train_dataset=<path_to_dataset> valid_dataset=<path_to_dataset> epochs=250 data.shuffle=True device=gpu snapshot_interval=10 hydra.run.dir=<path_to_output>
 ```  
 ```bash  
-python -m api.train --train_dataset=<dataset_name> --valid_dataset=<dataset_name> --model=<model_name> --keypoint_dim=2 --use_mask --epochs=100 --load_path=<path_to_model>
+python -m api.train model=<model_name> keypoint_dim=3 train_dataset=<path_to_dataset> valid_dataset=<path_to_dataset> epochs=250 data.batch_size=32 optimizer.lr=0.01 scheduler.factor=0.8
 ```  
 
 ## Evaluation
