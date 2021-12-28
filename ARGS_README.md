@@ -232,7 +232,7 @@ Example:
 python -m api.evaluate model=<model_name> dataset=<path_to_dataset> keypoint_dim=3 data.shuffle=True rounds_num=5 load_path=<path_to_model> device=gpu
 ```  
 
-## Generating Output
+## Generating Outputs
 
 ```  
 usage: python -m api.generate_final_output	[data] [model] [dataset] 
