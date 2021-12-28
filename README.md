@@ -133,7 +133,7 @@ Generate and save the predicted future poses:
 ```bash  
 python -m api.generate_final_output dataset=<dataset_name> model=<model_name> keypoint_dim=2 load_path=<path_to_model> data.is_interactive=False device=cpu pred_frames_num=<int> 
 ```  
-See [here](https://github.com/vita-epfl/posepred/blob/master/ARGS_README.md#prediction) for more details about prediction arguments.
+See [here](https://github.com/vita-epfl/posepred/blob/master/ARGS_README.md#GeneratingOutputs) for more details about prediction arguments.
   
   
 ## Visualization  
