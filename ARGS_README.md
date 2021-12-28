@@ -127,6 +127,7 @@ File Location: 'configs/hydra/metrics.yaml'
 ```
 pose_metrics:               List which metrics in the metrics module you want to use.
 mask_metrics:               List which metrics in the metrics module you want to use.
+```
 
 
 ## Preprocessing   
