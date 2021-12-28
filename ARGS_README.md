@@ -123,16 +123,12 @@ verbose                     If True, prints a message to stdout for each update 
 #### metrics
 File Location: 'configs/hydra/metrics.yaml'
 
-#### evaluate
-File Location: 'configs/hydra/evaluate.yaml'
-#### train
-File Location: 'configs/hydra/train.yaml'
-#### visualize
-File Location: 'configs/hydra/visualize.yaml
-#### preprocess
-File Location: 'configs/hydra/preprocess.yaml
-#### generate_output
-File Location: 'configs/hydra/generate_output.yaml
+`metrics.yaml`:
+```
+pose_metrics:               List which metrics in the metrics module you want to use.
+mask_metrics:               List which metrics in the metrics module you want to use.
+
+
 ## Preprocessing   
 Check preprocessing config file: "configs/hydra/preprocess.yaml" for more details.
 
