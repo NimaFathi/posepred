@@ -7,8 +7,6 @@ from .elbo import ELBO
 from .derpof_loss import DeRPoFLoss
 from .his_rep_itself_loss import HisRepItselfLoss
 from .comp_pred_vel import CompPredVel
-from .comp_pred_pose import CompPredPose
-from .comp_pred_center import CompPredCenter
 from .comp_pred import CompPred
 from .trans_cvae import TRANS_CVAE
 from .pv_lstm_noisy import PVLSTMNoisy
@@ -24,8 +22,6 @@ LOSSES = {'mse_vel': MSEVel,
           'derpof': DeRPoFLoss,
           'his_rep_itself': HisRepItselfLoss,
           'comp_pred_vel': CompPredVel,
-          'comp_pred_pose': CompPredPose,
-          'comp_pred_center': CompPredCenter,
           'comp_pred': CompPred,
           'trans_cvae': TRANS_CVAE,
           'pv_lstm_noisy': PVLSTMNoisy,
