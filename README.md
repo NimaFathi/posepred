@@ -15,6 +15,10 @@ posepred
 │   ├── evaluate.py                     -- script to evaluate the models, runs factory.evaluator.py
 |   ├── visualize.py                    -- script to run the visualization module
 |   └── generate_final_output.py        -- script to generate and save the outputs of the models, runs factory.output_generator.py
+├── preprocessor
+|   ├── preprocessor.py                 -- base class for preprocessor module
+|   ├── dpw_preprocessor.py             -- preprocessing 3DPW dataset class
+    └── ...                             -- other datasets preprocessor class
 ├── data_loader
 |   ├── solitary_dataset.py             -- handles dataloader for non-interactive data
 |   ├── noisy_solitary_dataset.py       -- handles dataloader for noisy non-interactive data
@@ -28,10 +32,21 @@ posepred
 │   ├── neareset_neighbor.py            
 |   ├── zero_vel.py                     
 |   ├── ...
-├── preprocessor
-|   ├── preprocessor.py                 -- base class for preprocessor module
-|   ├── dpw_preprocessor.py             -- preprocessing 3DPW dataset class
-    └── ...                             -- other datasets preprocessor class
+├── losses
+|   ├── kl_divergence.py                     
+│   ├── mae_vel.py            
+|   ├── ...
+├── metrics
+|   ├── pose_metrics.py                     
+│   └── mask_metrics.py            
+├── optimizers
+|   ├── adam.py                     
+|   ├── sgd.py            
+|   ├── ...
+├── schedulers
+|   ├── reduce_lr_on_plateau.py
+|   ├── step_lr.py            
+|   ├── ...
 ├── utils
 |   ├── average_meter                   -- updating average for metrics each epoch
 |   ├── losses.py                       -- available loss functions
