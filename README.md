@@ -92,7 +92,7 @@ hydra is A framework for elegantly configuring complex applications with hierarc
 To understand Hydra better read the official [documentation](https://hydra.cc/). It is not essential stage  to work with our library, but we encourage you to do.
 
 ## Hydra
-In order to have a better structure and understanding of our arguments we use Hydra to  dynamically create a hierarchical configuration by composition and override it through config files and the command line.
+In order to have a better structure and understanding of our arguments, we use Hydra to  dynamically create a hierarchical configuration by composition and override it through config files and the command line.
 If you have any issues and errors install hydra like below:
 ```bash
 pip install hydra-core --upgrade
