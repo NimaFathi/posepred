@@ -70,6 +70,15 @@ use_dct:                    Set True to use discrete cosine transform (bool)
 normalize:                  Set True to normalize the data in dataloader (bool)
 ```
 
+`<model-name>.yaml`:
+```
+Mandatory arguments:
+type:                       Name of the model (str)
+loss.type:	            Name of the loss function (str)
+
+optional arguments: 
+Every specific argument required for your model!
+```
 
 #### optimizer
 Folder Location: 'configs/hydra/optimizer'
