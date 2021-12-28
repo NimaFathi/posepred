@@ -10,8 +10,10 @@ posepred
 |      ├── data
 |         └── main.yaml                 -- main config file for data module (Essentially responsible for creating dataloader)             
 |      ├── model
-|         ├── ARMIN PUT FILES HERE
-|         └──                    
+|         ├── pv_lstml.py                     
+│         ├── neareset_neighbor.py            
+|         ├── zero_vel.py  
+|         ├── ...              
 |      ├── optimizer
 |         ├── adam.yaml                 -- config file for adam optimizer
 |         └── sgd.yaml                  -- config file for stochastic gradient descent optimizer
