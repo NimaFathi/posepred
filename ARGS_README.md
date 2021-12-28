@@ -16,10 +16,12 @@ posepred
 |         ├── ...              
 |      ├── optimizer
 |         ├── adam.yaml                 -- config file for adam optimizer
-|         └── sgd.yaml                  -- config file for stochastic gradient descent optimizer
+|         ├── sgd.yaml                  -- config file for stochastic gradient descent optimizer
+|         ├── ...   
 |      ├── scheduler
 |         ├── reduce_lr_on_plateau.yaml -- config file for reducing learning_rate on plateau technique arguments
-|         └── step_lr.yaml              -- config file for step of scheduler arguments                               
+|         ├── step_lr.yaml              -- config file for step of scheduler arguments                               
+|         ├── ...   
 |      ├── visualize.yaml               -- config file for visualizer API arguments
 |      ├── evaluate.yaml                -- config file for evaluate API arguments 
 |      ├── preprocess.yaml              -- config file for preprocess API arguments
