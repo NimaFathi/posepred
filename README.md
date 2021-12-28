@@ -15,13 +15,10 @@ posepred
 │   ├── evaluate.py                     -- script to evaluate the models
 |   ├── visualize.py                    -- script to run the visualization module
 |   └── generate_final_output.py        -- script to predict generate and save the outputs of the models.
-├── args
-|   ├── evaluations_args                -- argument handler for evaluation
-|   └── ...                             -- argument handler for other modules
-├── dataloader
-|   ├── data_loader.py                  -- simply returns appropriate dataloader
-|   ├── interactive_dataset.py          -- handles dataloader for interactive data
-|   └── non_interactive_dataset.py      -- handles dataloader for non-interactive data
+├── data_loader
+|   ├── solitary_dataset.py             -- handles dataloader for non-interactive data
+|   ├── noisy_solitary_dataset.py       -- handles dataloader for noisy non-interactive data
+|   └── interactive_dataset.py          -- handles dataloader for interactive data
 ├── factory
 │   ├── evaluator.py                    -- base code for evaluation 
 |   ├── predictor.py                    -- base code for testing
