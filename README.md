@@ -24,12 +24,10 @@ posepred
 │   ├── evaluator.py                    -- base code for evaluation 
 |   └── output_generator.py             -- base code for testing
 ├── models
-│   ├── decoder.py                      -- base code for decoder
-|   ├── encoder.py                      -- base code for encoder
-│   ├── disentangle1.py                 -- first disentangle model using pv_lstm structure
-│   ├── neareset_neighbor.py            -- nearest neighbor model
-|   ├── pv_lstml.py                     -- basic pv_lstm model
-|   └── zero_vel.py                     -- basic zero velocity model
+|   ├── pv_lstml.py                     
+│   ├── neareset_neighbor.py            
+|   ├── zero_vel.py                     
+|   ├── ...
 ├── preprocessor
 |   ├── preprocessor.py                 -- base class for preprocessor module
 |   ├── dpw_preprocessor.py             -- preprocessing 3DPW dataset class
