@@ -10,11 +10,11 @@ Pospred is an open-source toolbox for pose prediction based on PyTorch. It is a 
 ```
 posepred
 ├── api
-│   ├── evaluate.py                     -- script to evaluate
-|   ├── predict.py                      -- script to predict 
-|   ├── preprocess.py                   -- script to run preprocessor module
-|   ├── train.py                        -- script to train models
-|   └── visualize.py                    -- script to run visualization module
+|   ├── preprocess.py                   -- script to run the preprocessor module
+|   ├── train.py                        -- script to train the models
+│   ├── evaluate.py                     -- script to evaluate the models
+|   ├── visualize.py                    -- script to run the visualization module
+|   └── generate_final_output.py        -- script to predict generate and save the outputs of the models.
 ├── args
 |   ├── evaluations_args                -- argument handler for evaluation
 |   └── ...                             -- argument handler for other modules
