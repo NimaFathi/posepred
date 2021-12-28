@@ -49,8 +49,6 @@ posepred
 |   ├── ...
 ├── utils
 |   ├── average_meter                   -- updating average for metrics each epoch
-|   ├── losses.py                       -- available loss functions
-|   ├── metrics.py                      -- available metrics
 |   ├── reporter.py                     -- to calcualte and report losses and metrics
 |   ├── save_load.py                    -- base code for saving and loading models
 |   └── others.py                       -- other useful utils
@@ -58,12 +56,6 @@ posepred
 |   ├── color_generator.py              -- code for generating miscellanoeus colors
 |   ├── keypoints_connection.py         -- dictionary for creating joints connection graphs
 |   └── visualizer.py                   -- base code for visualization
-|── exps  
-|   ├── train                           -- outputs of train time
-|   ├── test                            -- outputs of test time (prediction)
-|   └── visualize                       -- outputs for visualization
-|
-└── path_definition.py                  -- base code for constant useful paths 
 
 ```
 
