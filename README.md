@@ -52,10 +52,10 @@ posepred
 |   ├── reporter.py                     -- to calcualte and report losses and metrics
 |   ├── save_load.py                    -- base code for saving and loading models
 |   └── others.py                       -- other useful utils
-|── visualization
-|   ├── color_generator.py              -- code for generating miscellanoeus colors
-|   ├── keypoints_connection.py         -- dictionary for creating joints connection graphs
-|   └── visualizer.py                   -- base code for visualization
+└── visualization
+    ├── color_generator.py              -- code for generating miscellanoeus colors
+    ├── keypoints_connection.py         -- dictionary for creating joints connection graphs
+    └── visualizer.py                   -- base code for visualization
 
 ```
 
