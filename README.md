@@ -112,8 +112,9 @@ See [here](https://github.com/vita-epfl/posepred/blob/master/ARGS_README.md#prep
 ## Training
 Train models from scratch:
 ```bash  
-python -m api.train model=<model_name> keypoint_dim=3 train_dataset=<path_to_dataset>' valid_dataset=<path_to_dataset> epochs=250 data.shuffle=True is_noisy=true data.noise_rate=0.2 model.autoregressive=false model.noise_value=-1000 model.loss.pred_weight=1 model.loss.comp_weight=1 model.loss.kl_weight=0.001
+python -m api.train model=<model_name> keypoint_dim=3 train_dataset=<path_to_dataset> valid_dataset=<path_to_dataset> epochs=250 data.shuffle=True device=gpu snapshot_interval=10 hydra.run.dir=<path_to_output>
 ```  
+
 Provide **validation_dataset** to adjust learning-rate and report metrics on validation-dataset as well.
 
 See [here](https://github.com/vita-epfl/posepred/blob/master/ARGS_README.md#training) for more details about training arguments.
