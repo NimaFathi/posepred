@@ -274,7 +274,7 @@ usage: python -m api.visualize [dataset_type] [dataset] [model]
                                [data.X for all arguments in configs/hydra/data]
                                
 mandatory arguments:  
-    dataset_type 	    Name of using dataset. (str) (['somof_posetrack', 'posetrack', 'somof_3dpw', '3dpw', 'jta', 'jaad', 'pie', 'human3.6m', 'human3.6_walking'])  
+    dataset_type 	    Name of using dataset. (str) (['somof_posetrack', 'posetrack', 'somof_3dpw', '3dpw', 'jta', 'jaad', 'pie', 'human3.6m'])  
     model        	    Name of desired model. (str) (['zero_vel','nearest_neighbor', 'pv_lstm', 'disentangled', 'derpof', 'history_repeats_itself', 'mix_and_match', 'comp_pred_vel', 'comp_pred_pose','comp_pred_center', 'comp_pred_root','trans_cvae','pv_lstm_noisy', 'comp_pred_vel_concat', 'v_lstm_noisy', 'p_lstm_noisy', 'pv_lstm_pro', 'keyplast'])  
     images_dir 		    Path to existing images on your local computer (str)
     showing             Indicates which images we want to show (dash(-) separated list) ([observed, future, predicted, completed])   
