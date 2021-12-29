@@ -5,7 +5,7 @@ defaults:
 
 dataset: ???
 dataset_type: ???
-#keypoint_dim: ???
+keypoint_dim: ???
 showing: future, predicted
 is_noisy: false
 use_mask: false
