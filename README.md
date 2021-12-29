@@ -145,7 +145,7 @@ In order to generate .gif outputs you can run `visualize.py‍‍‍‍` like be
   
 Example:  
 ```bash  
-python -m api.visualize model=<model_name> dataset=<path_to_dataset> dataset_type=jta keypoint_dim=2 is_noisy=true load_path=<path_to_model> index=25 showing=observed-future
+python -m api.visualize model=<model_name> dataset=<path_to_dataset> dataset_type=jta keypoint_dim=2 is_noisy=true data.noise_rate=0.1 device=cpu load_path=<path_to_model> index=25 showing=observed-future
 ```  
   
 Sample output:  
@@ -162,7 +162,7 @@ If we have camera extrinsic and intrinsic parameters and image paths, we would c
   
 Example:  
 ```bash  
-python -m api.visualize model=<model_name> dataset=<path_to_dataset> dataset_type=jta keypoint_dim=3 is_noisy=true load_path=<path_to_model> index=25 showing=observed-future
+python -m api.visualize model=<model_name> dataset=<path_to_dataset> dataset_type=jta keypoint_dim=3 is_noisy=true data.noise_rate=0.0 device=cpu load_path=<path_to_model> index=25 showing=observed-future
 ```  
   
 Sample outputs:  
