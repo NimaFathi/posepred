@@ -1,8 +1,5 @@
-import os
-
 from torch.utils.data import DataLoader
 
-from path_definition import ROOT_DIR
 from .interactive_dataset import InteractiveDataset
 from .noisy_solitary_dataset import NoisySolitaryDataset
 from .solitary_dataset import SolitaryDataset
@@ -12,12 +9,9 @@ DATA_TYPES = ['train', 'validation', 'test']
 VISUALIZING_TYPES = ['observed', 'future', 'predicted', 'completed']
 
 
-def get_dataloader(dataset_name, args):
-    if dataset_name is None:
+def get_dataloader(dataset_path, args):
+    if dataset_path is None:
         return None
-    data_folder = os.path.join(ROOT_DIR, 'preprocessed_data')
-    dataset_path = os.path.join(data_folder, dataset_name + '.jsonl')
-
     if args.is_interactive:
         dataset = InteractiveDataset(dataset_path, args.keypoint_dim, args.persons_num, args.is_testing, args.use_mask,
                                      args.is_visualizing, args.use_quaternion, args.normalize, args.metadata_path)

@@ -1,13 +1,17 @@
 defaults:
-  - _self_
   - data: main
   - model:
+  - _self_
 
 dataset: ???
 pred_frames_num: ???
 keypoint_dim: ???
 is_noisy: false
 use_mask: false
+normalize: false
 device: cuda
 load_path:
 save_dir:
+
+data:
+  is_testing: true

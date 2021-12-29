@@ -95,7 +95,7 @@ class NoisySolitaryDataset(Dataset):
             outputs['observed_noise'] = self.noise[index]
         else:
             if 'observed_mask' not in seq.keys():
-                raise Exception('data-mask is not available. assign a value to noise_rate to get a uniform noise.')
+                raise Exception('data-mask is not available. assign a value to data.noise_rate to get a uniform noise.')
             outputs['observed_noise'] = seq['observed_mask']
 
         if self.use_quaternion:

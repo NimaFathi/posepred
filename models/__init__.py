@@ -6,14 +6,8 @@ from .derpof import DeRPoF
 from .history_repeats_itself import HistoryRepeatsItself
 from .mix_and_match import MixAndMatch
 from .comp_pred_vel import CompPredVel
-from .comp_pred_pose import CompPredPose
-from .comp_pred_center import CompPredCenter
-from .comp_pred_root import CompPredRoot
 from .trans_cvae import TRANS_CVAE
 from .pv_lstm_noisy import PVLSTMNoisy
-from .comp_pred_vel_concat import CompPredVelConcat
-from .v_lstm_noisy import VLSTMNoisy
-from .p_lstm_noisy import PLSTMNoisy
 from .pv_lstm_pro import PVLSTMPro
 from .keyplast import Keyplast
 
@@ -25,14 +19,8 @@ MODELS = {'zero_vel': ZeroVel,
           'history_repeats_itself': HistoryRepeatsItself,
           'mix_and_match': MixAndMatch,
           'comp_pred_vel': CompPredVel,
-          'comp_pred_pose': CompPredPose,
-          'comp_pred_center': CompPredCenter,
-          'comp_pred_root': CompPredRoot,
           'trans_cvae': TRANS_CVAE,
           'pv_lstm_noisy': PVLSTMNoisy,
-          'comp_pred_vel_concat': CompPredVelConcat,
-          'v_lstm_noisy': VLSTMNoisy,
-          'p_lstm_noisy': PLSTMNoisy,
           'pv_lstm_pro': PVLSTMPro,
           'keyplast': Keyplast,
           }
