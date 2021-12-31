@@ -238,8 +238,8 @@ class JAADPreprocessor(Processor):
 
     def __create_annotations(self):
         logger.info("Create annotations using openpifpaf for JAAD in posepred")
-        if os.path.exists(os.path.join(PREPROCESSED_DATA_DIR, 'openpifpaf/JAAD')):
-            return PREPROCESSED_DATA_DIR + "openpifpaf/JAAD/"
+        if os.path.exists(os.path.join(PREPROCESSED_DATA_DIR, 'openpifpaf', 'JAAD')):
+            return os.path.join(PREPROCESSED_DATA_DIR, 'openpifpaf', 'JAAD')
         for subdir, dirs, files in os.walk(self.image_dir):
             annotation_dir = PREPROCESSED_DATA_DIR + 'openpifpaf/JAAD' + subdir.split(self.image_dir)[1]
             path = Path(annotation_dir)
@@ -258,7 +258,7 @@ class JAADPreprocessor(Processor):
                     logger.debug('json output = %s', json_out_name)
                     with open(json_out_name, 'w') as f:
                         json.dump([ann for ann in pred], f, indent=4)
-        return PREPROCESSED_DATA_DIR + "openpifpaf/JAAD/"
+        return os.path.join(PREPROCESSED_DATA_DIR, 'openpifpaf', 'JAAD')
 
 
 def intersect_area(a: Rectangle, b: Rectangle):
