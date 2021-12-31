@@ -252,8 +252,8 @@ class PIEPreprocessor(Processor):
 
     def __create_annotations(self):
         logger.info("Create annotations using openpifpaf for JAAD in posepred")
-        if os.path.exists(os.path.join(PREPROCESSED_DATA_DIR, 'openpifpaf/PIE')):
-            return PREPROCESSED_DATA_DIR + "openpifpaf/PIE/"
+        if os.path.exists(os.path.join(PREPROCESSED_DATA_DIR, '/openpifpaf/PIE')):
+            return PREPROCESSED_DATA_DIR + "/openpifpaf/PIE/"
         for subdir, dirs, files in os.walk(self.image_dir):
             annotation_dir = PREPROCESSED_DATA_DIR + 'openpifpaf/PIE' + subdir.split(self.image_dir)[1]
             path = Path(annotation_dir)
