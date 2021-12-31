@@ -15,6 +15,7 @@ logger = logging.getLogger(__name__)
 class SoMoFPoseTrackPreprocessor(Processor):
     def __init__(self, dataset_path, is_interactive, obs_frame_num, pred_frame_num,
                  skip_frame_num, use_video_once, custom_name):
+        # always: obs_frame_num = 16 and pred_frame_num = 14
         super(SoMoFPoseTrackPreprocessor, self).__init__(dataset_path, is_interactive, obs_frame_num,
                                                          pred_frame_num, skip_frame_num, use_video_once, custom_name)
         self.output_dir = os.path.join(
