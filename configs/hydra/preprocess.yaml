@@ -10,8 +10,8 @@ pred_frames_num: ???
 use_video_once: false
 annotate_openpifpaf: false
 annotate: false
-image_dir: ???
-joints_annotation_path: ???
+image_dir:
+joints_annotation_path:
 keypoint_dim: ???
 skip_num: 0
 interactive: false
