@@ -185,6 +185,8 @@ class PIEPreprocessor(Processor):
                             frame = bbox.get('frame')
                             ground_truth[frame][p_id] = bbox_rec
                     for frame in ground_truth.keys():
+                        print('here1')
+                        print(self.annotation_path)
                         for ann_subdir, _, _ in os.walk(self.annotation_path):
                             print('here')
                             json_file_path = os.path.join(
