@@ -252,11 +252,9 @@ class PIEPreprocessor(Processor):
 
     def __create_annotations(self):
         logger.info("Create annotations using openpifpaf for JAAD in posepred")
-        print(os.path.join(PREPROCESSED_DATA_DIR, 'openpifpaf', 'PIE'))
-        exit()
-        if os.path.exists(os.path.join(PREPROCESSED_DATA_DIR, '/openpifpaf/PIE')):
+        if os.path.exists(os.path.join(PREPROCESSED_DATA_DIR, 'openpifpaf', 'PIE')):
             print("this")
-            return PREPROCESSED_DATA_DIR + "/openpifpaf/PIE/"
+            return os.path.join(PREPROCESSED_DATA_DIR, 'openpifpaf', 'PIE')
         for subdir, dirs, files in os.walk(self.image_dir):
             annotation_dir = PREPROCESSED_DATA_DIR + 'openpifpaf/PIE' + subdir.split(self.image_dir)[1]
             path = Path(annotation_dir)
@@ -272,12 +270,9 @@ class PIEPreprocessor(Processor):
                     json_out_name = out_name(
                         annotation_dir, meta['file_name'], '.predictions.json')
                     logger.debug('json output = %s', json_out_name)
-                    print('here2')
-                    print(json_out_name)
                     with open(json_out_name, 'w') as f:
                         json.dump([ann for ann in pred], f, indent=4)
         return os.path.join(PREPROCESSED_DATA_DIR, 'openpifpaf', 'PIE')
-        # return PREPROCESSED_DATA_DIR + "/openpifpaf/PIE/"
 
 
 def intersect_area(a: Rectangle, b: Rectangle):
