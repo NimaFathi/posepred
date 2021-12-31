@@ -132,6 +132,8 @@ class PIEPreprocessor(Processor):
             pred_y = np.array(list(raw_data_pred[ped_id].values()))
             pred_interp = interp1d(pred_x, pred_y, axis=0, fill_value="extrapolate")
             pred_poses.append(pred_interp(pred_frame_range).tolist())
+        print('here')
+        print(output_file_name)
         with jsonlines.open(os.path.join(self.output_dir, output_file_name), 'a') as writer:
             if len(obs_poses) > 0:
                 if self.is_interactive:
@@ -157,9 +159,7 @@ class PIEPreprocessor(Processor):
             assert self.image_dir is not None
             logger.warning(
                 "It is better to create annotations yourself using openpifpaf with with desired methods and parameters")
-            print(self.annotation_path)
             self.annotation_path = self.__create_annotations()
-            print(self.annotation_path)
         else:
             assert self.annotation_path is not None
         for subdir, dirs, files in os.walk(self.dataset_path):
@@ -187,15 +187,11 @@ class PIEPreprocessor(Processor):
                             frame = bbox.get('frame')
                             ground_truth[frame][p_id] = bbox_rec
                     for frame in ground_truth.keys():
-                        print('here1')
-                        print(self.annotation_path)
                         for ann_subdir, _, _ in os.walk(self.annotation_path):
-                            print('here')
                             json_file_path = os.path.join(
                                 ann_subdir,
                                 str(frame) + ".png.predictions.json"
                             )
-                            print(json_file_path)
                             if os.path.exists(json_file_path):
                                 break
                         if not os.path.exists(json_file_path):
@@ -253,7 +249,6 @@ class PIEPreprocessor(Processor):
     def __create_annotations(self):
         logger.info("Create annotations using openpifpaf for JAAD in posepred")
         if os.path.exists(os.path.join(PREPROCESSED_DATA_DIR, 'openpifpaf', 'PIE')):
-            print("this")
             return os.path.join(PREPROCESSED_DATA_DIR, 'openpifpaf', 'PIE')
         for subdir, dirs, files in os.walk(self.image_dir):
             annotation_dir = PREPROCESSED_DATA_DIR + 'openpifpaf/PIE' + subdir.split(self.image_dir)[1]
