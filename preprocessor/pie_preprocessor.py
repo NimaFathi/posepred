@@ -157,7 +157,9 @@ class PIEPreprocessor(Processor):
             assert self.image_dir is not None
             logger.warning(
                 "It is better to create annotations yourself using openpifpaf with with desired methods and parameters")
+            print(self.annotation_path)
             self.annotation_path = self.__create_annotations()
+            print(self.annotation_path)
         else:
             assert self.annotation_path is not None
         for subdir, dirs, files in os.walk(self.dataset_path):
@@ -267,6 +269,8 @@ class PIEPreprocessor(Processor):
                     json_out_name = out_name(
                         annotation_dir, meta['file_name'], '.predictions.json')
                     logger.debug('json output = %s', json_out_name)
+                    print('here2')
+                    print(json_out_name)
                     with open(json_out_name, 'w') as f:
                         json.dump([ann for ann in pred], f, indent=4)
         return os.path.join(PREPROCESSED_DATA_DIR, 'openpifpaf', 'PIE')
