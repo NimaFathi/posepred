@@ -269,7 +269,7 @@ class PIEPreprocessor(Processor):
                     logger.debug('json output = %s', json_out_name)
                     with open(json_out_name, 'w') as f:
                         json.dump([ann for ann in pred], f, indent=4)
-        return PREPROCESSED_DATA_DIR + "openpifpaf/PIE/"
+        return PREPROCESSED_DATA_DIR + "/openpifpaf/PIE/"
 
 
 def intersect_area(a: Rectangle, b: Rectangle):
