@@ -12,6 +12,7 @@ from .trans_cvae import TRANS_CVAE
 from .pv_lstm_noisy import PVLSTMNoisy
 from .pv_lstm_pro import PVLSTMPro
 from .keyplast import Keyplast
+from .mpjpe import MPJPE
 
 LOSSES = {'mse_vel': MSEVel,
           'mse_pose': MSEPose,
@@ -27,4 +28,5 @@ LOSSES = {'mse_vel': MSEVel,
           'pv_lstm_noisy': PVLSTMNoisy,
           'pv_lstm_pro': PVLSTMPro,
           'keyplast': Keyplast,
+          'mpjpe': MPJPE
           }
