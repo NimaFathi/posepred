@@ -1,0 +1,12 @@
+defaults:
+  - _self_
+  - common
+
+type: sts_gcn
+st_gcnn_dropout: 0.1
+n_txcnn_layers: 4
+txc_kernel_size: [3, 3]
+txc_dropout: 0
+
+loss:
+  type: mpjpe
