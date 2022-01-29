@@ -14,11 +14,11 @@ class HistoryRepeatsItself(nn.Module):
         # TODO fix device
         self.args = args
         self.in_features = int(args.keypoints_num * args.keypoint_dim)
-        self.kernel_size = 10
-        self.d_model = 256
-        self.num_stage = 12
-        self.dct_n = 10
-        self.itera = 1
+        self.kernel_size = args.kernel_size
+        self.d_model = args.d_model
+        self.num_stage = args.num_stage
+        self.dct_n = args.dct_n
+        self.itera = args.itera
 
         self.convQ = nn.Sequential(nn.Conv1d(in_channels=self.in_features, out_channels=self.d_model, kernel_size=6,
                                              bias=False),
