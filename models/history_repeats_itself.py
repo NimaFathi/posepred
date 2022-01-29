@@ -11,7 +11,7 @@ class HistoryRepeatsItself(nn.Module):
 
     def __init__(self, args):
         super(HistoryRepeatsItself, self).__init__()
-
+        # TODO fix device
         self.args = args
         self.in_features = int(args.keypoints_num * args.keypoint_dim)
         self.kernel_size = 10
@@ -34,11 +34,15 @@ class HistoryRepeatsItself(nn.Module):
                                              bias=False),
                                    nn.ReLU())
 
-        self.gcn = GCN.GCN(input_feature=2 * self.dct_n, hidden_feature=self.d_model, p_dropout=0.3,
+        self.gcn = GCN(input_feature=2 * self.dct_n, hidden_feature=self.d_model, p_dropout=0.3,
                            num_stage=self.num_stage, node_n=self.in_features)
 
     def forward(self, inputs):
         src = inputs['observed_pose']
+        # print("shape:", src.shape)
+        # print(inputs.keys())
+        out = inputs['future_pose']
+        # print(out.shape)
         input_n = src.shape[1]
         bs = src.shape[0]
         output_n = self.args.pred_frames_num
@@ -48,12 +52,13 @@ class HistoryRepeatsItself(nn.Module):
         src_query_tmp = src_tmp.transpose(1, 2)[:, :, -self.kernel_size:].clone()
 
         dct_m, idct_m = get_dct_matrix(self.kernel_size + output_n)
-        dct_m = torch.from_numpy(dct_m).float().cuda()
-        idct_m = torch.from_numpy(idct_m).float().cuda()
+        dct_m = torch.from_numpy(dct_m).float()
+        idct_m = torch.from_numpy(idct_m).float()
 
         vn = input_n - self.kernel_size - output_n + 1
         vl = self.kernel_size + output_n
         idx = np.expand_dims(np.arange(vl), axis=0) + np.expand_dims(np.arange(vn), axis=1)
+        # print(bs, vn, vl, input_n, self.kernel_size, output_n)
         src_value_tmp = src_tmp[:, idx].clone().reshape([bs * vn, vl, -1])
         src_value_tmp = torch.matmul(dct_m[:self.dct_n].unsqueeze(dim=0), src_value_tmp).reshape(
             [bs, vn, self.dct_n, -1]).transpose(2, 3).reshape([bs, vn, -1])
