@@ -1,14 +1,12 @@
 import numpy as np
-import torch
-import torch.nn as nn
+from torch import nn
 
-from models.sts_gcn.utils import data_utils
+from .utils import data_utils
 
 
-class MPJPE(nn.Module):
-
+class Proc(nn.Module):
     def __init__(self, args):
-        super().__init__()
+        super(Proc, self).__init__()
 
         self.args = args
         self.dim_used = np.array([6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 21, 22, 23, 24, 25,
@@ -24,21 +22,16 @@ class MPJPE(nn.Module):
         self.index_to_ignore = index_to_ignore
         self.index_to_equal = index_to_equal
 
-    def forward(self, y_pred, y_true):
-        y_pred_real = y_pred['pred_pose']
-        y_pred_real = y_pred_real.view((-1, y_pred_real.shape[-1]))
+    def forward(self, x, preproc):
 
-        y_true = y_true['future_pose']
-        y_true = y_true.view((-1, y_true.shape[-1]))
-        y_true[:, 0:6] = 0
-        y_true = data_utils.expmap2xyz_torch(y_true)
-        y_true = y_true.view(y_true.shape[0], -1)
+        if preproc:
+            shape = x.shape
+            x = x.view((-1, x.shape[-1]))
+            x[:, 0:6] = 0
+            x = data_utils.expmap2xyz_torch(x)
+            x = x.view((shape[0], shape[1], -1))
+            x = x[:, :, self.dim_used]
+            return x
 
-        y_pred = y_true.clone()
-        y_pred[:, self.dim_used] = y_pred_real
-        y_pred[:, self.index_to_ignore] = y_pred[:, self.index_to_equal]
-
-        loss = torch.mean(torch.norm(y_true.contiguous().view(-1, 3) - y_pred.contiguous().view(-1, 3), 2, 1))
-        outputs = {'loss': loss}
-
-        return outputs
+        else:
+            return x

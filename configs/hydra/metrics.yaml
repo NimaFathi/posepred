@@ -1,13 +1,13 @@
-pose_metrics:
-  - ADE
-  - FDE
-  - local_ade
-  - local_fde
+pose_metrics: []
+#  - ADE
+#  - FDE
+#  - local_ade
+#  - local_fde
 #  - VIM
 #  - VAM
 
-mask_metrics:
-  - accuracy
-  - f1_score
-  - precision
-  - recall
+mask_metrics: []
+#  - accuracy
+#  - f1_score
+#  - precision
+#  - recall

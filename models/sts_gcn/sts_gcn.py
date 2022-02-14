@@ -3,6 +3,8 @@ import math
 import torch
 from torch import nn
 
+from .data_proc import Proc
+
 
 class ConvTemporalGraphical(nn.Module):
     # Source : https://github.com/yysijie/st-gcn/blob/master/net/st_gcn.py
@@ -186,15 +188,19 @@ class STsGCN(nn.Module):
         super(STsGCN, self).__init__()
 
         self.args = args
+        self.args.keypoints_num = 22
+
         input_channels = args.keypoint_dim
         input_time_frame = args.obs_frames_num
         output_time_frame = args.pred_frames_num
         joints_to_consider = args.keypoints_num
+        print(joints_to_consider)
         st_gcnn_dropout = args.st_gcnn_dropout
         n_txcnn_layers = args.n_txcnn_layers
         txc_kernel_size = args.txc_kernel_size
         txc_dropout = args.txc_dropout
 
+        self.proc = Proc(args)
         self.st_gcnns = nn.ModuleList()
         self.n_txcnn_layers = n_txcnn_layers
         self.txcnns = nn.ModuleList()
@@ -222,10 +228,12 @@ class STsGCN(nn.Module):
 
     def forward(self, x):
 
-        x = x['observed_pose'].view(-1,
-                                    self.args.obs_frames_num,
-                                    self.args.keypoints_num,
-                                    self.args.keypoint_dim).permute(0, 3, 1, 2)
+        x = self.proc(x['observed_pose'], True)
+
+        x = x.view(-1,
+                   self.args.obs_frames_num,
+                   self.args.keypoints_num,
+                   self.args.keypoint_dim).permute(0, 3, 1, 2)
 
         for gcn in self.st_gcnns:
             x = gcn(x)
@@ -238,6 +246,8 @@ class STsGCN(nn.Module):
             x = self.prelus[i](self.txcnns[i](x)) + x  # residual connection
 
         x = x.permute(0, 1, 3, 2).reshape(-1, self.args.pred_frames_num,
-                                       self.args.keypoints_num * self.args.keypoint_dim)
+                                          self.args.keypoints_num * self.args.keypoint_dim)
 
+
+        x = self.proc(x, False)
         return {'pred_pose': x}
