@@ -1,3 +1,13 @@
+#!/usr/bin/env python
+# encoding: utf-8
+'''
+@project : MSRGCN
+@file    : forward_kinematics.py
+@author  : Droliven
+@contact : droliven@163.com
+@ide     : PyCharm
+@time    : 2021-07-27 17:00
+'''
 import numpy as np
 import torch
 from torch.autograd.variable import Variable
@@ -216,7 +226,7 @@ def _some_variables_cmu():
     return parent, offset, posInd, expmapInd
 
 
-def fkl_torch(angles, parent, offset, rotInd, expmapInd):
+def fkl_torch(angles, parent, offset, rotInd, expmapInd, device="cuda:0"):
     """
     pytorch version of fkl.
 
@@ -231,7 +241,7 @@ def fkl_torch(angles, parent, offset, rotInd, expmapInd):
     """
     n = angles.data.shape[0]
     j_n = offset.shape[0]
-    p3d = Variable(torch.from_numpy(offset)).float().unsqueeze(0).repeat(n, 1, 1)
+    p3d = torch.from_numpy(offset).float().unsqueeze(0).repeat(n, 1, 1)
     angles = angles[:, 3:].contiguous().view(-1, 3)
     R = data_utils.expmap2rotmat_torch(angles).view(n, j_n, 3, 3)
     for i in np.arange(1, j_n):
@@ -278,7 +288,7 @@ def main():
     xyz1 = fkl(expmap_pred, parent, offset, rotInd, expmapInd)
     xyz2 = fkl(expmap_gt, parent, offset, rotInd, expmapInd)
 
-    exp1 = Variable(torch.from_numpy(np.vstack((expmap_pred, expmap_gt))).float())
+    exp1 = Variable(torch.from_numpy(np.vstack((expmap_pred, expmap_gt))).float()).float()
     xyz = fkl_torch(exp1, parent, offset, rotInd, expmapInd)
     xyz = xyz.cpu().data.numpy()
     print(xyz)

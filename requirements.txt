@@ -12,7 +12,6 @@ openpifpaf~=0.12.13
 bs4
 lxml~=4.6
 jsonlines
-pygifsicle
 tensorboard
 hydra-core
 cdflib
