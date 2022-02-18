@@ -35,8 +35,8 @@ def compute_difference_matrix(self, src_seq, tgt_seq):
 def train_preprocess(inputs, args):
     
     # B, n_frames, n_joints, 9 if rotmat else 3
-    obs_pose = inputs['observed_expmap_pose']  
-    future_pose = inputs['future_expmap_pose']
+    obs_pose = inputs[f'observed_{args.pose_format}_pose']  
+    future_pose = inputs[f'future_{args.pose_format}_pose']
     print('here1', obs_pose.shape, future_pose.shape, args.obs_frames_num)
     # B, n_frames, 21, 9 or 3
     obs_pose = obs_pose[:, :, _MAJOR_JOINTS]
