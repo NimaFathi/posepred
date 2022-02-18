@@ -23,7 +23,7 @@ def pose_encoder_gcn(args):
 
 def pose_decoder_mlp(args):
     init_fn = INIT_FUNC[args.init_fn_name]
-    pose_decoder = nn.Linear(args.model_dim, args.pose_dim)
+    pose_decoder = nn.Linear(args.model_dim, args.pose_dim*args.n_joints)
     utils.weight_init(pose_decoder, init_fn=init_fn)
     return pose_decoder
 

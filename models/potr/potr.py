@@ -72,9 +72,11 @@ class POTR(nn.Module):
 
     def init_position_encodings(self):
         src_len = self.args.obs_frames_num-1
+        print('here10', src_len)
         # when using a token we need an extra element in the sequence
         if self.args.use_class_token:
             src_len = src_len + 1
+        print('here11', src_len)
         encoder_pos_encodings = self.pos_encoder(src_len).view(
                 src_len, 1, self.args.model_dim)
 
@@ -116,18 +118,18 @@ class POTR(nn.Module):
             form (input_list, target_list) where input_list contains indices of
             elements in the input to be copy to elements in the target specified by
             target_list.
-        input_pose_seq_: Source skeleton sequence [batch_size, src_len, pose_dim].
+        input_pose_seq_: Source skeleton sequence [batch_size, src_len, pose_dim * n_joints].
 
         Returns:
         A tuple with first elements the decoder input skeletons with shape
         [tgt_len, batch_size, skeleton_dim], and the skeleton embeddings of the 
-        input sequence with shape [tgt_len, batch_size, pose_dim].
+        input sequence with shape [tgt_len, batch_size, pose_dim * n_joints].
         """
         batch_size = input_pose_seq_.size()[0]
         decoder_inputs = torch.FloatTensor(
             batch_size,
             self.args.future_frames_num,
-            self.args.pose_dim
+            self.args.pose_dim * self.args.n_joints
         ).to(self.decoder_pos_encodings.device)
         for i in range(batch_size):
             for j in range(self.args.future_frames_num):
@@ -195,6 +197,7 @@ class POTR(nn.Module):
 
         # 3) compute the attention weights using the transformer
         # [target_sequence_length, batch_size, model_dim]
+        print('here12', self.encoder_pos_encodings.shape, self.decoder_pos_encodings.shape)
         attn_output, memory, attn_weights, enc_weights, mat = self.transformer(
             input_pose_seq,
             target_pose_seq,
@@ -207,7 +210,7 @@ class POTR(nn.Module):
             query_selection_fn=query_copy_fn
         )
 
-        end = self.args.pose_dim
+        end = self.args.pose_dim * self.args.n_joints
         out_sequence = []
         target_pose_seq_ = mat[0] if self.args.query_selection else \
             torch.transpose(target_pose_seq_, 0, 1)
@@ -221,7 +224,7 @@ class POTR(nn.Module):
                 attn_output[l].view(-1, self.args.model_dim))
             # [target_seq_length, batch_size, pose_dim]
             out_sequence_ = out_sequence_.view(
-                self.args.future_frames_num, -1, self.args.pose_dim)
+                self.args.future_frames_num, -1, self.args.pose_dim * self.args.n_joints)
             # apply residual connection between target query and predicted pose
             # [tgt_seq_len, batch_size, pose_dim]
             out_sequence_ = out_sequence_ + target_pose_seq_[:, :, 0:end]

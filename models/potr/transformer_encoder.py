@@ -41,6 +41,7 @@ class EncoderLayer(nn.Module):
         Tensor of shape [sequence_length, batch_size, model_dim].
         """
         if self.pre_normalization:
+            print('here15', source_seq.shape, pos_encodings.shape)
             return self.forward_pre(source_seq, pos_encodings)
 
         return self.forward_post(source_seq, pos_encodings)
@@ -154,7 +155,7 @@ class TransformerEncoder(nn.Module):
         Tensor of shape [sequence_length, batch_size, model_dim].
         """
         outputs = input_sequence
-
+        print('here14', pos_encodings.shape)
         for l in range(self.num_layers):
             outputs, attn_weights = self.encoder_stack[l](outputs, pos_encodings)
 

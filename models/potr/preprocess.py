@@ -55,17 +55,17 @@ def train_preprocess(inputs, args):
     encoder_inputs = np.zeros((obs_pose.shape[0], src_seq_len, args.pose_dim * args.n_joints), dtype=np.float32)
     decoder_inputs = np.zeros((obs_pose.shape[0], args.future_frames_num, args.pose_dim * args.n_joints), dtype=np.float32)
     decoder_outputs = np.zeros((obs_pose.shape[0], args.future_frames_num, args.pose_dim * args.n_joints), dtype=np.float32)
-    print('here5', encoder_inputs.shape, decoder_inputs.shape, decoder_outputs.shape)
+    print('here4', encoder_inputs.shape, decoder_inputs.shape, decoder_outputs.shape)
     data_sel = torch.cat((obs_pose, future_pose), dim=1)
  
-    print('here4', data_sel.shape)
+    print('here5', data_sel.shape)
 
     encoder_inputs[:, :, 0:args.pose_dim * args.n_joints] = data_sel[:, 0:src_seq_len,:]
     decoder_inputs[:, :, 0:args.pose_dim * args.n_joints] = \
         data_sel[:, src_seq_len:src_seq_len + args.future_frames_num, :]
 
     # source_seq_len = src_seq_len + 1
-    decoder_outputs[:, :, 0:args.pose_dim] = data_sel[:, args.obs_frames_num:, 0:args.pose_dim]
+    decoder_outputs[:, :, 0:args.pose_dim * args.n_joints] = data_sel[:, args.obs_frames_num:, 0:args.pose_dim * args.n_joints]
 
     if args.pad_decoder_inputs:
       query = decoder_inputs[:, 0:1, :]

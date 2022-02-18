@@ -95,7 +95,7 @@ class Transformer(nn.Module):
             query_embedding = query_embedding.unsqueeze(1).repeat(1, bs, 1)
             decoder_position_encodings = encoder_position_encodings
         
-        print(encoder_position_encodings.shape, source_seq.shape)
+        print('here13', encoder_position_encodings.shape, source_seq.shape, decoder_position_encodings.shape)
         memory, enc_weights = self.encoder(source_seq, encoder_position_encodings)
 
         tgt_plain = None
