@@ -37,28 +37,29 @@ def train_preprocess(inputs, args):
     # B, n_frames, n_joints, 9 if rotmat else 3
     obs_pose = inputs['observed_expmap_pose']  
     future_pose = inputs['future_expmap_pose']
-    print('here1', obs_pose.shape, future_pose.shape)
+    print('here1', obs_pose.shape, future_pose.shape, args.obs_frames_num)
     # B, n_frames, 21, 9 or 3
     obs_pose = obs_pose[:, :, _MAJOR_JOINTS]
     future_pose = future_pose[:, :, _MAJOR_JOINTS]
-    print('here2', obs_pose.shape, future_pose.shape)
+    print('here2', obs_pose.shape, future_pose.shape, args.obs_frames_num)
 
     # B, n_frmas, 21 * joint_dim
     obs_pose = obs_pose.reshape(*obs_pose.shape[:2], -1)
     future_pose = future_pose.reshape(*future_pose.shape[:2], -1)
-    print('here3', obs_pose.shape, future_pose.shape)
-
+    print('here3', obs_pose.shape, future_pose.shape, args.obs_frames_num)
+    
     src_seq_len = args.obs_frames_num - 1
+    print(src_seq_len, args.obs_frames_num, args.include_last_obs)
     if args.include_last_obs:
       src_seq_len += 1
-
+    print(src_seq_len)
     encoder_inputs = np.zeros((obs_pose.shape[0], src_seq_len, args.pose_dim * args.n_joints), dtype=np.float32)
     decoder_inputs = np.zeros((obs_pose.shape[0], args.future_frames_num, args.pose_dim * args.n_joints), dtype=np.float32)
     decoder_outputs = np.zeros((obs_pose.shape[0], args.future_frames_num, args.pose_dim * args.n_joints), dtype=np.float32)
-    print('here4', encoder_inputs.shape, decoder_inputs.shape, decoder_outputs.shape)
+    print('here17', encoder_inputs.shape, decoder_inputs.shape, decoder_outputs.shape)
     data_sel = torch.cat((obs_pose, future_pose), dim=1)
  
-    print('here5', data_sel.shape)
+    print('here18', data_sel.shape)
 
     encoder_inputs[:, :, 0:args.pose_dim * args.n_joints] = data_sel[:, 0:src_seq_len,:]
     decoder_inputs[:, :, 0:args.pose_dim * args.n_joints] = \
@@ -67,12 +68,14 @@ def train_preprocess(inputs, args):
     # source_seq_len = src_seq_len + 1
     decoder_outputs[:, :, 0:args.pose_dim * args.n_joints] = data_sel[:, args.obs_frames_num:, 0:args.pose_dim * args.n_joints]
 
+    print('here19', encoder_inputs.shape, decoder_inputs.shape, decoder_outputs.shape)
+
     if args.pad_decoder_inputs:
       query = decoder_inputs[:, 0:1, :]
       decoder_inputs = np.repeat(query, args.future_frames_num, axis=1)
       #if self._params['copy_method'] == 'uniform_scan':
       #  copy_uniform_scan(encoder_inputs, decoder_inputs)
-
+    print('here20', encoder_inputs.shape, decoder_inputs.shape, decoder_outputs.shape)
     #distance, distance_norm = compute_difference_matrix(
     #    encoder_inputs, decoder_outputs
     #)

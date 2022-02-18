@@ -106,7 +106,7 @@ if __name__ == '__main__':
     parser.add_argument('--loss_fn', default='l1')
     parser.add_argument('--query_selection', default=False)
     parser.add_argument('--pad_decoder_inputs', default=True)
-    parser.add_argument('--include_last_obs', default=True)
+    parser.add_argument('--include_last_obs', default=False)
 
     parser.add_argument('--num_encoder_layers', default=4)
     parser.add_argument('--num_decoder_layers', default=4)
@@ -137,14 +137,14 @@ if __name__ == '__main__':
     tgt_seq_length = args.future_frames_num
     batch_size = 8
 
-    pred_seq = [torch.FloatTensor(batch_size, tgt_seq_length, 128).uniform_(0, 1) for l in range(4)]
+    #pred_seq = [torch.FloatTensor(batch_size, tgt_seq_length, 128).uniform_(0, 1) for l in range(4)]
 
     inputs = {}
     inputs['observed_expmap_pose']  = torch.FloatTensor(batch_size, src_seq_length, 32, args.pose_dim).uniform_(0, 1)
     inputs['future_expmap_pose'] = torch.FloatTensor(batch_size, tgt_seq_length, 32, args.pose_dim).fill_(1)
-
+    
     preprocessed_inputs = train_preprocess(inputs, args)
-
+    print('here16', preprocessed_inputs['encoder_inputs'].shape, preprocessed_inputs['decoder_inputs'].shape)
     model = POTR(args)
     model_outputs = model(preprocessed_inputs['encoder_inputs'],
                        preprocessed_inputs['decoder_inputs'],
@@ -153,7 +153,7 @@ if __name__ == '__main__':
 
     loss_func = POTRLoss(args)
 
-
-    loss_outputs = loss_func(pred_seq, inputs)
+    print('mo', model_outputs[0][0].shape)
+    loss_outputs = loss_func(model_outputs, preprocessed_inputs)
 
     print(loss_outputs)

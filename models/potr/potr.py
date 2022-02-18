@@ -291,7 +291,7 @@ if __name__ == '__main__':
     parser.add_argument('--predict_activity', default=True)
     parser.add_argument('--num_activities', default=15)
     parser.add_argument('--non_autoregressive', default=True)
-    parser.add_argument('--n_joints', default=32)
+    parser.add_argument('--n_joints', default=21)
     parser.add_argument('--pose_format', default='rotmat')
     #parser.add_argument('--pose_embedding')
     #parser.add_argument('--')
@@ -313,6 +313,7 @@ if __name__ == '__main__':
     #encodings = torch.FloatTensor(tgt_seq_length, 1, args.model_dim).uniform_(0,1)
 
     model = POTR(args)
+    print('here0', src_seq.shape)
     out_attn, memory, out_weights_, enc_weights_, (tgt_plain, prob_matrix_) = model(src_seq,
                        tgt_seq,
                        None,
