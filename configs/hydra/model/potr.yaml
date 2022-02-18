@@ -1,0 +1,38 @@
+defaults:
+  - _self_
+  - common
+
+type: potr
+num_encoder_layers: 4
+num_decoder_layers: 4
+query_selection: false
+future_frames_num: 20
+obs_frames_num: 50
+use_query_embedding: false
+num_layers: 6
+model_dim: 128
+num_heads: 2
+dim_ffn: 16
+dropout: 0.5
+init_fn_name: xavier
+pre_normalization: true
+pose_dim: 9
+pose_embedding_type: gcn_enc
+pos_enc_beta: 500
+pos_enc_alpha: 10
+use_class_token: false
+predict_activity: true
+num_activities: 15
+non_autoregressive: true
+n_joints: 21
+pose_format: rotmat
+
+include_last_obs: false
+pad_decoder_inputs: true
+
+loss:
+  type: potr
+  query_selection: false
+  predict_activity: true
+  activity_weight: 1.0
+  loss_fn: l1
