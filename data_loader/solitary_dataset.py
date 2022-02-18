@@ -19,12 +19,14 @@ class SolitaryDataset(Dataset):
             use_mask, 
             is_visualizing, 
             use_expmap,
+            use_rotmat,
             use_quaternion, 
             normalize,
             metadata_path):
 
         self.normalize = normalize
         self.use_expmap = use_expmap
+        self.use_rotmat = use_rotmat
         self.use_quaternion = use_quaternion
 
         if normalize:
@@ -44,9 +46,14 @@ class SolitaryDataset(Dataset):
                 'observed_mask', 
                 'future_mask'
                 ]
+
         if self.use_expmap:
             tensor_keys.append('observed_expmap_pose')
             tensor_keys.append('future_expmap_pose')
+
+        if self.use_rotmat:
+            tensor_keys.append('observed_rotmat_pose')
+            tensor_keys.append('future_rotmat_pose')
 
         if self.use_quaternion:
             tensor_keys.append('observed_quaternion_pose')
@@ -104,6 +111,12 @@ class SolitaryDataset(Dataset):
                     torch.tensor(seq['observed_expmap_pose'])
             outputs['future_expmap_pose'] = \
                     torch.tensor(seq['future_expmap_pose'])
+
+        if self.use_expmap:
+            outputs['observed_rotmat_pose'] = \
+                    torch.tensor(seq['observed_rotmat_pose'])
+            outputs['future_rotmat_pose'] = \
+                    torch.tensor(seq['future_rotmat_pose'])
 
         if self.use_quaternion:
             outputs['observed_quaternion_pose'] = \

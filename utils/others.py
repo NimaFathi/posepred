@@ -1,6 +1,6 @@
 import numpy as np
 import torch
-
+import cv2
 
 def pose_from_vel(velocity, last_obs_pose, stay_in_frame=False):
     device = 'cuda' if velocity.is_cuda else 'cpu'
@@ -64,6 +64,23 @@ def expmap_to_quaternion(e):
     xyz = 0.5 * np.sinc(0.5 * theta / np.pi) * e
     return np.concatenate((w, xyz), axis=1).reshape(original_shape)
 
+def expmap_to_rotmat(action_sequence):
+  """Convert exponential maps to rotmats.
+
+  Args:
+    action_sequence: [n_samples, n_joints, 3]
+  Returns:
+    Rotation matrices for exponenital maps [n_samples, n_joints, 9].
+  """
+  n_samples, n_joints, _ = action_sequence.shape
+  expmap = np.reshape(action_sequence, [n_samples*n_joints, 1, 3])
+  # first three values are positions, so technically it's meaningless to convert them,
+  # but we do it anyway because later we discard this values anywho
+  rotmats = np.zeros([n_samples*n_joints, 3, 3])
+  for i in range(rotmats.shape[0]):
+    rotmats[i] = cv2.Rodrigues(expmap[i])[0]
+  rotmats = np.reshape(rotmats, [n_samples, n_joints, 3*3])
+  return rotmats
 
 def qfix(q):
     """
