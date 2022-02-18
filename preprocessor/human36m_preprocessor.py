@@ -46,11 +46,15 @@ class PreprocessorHuman36m(Processor):
 
     def normal(self, data_type='train'):
         self.subjects = SPLIT[data_type]
-        logger.info('start creating Human3.6m normal static data from original Human3.6m dataset (CDF files) ... ')
+        logger.info(
+                'start creating Human3.6m normal static data \
+                        from original Human3.6m dataset (CDF files) ... ')
         if self.custom_name:
-            output_file_name = f'{data_type}_{self.obs_frame_num}_{self.pred_frame_num}_{self.skip_frame_num}_{self.custom_name}.jsonl'
+            output_file_name = \
+                    f'{data_type}_{self.obs_frame_num}_{self.pred_frame_num}_{self.skip_frame_num}_{self.custom_name}.jsonl'
         else:
-            output_file_name = f'{data_type}_{self.obs_frame_num}_{self.pred_frame_num}_{self.skip_frame_num}_human3.6m.jsonl'
+            output_file_name = \
+                    f'{data_type}_{self.obs_frame_num}_{self.pred_frame_num}_{self.skip_frame_num}_human3.6m.jsonl'
         assert os.path.exists(os.path.join(
             self.output_dir,
             output_file_name
@@ -58,6 +62,7 @@ class PreprocessorHuman36m(Processor):
         for subject in self.subjects:
             logger.info("handling subject: {}".format(subject))
             subject_pose_path = os.path.join(self.dataset_path, subject, 'MyPoseFeatures/D3_Positions/*.cdf')
+            print('subject_pose_path:', subject_pose_path)
             file_list_pose = glob(subject_pose_path)
             assert len(file_list_pose) == 30, "Expected 30 files for subject " + subject + ", got " + str(
                 len(file_list_pose))
@@ -75,7 +80,20 @@ class PreprocessorHuman36m(Processor):
                 elif data_type == 'validation':
                     positions = positions[95 * positions.shape[0] // 100:]
                 positions /= 1000
+                expmap = self.expmap_rep(f, subject, data_type)
+                #print(expmap.shape)
                 quat = self.quaternion_rep(f, subject, data_type)
+                if positions.shape[0] != expmap.shape[0]:
+                    print(f'''\
+                            corrupted:
+                            subject: {subject}
+                            file: {f}
+                            positions shape: {positions.shape}
+                            expmap shape: {expmap.shape}
+                            quat shape: {quat.shape}
+                    ''')
+                    positions = positions[:min(positions.shape[0], expmap.shape[0])]
+                
                 total_frame_num = self.obs_frame_num + self.pred_frame_num
                 section_range = positions.shape[0] // (
                         total_frame_num * (self.skip_frame_num + 1)) if self.use_video_once is False else 1
@@ -85,6 +103,8 @@ class PreprocessorHuman36m(Processor):
                         'future_pose': list(),
                         'observed_quaternion_pose': list(),
                         'future_quaternion_pose': list(),
+                        'observed_expmap_pose': list(),
+                        'future_expmap_pose': list(),
                         'observed_image_path': list(),
                         'future_image_path': list()
                     }
@@ -94,6 +114,8 @@ class PreprocessorHuman36m(Processor):
                                 positions[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
                             # video_data['observed_quaternion_pose'].append(
                             #     quat[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
+                            video_data['observed_expmap_pose'].append(
+                                expmap[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
                             video_data['observed_image_path'].append(
                                 f'{os.path.basename(f).split(".cdf")[0]}_{i * total_frame_num * (self.skip_frame_num + 1) + j:05}')
                         else:
@@ -101,6 +123,8 @@ class PreprocessorHuman36m(Processor):
                                 positions[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
                             # video_data['future_quaternion_pose'].append(
                             #     quat[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
+                            video_data['future_expmap_pose'].append(
+                                expmap[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
                             video_data['future_image_path'].append(
                                 f'{os.path.basename(f).split(".cdf")[0]}_{i * total_frame_num * (self.skip_frame_num + 1) + j:05}'
                             )
@@ -112,18 +136,20 @@ class PreprocessorHuman36m(Processor):
                             'future_pose': video_data['future_pose'],
                             # 'observed_quaternion_pose': video_data['observed_quaternion_pose'],
                             # 'future_quaternion_pose': video_data['future_quaternion_pose'],
+                            'observed_expmap_pose': video_data['observed_expmap_pose'],
+                            'future_expmap_pose': video_data['future_expmap_pose'],
                             'observed_image_path': video_data['observed_image_path'],
                             'future_image_path': video_data['future_image_path']
                         })
         self.save_meta_data(self.meta_data, self.output_dir, True, data_type)
         # self.delete_redundant_files()
-
-    def quaternion_rep(self, file_path, subject, data_type):
+    
+    def expmap_rep(self, file_path, subject, data_type):
         output_directory = os.path.join(PREPROCESSED_DATA_DIR, 'H3.6m_rotations')
         os.makedirs(output_directory, exist_ok=True)
         h36m_rotations_dataset_url = 'http://www.cs.stanford.edu/people/ashesh/h3.6m.zip'
         h36m_path = os.path.join(output_directory, 'h3.6m')
-
+        print('h36m_path:', h36m_path)
         if not os.path.exists(h36m_path):
             zip_path = h36m_path + ".zip"
 
@@ -135,6 +161,10 @@ class PreprocessorHuman36m(Processor):
                 with zipfile.ZipFile(zip_path, 'r') as archive:
                     archive.extractall(output_directory)
         data = self.__read_file(file_path, h36m_path, subject, data_type)
+        return data
+    
+    def quaternion_rep(self, file_path, subject, data_type):
+        data = self.expmap_rep(file_path, subject, data_type)
         quat = expmap_to_quaternion(-data)
         quat = qfix(quat)
         quat = quat.reshape(-1, 32 * 4)
@@ -147,7 +177,7 @@ class PreprocessorHuman36m(Processor):
         and return a NumPy tensor with shape (sequence length, number of joints, 3).
         '''
         action = os.path.splitext(os.path.basename(file_path))[0].replace('WalkTogether', 'WalkingTogether').replace('WalkDog', 'WalkingDog')
-        if subject == 'S5' and action.lower().__contains__('photo'):
+        if action.lower().__contains__('photo'):
             action = 'TakingPhoto'
         action_number = 1 if len(action.split(" ")) == 2 else 2
         path_to_read = os.path.join(rot_dir_path, 'dataset', subject,
