@@ -11,6 +11,7 @@ from potr.transformer import Transformer
 from potr.position_encodings import PositionEncodings1D
 from potr import utils
 from potr.pose_encoder_decoder import select_pose_encoder_decoder_fn
+from potr.preprocess import train_preprocess
 
 class POTR(nn.Module):
     def __init__(self, args):
@@ -141,8 +142,7 @@ class POTR(nn.Module):
             torch.transpose(dec_inputs_encode, 0, 1)
 
     def forward(self, 
-              input_pose_seq,
-              target_pose_seq=None,
+              inputs,
               mask_target_padding=None,
               get_attn_weights=False):
         """Performs the forward pass of the pose transformers.
@@ -155,6 +155,9 @@ class POTR(nn.Module):
         A tensor of the predicted sequence with shape [batch_size, 
         tgt_sequence_length, dim_pose].
         """
+        preprocessed_inputs = train_preprocess(inputs, self.args)
+        input_pose_seq = preprocessed_inputs['encoder_inputs']
+        target_pose_seq = preprocessed_inputs['decoder_inputs']
 
         return self.forward_training(
                 input_pose_seq, target_pose_seq, mask_target_padding, get_attn_weights)
