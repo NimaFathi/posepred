@@ -13,16 +13,53 @@ def get_dataloader(dataset_path, args):
     if dataset_path is None:
         return None
     if args.is_interactive:
-        dataset = InteractiveDataset(dataset_path, args.keypoint_dim, args.persons_num, args.is_testing, args.use_mask,
-                                     args.is_visualizing, args.use_quaternion, args.normalize, args.metadata_path)
+        dataset = InteractiveDataset(
+                dataset_path, 
+                args.keypoint_dim, 
+                args.persons_num, 
+                args.is_testing, 
+                args.use_mask,
+                args.is_visualizing, 
+                args.use_expmap,
+                args.use_quaternion,
+                args.normalize, 
+                args.metadata_path
+                )
     else:
         if args.is_noisy:
-            dataset = NoisySolitaryDataset(dataset_path, args.keypoint_dim, args.is_testing, args.use_mask,
-                                           args.is_visualizing, args.use_quaternion, args.normalize, args.metadata_path,
-                                           args.noise_rate, args.noise_keypoint, args.overfit)
+            dataset = NoisySolitaryDataset(
+                    dataset_path, 
+                    args.keypoint_dim, 
+                    args.is_testing, 
+                    args.use_mask,
+                    args.is_visualizing,
+                    args.use_expmap,
+                    args.use_quaternion, 
+                    args.normalize, 
+                    args.metadata_path,
+                    args.noise_rate, 
+                    args.noise_keypoint, 
+                    args.overfit
+                    )
         else:
-            dataset = SolitaryDataset(dataset_path, args.keypoint_dim, args.is_testing, args.use_mask,
-                                      args.is_visualizing, args.use_quaternion, args.normalize, args.metadata_path)
-    dataloader = DataLoader(dataset, batch_size=args.batch_size, shuffle=args.shuffle, pin_memory=args.pin_memory,
-                            num_workers=args.num_workers)
+            dataset = SolitaryDataset(
+                    dataset_path, 
+                    args.keypoint_dim, 
+                    args.is_testing, 
+                    args.use_mask,
+                    args.is_visualizing, 
+                    args.use_expmap,
+                    args.use_quaternion, 
+                    args.normalize, 
+                    args.metadata_path
+                    )
+
+    dataloader = DataLoader(
+            dataset, 
+            batch_size=args.batch_size, 
+            shuffle=args.shuffle, 
+            pin_memory=args.pin_memory,
+            num_workers=args.num_workers
+            )
+
     return dataloader

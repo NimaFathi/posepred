@@ -5,6 +5,7 @@ noise_rate: mask
 noise_keypoint:
 persons_num: 1
 use_mask: ${use_mask}
+use_expmap: true
 use_quaternion: false
 is_testing: false
 is_visualizing: false
