@@ -4,9 +4,10 @@ import torch.nn as nn
 import os 
 import sys
 
+
 thispath = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, thispath+"/../")
-
+from potr.pose_encoder_decoder import pose_decoder_mlp
 from potr import utils
 from potr import INIT_FUNC
 
@@ -92,6 +93,7 @@ class EncoderLayer(nn.Module):
         # add positional encodings to the input sequence
         # for self attention query is the same as key
         source_seq = self.norm1(source_seq_)
+        print(source_seq.shape, pos_encodings.shape)
         query = source_seq + pos_encodings
         key = query
         value = source_seq

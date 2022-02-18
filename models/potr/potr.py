@@ -270,8 +270,8 @@ if __name__ == '__main__':
     parser.add_argument('--num_encoder_layers', default=4)
     parser.add_argument('--num_decoder_layers', default=4)
     parser.add_argument('--query_selection', default=False)
-    parser.add_argument('--future_frames_num', default=50)
-    parser.add_argument('--obs_frames_num', default=20)
+    parser.add_argument('--future_frames_num', default=20)
+    parser.add_argument('--obs_frames_num', default=50)
     parser.add_argument('--use_query_embedding', default=False)
     parser.add_argument('--num_layers', default=6)
     parser.add_argument('--model_dim', default=128)
@@ -300,14 +300,14 @@ if __name__ == '__main__':
     tgt_seq_length = args.future_frames_num
     batch_size = 8
 
-    src_seq = torch.FloatTensor(batch_size, src_seq_length, args.pose_dim).uniform_(0, 1)
-    tgt_seq = torch.FloatTensor(batch_size, tgt_seq_length, args.model_dim).fill_(1)
+    src_seq = torch.FloatTensor(batch_size, src_seq_length - 1, args.pose_dim*args.n_joints).uniform_(0, 1)
+    tgt_seq = torch.FloatTensor(batch_size, tgt_seq_length, args.pose_dim*args.n_joints).fill_(1)
     
 
-    mask_look_ahead = utils.create_look_ahead_mask(tgt_seq_length)
-    mask_look_ahead = torch.from_numpy(mask_look_ahead)
+    #mask_look_ahead = utils.create_look_ahead_mask(tgt_seq_length)
+    #mask_look_ahead = torch.from_numpy(mask_look_ahead)
 
-    encodings = torch.FloatTensor(tgt_seq_length, 1, args.model_dim).uniform_(0,1)
+    #encodings = torch.FloatTensor(tgt_seq_length, 1, args.model_dim).uniform_(0,1)
 
     model = POTR(args)
     out_attn, memory, out_weights_, enc_weights_, (tgt_plain, prob_matrix_) = model(src_seq,
