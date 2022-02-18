@@ -6,7 +6,7 @@ type: potr
 num_encoder_layers: 4
 num_decoder_layers: 4
 query_selection: false
-future_frames_num: 20
+future_frames_num: 25
 obs_frames_num: 50
 use_query_embedding: false
 num_layers: 6
@@ -21,7 +21,7 @@ pose_embedding_type: gcn_enc
 pos_enc_beta: 500
 pos_enc_alpha: 10
 use_class_token: false
-predict_activity: true
+predict_activity: false
 num_activities: 15
 non_autoregressive: true
 n_joints: 21
@@ -33,6 +33,13 @@ pad_decoder_inputs: true
 loss:
   type: potr
   query_selection: false
-  predict_activity: true
+  predict_activity: false
   activity_weight: 1.0
   loss_fn: l1
+  pose_format: rotmat
+  future_frames_num: 25
+  obs_frames_num: 50
+  include_last_obs: false
+  pose_dim: 9
+  n_joints: 21
+  pad_decoder_inputs: true

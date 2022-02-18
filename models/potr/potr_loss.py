@@ -55,7 +55,7 @@ class POTRLoss(nn.Module):
         return self.layerwise_loss_fn(preds, target, class_logits, class_gt)
 
     def forward(self, model_outputs, input_data):
-
+        input_data = train_preprocess(input_data, self.args)
         print(input_data['encoder_inputs'].shape, input_data['decoder_outputs'].shape)
         selection_loss = 0
         if self.args.query_selection:

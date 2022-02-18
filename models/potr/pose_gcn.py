@@ -310,6 +310,7 @@ class SimpleEncoder(nn.Module):
     Args:
       x: [batch_size, n_poses, pose_dim/input_dim]. 
     """
+    #print(x.keys())
     print(x.shape)
     B, S, D = x.size()
     
