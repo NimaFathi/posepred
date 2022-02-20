@@ -128,6 +128,11 @@ def rotmat2euler(R):
   eul = np.array([E1, E2, E3]);
   return eul
 
+def expmap_to_euler(action_sequence):
+  rotmats = expmap_to_rotmat(action_sequence)
+  eulers = rotmat_to_euler(rotmats)
+  return eulers
+
 def qfix(q):
     """
     Enforce quaternion continuity across the time dimension by selecting

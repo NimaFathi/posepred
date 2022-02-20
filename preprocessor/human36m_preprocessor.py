@@ -11,7 +11,7 @@ import numpy as np
 
 from path_definition import PREPROCESSED_DATA_DIR
 from preprocessor.preprocessor import Processor
-from utils.others import expmap_to_quaternion, qfix, expmap_to_rotmat
+from utils.others import expmap_to_quaternion, qfix, expmap_to_rotmat, expmap_to_euler
 
 logger = logging.getLogger(__name__)
 
@@ -82,6 +82,7 @@ class PreprocessorHuman36m(Processor):
                 positions /= 1000
                 expmap = self.expmap_rep(f, subject, data_type)
                 rotmat = self.rotmat_rep(f, subject, data_type)
+                euler = self.euler_rep(f, subject, data_type)
                 print('rotmat shape', rotmat.shape)
                 #print(expmap.shape)
                 quat = self.quaternion_rep(f, subject, data_type)
@@ -110,6 +111,8 @@ class PreprocessorHuman36m(Processor):
                         'future_expmap_pose': list(),
                         'observed_rotmat_pose': list(),
                         'future_rotmat_pose': list(),
+                        'observed_euler_pose': list(),
+                        'future_euler_pose': list(),
                         'observed_image_path': list(),
                         'future_image_path': list()
                     }
@@ -122,7 +125,9 @@ class PreprocessorHuman36m(Processor):
                             video_data['observed_expmap_pose'].append(
                                 expmap[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
                             video_data['observed_rotmat_pose'].append(
-                                rotmat[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())                                
+                                rotmat[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
+                            video_data['observed_euler_pose'].append(
+                                euler[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())                                         
                             video_data['observed_image_path'].append(
                                 f'{os.path.basename(f).split(".cdf")[0]}_{i * total_frame_num * (self.skip_frame_num + 1) + j:05}')
                         else:
@@ -134,6 +139,8 @@ class PreprocessorHuman36m(Processor):
                                 expmap[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
                             video_data['future_rotmat_pose'].append(
                                 rotmat[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
+                            video_data['future_euler_pose'].append(
+                                euler[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
                             video_data['future_image_path'].append(
                                 f'{os.path.basename(f).split(".cdf")[0]}_{i * total_frame_num * (self.skip_frame_num + 1) + j:05}'
                             )
@@ -149,6 +156,8 @@ class PreprocessorHuman36m(Processor):
                             'future_expmap_pose': video_data['future_expmap_pose'],
                             'observed_rotmat_pose': video_data['observed_rotmat_pose'],
                             'future_rotmat_pose': video_data['future_rotmat_pose'],
+                            'observed_euler_pose': video_data['observed_euler_pose'],
+                            'future_euler_pose': video_data['future_euler_pose'],                            
                             'observed_image_path': video_data['observed_image_path'],
                             'future_image_path': video_data['future_image_path']
                         })
@@ -177,6 +186,11 @@ class PreprocessorHuman36m(Processor):
     def rotmat_rep(self, file_path, subject, data_type):
         data = self.expmap_rep(file_path, subject, data_type)
         data = expmap_to_rotmat(data)
+        return data
+    
+    def euler_rep(self, file_path, subject, data_type):
+        data = self.expmap_rep(file_path, subject, data_type)
+        data = expmap_to_euler(data)
         return data
 
     def quaternion_rep(self, file_path, subject, data_type):
