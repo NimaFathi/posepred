@@ -41,7 +41,6 @@ class EncoderLayer(nn.Module):
         Tensor of shape [sequence_length, batch_size, model_dim].
         """
         if self.pre_normalization:
-            print('here15', source_seq.shape, pos_encodings.shape)
             return self.forward_pre(source_seq, pos_encodings)
 
         return self.forward_post(source_seq, pos_encodings)
@@ -94,7 +93,6 @@ class EncoderLayer(nn.Module):
         # add positional encodings to the input sequence
         # for self attention query is the same as key
         source_seq = self.norm1(source_seq_)
-        print(source_seq.shape, pos_encodings.shape)
         query = source_seq + pos_encodings
         key = query
         value = source_seq
@@ -155,7 +153,6 @@ class TransformerEncoder(nn.Module):
         Tensor of shape [sequence_length, batch_size, model_dim].
         """
         outputs = input_sequence
-        print('here14', pos_encodings.shape)
         for l in range(self.num_layers):
             outputs, attn_weights = self.encoder_stack[l](outputs, pos_encodings)
 
@@ -198,4 +195,3 @@ if __name__ == '__main__':
     encoder.eval()
     
     output, attn_weights = encoder(seq, pos_encodings)
-    print(output.shape, attn_weights.shape)

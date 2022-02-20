@@ -62,13 +62,11 @@ class PreprocessorHuman36m(Processor):
         for subject in self.subjects:
             logger.info("handling subject: {}".format(subject))
             subject_pose_path = os.path.join(self.dataset_path, subject, 'MyPoseFeatures/D3_Positions/*.cdf')
-            print('subject_pose_path:', subject_pose_path)
             file_list_pose = glob(subject_pose_path)
             assert len(file_list_pose) == 30, "Expected 30 files for subject " + subject + ", got " + str(
                 len(file_list_pose))
             for f in file_list_pose:
                 action = os.path.splitext(os.path.basename(f))[0]
-                print(action)
                 if subject == 'S11' and action == 'Directions':
                     continue  # Discard corrupted video
                 canonical_name = action.replace('TakingPhoto', 'Photo') \
@@ -83,8 +81,6 @@ class PreprocessorHuman36m(Processor):
                 expmap = self.expmap_rep(f, subject, data_type)
                 rotmat = self.rotmat_rep(f, subject, data_type)
                 euler = self.euler_rep(f, subject, data_type)
-                print('rotmat shape', rotmat.shape)
-                #print(expmap.shape)
                 quat = self.quaternion_rep(f, subject, data_type)
                 if positions.shape[0] != expmap.shape[0]:
                     print(f'''\
@@ -169,7 +165,6 @@ class PreprocessorHuman36m(Processor):
         os.makedirs(output_directory, exist_ok=True)
         h36m_rotations_dataset_url = 'http://www.cs.stanford.edu/people/ashesh/h3.6m.zip'
         h36m_path = os.path.join(output_directory, 'h3.6m')
-        print('h36m_path:', h36m_path)
         if not os.path.exists(h36m_path):
             zip_path = h36m_path + ".zip"
 

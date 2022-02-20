@@ -310,8 +310,7 @@ class SimpleEncoder(nn.Module):
     Args:
       x: [batch_size, n_poses, pose_dim/input_dim]. 
     """
-    #print(x.keys())
-    print(x.shape)
+
     B, S, D = x.size()
     
     # [batch_size, n_joints, model_dim]
@@ -353,7 +352,6 @@ def test_decoder():
   )
 
   X = torch.FloatTensor(10, n_joints, joint_dof)
-  print(layer(X).size())
 
   gcn = PoseGCN(
       input_features=model_dim,
@@ -365,7 +363,6 @@ def test_decoder():
   )
 
   X = torch.FloatTensor(10*seq_len, model_dim)
-  print(gcn(X).size())
 
 
 def test_encoder():
@@ -384,10 +381,8 @@ def test_encoder():
   )
   X = torch.FloatTensor(10, 25, output_nodes*dof)
 
-  print(encoder(X).size())
 
 
 if __name__ == '__main__':
-  #test_decoder()
   test_encoder()
   test_decoder()

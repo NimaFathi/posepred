@@ -276,5 +276,4 @@ if __name__ == '__main__':
                                 pre_normalization=True,
                                 use_query_embedding=False)
     outputs, attn_weights_list = decoder(tgt_seq, memory, encodings, mask_look_ahead=mask_look_ahead)
-    print(len(outputs))
-    print(outputs[0].shape)
+

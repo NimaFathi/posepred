@@ -95,7 +95,6 @@ class Transformer(nn.Module):
             query_embedding = query_embedding.unsqueeze(1).repeat(1, bs, 1)
             decoder_position_encodings = encoder_position_encodings
         
-        print('here13', encoder_position_encodings.shape, source_seq.shape, decoder_position_encodings.shape)
         memory, enc_weights = self.encoder(source_seq, encoder_position_encodings)
 
         tgt_plain = None
@@ -164,5 +163,3 @@ if __name__ == '__main__':
 
     model = Transformer(args)
     out_attn, memory, out_weights_, enc_weights_, (tgt_plain, prob_matrix_) = model(src_seq, tgt_seq, src_seq, tgt_seq, mask_look_ahead=mask_look_ahead)
-    print(len(out_attn))
-    print(out_attn[0].shape)

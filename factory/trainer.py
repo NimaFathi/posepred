@@ -53,16 +53,18 @@ class Trainer:
         self.model.train()
         self.train_reporter.start_time = time.time()
         for data in self.train_dataloader:
-            #print('here20', data['observed_rotmat_pose'].shape)
+            
             batch_size = data['observed_pose'].shape[0]
             data = dict_to_device(data, self.args.device)
             # predict & calculate loss
             self.model.zero_grad()
             model_outputs = self.model(data)
             loss_outputs = self.loss_module(model_outputs, dict_to_device(data, self.args.device))
-            #print(loss_outputs)
+            
 
-            assert f'pred_{self.args.pred_pose_format}_pose' in model_outputs.keys(), 'outputs of model should include pred_pose'
+            #assert f'pred_{self.args.pred_pose_format}_pose' in model_outputs.keys(), 'outputs of model should include pred_pose'
+            #assert 'loss' in loss_outputs.keys(), 'outputs of loss should include loss'
+            assert f'pred_pose' in model_outputs.keys(), 'outputs of model should include pred_pose'
             assert 'loss' in loss_outputs.keys(), 'outputs of loss should include loss'
 
             # backpropagate and optimize
@@ -76,10 +78,8 @@ class Trainer:
             else:
                 pred_mask = None
 
-            print(model_outputs[f'pred_{self.args.pred_pose_format}_pose'].shape)
-            print(data[f'future_{self.args.pred_pose_format}_pose'].shape)
+            data['future_euler_pose'] = data['future_euler_pose'].reshape(*data['future_euler_pose'].shape[:-2], -1)# temporart
 
-            #print(self.args.pose_metrics, self.model.training)
             #import sys
             #sys.exit()
             # calculate pose_metrics
@@ -88,8 +88,10 @@ class Trainer:
             for metric_name in self.args.pose_metrics:
                 metric_func = POSE_METRICS[metric_name]
                 metric_value = metric_func(
-                    model_outputs[f'pred_{self.args.pred_pose_format}_pose'], 
-                    data[f'future_{self.args.pred_pose_format}_pose'].to(self.args.device),
+                    model_outputs['pred_pose'],
+                    data[f'future_pose'].to(self.args.device),
+                    #model_outputs[f'pred_{self.args.pred_pose_format}_pose'], 
+                    #data[f'future_{self.args.pred_pose_format}_pose'].to(self.args.device),
                     self.model.args.keypoint_dim, pred_mask
                     )
 
@@ -101,7 +103,7 @@ class Trainer:
                     metric_func = MASK_METRICS[metric_name]
                     metric_value = metric_func(pred_mask, data['future_mask'].to(self.args.device), self.args.device)
                     report_attrs[metric_name] = metric_value
-            print(report_attrs, batch_size)
+            
             self.train_reporter.update(report_attrs, batch_size)
 
         self.train_reporter.epoch_finished(self.tensor_board)
@@ -118,7 +120,8 @@ class Trainer:
                 # predict & calculate loss
                 model_outputs = self.model(data)
                 loss_outputs = self.loss_module(model_outputs, dict_to_device(data, self.args.device))
-                assert f'pred_{self.args.pred_pose_format}_pose' in model_outputs.keys(), 'outputs of model should include pred_pose'
+                #assert f'pred_{self.args.pred_pose_format}_pose' in model_outputs.keys(), 'outputs of model should include pred_pose'
+                assert f'pred_pose' in model_outputs.keys(), 'outputs of model should include pred_pose'
 
                 if self.model.args.use_mask:
                     assert 'pred_mask' in model_outputs.keys(), 'outputs of model should include pred_mask'

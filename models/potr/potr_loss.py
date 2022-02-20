@@ -56,7 +56,7 @@ class POTRLoss(nn.Module):
 
     def forward(self, model_outputs, input_data):
         input_data = train_preprocess(input_data, self.args)
-        print(input_data['encoder_inputs'].shape, input_data['decoder_outputs'].shape)
+        
         selection_loss = 0
         if self.args.query_selection:
             prob_mat = model_outputs['mat'][-1]
@@ -64,7 +64,6 @@ class POTRLoss(nn.Module):
                 inputs=prob_mat, 
                 target=input_data['src_tgt_distance']
             )
-        #print('attn_weights', model_outputs['attn_weights'].shape)
 
         pred_class, gt_class = None, None
         if self.args.predict_activity:
@@ -145,7 +144,7 @@ if __name__ == '__main__':
     inputs['future_expmap_pose'] = torch.FloatTensor(batch_size, tgt_seq_length, 32, args.pose_dim).fill_(1)
     
     preprocessed_inputs = train_preprocess(inputs, args)
-    print('here16', preprocessed_inputs['encoder_inputs'].shape, preprocessed_inputs['decoder_inputs'].shape)
+    
     model = POTR(args)
     model_outputs = model(preprocessed_inputs['encoder_inputs'],
                        preprocessed_inputs['decoder_inputs'],
@@ -154,7 +153,6 @@ if __name__ == '__main__':
 
     loss_func = POTRLoss(args)
 
-    print('mo', model_outputs[0][0].shape)
+    
     loss_outputs = loss_func(model_outputs, preprocessed_inputs)
 
-    print(loss_outputs)

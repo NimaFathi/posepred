@@ -73,11 +73,11 @@ class POTR(nn.Module):
 
     def init_position_encodings(self):
         src_len = self.args.obs_frames_num-1
-        print('here10', src_len)
+        
         # when using a token we need an extra element in the sequence
         if self.args.use_class_token:
             src_len = src_len + 1
-        print('here11', src_len)
+        
         encoder_pos_encodings = self.pos_encoder(src_len).view(
                 src_len, 1, self.args.model_dim)
 
@@ -200,7 +200,7 @@ class POTR(nn.Module):
 
         # 3) compute the attention weights using the transformer
         # [target_sequence_length, batch_size, model_dim]
-        print('here12', self.encoder_pos_encodings.shape, self.decoder_pos_encodings.shape)
+        
         attn_output, memory, attn_weights, enc_weights, mat = self.transformer(
             input_pose_seq,
             target_pose_seq,
@@ -238,14 +238,13 @@ class POTR(nn.Module):
         if self.args.predict_activity:
             out_class = self.predict_activity(attn_output, memory)
             return out_sequence, out_class, attn_weights, enc_weights, mat
-        print(out_sequence[-1].shape)
+        
         pred_euler_pose = torch.tensor(post_process_to_euler( # convert to post_process_to_format
             out_sequence[-1].detach().cpu().numpy(), 
             self.args.n_major_joints, 
             self.args.n_h36m_joints, 
             self.args.pose_format))
 
-        print('pred_pose_shape', pred_euler_pose.shape)
         assert self.args.pred_pose_format == 'euler'
         outputs = {
             f'pred_euler_pose': pred_euler_pose,
@@ -254,7 +253,7 @@ class POTR(nn.Module):
             'enc_weights': enc_weights,
             'mat': mat
         }
-        print('here21', out_sequence[0].shape)
+
         return outputs#out_sequence, attn_weights, enc_weights, mat
 
 
@@ -332,10 +331,8 @@ if __name__ == '__main__':
     #encodings = torch.FloatTensor(tgt_seq_length, 1, args.model_dim).uniform_(0,1)
 
     model = POTR(args)
-    print('here0', src_seq.shape)
+    
     out_attn, memory, out_weights_, enc_weights_, (tgt_plain, prob_matrix_) = model(src_seq,
                        tgt_seq,
                        None,
                        get_attn_weights=False)
-    print(len(out_attn))
-    print(out_attn[0].shape)
