@@ -7,6 +7,9 @@ logger = logging.getLogger(__name__)
 
 
 def ADE(pred, target, dim, mask=None):
+    """
+    Average Displacement Error
+    """
     keypoints_num = int(pred.shape[-1] / dim)
     pred = torch.reshape(pred, pred.shape[:-1] + (keypoints_num, dim))
     target = torch.reshape(target, target.shape[:-1] + (keypoints_num, dim))
@@ -18,6 +21,9 @@ def ADE(pred, target, dim, mask=None):
 
 
 def FDE(pred, target, dim, mask=None):
+    """
+    Final Displacement Error
+    """
     keypoints_num = int(pred.shape[-1] / dim)
     pred = torch.reshape(pred, pred.shape[:-1] + (keypoints_num, dim))
     target = torch.reshape(target, target.shape[:-1] + (keypoints_num, dim))
@@ -128,3 +134,16 @@ def VAM(pred, target, dim, mask, occ_cutoff=100):
         else:
             seq_err.append(f_err)
     return np.array(seq_err)
+
+def MSE(pred, target, dim, mask=None):
+    """
+    Mean Angle Error
+    """
+    keypoints_num = int(pred.shape[-1] / dim)
+    pred = torch.reshape(pred, pred.shape[:-1] + (keypoints_num, dim))
+    target = torch.reshape(target, target.shape[:-1] + (keypoints_num, dim))
+    displacement = 0
+    for d in range(dim):
+        displacement += (pred[..., d] - target[..., d]) ** 2
+    ade = torch.mean(torch.sqrt(displacement))
+    return ade
