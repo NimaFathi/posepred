@@ -20,6 +20,7 @@ class SolitaryDataset(Dataset):
             is_visualizing, 
             use_expmap,
             use_rotmat,
+            use_euler,
             use_quaternion, 
             normalize,
             metadata_path):
@@ -54,6 +55,10 @@ class SolitaryDataset(Dataset):
         if self.use_rotmat:
             tensor_keys.append('observed_rotmat_pose')
             tensor_keys.append('future_rotmat_pose')
+
+        if self.use_euler:
+            tensor_keys.append('observed_euler_pose')
+            tensor_keys.append('future_euler_pose')
 
         if self.use_quaternion:
             tensor_keys.append('observed_quaternion_pose')
@@ -112,11 +117,17 @@ class SolitaryDataset(Dataset):
             outputs['future_expmap_pose'] = \
                     torch.tensor(seq['future_expmap_pose'])
 
-        if self.use_expmap:
+        if self.use_rotmat:
             outputs['observed_rotmat_pose'] = \
                     torch.tensor(seq['observed_rotmat_pose'])
             outputs['future_rotmat_pose'] = \
                     torch.tensor(seq['future_rotmat_pose'])
+
+        if self.use_euler:
+            outputs['observed_euler_pose'] = \
+                    torch.tensor(seq['observed_euler_pose'])
+            outputs['future_euler_pose'] = \
+                    torch.tensor(seq['future_euler_pose'])
 
         if self.use_quaternion:
             outputs['observed_quaternion_pose'] = \

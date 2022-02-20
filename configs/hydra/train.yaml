@@ -19,3 +19,4 @@ use_dct: false
 normalize: false
 load_path:
 save_dir:
+pred_pose_format: euler #temp
