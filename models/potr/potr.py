@@ -239,15 +239,16 @@ class POTR(nn.Module):
             out_class = self.predict_activity(attn_output, memory)
             return out_sequence, out_class, attn_weights, enc_weights, mat
         print(out_sequence[-1].shape)
-        pred_pose = torch.tensor(post_process_to_euler(
+        pred_euler_pose = torch.tensor(post_process_to_euler( # convert to post_process_to_format
             out_sequence[-1].detach().cpu().numpy(), 
             self.args.n_major_joints, 
             self.args.n_h36m_joints, 
             self.args.pose_format))
 
-        print('pred_pose_shape', pred_pose.shape)
+        print('pred_pose_shape', pred_euler_pose.shape)
+        assert self.args.pred_pose_format == 'euler'
         outputs = {
-            'pred_pose': pred_pose,
+            f'pred_euler_pose': pred_euler_pose,
             'out_sequences': out_sequence,
             'attn_weights': attn_weights,
             'enc_weights': enc_weights,
