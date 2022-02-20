@@ -6,7 +6,7 @@ import os, sys
 thispath = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, thispath+"/../")
 from potr.potr import POTR
-from potr.preprocess import train_preprocess
+from models.potr.data_process import train_preprocess
 
 class POTRLoss(nn.Module):
 
@@ -59,21 +59,22 @@ class POTRLoss(nn.Module):
         print(input_data['encoder_inputs'].shape, input_data['decoder_outputs'].shape)
         selection_loss = 0
         if self.args.query_selection:
-            prob_mat = model_outputs[-1][-1]
+            prob_mat = model_outputs['mat'][-1]
             selection_loss = self.compute_selection_loss(
                 inputs=prob_mat, 
                 target=input_data['src_tgt_distance']
             )
+        #print('attn_weights', model_outputs['attn_weights'].shape)
 
         pred_class, gt_class = None, None
         if self.args.predict_activity:
             gt_class = input_data['action_ids']  # one label for the sequence
-            pred_class = model_outputs[1]
+            pred_class = model_outputs['attn_weights']
 
         pose_loss, activity_loss = self.compute_loss(
             inputs=input_data['encoder_inputs'],
             target=input_data['decoder_outputs'],
-            preds=model_outputs[0],
+            preds=model_outputs['out_sequences'],
             class_logits=pred_class,
             class_gt=gt_class
         )
@@ -86,8 +87,8 @@ class POTRLoss(nn.Module):
          
         outputs = {
             'loss': step_loss, 
-            'selection_loss': selection_loss, 
-            'activity_loss': activity_loss
+            #'selection_loss': selection_loss, 
+            #'activity_loss': activity_loss
             }
 
         return outputs

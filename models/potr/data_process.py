@@ -1,7 +1,11 @@
 import torch
 from torch import nn
 import numpy as np
-import sys
+import sys, os
+#thispath = os.path.dirname(os.path.abspath(__file__))
+#sys.path.insert(0, thispath+"/../")
+#from potr import utils
+from utils.others import rotmat_to_euler, expmap_to_rotmat
 _MAJOR_JOINTS = [
     0, 1, 2, 3, 4, 6, 7, 8, 9, 11, 12, 13, 14, 16, 17, 18, 19, 24, 25, 26, 27
 ]
@@ -93,3 +97,40 @@ def train_preprocess(inputs, args):
     #'action_id_instance': [self._action_ids[action]]*target_seq_len,
     #'src_tgt_distance': distance
     }
+
+def convert_to_euler(action_sequence_, n_major_joints, pose_format, is_normalized=True):
+  """Convert the input exponential maps to euler angles.
+
+  Args:
+    action_sequence: Pose exponential maps [batch_size, sequence_length, pose_size].
+      The input should not contain the one hot encoding in the vector.
+  """
+  B, S, D = action_sequence_.shape
+  # first unnormalize data to then convert to euler
+  #if is_normalized:
+  #  action_sequence_ = action_sequence_*args._norm_stats['std'] + args._norm_stats['mean']
+  rotmats = action_sequence_.reshape((B*S, n_major_joints, -1))
+  if pose_format == 'expmap':
+    rotmats = expmap_to_rotmat(rotmats)
+
+  euler_maps = rotmat_to_euler(rotmats)
+  euler_maps = euler_maps.reshape((B, S, -1))
+
+  return euler_maps
+
+def post_process_to_euler(norm_seq, n_major_joints, n_h36m_joints, pose_format):
+    """Converts to euler angles and pad with zeros the minor joints.
+    Args:
+      norm_seq: A numpy array. Normalized sequence [batch_size, seq_length, 
+        n_major_joints*dof]
+    """
+    batch_size, seq_length, D = norm_seq.shape
+    # batch_size x seq_length x n_major_joints*dof
+    euler_seq = convert_to_euler(norm_seq, n_major_joints, pose_format)
+    # batch_size x seq_length x n_major_joints x dof (or joint dim)
+    euler_seq = euler_seq.reshape((batch_size, seq_length, n_major_joints, 3))
+    p_euler_padded = np.zeros([batch_size, seq_length, n_h36m_joints, 3])
+    p_euler_padded[:, :, _MAJOR_JOINTS] = euler_seq
+    # batch_size x seq_length x _NH36M_JOINTS*3
+    p_euler_padded = np.reshape(p_euler_padded, [batch_size, seq_length, -1])
+    return p_euler_padded

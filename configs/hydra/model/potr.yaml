@@ -30,6 +30,9 @@ pose_format: rotmat
 include_last_obs: false
 pad_decoder_inputs: true
 
+n_major_joints: 21
+n_h36m_joints: 32
+
 loss:
   type: potr
   query_selection: false

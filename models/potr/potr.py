@@ -11,7 +11,7 @@ from potr.transformer import Transformer
 from potr.position_encodings import PositionEncodings1D
 from potr import utils
 from potr.pose_encoder_decoder import select_pose_encoder_decoder_fn
-from potr.preprocess import train_preprocess
+from models.potr.data_process import train_preprocess, post_process_to_euler
 
 class POTR(nn.Module):
     def __init__(self, args):
@@ -238,8 +238,23 @@ class POTR(nn.Module):
         if self.args.predict_activity:
             out_class = self.predict_activity(attn_output, memory)
             return out_sequence, out_class, attn_weights, enc_weights, mat
+        print(out_sequence[-1].shape)
+        pred_pose = torch.tensor(post_process_to_euler(
+            out_sequence[-1].detach().cpu().numpy(), 
+            self.args.n_major_joints, 
+            self.args.n_h36m_joints, 
+            self.args.pose_format))
 
-        return out_sequence, attn_weights, enc_weights, mat
+        print('pred_pose_shape', pred_pose.shape)
+        outputs = {
+            'pred_pose': pred_pose,
+            'out_sequences': out_sequence,
+            'attn_weights': attn_weights,
+            'enc_weights': enc_weights,
+            'mat': mat
+        }
+        print('here21', out_sequence[0].shape)
+        return outputs#out_sequence, attn_weights, enc_weights, mat
 
 
 

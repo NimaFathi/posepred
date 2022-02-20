@@ -82,6 +82,52 @@ def expmap_to_rotmat(action_sequence):
   rotmats = np.reshape(rotmats, [n_samples, n_joints, 3*3])
   return rotmats
 
+def rotmat_to_euler(action_sequence):
+  """Convert exponential maps to rotmats.
+
+  Args:
+    action_sequence: [n_samples, n_joints, 9]
+  Returns:
+    Euler angles for rotation maps given [n_samples, n_joints, 3].
+  """
+  n_samples, n_joints, _ = action_sequence.shape
+  rotmats = np.reshape(action_sequence, [n_samples*n_joints, 3, 3])
+  eulers = np.zeros([n_samples*n_joints, 3])
+  for i in range(eulers.shape[0]):
+    eulers[i] = rotmat2euler(rotmats[i])
+  eulers = np.reshape(eulers, [n_samples, n_joints, 3])
+  return eulers
+
+def rotmat2euler(R):
+  """Converts a rotation matrix to Euler angles.
+  Matlab port to python for evaluation purposes
+  https://github.com/asheshjain399/RNNexp/blob/srnn/structural_rnn/CRFProblems/H3.6m/mhmublv/Motion/RotMat2Euler.m#L1
+
+  Args:
+    R: a 3x3 rotation matrix
+
+  Returns:
+    eul: a 3x1 Euler angle representation of R
+  """
+  if R[0,2] >= 1 or R[0,2] <= -1:
+    # special case values are out of bounds for arcsinc
+    E3   = 0 # set arbitrarily
+    dlta = np.arctan2( R[0,1], R[0,2] );
+
+    if R[0,2] == -1:
+      E2 = np.pi/2;
+      E1 = E3 + dlta;
+    else:
+      E2 = -np.pi/2;
+      E1 = -E3 + dlta;
+  else:
+    E2 = -np.arcsin(R[0,2])
+    E1 = np.arctan2(R[1,2]/np.cos(E2), R[2,2]/np.cos(E2) )
+    E3 = np.arctan2(R[0,1]/np.cos(E2), R[0,0]/np.cos(E2) )
+
+  eul = np.array([E1, E2, E3]);
+  return eul
+
 def qfix(q):
     """
     Enforce quaternion continuity across the time dimension by selecting
