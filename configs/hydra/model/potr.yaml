@@ -33,6 +33,8 @@ pad_decoder_inputs: true
 n_major_joints: 21
 n_h36m_joints: 32
 
+pred_pose_format: euler
+
 loss:
   type: potr
   query_selection: false
@@ -46,3 +48,4 @@ loss:
   pose_dim: 9
   n_joints: 21
   pad_decoder_inputs: true
+  #pred_pose_format: pred_pose_format
