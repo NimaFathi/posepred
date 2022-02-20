@@ -28,6 +28,7 @@ class SolitaryDataset(Dataset):
         self.normalize = normalize
         self.use_expmap = use_expmap
         self.use_rotmat = use_rotmat
+        self.use_euler = use_euler
         self.use_quaternion = use_quaternion
 
         if normalize:
