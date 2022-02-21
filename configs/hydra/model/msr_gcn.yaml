@@ -10,4 +10,4 @@ final_out_noden: 22
 input_feature: 35
 
 loss:
-  type: mpjpe
+  type: msr_gcn

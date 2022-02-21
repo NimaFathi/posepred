@@ -176,9 +176,8 @@ class MSRGCN(nn.Module):
         :return:
         '''
 
-        print(inputs['observed_pose'].shape, inputs['future_pose'].shape)
-        observed = self.proc(inputs['observed_pose'], True)
-
+        # print(inputs['observed_pose'].shape, inputs['future_pose'].shape)
+        observed = self.proc(inputs['observed_pose'].clone(), True)
 
         x_p22 = observed['p22']
         x_p12 = observed['p12']
@@ -233,9 +232,7 @@ class MSRGCN(nn.Module):
         pred_fourth = self.fourth_out(fusion_fourth) + x_p4  # 大残差连接
 
         return {
-            "p22": pred_first, "p12": pred_second, "p7": pred_third, "p4": pred_fourth
-            # "out_p22": pred_first
-
+            "pred_pose":{"p22": pred_first, "p12": pred_second, "p7": pred_third, "p4": pred_fourth}
         }
 
 

@@ -1,7 +1,10 @@
-import numpy as np
-from torch import nn
+import imp
 import torch
-from .utils import data_utils
+import torch.nn as nn
+from metrics import ADE
+import numpy as np
+
+from models.msr_gcn.utils import data_utils
 
 class Proc(nn.Module):
     def __init__(self, args):
@@ -47,7 +50,7 @@ class Proc(nn.Module):
             x[:, 0:6] = 0
             x = data_utils.expmap2xyz_torch(x)
             x32 = x.view((shape[0], shape[1], -1)).permute((0,2,1))
-            x32 = torch.concat([x32, x32[:,:,-1].unsqueeze(-1).repeat(1,1,25)], dim=2)
+            # x32 = torch.concat([x32, x32[:,:,-1].unsqueeze(-1).repeat(1,1,25)], dim=2)
             # print(x32.shape, x32.sum(dim=(0,1)))
             
             x22 = x32[:, self.dim_used, :]
@@ -65,3 +68,59 @@ class Proc(nn.Module):
             }
         else:
             return x
+
+def L2NormLoss_train(gt, out):
+    '''
+    ### (batch size,feature dim, seq len)
+    等同于 mpjpe_error_p3d()
+    '''
+
+    batch_size, _, seq_len = gt.shape
+    gt = gt.view(batch_size, -1, 3, seq_len).permute(0, 3, 1, 2).contiguous()
+    out = out.view(batch_size, -1, 3, seq_len).permute(0, 3, 1, 2).contiguous()
+    loss = torch.mean(torch.norm(gt - out, 2, dim=-1))
+    return loss
+
+class MSRGCNLoss(nn.Module):
+
+    def __init__(self, args):
+        super().__init__()
+        self.proc = Proc(args)
+        self.args = args
+
+    def forward(self, model_outputs, input_data):
+        # print(input_data['observed_pose'].shape, input_data['future_pose'].shape)
+        gt = torch.concat([input_data['observed_pose'].clone(), input_data['future_pose'].clone()], dim=1)
+        # print(gt.shape)
+        gt = self.proc(gt, True)
+        out = model_outputs["pred_pose"]
+
+        losses = 0
+        for k in out.keys():
+            losses += L2NormLoss_train(gt[k], out[k])
+
+        # print(gt["p22"].shape)
+        # print(model_outputs["pred_pose"]["p22"].shape)
+
+        # observed_pose = input_data['observed_pose']
+        # future_pose = input_data['future_pose']
+        # observed_vel = observed_pose[..., 1:, :] - observed_pose[..., :-1, :]
+        # future_vel = torch.cat(((future_pose[..., 0, :] - observed_pose[..., -1, :]).unsqueeze(-2),
+        #                         future_pose[..., 1:, :] - future_pose[..., :-1, :]), -2)
+
+        # # prediction loss
+        # pred_vel_loss = self.mse1(model_outputs['pred_vel'], future_vel)
+
+        # # completion loss
+        # comp_vel_loss = self.mse2(model_outputs['comp_vel'], observed_vel)
+        # comp_ade = ADE(model_outputs['comp_pose'], input_data['observed_pose'], self.args.keypoint_dim)
+        # comp_ade_noise_only = ADE(model_outputs['comp_pose_noise_only'], observed_pose, self.args.keypoint_dim)
+
+        # loss = (self.args.pred_weight * pred_vel_loss) + (self.args.comp_weight * comp_vel_loss)
+        # outputs = {'loss': loss, 'pred_vel_loss': pred_vel_loss, 'comp_vel_loss': comp_vel_loss, 'comp_ade': comp_ade,
+        #            'comp_ade_noise_only': comp_ade_noise_only}
+
+
+
+        return {'loss': losses, 'pred_vel_loss': 5, 'comp_vel_loss': 5, 'comp_ade': 5,
+                   'comp_ade_noise_only': 5}
