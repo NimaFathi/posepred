@@ -249,3 +249,4 @@ raw_data/
 visualization/example.py
 outputs/
 tmp/
+run.sh
