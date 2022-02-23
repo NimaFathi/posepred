@@ -62,10 +62,10 @@ class Trainer:
             loss_outputs = self.loss_module(model_outputs, dict_to_device(data, self.args.device))
             
 
-            #assert f'pred_{self.args.pred_pose_format}_pose' in model_outputs.keys(), 'outputs of model should include pred_pose'
-            #assert 'loss' in loss_outputs.keys(), 'outputs of loss should include loss'
-            assert f'pred_pose' in model_outputs.keys(), 'outputs of model should include pred_pose'
+            assert f'pred_{self.args.pred_pose_format}_pose' in model_outputs.keys(), 'outputs of model should include pred_pose'
             assert 'loss' in loss_outputs.keys(), 'outputs of loss should include loss'
+            #assert f'pred_pose' in model_outputs.keys(), 'outputs of model should include pred_pose'
+            #assert 'loss' in loss_outputs.keys(), 'outputs of loss should include loss'
 
             # backpropagate and optimize
             loss = loss_outputs['loss']
@@ -88,11 +88,11 @@ class Trainer:
             for metric_name in self.args.pose_metrics:
                 metric_func = POSE_METRICS[metric_name]
                 metric_value = metric_func(
-                    model_outputs['pred_pose'],
-                    data[f'future_pose'].to(self.args.device),
-                    #model_outputs[f'pred_{self.args.pred_pose_format}_pose'], 
-                    #data[f'future_{self.args.pred_pose_format}_pose'].to(self.args.device),
-                    self.model.args.keypoint_dim, pred_mask
+                    #model_outputs['pred_pose'],
+                    #data[f'future_pose'].to(self.args.device),
+                    model_outputs[f'pred_{self.args.pred_pose_format}_pose'].to(self.args.device), 
+                    data[f'future_{self.args.pred_pose_format}_pose'].to(self.args.device),
+                    self.model.args.pred_keypoint_dim, pred_mask
                     )
 
                 report_attrs[metric_name] = metric_value
@@ -118,22 +118,22 @@ class Trainer:
 
             with torch.no_grad():
                 # predict & calculate loss
-                model_outputs = self.model(data)
+                model_outputs = dict_to_device(self.model(data), self.args.device)
                 loss_outputs = self.loss_module(model_outputs, dict_to_device(data, self.args.device))
-                #assert f'pred_{self.args.pred_pose_format}_pose' in model_outputs.keys(), 'outputs of model should include pred_pose'
-                assert f'pred_pose' in model_outputs.keys(), 'outputs of model should include pred_pose'
+                assert f'pred_{self.args.pred_pose_format}_pose' in model_outputs.keys(), 'outputs of model should include pred_pose'
+                #assert f'pred_pose' in model_outputs.keys(), 'outputs of model should include pred_pose'
 
                 if self.model.args.use_mask:
                     assert 'pred_mask' in model_outputs.keys(), 'outputs of model should include pred_mask'
                     pred_mask = model_outputs['pred_mask']
                 else:
                     pred_mask = None
-
+                data['future_euler_pose'] = data['future_euler_pose'].reshape(*data['future_euler_pose'].shape[:-2], -1)# temporart
                 # calculate pose_metrics
                 report_attrs = loss_outputs
                 for metric_name in self.args.pose_metrics:
                     metric_func = POSE_METRICS[metric_name]
-                    metric_value = metric_func(model_outputs['pred_pose'], data['future_pose'],
+                    metric_value = metric_func(model_outputs[f'pred_{self.args.pred_pose_format}_pose'], data[f'future_{self.args.pred_pose_format}_pose'],
                                                self.model.args.keypoint_dim, pred_mask)
                     report_attrs[metric_name] = metric_value
 

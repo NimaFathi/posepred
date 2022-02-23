@@ -65,12 +65,12 @@ def train_preprocess(inputs, args):
  
     
 
-    encoder_inputs[:, :, 0:args.pose_dim * args.n_joints] = data_sel[:, 0:src_seq_len,:]
+    encoder_inputs[:, :, 0:args.pose_dim * args.n_joints] = data_sel[:, 0:src_seq_len,:].cpu()
     decoder_inputs[:, :, 0:args.pose_dim * args.n_joints] = \
-        data_sel[:, src_seq_len:src_seq_len + args.future_frames_num, :]
+        data_sel[:, src_seq_len:src_seq_len + args.future_frames_num, :].cpu()
 
     # source_seq_len = src_seq_len + 1
-    decoder_outputs[:, :, 0:args.pose_dim * args.n_joints] = data_sel[:, args.obs_frames_num:, 0:args.pose_dim * args.n_joints]
+    decoder_outputs[:, :, 0:args.pose_dim * args.n_joints] = data_sel[:, args.obs_frames_num:, 0:args.pose_dim * args.n_joints].cpu()
 
     
 
@@ -87,9 +87,9 @@ def train_preprocess(inputs, args):
     #sys.exit()
 
     return {
-    'encoder_inputs': torch.tensor(encoder_inputs), 
-    'decoder_inputs': torch.tensor(decoder_inputs), 
-    'decoder_outputs': torch.tensor(decoder_outputs),
+    'encoder_inputs': torch.tensor(encoder_inputs).to(args.device), 
+    'decoder_inputs': torch.tensor(decoder_inputs).to(args.device), 
+    'decoder_outputs': torch.tensor(decoder_outputs).to(args.device),
     #'actions': action,
     #'action_id': self._action_ids[action],
     #'action_id_instance': [self._action_ids[action]]*target_seq_len,

@@ -1,17 +1,22 @@
-keypoint_dim: ${keypoint_dim}
+keypoint_dim: ${pred_keypoint_dim}
 is_interactive: false
 is_noisy: ${is_noisy}
 noise_rate: mask
 noise_keypoint:
 persons_num: 1
 use_mask: ${use_mask}
-use_expmap: true
+
+train_pose_format: ${train_pose_format}
+pred_pose_format: ${pred_pose_format}
+
+use_expmap: false
 use_rotmat: true
 use_euler: true
+
 use_quaternion: false
 is_testing: false
 is_visualizing: false
-batch_size: 2
+batch_size: 256
 shuffle: false
 pin_memory: false
 num_workers: 0

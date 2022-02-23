@@ -3,11 +3,10 @@ defaults:
   - common
 
 type: potr
+
 num_encoder_layers: 4
 num_decoder_layers: 4
-query_selection: false
-future_frames_num: 25
-obs_frames_num: 50
+query_selection: &query_selection false
 use_query_embedding: false
 num_layers: 6
 model_dim: 128
@@ -16,36 +15,43 @@ dim_ffn: 16
 dropout: 0.5
 init_fn_name: xavier
 pre_normalization: true
-pose_dim: 9
 pose_embedding_type: gcn_enc
 pos_enc_beta: 500
 pos_enc_alpha: 10
 use_class_token: false
-predict_activity: false
-num_activities: 15
+predict_activity: &predict_activity false
 non_autoregressive: true
-n_joints: 21
-pose_format: rotmat
 
-include_last_obs: false
-pad_decoder_inputs: true
+include_last_obs: &include_last_obs false
+pad_decoder_inputs: &pad_decoder_inputs true
 
-n_major_joints: 21
+
+# data related
+pose_format: &train_pose_format ${train_pose_format}
+pred_pose_format: ${pred_pose_format}
+future_frames_num: &pred_frames_num ${pred_frames_num} # convert to pred frames num which is in common
+
+n_major_joints: &n_major_joints 21
+n_joints: &n_joints 21
 n_h36m_joints: 32
+pose_dim: ${train_keypoint_dim}
+pred_keypoint_dim: ${pred_keypoint_dim}
+num_activities: 15
 
-pred_pose_format: euler
+device: &device cuda
 
 loss:
   type: potr
-  query_selection: false
-  predict_activity: false
   activity_weight: 1.0
   loss_fn: l1
-  pose_format: rotmat
-  future_frames_num: 25
-  obs_frames_num: 50
-  include_last_obs: false
-  pose_dim: 9
-  n_joints: 21
-  pad_decoder_inputs: true
+  query_selection: *query_selection
+  predict_activity: *predict_activity
+  pose_format: *train_pose_format
+  future_frames_num: *pred_frames_num
+  obs_frames_num: ${obs_frames_num} #*obs_frames_num
+  include_last_obs: *include_last_obs
+  pose_dim: ${train_keypoint_dim} #*keypoint_dim
+  n_joints: *n_joints
+  pad_decoder_inputs: *pad_decoder_inputs
+  device: *device
   #pred_pose_format: pred_pose_format

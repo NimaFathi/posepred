@@ -1,0 +1,9 @@
+defaults:
+  - _self_
+  - common
+
+type: temp_model
+n_layers: 5
+
+loss:
+  type: mse_pose
