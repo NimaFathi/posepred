@@ -1,7 +1,7 @@
-keypoint_dim: ${keypoint_dim}
-pred_frames_num:
-obs_frames_num:
-keypoints_num:
+keypoint_dim: ${pred_keypoint_dim}
+pred_frames_num: ${pred_frames_num}
+obs_frames_num: ${obs_frames_num}
+keypoints_num: 
 use_mask: ${use_mask}
 use_dct: ${use_dct}
 normalize: ${normalize}

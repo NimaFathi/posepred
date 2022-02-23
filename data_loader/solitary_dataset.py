@@ -12,10 +12,25 @@ logger = logging.getLogger(__name__)
 
 
 class SolitaryDataset(Dataset):
-    def __init__(self, dataset_path, keypoint_dim, is_testing, use_mask, is_visualizing, use_quaternion, normalize,
-                 metadata_path):
+    def __init__(self, 
+            dataset_path, 
+            keypoint_dim, 
+            is_testing, 
+            use_mask, 
+            is_visualizing, 
+            use_expmap,
+            use_rotmat,
+            use_euler,
+            use_quaternion, 
+            normalize,
+            metadata_path):
 
         self.normalize = normalize
+        self.use_expmap = use_expmap
+        self.use_rotmat = use_rotmat
+        self.use_euler = use_euler
+        self.use_quaternion = use_quaternion
+
         if normalize:
             assert metadata_path, "Specify metadata_path when normalize is true."
             with open(os.path.join(PREPROCESSED_DATA_DIR, metadata_path)) as meta_file:
@@ -27,7 +42,29 @@ class SolitaryDataset(Dataset):
             self.std_pose = None
 
         data = list()
-        tensor_keys = ['observed_pose', 'future_pose', 'observed_mask', 'future_mask']
+        tensor_keys = [
+                'observed_pose', 
+                'future_pose', 
+                'observed_mask', 
+                'future_mask'
+                ]
+
+        if self.use_expmap:
+            tensor_keys.append('observed_expmap_pose')
+            tensor_keys.append('future_expmap_pose')
+
+        if self.use_rotmat:
+            tensor_keys.append('observed_rotmat_pose')
+            tensor_keys.append('future_rotmat_pose')
+
+        if self.use_euler:
+            tensor_keys.append('observed_euler_pose')
+            tensor_keys.append('future_euler_pose')
+
+        if self.use_quaternion:
+            tensor_keys.append('observed_quaternion_pose')
+            tensor_keys.append('future_quaternion_pose')
+
         with jsonlines.open(dataset_path) as reader:
             for seq in reader:
                 seq_tensor = {}
@@ -43,6 +80,7 @@ class SolitaryDataset(Dataset):
         self.is_testing = is_testing
         self.use_mask = use_mask
         self.is_visualizing = is_visualizing
+        self.use_expmap = use_expmap
         self.use_quaternion = use_quaternion
 
         seq = self.data[0]
@@ -73,10 +111,30 @@ class SolitaryDataset(Dataset):
                 outputs[key] = seq[key]
             else:
                 raise Exception('dataset must include ' + key)
+        
+        if self.use_expmap:
+            outputs['observed_expmap_pose'] = \
+                    torch.tensor(seq['observed_expmap_pose'])
+            outputs['future_expmap_pose'] = \
+                    torch.tensor(seq['future_expmap_pose'])
+
+        if self.use_rotmat:
+            outputs['observed_rotmat_pose'] = \
+                    torch.tensor(seq['observed_rotmat_pose'])
+            outputs['future_rotmat_pose'] = \
+                    torch.tensor(seq['future_rotmat_pose'])
+
+        if self.use_euler:
+            outputs['observed_euler_pose'] = \
+                    torch.tensor(seq['observed_euler_pose'])
+            outputs['future_euler_pose'] = \
+                    torch.tensor(seq['future_euler_pose'])
 
         if self.use_quaternion:
-            outputs['observed_quaternion_pose'] = torch.tensor(seq['observed_quaternion_pose'])
-            outputs['future_quaternion_pose'] = torch.tensor(seq['future_quaternion_pose'])
+            outputs['observed_quaternion_pose'] = \
+                    torch.tensor(seq['observed_quaternion_pose'])
+            outputs['future_quaternion_pose'] = \
+                    torch.tensor(seq['future_quaternion_pose'])
 
         if self.is_visualizing:
             if 'observed_image_path' in seq.keys():

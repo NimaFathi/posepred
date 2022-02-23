@@ -23,8 +23,19 @@ def train(cfg: DictConfig):
         msg = 'either specify a load_path or config a model.'
         logger.error(msg)
         raise Exception(msg)
+    
+    print(cfg.data.train_pose_format) 
+    print(cfg.data.pred_pose_format)
+    print(cfg.model.pad_decoder_inputs)
+    print(cfg.model.loss.pad_decoder_inputs)
+    print(cfg.model.obs_frames_num)
+    print(cfg.model.pred_frames_num)
+    print(cfg.obs_frames_num)
+    print(cfg.pred_frames_num)
+
     train_dataloader = get_dataloader(cfg.train_dataset, cfg.data)
     valid_dataloader = get_dataloader(cfg.valid_dataset, cfg.data)
+
     if cfg.load_path is not None:
         model, loss_module, optimizer, optimizer_args, epoch, train_reporter, valid_reporter = load_snapshot(
             cfg.load_path)

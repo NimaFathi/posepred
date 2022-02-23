@@ -1,10 +1,11 @@
 pose_metrics: []
-#  - ADE
-#  - FDE
-#  - local_ade
-#  - local_fde
-#  - VIM
-#  - VAM
+#  - MSE
+  #- ADE
+  #- FDE
+  #- local_ade
+  #- local_fde
+  #- VIM
+  #- VAM
 
 mask_metrics: []
 #  - accuracy

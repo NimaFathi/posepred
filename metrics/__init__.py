@@ -1,4 +1,4 @@
-from .pose_metrics import ADE, FDE, local_ade, local_fde, VIM, VAM
+from .pose_metrics import ADE, FDE, local_ade, local_fde, VIM, VAM, MSE
 from .mask_metrics import accuracy, f1_score, precision, recall
 
 POSE_METRICS = {'ADE': ADE,
@@ -7,6 +7,7 @@ POSE_METRICS = {'ADE': ADE,
                 'local_fde': local_fde,
                 'VIM': VIM,
                 'VAM': VAM,
+                'MSE': MSE,
                 }
 
 MASK_METRICS = {'accuracy': accuracy,
