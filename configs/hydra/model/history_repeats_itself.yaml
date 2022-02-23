@@ -3,6 +3,15 @@ defaults:
   - common
 
 type: history_repeats_itself
-
+kernel_size: 10
+d_model: 256
+in_features: 66
+input_n: 50
+output_n: 10
+num_stage: 12
+dct_n: 10
+itera: 1
 loss:
   type: his_rep_itself
+  output_n: 10
+  kernel_size: 10

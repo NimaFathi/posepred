@@ -3,7 +3,7 @@ from .nearest_neighbor import NearestNeighbor
 from .pv_lstm import PVLSTM
 from .disentangled import Disentangled
 from .derpof import DeRPoF
-from .history_repeats_itself import HistoryRepeatsItself
+from  models.history_repeats_itself.history_repeats_itself import HistoryRepeatsItself
 from .mix_and_match import MixAndMatch
 from .comp_pred_vel import CompPredVel
 from .trans_cvae import TRANS_CVAE
