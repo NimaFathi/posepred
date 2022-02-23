@@ -11,6 +11,7 @@ from .pv_lstm_noisy import PVLSTMNoisy
 from .pv_lstm_pro import PVLSTMPro
 from .keyplast import Keyplast
 from .sts_gcn.sts_gcn import STsGCN
+from .msr_gcn.msrgcn import MSRGCN
 
 MODELS = {'zero_vel': ZeroVel,
           'nearest_neighbor': NearestNeighbor,
@@ -24,5 +25,6 @@ MODELS = {'zero_vel': ZeroVel,
           'pv_lstm_noisy': PVLSTMNoisy,
           'pv_lstm_pro': PVLSTMPro,
           'keyplast': Keyplast,
-          'sts_gcn': STsGCN
+          'sts_gcn': STsGCN,
+          'msr_gcn': MSRGCN
           }

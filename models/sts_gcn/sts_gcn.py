@@ -158,9 +158,6 @@ class CNN_layer(
         return output
 
 
-# In[11]:
-
-
 class STsGCN(nn.Module):
     """
     Shape:

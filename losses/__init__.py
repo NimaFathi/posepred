@@ -13,7 +13,7 @@ from .pv_lstm_noisy import PVLSTMNoisy
 from .pv_lstm_pro import PVLSTMPro
 from .keyplast import Keyplast
 from .mpjpe import MPJPE
-
+from .msr_gcn_loass import MSRGCNLoss
 LOSSES = {'mse_vel': MSEVel,
           'mse_pose': MSEPose,
           'mae_vel': MAEVel,
@@ -28,5 +28,6 @@ LOSSES = {'mse_vel': MSEVel,
           'pv_lstm_noisy': PVLSTMNoisy,
           'pv_lstm_pro': PVLSTMPro,
           'keyplast': Keyplast,
-          'mpjpe': MPJPE
+          'mpjpe': MPJPE,
+          'msr_gcn':MSRGCNLoss
           }
