@@ -35,7 +35,7 @@ class HisRepItselfLoss(nn.Module):
         seq1 = torch.cat((input_data['observed_pose'], input_data['future_pose']), dim=1)
         p3d_h36 = HistoryRepeatsItself.exp2xyz(seq1)
         batch_size, seq_n, joints = p3d_h36.shape
-        p3d_h36 = p3d_h36.float()  #device check
+        p3d_h36 = p3d_h36.float().cuda()  # todo
         p3d_sup = p3d_h36.clone()[:, :, self.dim_used][:, -self.output_n - self.seq_in:].reshape(
             [-1, self.seq_in + self.output_n, len(self.dim_used) // 3, 3])
         p3d_out_all = model_outputs['pred_pose']

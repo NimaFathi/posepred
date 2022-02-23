@@ -46,15 +46,20 @@ class HistoryRepeatsItself(nn.Module):
 
     @staticmethod
     def exp2xyz(inputs):
+        is_cuda_type = False
+        if inputs.is_cuda:
+          is_cuda_type = True
         # print(inputs.shape)
         b,n, d = inputs.shape
-        the_sequence = np.array(inputs)
+        the_sequence = np.array(inputs.cpu())
         the_sequence = np.reshape(the_sequence, (-1, the_sequence.shape[-1]))
-        the_sequence = torch.from_numpy(the_sequence).float()  #device check
+        the_sequence = torch.from_numpy(the_sequence).float().cpu() #todo
         # remove global rotation and translation
         the_sequence[:, 0:6] = 0
         p3d = data_utils.expmap2xyz_torch(the_sequence)
         p3d = np.reshape(p3d,(b, n, -1))
+        if is_cuda_type:
+          p3d = p3d.cuda()
         # print(p3d.shape)
         return p3d
 
@@ -63,7 +68,7 @@ class HistoryRepeatsItself(nn.Module):
         p3d_h36 = self.exp2xyz(seq)
         # print(i)
         batch_size, seq_n, _ = p3d_h36.shape
-        p3d_h36 = p3d_h36.float() #device check
+        p3d_h36 = p3d_h36.float() #todo
         p3d_sup = p3d_h36.clone()[:, :, self.dim_used][:, -self.out_n - self.seq_in:].reshape(
             [-1, self.seq_in + self.out_n, len(self.dim_used) // 3, 3])
         p3d_src = p3d_h36.clone()[:, :, self.dim_used]
@@ -130,8 +135,8 @@ class AttModel(nn.Module):
         src_query_tmp = src_tmp.transpose(1, 2)[:, :, -self.kernel_size:].clone()
 
         dct_m, idct_m = util.get_dct_matrix(self.kernel_size + output_n)
-        dct_m = torch.from_numpy(dct_m).float() #device check
-        idct_m = torch.from_numpy(idct_m).float()  #device check
+        dct_m = torch.from_numpy(dct_m).float().cuda() #todo
+        idct_m = torch.from_numpy(idct_m).float().cuda() #todo
 
         vn = input_n - self.kernel_size - output_n + 1
         vl = self.kernel_size + output_n
@@ -308,7 +313,17 @@ class GCN(nn.Module):
         return y
 
 
-
+# '''
+# C:\Users\samen\Desktop\term7\b\git_pose\datasets
+# python -m api.preprocess dataset=human3.6m official_annotation_path=C:\Users\samen\Desktop\term7\b\git_pose\datasets\Poses\ data_type=validation keypoint_dim=3 skip_num=1 obs_frames_num=50 pred_frames_num=10 interactive=false
+#
+# '''
+#python -m api.train model=history_repeats_itself keypoint_dim=3 train_dataset=C:\Users\samen\Desktop\term7\b\git_pose\preprocessed_data\human36m\train_50_10_1_human3.6m.jsonl valid_dataset=C:\Users\samen\Desktop\term7\b\git_pose\preprocessed_data\human36m\validation_50_10_1_human3.6m.jsonl epochs=10 data.shuffle=True device=cpu snapshot_interval=10 hydra.run.dir=.\outputs\21
+#
+# '''
+# python -m api.train model=hisroty_repeats_itself keypoint_dim=3 train_dataset=C:\Users\samen\Desktop\term7\b\git_pose\preprocessed_data\human36m\train_50_10_1_human3.6m.jsonl valid_dataset=C:\Users\samen\Desktop\term7\b\git_pose\preprocessed_data\human36m\validation_50_10_1_human3.6m.jsonl epochs=10 data.shuffle=True device=cpu snapshot_interval=10 hydra.run.dir=./
 
 #python -m api.train model=history_repeats_itself keypoint_dim=3 train_dataset=C:\Users\samen\Desktop\term7\b\git_pose\preprocessed_data\human36m\train_50_10_1_human3.6m.jsonl valid_dataset=C:\Users\samen\Desktop\term7\b\git_pose\preprocessed_data\human36m\validation_50_10_1_human3.6m.jsonl epochs=1 data.shuffle=True device=cpu snapshot_interval=10 hydra.run.dir=.\outputs\59
 
+
+# '''
