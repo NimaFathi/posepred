@@ -3,9 +3,43 @@ from torch import nn
 import torch
 from .utils import data_utils
 
+
+def get_dct_matrix(N):
+    dct_m = np.eye(N)
+    for k in np.arange(N):
+        for i in np.arange(N):
+            w = np.sqrt(2 / N)
+            if k == 0:
+                w = np.sqrt(1 / N)
+            dct_m[k, i] = w * np.cos(np.pi * (i + 1 / 2) * k / N)
+    idct_m = np.linalg.inv(dct_m)
+    return torch.FloatTensor(dct_m), torch.FloatTensor(idct_m)
+
+
+def dct_transform_torch(data, dct_m, dct_n):
+    '''
+    B, 60, 35
+    '''
+    batch_size, features, seq_len = data.shape
+
+    data = data.contiguous().view(-1, seq_len)  # [180077*60， 35]
+    data = data.permute(1, 0)  # [35, b*60]
+
+    out_data = torch.matmul(dct_m[:dct_n, :], data)  # [dct_n, 180077*60]
+    out_data = out_data.permute(1, 0).contiguous().view(-1, features, dct_n)  # [b, 60, dct_n]
+    return out_data
+
+
 class Proc(nn.Module):
     def __init__(self, args):
         super(Proc, self).__init__()
+
+        self.dct_used = args.dct_used
+        self.input_n = args.input_n
+        self.output_n = args.output_n
+        self.dct_m, self.idct_m = get_dct_matrix(self.input_n + self.output_n)
+        self.global_min = args.global_min
+        self.global_max = args.global_max
 
         self.args = args
         # joints at same loc
@@ -54,6 +88,28 @@ class Proc(nn.Module):
             x12 = self.down(x22, self.Index2212)
             x7 = self.down(x12, self.Index127)
             x4 = self.down(x7, self.Index74)
+
+            # print(x32.shape, x22.shape, x12.shape, x7.shape, x4.shape)
+
+            x32 = dct_transform_torch(x32, self.dct_m, self.dct_used)
+            x22 = dct_transform_torch(x22, self.dct_m, self.dct_used)
+            x12 = dct_transform_torch(x12, self.dct_m, self.dct_used)
+            x7 = dct_transform_torch(x7, self.dct_m, self.dct_used)
+            x4 = dct_transform_torch(x4, self.dct_m, self.dct_used)
+
+            x32 = (x32-self.global_min)/(self.global_max-self.global_min)
+            x22 = (x22-self.global_min)/(self.global_max-self.global_min)
+            x12 = (x12-self.global_min)/(self.global_max-self.global_min)
+            x7 = (x7-self.global_min)/(self.global_max-self.global_min)
+            x4 = (x4-self.global_min)/(self.global_max-self.global_min)
+
+            x32=x32*2-1
+            x22=x22*2-1
+            x12=x12*2-1
+            x7=x7*2-1
+            x4=x4*2-1
+
+            # print(x32.shape, x22.shape, x12.shape, x7.shape, x4.shape)
 
             # extend inputs + dct + global min and max
             return {
