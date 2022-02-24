@@ -16,3 +16,8 @@ output_n: 25
 
 loss:
   type: msr_gcn
+  global_max: 6793.261339887178
+  global_min: -6245.483729757661
+  dct_used: 35
+  input_n: 10
+  output_n: 25
