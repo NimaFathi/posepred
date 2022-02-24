@@ -122,7 +122,6 @@ class MSRGCNLoss(nn.Module):
         # print(gt.shape)
         gt = self.proc(gt, True)
         out = model_outputs["pred_pose"]
-
         losses = 0
         for k in out.keys():
             temp = out[k]
@@ -154,5 +153,4 @@ class MSRGCNLoss(nn.Module):
 
 
 
-        return {'loss': losses, 'pred_vel_loss': 5, 'comp_vel_loss': 5, 'comp_ade': 5,
-                   'comp_ade_noise_only': 5}
+        return {'loss': losses}
