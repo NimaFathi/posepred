@@ -8,6 +8,8 @@ p_dropout: 0.5
 leaky_c: 0.2
 final_out_noden: 22
 input_feature: 35
+global_max: 6793.261339887178
+global_min: -6245.483729757661
 
 loss:
   type: msr_gcn
