@@ -68,7 +68,6 @@ class OurDataset(Dataset):
         with jsonlines.open(dataset_path) as reader:
             for seq in reader:
                 seq_tensor = {}
-                print(seq)
                 for k, v in seq.items():
                     if k in tensor_keys:
                         seq_tensor[k] = torch.tensor(v, dtype=torch.float32)
