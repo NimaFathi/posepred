@@ -581,20 +581,20 @@ def expmap2rotmat_torch(r, device="cuda:0"):
     r1 = r1.view(-1, 3, 3)
     r1 = r1 - r1.transpose(1, 2)
     n = r1.data.shape[0]
-    R = torch.eye(3, 3).repeat(n, 1, 1).float() + torch.mul(
+    R = torch.eye(3, 3).repeat(n, 1, 1).float().to(device) + torch.mul(
         torch.sin(theta).unsqueeze(1).repeat(1, 9).view(-1, 3, 3), r1) + torch.mul(
         (1 - torch.cos(theta).unsqueeze(1).repeat(1, 9).view(-1, 3, 3)), torch.matmul(r1, r1))
     return R
 
 
-def expmap2xyz_torch(expmap):
+def expmap2xyz_torch(expmap, device="cuda:0"):
     """
     convert expmaps to joint locations
     :param expmap: N*99
     :return: N*32*3
     """
     parent, offset, rotInd, expmapInd = forward_kinematics._some_variables()
-    xyz = forward_kinematics.fkl_torch(expmap, parent, offset, rotInd, expmapInd)
+    xyz = forward_kinematics.fkl_torch(expmap, parent, offset, rotInd, expmapInd, device)
     return xyz
 
 

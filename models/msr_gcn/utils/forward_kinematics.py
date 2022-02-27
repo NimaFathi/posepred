@@ -241,9 +241,9 @@ def fkl_torch(angles, parent, offset, rotInd, expmapInd, device="cuda:0"):
     """
     n = angles.data.shape[0]
     j_n = offset.shape[0]
-    p3d = torch.from_numpy(offset).float().unsqueeze(0).repeat(n, 1, 1)
+    p3d = torch.from_numpy(offset).float().unsqueeze(0).repeat(n, 1, 1).to(device)
     angles = angles[:, 3:].contiguous().view(-1, 3)
-    R = data_utils.expmap2rotmat_torch(angles).view(n, j_n, 3, 3)
+    R = data_utils.expmap2rotmat_torch(angles, device).view(n, j_n, 3, 3)
     for i in np.arange(1, j_n):
         if parent[i] > 0:
             R[:, i, :, :] = torch.matmul(R[:, i, :, :], R[:, parent[i], :, :]).clone()

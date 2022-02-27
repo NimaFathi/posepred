@@ -59,7 +59,7 @@ class Proc(nn.Module):
     def down(self, x, index):
         N, features, seq_len = x.shape
         my_data = x.reshape(N, -1, 3, seq_len)  # x, 22, 3, 10
-        da = torch.zeros((N, len(index), 3, seq_len)) # x, 12, 3, 10
+        da = torch.zeros((N, len(index), 3, seq_len)).to(x.device) # x, 12, 3, 10
         for i in range(len(index)):
             da[:, i, :, :] = torch.mean(my_data[:, index[i], :, :], dim=1)
         da = da.reshape(N, -1, seq_len)
@@ -70,7 +70,7 @@ class Proc(nn.Module):
             shape = x.shape
             x = x.view((-1, x.shape[-1]))
             x[:, 0:6] = 0
-            x = data_utils.expmap2xyz_torch(x)
+            x = data_utils.expmap2xyz_torch(x, x.device)
             x32 = x.view((shape[0], shape[1], -1)).permute((0,2,1))
             # x32 = torch.concat([x32, x32[:,:,-1].unsqueeze(-1).repeat(1,1,25)], dim=2)
             # print(x32.shape, x32.sum(dim=(0,1)))
@@ -118,7 +118,7 @@ class MSRGCNLoss(nn.Module):
 
     def forward(self, model_outputs, input_data):
         # print(input_data['observed_pose'].shape, input_data['future_pose'].shape)
-        gt = torch.concat([input_data['observed_pose'].clone(), input_data['future_pose'].clone()], dim=1)
+        gt = torch.cat([input_data['observed_pose'].clone(), input_data['future_pose'].clone()], dim=1)
         # print(gt.shape)
         gt = self.proc(gt, True)
         out = model_outputs["pred_pose"]
@@ -127,7 +127,7 @@ class MSRGCNLoss(nn.Module):
             temp = out[k]
             temp = (temp+1)/2
             temp = temp *(self.global_max-self.global_min)+self.global_min
-            temp = reverse_dct_torch(temp, self.idct_m, self.input_n+self.output_n)
+            temp = reverse_dct_torch(temp, self.idct_m.to(out[k].device), self.input_n+self.output_n)
             losses += L2NormLoss_train(gt[k], temp)
 
         # print(gt["p22"].shape)

@@ -4,7 +4,7 @@ import torch
 from .utils import data_utils
 
 
-def get_dct_matrix(N):
+def get_dct_matrix(N, device):
     dct_m = np.eye(N)
     for k in np.arange(N):
         for i in np.arange(N):
@@ -13,7 +13,7 @@ def get_dct_matrix(N):
                 w = np.sqrt(1 / N)
             dct_m[k, i] = w * np.cos(np.pi * (i + 1 / 2) * k / N)
     idct_m = np.linalg.inv(dct_m)
-    return torch.FloatTensor(dct_m), torch.FloatTensor(idct_m)
+    return torch.FloatTensor(dct_m).to(device), torch.FloatTensor(idct_m).to(device)
 
 
 def dct_transform_torch(data, dct_m, dct_n):
@@ -37,7 +37,8 @@ class Proc(nn.Module):
         self.dct_used = args.dct_used
         self.input_n = args.input_n
         self.output_n = args.output_n
-        self.dct_m, self.idct_m = get_dct_matrix(self.input_n + self.output_n)
+        print("helll", args.device)
+        self.dct_m, self.idct_m = get_dct_matrix(self.input_n + self.output_n, args.device)
         self.global_min = args.global_min
         self.global_max = args.global_max
 
@@ -68,7 +69,7 @@ class Proc(nn.Module):
     def down(self, x, index):
         N, features, seq_len = x.shape
         my_data = x.reshape(N, -1, 3, seq_len)  # x, 22, 3, 10
-        da = torch.zeros((N, len(index), 3, seq_len)) # x, 12, 3, 10
+        da = torch.zeros((N, len(index), 3, seq_len)).to(x.device) # x, 12, 3, 10
         for i in range(len(index)):
             da[:, i, :, :] = torch.mean(my_data[:, index[i], :, :], dim=1)
         da = da.reshape(N, -1, seq_len)
@@ -79,9 +80,9 @@ class Proc(nn.Module):
             shape = x.shape
             x = x.view((-1, x.shape[-1]))
             x[:, 0:6] = 0
-            x = data_utils.expmap2xyz_torch(x)
+            x = data_utils.expmap2xyz_torch(x, x.device)
             x32 = x.view((shape[0], shape[1], -1)).permute((0,2,1))
-            x32 = torch.concat([x32, x32[:,:,-1].unsqueeze(-1).repeat(1,1,25)], dim=2)
+            x32 = torch.cat([x32, x32[:,:,-1].unsqueeze(-1).repeat(1,1,25)], dim=2)
             # print(x32.shape, x32.sum(dim=(0,1)))
             
             x22 = x32[:, self.dim_used, :]
