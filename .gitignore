@@ -251,3 +251,5 @@ outputs/
 results
 tmp/
 run.sh
+jobs
+**/slurm*
