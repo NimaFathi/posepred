@@ -12,6 +12,7 @@ from preprocessor.pie_preprocessor import PIEPreprocessor
 from preprocessor.posetrack_preprocessor import PoseTrackPreprocessor
 from preprocessor.somof_3dpw_preprocessor import SoMoF3DPWPreprocessor
 from preprocessor.somof_posetrack_preprocessor import SoMoFPoseTrackPreprocessor
+from preprocessor.our_preprocessor import PreprocessorOur
 from data_loader import DATASETS, DATA_TYPES
 
 logger = logging.getLogger(__name__)
@@ -37,6 +38,12 @@ def preprocess(cfg: DictConfig):
     elif cfg.dataset == 'jta':
         preprocessor = JTAPreprocessor(
             is_3d=is_3D, dataset_path=cfg.official_annotation_path,
+            obs_frame_num=cfg.obs_frames_num, custom_name=cfg.output_name, is_interactive=cfg.interactive,
+            pred_frame_num=cfg.pred_frames_num, skip_frame_num=cfg.skip_num, use_video_once=cfg.use_video_once
+        )
+    elif cfg.dataset == 'our':
+        preprocessor = PreprocessorOur(
+            dataset_path=cfg.official_annotation_path,
             obs_frame_num=cfg.obs_frames_num, custom_name=cfg.output_name, is_interactive=cfg.interactive,
             pred_frame_num=cfg.pred_frames_num, skip_frame_num=cfg.skip_num, use_video_once=cfg.use_video_once
         )
