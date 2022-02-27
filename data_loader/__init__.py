@@ -29,7 +29,7 @@ def get_dataloader(dataset_path, args):
                 args.metadata_path
                 )
     else:
-        if args.is_noisy:
+        if args.loader=="noisy":
             dataset = NoisySolitaryDataset(
                     dataset_path, 
                     args.keypoint_dim, 
@@ -46,8 +46,20 @@ def get_dataloader(dataset_path, args):
                     args.noise_keypoint, 
                     args.overfit
                     )
-        elif args.is_ours:
-            pass
+        elif args.loader=="ours":
+            dataset = OurDataset(
+                    dataset_path, 
+                    args.keypoint_dim, 
+                    args.is_testing, 
+                    args.use_mask,
+                    args.is_visualizing, 
+                    args.use_expmap,
+                    args.use_rotmat,
+                    args.use_euler,
+                    args.use_quaternion, 
+                    args.normalize, 
+                    args.metadata_path
+                    )
         else:
             dataset = SolitaryDataset(
                     dataset_path, 

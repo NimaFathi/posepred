@@ -1,7 +1,7 @@
 keypoint_dim: ${keypoint_dim}
 pred_keypoint_dim: ${pred_keypoint_dim}
 is_interactive: false
-is_noisy: ${is_noisy}
+loader: ${loader}
 noise_rate: mask
 noise_keypoint:
 persons_num: 1

@@ -15,7 +15,7 @@ device: cuda
 train_keypoint_dim: ???
 pred_keypoint_dim: ???
 keypoint_dim: 3
-is_noisy: false
+loader: "ours"
 use_mask: false
 use_dct: false
 normalize: false
