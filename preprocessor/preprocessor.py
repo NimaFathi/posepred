@@ -1,96 +1,81 @@
-import logging
+import json
+import os
+from json import JSONEncoder
 
-import hydra
-from omegaconf import DictConfig
-
-from path_definition import HYDRA_PATH
-from preprocessor.dpw_preprocessor import Preprocessor3DPW
-from preprocessor.human36m_preprocessor import PreprocessorHuman36m
-from preprocessor.jaad_preprocessor import JAADPreprocessor
-from preprocessor.jta_preprocessor import JTAPreprocessor
-from preprocessor.pie_preprocessor import PIEPreprocessor
-from preprocessor.posetrack_preprocessor import PoseTrackPreprocessor
-from preprocessor.somof_3dpw_preprocessor import SoMoF3DPWPreprocessor
-from preprocessor.somof_posetrack_preprocessor import SoMoFPoseTrackPreprocessor
-from preprocessor.our_preprocessor import PreprocessorOur
-from data_loader import DATASETS, DATA_TYPES
-
-logger = logging.getLogger(__name__)
+import numpy as np
 
 
-@hydra.main(config_path=HYDRA_PATH, config_name="preprocess")
-def preprocess(cfg: DictConfig):
-    assert cfg.dataset in DATASETS, "invalid dataset name"
-    assert cfg.data_type in DATA_TYPES, "data_type choices: " + str(DATA_TYPES)
-    if cfg.keypoint_dim == 2:
-        is_3D = False
-    elif cfg.keypoint_dim == 3:
-        is_3D = True
-    else:
-        msg = "Dimension of data must be either 2 or 3"
-        logger.error(msg=msg)
-        raise Exception(msg)
-    if cfg.dataset == 'posetrack':
-        preprocessor = PoseTrackPreprocessor(
-            dataset_path=cfg.official_annotation_path,
-            obs_frame_num=cfg.obs_frames_num, custom_name=cfg.output_name, is_interactive=cfg.interactive,
-            pred_frame_num=cfg.pred_frames_num, skip_frame_num=0, use_video_once=cfg.use_video_once)
-    elif cfg.dataset == 'jta':
-        preprocessor = JTAPreprocessor(
-            is_3d=is_3D, dataset_path=cfg.official_annotation_path,
-            obs_frame_num=cfg.obs_frames_num, custom_name=cfg.output_name, is_interactive=cfg.interactive,
-            pred_frame_num=cfg.pred_frames_num, skip_frame_num=cfg.skip_num, use_video_once=cfg.use_video_once
-        )
-    elif cfg.dataset == 'our':
-        preprocessor = PreprocessorOur(
-            dataset_path=cfg.official_annotation_path,
-            custom_name=cfg.output_name, is_interactive=cfg.interactive,
-            skip_frame_num=cfg.skip_num, use_video_once=cfg.use_video_once
-        )
-    elif cfg.dataset == 'somof_posetrack':
-        preprocessor = SoMoFPoseTrackPreprocessor(
-            dataset_path=cfg.official_annotation_path,
-            obs_frame_num=16, custom_name=cfg.output_name, is_interactive=cfg.interactive,
-            pred_frame_num=14, skip_frame_num=1, use_video_once=True
-        )
-    elif cfg.dataset == 'somof_3dpw':
-        preprocessor = SoMoF3DPWPreprocessor(
-            dataset_path=cfg.official_annotation_path,
-            obs_frame_num=16, custom_name=cfg.output_name, is_interactive=cfg.interactive,
-            pred_frame_num=14, skip_frame_num=0, use_video_once=True
-        )
-    elif cfg.dataset == '3dpw':
-        preprocessor = Preprocessor3DPW(
-            dataset_path=cfg.official_annotation_path,
-            obs_frame_num=cfg.obs_frames_num, custom_name=cfg.output_name, is_interactive=cfg.interactive,
-            pred_frame_num=cfg.pred_frames_num, skip_frame_num=cfg.skip_num, use_video_once=cfg.use_video_once
-        )
-    elif cfg.dataset == 'jaad':
-        preprocessor = JAADPreprocessor(
-            dataset_path=cfg.official_annotation_path, annotate=cfg.annotate, image_dir=cfg.image_dir,
-            obs_frame_num=cfg.obs_frames_num, custom_name=cfg.output_name, is_interactive=cfg.interactive,
-            pred_frame_num=cfg.pred_frames_num, skip_frame_num=cfg.skip_num, use_video_once=cfg.use_video_once,
-            annotation_path=cfg.joints_annotation_path
-        )
-    elif cfg.dataset == 'pie':
-        preprocessor = PIEPreprocessor(
-            dataset_path=cfg.official_annotation_path, annotate=cfg.annotate, image_dir=cfg.image_dir,
-            obs_frame_num=cfg.obs_frames_num, custom_name=cfg.output_name, is_interactive=cfg.interactive,
-            pred_frame_num=cfg.pred_frames_num, skip_frame_num=cfg.skip_num, use_video_once=cfg.use_video_once,
-            annotation_path=cfg.joints_annotation_path
-        )
-    elif cfg.dataset == 'human3.6m':
-        preprocessor = PreprocessorHuman36m(
-            dataset_path=cfg.official_annotation_path,
-            obs_frame_num=cfg.obs_frames_num, custom_name=cfg.output_name, is_interactive=cfg.interactive,
-            pred_frame_num=cfg.pred_frames_num, skip_frame_num=cfg.skip_num, use_video_once=cfg.use_video_once
-        )
-    else:
-        msg = "Invalid preprocessor."
-        logger.error(msg)
-        raise Exception(msg)
-    preprocessor.normal(data_type=cfg.data_type)
+class Processor:
+    def __init__(self, dataset_path, is_interactive, obs_frame_num, pred_frame_num, skip_frame_num,
+                 use_video_once, custom_name):
+        self.is_interactive = is_interactive
+        self.obs_frame_num = obs_frame_num
+        self.pred_frame_num = pred_frame_num
+        self.skip_frame_num = skip_frame_num
+        self.use_video_once = use_video_once
+        self.dataset_path = dataset_path
+        self.custom_name = custom_name
+
+    def normal(self, data_type='train'):
+        """
+        :param data_type: specify what kind of static file you want to creat (options are: <train>, <test>, <validation>
+        :return: None: create static <.csv> file
+        """
+        pass
+
+    @staticmethod
+    def update_meta_data(meta_data, new_data, dim):
+        """
+        :param meta_data: pass existing meta_data
+        :param new_data: pass new data
+        :param dim: pass dimension of joint i.e. 2 for 2D or 3 for 3D
+        :return None: update meta_data
+        """
+        np_data = np.array(new_data)
+        if len(np_data.shape) == 2:
+            np_data = np.expand_dims(np_data, axis=0)
+
+        meta_data['avg_person'].append(np_data.shape[0])
+        meta_data['count'] += np_data.size // dim
+        meta_data['sum2_pose'] += np.array([np.sum(np.square(np_data[:, :, i::dim])) for i in range(dim)])
+        meta_data['sum_pose'] += np.array([np.sum(np_data[:, :, i::dim]) for i in range(dim)])
+        np_data = np_data.reshape(*np_data.shape[:-1], np_data.shape[-1] // dim, dim)
+        new_max = [np.max(np_data[:, :, :, i]) for i in range(dim)]
+        new_min = [np.min(np_data[:, :, :, i]) for i in range(dim)]
+        for i in range(dim):
+            if new_max[i] > meta_data['max_pose'][i]:
+                meta_data['max_pose'][i] = new_max[i]
+            if new_min[i] < meta_data['min_pose'][i]:
+                meta_data['min_pose'][i] = new_min[i]
+
+    @staticmethod
+    def save_meta_data(meta_data, outputdir, is_3d, data_type):
+        """
+        :param meta_data: pass existing and also final meta data
+        :param outputdir: pass output directory in which you want to save meta data
+        :param is_3d: pass if your data is in 3D format or not (3D or 2D)
+        :return None: save meta data as json format
+        """
+        if data_type != 'train':
+            return
+        assert meta_data['count'] > 0
+        output_file_path = os.path.join(outputdir, f'3D_meta.json' if is_3d else f'2D_meta.json')
+        meta = {
+            'avg_person': np.mean(np.array(meta_data['avg_person'])),
+            'std_person': np.std(np.array(meta_data['avg_person'])),
+            'avg_pose': meta_data['sum_pose'] / meta_data['count'],
+            'max_pose': meta_data['max_pose'],
+            'min_pose': meta_data['min_pose'],
+            'std_pose': np.sqrt(
+                ((meta_data['sum2_pose'] - (np.square(meta_data['sum_pose']) / meta_data['count'])) /
+                 meta_data['count']))
+        }
+        with open(output_file_path, 'w') as f_object:
+            json.dump(meta, f_object, cls=NumpyEncoder, indent=4)
 
 
-if __name__ == '__main__':
-    preprocess()
+class NumpyEncoder(JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        return JSONEncoder.default(self, obj)
