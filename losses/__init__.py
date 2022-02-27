@@ -31,6 +31,6 @@ LOSSES = {'mse_vel': MSEVel,
           'pv_lstm_pro': PVLSTMPro,
           'keyplast': Keyplast,
           'mpjpe': MPJPE,
-          'msr_gcn':MSRGCNLoss
+          'msr_gcn':MSRGCNLoss,
           'potr': POTRLoss
           }

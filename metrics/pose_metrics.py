@@ -10,7 +10,7 @@ def ADE(pred, target, dim, mask=None):
     """
     Average Displacement Error
     """
-    print(pred.shape)
+    # print(pred.shape)
     keypoints_num = int(pred.shape[-1] / dim)
     pred = torch.reshape(pred, pred.shape[:-1] + (keypoints_num, dim))
     target = torch.reshape(target, target.shape[:-1] + (keypoints_num, dim))
@@ -216,7 +216,7 @@ def MSE(pred, target, dim=None, mask=None):
 
 
 
-print('here1')
+# print('here1')
 pred = torch.rand(2, 25, 96)
 target = torch.rand(2, 25, 96)
-print(MSE(pred, target))
+# print(MSE(pred, target))

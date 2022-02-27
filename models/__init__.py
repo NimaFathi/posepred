@@ -26,7 +26,7 @@ MODELS = {'zero_vel': ZeroVel,
           'pv_lstm_noisy': PVLSTMNoisy,
           'pv_lstm_pro': PVLSTMPro,
           'keyplast': Keyplast,
-          'potr': POTR
+          'potr': POTR,
           'sts_gcn': STsGCN,
           'msr_gcn': MSRGCN
           }
