@@ -148,11 +148,11 @@ class PreprocessorOur(Processor):
                 with jsonlines.open(os.path.join(self.output_dir, output_file_name), mode='a') as writer:
                     writer.write({
                         'video_section': f'{subject}-{canonical_name}',
-                        # 'pose': video_data['pose'],
-                        # 'quaternion_pose': video_data['quaternion_pose'],
+                        'pose': video_data['pose'],
+                        'quaternion_pose': video_data['quaternion_pose'],
                         'expmap_pose': video_data['expmap_pose'],
-                        # 'rotmat_pose': video_data['rotmat_pose'],
-                        # 'euler_pose': video_data['euler_pose'],
+                        'rotmat_pose': video_data['rotmat_pose'],
+                        'euler_pose': video_data['euler_pose'],
                         'image_path': video_data['image_path']
                     })
         self.save_meta_data(self.meta_data, self.output_dir, True, data_type)

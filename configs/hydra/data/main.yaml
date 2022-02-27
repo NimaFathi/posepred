@@ -10,11 +10,11 @@ use_mask: ${use_mask}
 train_pose_format: ${train_pose_format}
 pred_pose_format: ${pred_pose_format}
 
-use_expmap: false
-use_rotmat: false
-use_euler: false
+use_expmap: true
+use_rotmat: true
+use_euler: true
+use_quaternion: true
 
-use_quaternion: false
 is_testing: false
 is_visualizing: false
 batch_size: 256

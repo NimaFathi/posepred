@@ -43,27 +43,21 @@ class OurDataset(Dataset):
 
         data = list()
         tensor_keys = [
-                'observed_pose', 
-                'future_pose', 
-                'observed_mask', 
-                'future_mask'
-                ]
+            'expmap_pose',
+            'pose'
+        ]
 
         if self.use_expmap:
-            tensor_keys.append('observed_expmap_pose')
-            tensor_keys.append('future_expmap_pose')
+            tensor_keys.append('expmap_pose')
 
         if self.use_rotmat:
-            tensor_keys.append('observed_rotmat_pose')
-            tensor_keys.append('future_rotmat_pose')
+            tensor_keys.append('rotmat_pose')
 
         if self.use_euler:
-            tensor_keys.append('observed_euler_pose')
-            tensor_keys.append('future_euler_pose')
+            tensor_keys.append('euler_pose')
 
         if self.use_quaternion:
-            tensor_keys.append('observed_quaternion_pose')
-            tensor_keys.append('future_quaternion_pose')
+            tensor_keys.append('quaternion_pose')
 
         with jsonlines.open(dataset_path) as reader:
             for seq in reader:
@@ -71,9 +65,13 @@ class OurDataset(Dataset):
                 for k, v in seq.items():
                     if k in tensor_keys:
                         seq_tensor[k] = torch.tensor(v, dtype=torch.float32)
+                        print(k, seq_tensor[k].shape)
                     else:
                         seq_tensor[k] = v
+
                 data.append(seq_tensor)
+
+        return
 
         self.data = data
         self.keypoint_dim = keypoint_dim
