@@ -3,6 +3,7 @@ from torch.utils.data import DataLoader
 from .interactive_dataset import InteractiveDataset
 from .noisy_solitary_dataset import NoisySolitaryDataset
 from .solitary_dataset import SolitaryDataset
+from .our_dataset import OurDataset
 
 DATASETS = ['somof_posetrack', 'posetrack', 'somof_3dpw', '3dpw', 'jta', 'jaad', 'pie', 'human3.6m']
 DATA_TYPES = ['train', 'validation', 'test']
@@ -45,6 +46,8 @@ def get_dataloader(dataset_path, args):
                     args.noise_keypoint, 
                     args.overfit
                     )
+        elif args.is_ours:
+            pass
         else:
             dataset = SolitaryDataset(
                     dataset_path, 
