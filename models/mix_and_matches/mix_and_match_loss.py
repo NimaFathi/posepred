@@ -2,7 +2,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-from losses import KLDivergenceLoss
+from models.mix_and_matches.kl_divergence import KLDivergenceLoss
 
 
 class MixAndMatchLoss(nn.Module):
