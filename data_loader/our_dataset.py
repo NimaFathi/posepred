@@ -88,7 +88,6 @@ class OurDataset(Dataset):
                         seq_tensor[k] = v
                 data.append(seq_tensor)
                 len_seq = seq_tensor[self.tensor_keys[0]].shape[0]
-                print("the sequence length is: ", len_seq)
                 indexes = indexes + [(len(data)-1, i)
                                      for i in range(0, len_seq-total_len+1, seq_rate)]
 
