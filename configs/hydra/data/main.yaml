@@ -21,11 +21,11 @@ is_visualizing: false
 batch_size: 256
 shuffle: false
 pin_memory: false
-num_workers: 0
+num_workers: 10
 overfit:
 normalize: ${normalize}
 metadata_path:
-seq_rate: 5
+seq_rate: 2
 frame_rate: 2
 len_observed: 10
-len_future: 15
+len_future: 25

@@ -250,6 +250,6 @@ visualization/example.py
 outputs/
 results
 tmp/
-run.sh
 jobs
 **/slurm*
+*.sh

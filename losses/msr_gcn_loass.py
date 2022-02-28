@@ -118,8 +118,9 @@ class MSRGCNLoss(nn.Module):
 
     def forward(self, model_outputs, input_data):
         # print(input_data['observed_pose'].shape, input_data['future_pose'].shape)
-        gt = torch.cat([input_data['observed_pose'].clone(), input_data['future_pose'].clone()], dim=1)
-        # print(gt.shape)
+        gt = torch.cat([input_data['observed_expmap_pose'].clone(), input_data['future_expmap_pose'].clone()], dim=1)
+    
+        gt = gt.reshape((gt.shape[0], gt.shape[1], -1))
         gt = self.proc(gt, True)
         out = model_outputs["pred_pose"]
         losses = 0

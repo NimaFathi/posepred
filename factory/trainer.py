@@ -57,7 +57,7 @@ class Trainer:
             # TODO: fix later
             if pose_key is None:
                 pose_key = [k for k in data.keys() if "pose" in k][0]
-            batch_size =data[pose_key]
+            batch_size =data[pose_key].shape[0]
             data = dict_to_device(data, self.args.device)
             # predict & calculate loss
             self.model.zero_grad()
@@ -121,7 +121,7 @@ class Trainer:
             data = dict_to_device(data, self.args.device)
             if pose_key is None:
                 pose_key = [k for k in data.keys() if "pose" in k][0]
-            batch_size =data[pose_key]
+            batch_size =data[pose_key].shape[0]
             pred_pose_format = "_"+self.args.pred_pose_format if self.args.pred_pose_format!= "" else ""
 
             with torch.no_grad():
