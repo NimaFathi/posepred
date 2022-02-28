@@ -25,7 +25,7 @@ num_workers: 0
 overfit:
 normalize: ${normalize}
 metadata_path:
-seq_rate: 1
-frame_rate: 1
+seq_rate: 5
+frame_rate: 2
 len_observed: 10
 len_future: 15

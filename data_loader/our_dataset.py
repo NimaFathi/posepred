@@ -30,6 +30,9 @@ class OurDataset(Dataset):
                  len_observed,
                  len_future):
 
+
+        print("Initialzing Dataset:")
+
         self.normalize = normalize
         self.use_expmap = use_expmap
         self.use_rotmat = use_rotmat
@@ -90,6 +93,9 @@ class OurDataset(Dataset):
                 len_seq = seq_tensor[self.tensor_keys[0]].shape[0]
                 indexes = indexes + [(len(data)-1, i)
                                      for i in range(0, len_seq-total_len+1, seq_rate)]
+        self.keypoints_num = 3
+        self.obs_frames_num = self.len_observed
+        self.future_frames_num = self.len_future
 
         self.data = data
         self.indexes = indexes
@@ -104,15 +110,15 @@ class OurDataset(Dataset):
         return len(self.indexes)
 
     def __getitem__(self, index):
-        data_index, seq_index = self.data[index]
-        seq = self.data[data_index][seq_index:seq_index+self.total_len]
-        outputs = {"observed_pose": {}, "future_pose": {}}
+        data_index, seq_index = self.indexes[index]
+        seq = self.data[data_index]
+        outputs = {}
         
         for k in self.tensor_keys:
-            temp_seq = seq[k]
+            temp_seq = seq[k][seq_index:seq_index+self.total_len]
             s = temp_seq.shape
-            temp_seq = temp_seq.view(-1,self.frame_rate, s[2], s[3])[:, 0, :, :]
-            outputs['observed_pose'][k] = temp_seq[:self.len_observed]
-            outputs['future_pose'][k] = temp_seq[self.len_observed:]
+            temp_seq = temp_seq.view(-1,self.frame_rate, s[1], s[2])[:, 0, :, :]
+            outputs["observed_"+k] = temp_seq[:self.len_observed]
+            outputs["future_"+k] = temp_seq[self.len_observed:]
 
         return outputs

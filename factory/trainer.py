@@ -52,9 +52,12 @@ class Trainer:
     def __train(self):
         self.model.train()
         self.train_reporter.start_time = time.time()
+        pose_key = None
         for data in self.train_dataloader:
-            
-            batch_size = data['observed_pose'].shape[0]
+            # TODO: fix later
+            if pose_key is None:
+                pose_key = [k for k in data.keys() if "pose" in k][0]
+            batch_size =data[pose_key]
             data = dict_to_device(data, self.args.device)
             # predict & calculate loss
             self.model.zero_grad()
@@ -113,9 +116,12 @@ class Trainer:
     def __validate(self):
         self.model.eval()
         self.valid_reporter.start_time = time.time()
+        pose_key = None
         for data in self.valid_dataloader:
             data = dict_to_device(data, self.args.device)
-            batch_size = data['observed_pose'].shape[0]
+            if pose_key is None:
+                pose_key = [k for k in data.keys() if "pose" in k][0]
+            batch_size =data[pose_key]
             pred_pose_format = "_"+self.args.pred_pose_format if self.args.pred_pose_format!= "" else ""
 
             with torch.no_grad():
