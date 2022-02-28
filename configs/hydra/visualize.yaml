@@ -7,7 +7,7 @@ dataset: ???
 dataset_type: ???
 keypoint_dim: ???
 showing: future, predicted
-is_noisy: false
+loader: "ours"
 use_mask: false
 pred_frames_num:
 load_path:

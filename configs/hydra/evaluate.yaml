@@ -7,7 +7,7 @@ defaults:
 dataset: ???
 keypoint_dim: ???
 normalize: false
-is_noisy: false
+loader: "ours"
 use_mask: false
 load_path:
 rounds_num: 1

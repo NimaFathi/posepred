@@ -1,6 +1,9 @@
 import torch
 import torch.nn as nn
+import numpy as np
 
+from models.history_repeats_itself.utils import data_utils, util
+from models.history_repeats_itself.history_repeats_itself import HistoryRepeatsItself
 
 class HisRepItselfLoss(nn.Module):
 
@@ -8,26 +11,44 @@ class HisRepItselfLoss(nn.Module):
         super().__init__()
 
         self.args = args
-        self.kernel_size = 10
+        self.output_n = args.output_n
+        self.seq_in = args.kernel_size
         self.dim = 3
+        self.dim_used = np.array([6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 21, 22, 23, 24, 25,
+                                  26, 27, 28, 29, 30, 31, 32, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45,
+                                  46, 47, 51, 52, 53, 54, 55, 56, 57, 58, 59, 63, 64, 65, 66, 67, 68,
+                                  75, 76, 77, 78, 79, 80, 81, 82, 83, 87, 88, 89, 90, 91, 92])
+        self.sample_rate = 2
+        # joints at same loc
+        self.joint_to_ignore = np.array([16, 20, 23, 24, 28, 31])
+        self.index_to_ignore = np.concatenate(
+            (self.joint_to_ignore * 3, self.joint_to_ignore * 3 + 1, self.joint_to_ignore * 3 + 2))
+        self.joint_equal = np.array([13, 19, 22, 13, 27, 30])
+        self.index_to_equal = np.concatenate((self.joint_equal * 3, self.joint_equal * 3 + 1, self.joint_equal * 3 + 2))
+        self.itera = 1
+        # self.idx = np.expand_dims(np.arange(self.seq_in + self.out_n), axis=1) + (
+        #         self.out_n - self.seq_in + np.expand_dims(np.arange(self.itera), axis=0))
+
+
 
     def forward(self, model_outputs, input_data):
-        future_pose = input_data['future_pose']
-        feature_n = future_pose.shape[-1]
-        out = model_outputs['pred_pose']
-        mpjpe = torch.mean(torch.norm(
-            future_pose.reshape(-1, feature_n // self.dim, self.dim) - out.reshape(-1, feature_n // self.dim, self.dim),
-            dim=3))
+        seq1 = torch.cat((input_data['observed_pose'], input_data['future_pose']), dim=1)
+        p3d_h36 = HistoryRepeatsItself.exp2xyz(seq1)
+        batch_size, seq_n, joints = p3d_h36.shape
+        p3d_h36 = p3d_h36.float().cuda()  # todo
+        p3d_sup = p3d_h36.clone()[:, :, self.dim_used][:, -self.output_n - self.seq_in:].reshape(
+            [-1, self.seq_in + self.output_n, len(self.dim_used) // 3, 3])
+        p3d_out_all = model_outputs['pred_pose']
+        loss_p3d = torch.mean(torch.norm(p3d_out_all[:, :, 0] - p3d_sup, dim=3))
 
-        observed_pose = input_data['observed_pose']
-        sup_seq = torch.cat((observed_pose[:, -self.kernel_size:, :], future_pose), 1).reshape(-1,
-                                                                                               feature_n // self.dim,
-                                                                                               self.dim)
-        out_all = model_outputs['out_all'].reshape(-1, feature_n // self.dim, self.dim)
-        loss_all = torch.mean(torch.norm(out_all - sup_seq, dim=3))
+        p3d_out = model_outputs['pred_pose_output_only']
+        # print('loss mp', p3d_h36[:, -self.output_n:].shape, p3d_out.shape, joints//3)
+        mpjpe_p3d_h36 = torch.mean(torch.norm(p3d_h36[:, -self.output_n:].reshape(
+            [-1, self.output_n, (joints // 3), 3]) - p3d_out, dim=3))
 
-        outputs = {'loss': mpjpe, 'loss_all': loss_all}
 
+        outputs =  {'loss':loss_p3d, 'loss_all':mpjpe_p3d_h36}
+        # print(outputs)
         if 'pred_mask' in model_outputs.keys():
             mask_loss = self.bce(model_outputs['pred_mask'], input_data['future_mask'])
             outputs['mask_loss'] = mask_loss

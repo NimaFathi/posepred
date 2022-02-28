@@ -3,7 +3,7 @@ from .nearest_neighbor import NearestNeighbor
 from .pv_lstm import PVLSTM
 from .disentangled import Disentangled
 from .derpof import DeRPoF
-from .history_repeats_itself import HistoryRepeatsItself
+from  models.history_repeats_itself.history_repeats_itself import HistoryRepeatsItself
 from .mix_and_match import MixAndMatch
 from .comp_pred_vel import CompPredVel
 from .trans_cvae import TRANS_CVAE
@@ -12,6 +12,7 @@ from .pv_lstm_pro import PVLSTMPro
 from .keyplast import Keyplast
 from .sts_gcn.sts_gcn import STsGCN
 from .msr_gcn.msrgcn import MSRGCN
+from .potr.potr import POTR
 
 MODELS = {'zero_vel': ZeroVel,
           'nearest_neighbor': NearestNeighbor,
@@ -25,6 +26,7 @@ MODELS = {'zero_vel': ZeroVel,
           'pv_lstm_noisy': PVLSTMNoisy,
           'pv_lstm_pro': PVLSTMPro,
           'keyplast': Keyplast,
+          'potr': POTR,
           'sts_gcn': STsGCN,
           'msr_gcn': MSRGCN
           }

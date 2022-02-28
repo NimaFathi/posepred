@@ -12,10 +12,18 @@ epochs: ???
 snapshot_interval: ${epochs}
 start_epoch: 0
 device: cuda
-keypoint_dim: ???
-is_noisy: false
+train_keypoint_dim: ???
+pred_keypoint_dim: ???
+keypoint_dim: 3
+loader: "ours"
 use_mask: false
 use_dct: false
 normalize: false
 load_path:
 save_dir:
+
+# added
+obs_frames_num: ???
+pred_frames_num: ???
+train_pose_format: ""
+pred_pose_format: ""
