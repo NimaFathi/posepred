@@ -80,7 +80,7 @@ def get_dataloader(dataset_path, args, is_train=True):
                 args.normalize,
                 args.metadata_path
             )
-
+    print("datsaet length is: ", len(dataset))
     dataloader = DataLoader(
         dataset,
         batch_size=args.batch_size,

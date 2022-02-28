@@ -14,7 +14,7 @@ use_expmap: true
 use_rotmat: true
 use_euler: true
 use_quaternion: true
-use_xyz: true
+use_xyz: false
 
 is_testing: false
 is_visualizing: false
