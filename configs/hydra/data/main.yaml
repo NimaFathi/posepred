@@ -14,6 +14,7 @@ use_expmap: true
 use_rotmat: true
 use_euler: true
 use_quaternion: true
+use_xyz: true
 
 is_testing: false
 is_visualizing: false
@@ -24,3 +25,7 @@ num_workers: 0
 overfit:
 normalize: ${normalize}
 metadata_path:
+seq_rate: 1
+frame_rate: 1
+len_observed: 10
+len_future: 15
