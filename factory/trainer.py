@@ -55,11 +55,16 @@ class Trainer:
         for data in self.train_dataloader:
             
             batch_size = data['observed_pose'].shape[0]
+            #print('data', data.keys())
             data = dict_to_device(data, self.args.device)
+            #print('data', data.keys())
+            #print(data['action_ids'])
             # predict & calculate loss
             self.model.zero_grad()
             model_outputs = self.model(data)
-            loss_outputs = self.loss_module(model_outputs, dict_to_device(data, self.args.device))
+            #print(type(model_outputs), type(model_outputs[0]))
+            #print('keys', model_outputs.keys())
+            loss_outputs = self.loss_module(model_outputs, data)
             
 
             assert f'pred_{self.args.pred_pose_format}_pose' in model_outputs.keys(), 'outputs of model should include pred_pose'

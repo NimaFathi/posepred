@@ -1,5 +1,5 @@
 type: step_lr
-step_size: 50
-gamma: 0.5
+step_size: 400 #50
+gamma: 0.1 #0.5
 last_epoch: -1
 verbose: true

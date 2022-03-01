@@ -35,8 +35,16 @@ class POTRLoss(nn.Module):
 
     def loss_activity(self, logits, class_gt):                                     
         """Computes entropy loss from logits between predictions and class."""
+        #print(logits.shape, class_gt.shape)
         return nn.functional.cross_entropy(logits, class_gt, reduction='mean')
 
+    def compute_class_loss(self, class_logits, class_gt):
+        """Computes the class loss for each of the decoder layers predictions or memory."""
+        class_loss = 0.0
+        for l in range(len(class_logits)):
+            class_loss += self.loss_activity(class_logits[l], class_gt)
+
+        return class_loss/len(class_logits)
 
     def layerwise_loss_fn(self, decoder_pred, decoder_gt, class_logits=None, class_gt=None):
         """Computes layerwise loss between predictions and ground truth."""
@@ -66,9 +74,12 @@ class POTRLoss(nn.Module):
             )
 
         pred_class, gt_class = None, None
+        #print(model_outputs.keys())
+        #print('action_ids', input_data['action_ids'].shape)
+        #print('out_class', len(model_outputs['out_class']), model_outputs['out_class'][0].shape)
         if self.args.predict_activity:
             gt_class = input_data['action_ids']  # one label for the sequence
-            pred_class = model_outputs['attn_weights']
+            pred_class = model_outputs['out_class']
 
         pose_loss, activity_loss = self.compute_loss(
             inputs=input_data['encoder_inputs'],
@@ -81,7 +92,7 @@ class POTRLoss(nn.Module):
         step_loss = pose_loss + selection_loss
         if self.args.predict_activity:
             step_loss += self.args.activity_weight*activity_loss
-            act_loss += activity_loss
+            #act_loss += activity_loss
 
          
         outputs = {

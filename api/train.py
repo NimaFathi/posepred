@@ -32,9 +32,11 @@ def train(cfg: DictConfig):
     print(cfg.model.pred_frames_num)
     print(cfg.obs_frames_num)
     print(cfg.pred_frames_num)
+    print(cfg.data.use_action)
 
     train_dataloader = get_dataloader(cfg.train_dataset, cfg.data)
     valid_dataloader = get_dataloader(cfg.valid_dataset, cfg.data)
+
 
     if cfg.load_path is not None:
         model, loss_module, optimizer, optimizer_args, epoch, train_reporter, valid_reporter = load_snapshot(

@@ -90,6 +90,7 @@ def train_preprocess(inputs, args):
     'encoder_inputs': torch.tensor(encoder_inputs).to(args.device), 
     'decoder_inputs': torch.tensor(decoder_inputs).to(args.device), 
     'decoder_outputs': torch.tensor(decoder_outputs).to(args.device),
+    'action_ids': inputs['action_ids']
     #'actions': action,
     #'action_id': self._action_ids[action],
     #'action_id_instance': [self._action_ids[action]]*target_seq_len,

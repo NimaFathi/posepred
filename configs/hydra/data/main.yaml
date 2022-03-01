@@ -12,11 +12,12 @@ pred_pose_format: ${pred_pose_format}
 use_expmap: false
 use_rotmat: true
 use_euler: true
+use_action: true
 
 use_quaternion: false
 is_testing: false
 is_visualizing: false
-batch_size: 256
+batch_size: 16
 shuffle: false
 pin_memory: false
 num_workers: 0

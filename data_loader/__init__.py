@@ -24,6 +24,7 @@ def get_dataloader(dataset_path, args):
                 args.use_rotmat,
                 args.use_euler,
                 args.use_quaternion,
+                args.use_action,
                 args.normalize, 
                 args.metadata_path
                 )
@@ -39,6 +40,7 @@ def get_dataloader(dataset_path, args):
                     args.use_rotmat,
                     args.use_euler,
                     args.use_quaternion, 
+                    args.use_action,
                     args.normalize, 
                     args.metadata_path,
                     args.noise_rate, 
@@ -55,7 +57,8 @@ def get_dataloader(dataset_path, args):
                     args.use_expmap,
                     args.use_rotmat,
                     args.use_euler,
-                    args.use_quaternion, 
+                    args.use_quaternion,
+                    args.use_action,
                     args.normalize, 
                     args.metadata_path
                     )

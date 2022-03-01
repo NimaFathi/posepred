@@ -167,7 +167,7 @@ class POTR(nn.Module):
                        input_pose_seq_,
                        target_pose_seq_,
                        mask_target_padding,
-                       get_attn_weights=False):
+                       get_attn_weights):
         """Compute forward pass for training and non recursive inference.
         Args:
         input_pose_seq_: Source sequence [batch_size, src_len, skeleton_dim].
@@ -235,10 +235,8 @@ class POTR(nn.Module):
             out_sequence_ = torch.transpose(out_sequence_, 0, 1)
             out_sequence.append(out_sequence_)
 
-        if self.args.predict_activity:
-            out_class = self.predict_activity(attn_output, memory)
-            return out_sequence, out_class, attn_weights, enc_weights, mat
-        
+        #print('attn_output, memory', len(attn_output), attn_output[0].shape, len(memory), memory[0].shape)
+
         pred_euler_pose = torch.tensor(post_process_to_euler( # convert to post_process_to_format
             out_sequence[-1].detach().cpu().numpy(), 
             self.args.n_major_joints, 
@@ -246,13 +244,40 @@ class POTR(nn.Module):
             self.args.pose_format))
 
         assert self.args.pred_pose_format == 'euler'
-        outputs = {
-            f'pred_euler_pose': pred_euler_pose,
-            'out_sequences': out_sequence,
-            'attn_weights': attn_weights,
-            'enc_weights': enc_weights,
-            'mat': mat
-        }
+
+        if self.args.predict_activity:
+            out_class = self.predict_activity(attn_output, memory)
+            #print('out_class', len(out_class), out_class[0].shape)
+
+            outputs = {
+                f'pred_euler_pose': pred_euler_pose,
+                'out_sequences': out_sequence,
+                'out_class': out_class,
+                'attn_weights': attn_weights,
+                'enc_weights': enc_weights,
+                'mat': mat
+            }
+
+        else:
+            outputs = {
+                f'pred_euler_pose': pred_euler_pose,
+                'out_sequences': out_sequence,
+                'attn_weights': attn_weights,
+                'enc_weights': enc_weights,
+                'mat': mat
+            }
+            
+        """
+        if self.args.predict_activity:
+            out_class = self.predict_activity(attn_output, memory)
+            print('out_class', len(out_class), out_class[0].shape)
+
+            return out_sequence, out_class, attn_weights, enc_weights, mat
+        """        
+
+
+        
+
 
         return outputs#out_sequence, attn_weights, enc_weights, mat
 
@@ -278,6 +303,7 @@ class POTR(nn.Module):
         # [batch_size, src_len*model_dim]
         in_act = torch.reshape(in_act, (-1, self.action_head_size))
         actions = self.action_head(in_act)
+        #print('actions', actions.shape)
         return [actions]
 
 

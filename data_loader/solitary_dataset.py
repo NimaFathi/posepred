@@ -22,6 +22,7 @@ class SolitaryDataset(Dataset):
             use_rotmat,
             use_euler,
             use_quaternion, 
+            use_action,
             normalize,
             metadata_path):
 
@@ -30,6 +31,29 @@ class SolitaryDataset(Dataset):
         self.use_rotmat = use_rotmat
         self.use_euler = use_euler
         self.use_quaternion = use_quaternion
+        self.use_action = use_action
+
+        self.actions_dict = {
+            	"walking": 0,
+                "eating": 1,
+                "smoking": 2,
+                "discussion": 3,
+                "directions": 4,
+                "greeting": 5,
+                "phoning": 6,
+                "posing": 7,
+                "purchases": 8,
+                "sitting": 9,
+                "sittingdown": 10,
+                "takingphoto": 11,
+                "photo": 11,
+                "takephoto": 11,
+                "waiting": 12,
+                "walkingdog": 13,
+                "walkdog": 13,
+                "walkingtogether": 14,
+                "walktogether": 14
+        }
 
         if normalize:
             assert metadata_path, "Specify metadata_path when normalize is true."
@@ -64,6 +88,9 @@ class SolitaryDataset(Dataset):
         if self.use_quaternion:
             tensor_keys.append('observed_quaternion_pose')
             tensor_keys.append('future_quaternion_pose')
+        
+        if self.use_action:
+            tensor_keys.append('use_action')
 
         with jsonlines.open(dataset_path) as reader:
             for seq in reader:
@@ -135,7 +162,10 @@ class SolitaryDataset(Dataset):
                     torch.tensor(seq['observed_quaternion_pose'])
             outputs['future_quaternion_pose'] = \
                     torch.tensor(seq['future_quaternion_pose'])
-
+        
+        if self.use_action:
+            outputs['action_ids'] = torch.tensor(self.actions_dict[seq['action'].lower()])
+        #print(outputs['action_ids'])
         if self.is_visualizing:
             if 'observed_image_path' in seq.keys():
                 outputs['observed_image'] = seq['observed_image_path']

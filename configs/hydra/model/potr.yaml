@@ -19,7 +19,7 @@ pose_embedding_type: gcn_enc
 pos_enc_beta: 500
 pos_enc_alpha: 10
 use_class_token: false
-predict_activity: &predict_activity false
+predict_activity: &predict_activity true
 non_autoregressive: true
 
 include_last_obs: &include_last_obs false
