@@ -39,10 +39,12 @@ def compute_difference_matrix(self, src_seq, tgt_seq):
 def train_preprocess(inputs, args):
     
     # B, n_frames, n_joints, 9 if rotmat else 3
+    #print(inputs.keys())
     obs_pose = inputs[f'observed_{args.pose_format}_pose']  
     future_pose = inputs[f'future_{args.pose_format}_pose']
     
     # B, n_frames, 21, 9 or 3
+    n_major_joints = len(_MAJOR_JOINTS)
     obs_pose = obs_pose[:, :, _MAJOR_JOINTS]
     future_pose = future_pose[:, :, _MAJOR_JOINTS]
     
@@ -57,20 +59,20 @@ def train_preprocess(inputs, args):
     if args.include_last_obs:
       src_seq_len += 1
     
-    encoder_inputs = np.zeros((obs_pose.shape[0], src_seq_len, args.pose_dim * args.n_joints), dtype=np.float32)
-    decoder_inputs = np.zeros((obs_pose.shape[0], args.future_frames_num, args.pose_dim * args.n_joints), dtype=np.float32)
-    decoder_outputs = np.zeros((obs_pose.shape[0], args.future_frames_num, args.pose_dim * args.n_joints), dtype=np.float32)
+    encoder_inputs = np.zeros((obs_pose.shape[0], src_seq_len, args.pose_dim * n_major_joints), dtype=np.float32)
+    decoder_inputs = np.zeros((obs_pose.shape[0], args.future_frames_num, args.pose_dim * n_major_joints), dtype=np.float32)
+    decoder_outputs = np.zeros((obs_pose.shape[0], args.future_frames_num, args.pose_dim * n_major_joints), dtype=np.float32)
     
     data_sel = torch.cat((obs_pose, future_pose), dim=1)
  
     
 
-    encoder_inputs[:, :, 0:args.pose_dim * args.n_joints] = data_sel[:, 0:src_seq_len,:].cpu()
-    decoder_inputs[:, :, 0:args.pose_dim * args.n_joints] = \
+    encoder_inputs[:, :, 0:args.pose_dim * n_major_joints] = data_sel[:, 0:src_seq_len,:].cpu()
+    decoder_inputs[:, :, 0:args.pose_dim * n_major_joints] = \
         data_sel[:, src_seq_len:src_seq_len + args.future_frames_num, :].cpu()
 
     # source_seq_len = src_seq_len + 1
-    decoder_outputs[:, :, 0:args.pose_dim * args.n_joints] = data_sel[:, args.obs_frames_num:, 0:args.pose_dim * args.n_joints].cpu()
+    decoder_outputs[:, :, 0:args.pose_dim * n_major_joints] = data_sel[:, args.obs_frames_num:, 0:args.pose_dim * n_major_joints].cpu()
 
     
 
@@ -85,17 +87,21 @@ def train_preprocess(inputs, args):
     #)
 
     #sys.exit()
+    model_outputs = {
+      'encoder_inputs': torch.tensor(encoder_inputs).reshape((*encoder_inputs.shape[:-1], args.n_major_joints, args.pose_dim)).to(args.device), 
+      'decoder_inputs': torch.tensor(decoder_inputs).reshape((*decoder_inputs.shape[:-1], args.n_major_joints, args.pose_dim)).to(args.device), 
+      'decoder_outputs': torch.tensor(decoder_outputs).reshape((*decoder_outputs.shape[:-1], args.n_major_joints, args.pose_dim)).to(args.device)
+    }
+    #print(inputs.keys())
+    if args.predict_activity:
+      model_outputs['action_ids'] = inputs['action_ids']
 
-    return {
-    'encoder_inputs': torch.tensor(encoder_inputs).to(args.device), 
-    'decoder_inputs': torch.tensor(decoder_inputs).to(args.device), 
-    'decoder_outputs': torch.tensor(decoder_outputs).to(args.device),
-    'action_ids': inputs['action_ids']
     #'actions': action,
     #'action_id': self._action_ids[action],
     #'action_id_instance': [self._action_ids[action]]*target_seq_len,
     #'src_tgt_distance': distance
-    }
+    return model_outputs
+    
 
 def convert_to_euler(action_sequence_, n_major_joints, pose_format, is_normalized=True):
   """Convert the input exponential maps to euler angles.
@@ -104,6 +110,7 @@ def convert_to_euler(action_sequence_, n_major_joints, pose_format, is_normalize
     action_sequence: Pose exponential maps [batch_size, sequence_length, pose_size].
       The input should not contain the one hot encoding in the vector.
   """
+  print('seq shape', action_sequence_.shape)
   B, S, D = action_sequence_.shape
   # first unnormalize data to then convert to euler
   #if is_normalized:
@@ -113,8 +120,9 @@ def convert_to_euler(action_sequence_, n_major_joints, pose_format, is_normalize
     rotmats = expmap_to_rotmat(rotmats)
 
   euler_maps = rotmat_to_euler(rotmats)
+  
   euler_maps = euler_maps.reshape((B, S, -1))
-
+  print('euler shape', euler_maps.shape)
   return euler_maps
 
 def post_process_to_euler(norm_seq, n_major_joints, n_h36m_joints, pose_format):
@@ -123,7 +131,9 @@ def post_process_to_euler(norm_seq, n_major_joints, n_h36m_joints, pose_format):
       norm_seq: A numpy array. Normalized sequence [batch_size, seq_length, 
         n_major_joints*dof]
     """
-    batch_size, seq_length, D = norm_seq.shape
+
+    batch_size, seq_length, n_major_joints, pose_dim = norm_seq.shape
+    norm_seq = norm_seq.reshape(batch_size, seq_length, n_major_joints*pose_dim)
     # batch_size x seq_length x n_major_joints*dof
     euler_seq = convert_to_euler(norm_seq, n_major_joints, pose_format)
     # batch_size x seq_length x n_major_joints x dof (or joint dim)
