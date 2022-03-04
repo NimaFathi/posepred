@@ -39,10 +39,12 @@ pred_keypoint_dim: ${pred_keypoint_dim}
 num_activities: 15
 
 device: &device cuda
+consider_uncertainty: &consider_uncertainty true
 
 loss:
   type: potr
   activity_weight: 1.0
+  uncertainty_weight: 1.0
   loss_fn: l1
   query_selection: *query_selection
   predict_activity: *predict_activity
@@ -54,4 +56,5 @@ loss:
   n_joints: *n_joints
   pad_decoder_inputs: *pad_decoder_inputs
   device: *device
+  consider_uncertainty: *consider_uncertainty
   #pred_pose_format: pred_pose_format

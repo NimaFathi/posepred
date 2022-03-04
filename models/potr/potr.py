@@ -59,7 +59,7 @@ class POTR(nn.Module):
             )
 
         if args.consider_uncertainty:
-            self.uncertainty_matrix = nn.parameter.Parameter(data=torch.zeros(args.n_classes, args.n_major_joints), requires_grad=True)
+            self.uncertainty_matrix = nn.parameter.Parameter(data=torch.zeros(args.num_activities, args.n_major_joints), requires_grad=True)
             nn.init.xavier_uniform_(self.uncertainty_matrix.data)
             #self.uncertainty_matrix.data
 

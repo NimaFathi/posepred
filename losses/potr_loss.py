@@ -77,7 +77,7 @@ class POTRLoss(nn.Module):
         loss_fn = nn.L1Loss(reduction='none')
         if uncertainty_matrix is not None:
             assert class_gt is not None
-            assert uncertainty_matrix.shape == (self.args.n_classes, self.args.n_major_joints)
+            assert uncertainty_matrix.shape == (self.args.num_activities, self.args.n_major_joints)
             uncertainty_vector = uncertainty_matrix[class_gt].reshape(B, 1, self.args.n_major_joints, 1) # (n_joints, )
             u_coeff = (torch.arange(1, T+1) / T).reshape(1, T, 1, 1)
         else:
@@ -211,7 +211,7 @@ if __name__ == '__main__':
     parser.add_argument('--consider_uncertainty', default=True)
     parser.add_argument('--device', default='cpu')
     parser.add_argument('--pred_pose_format', default='euler')
-    parser.add_argument('--n_classes', default=15)
+    #parser.add_argument('--n_classes', default=15)
 
     #parser.add_argument('--pad_decoder_inputs', default=True)
     args = parser.parse_args()
