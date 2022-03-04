@@ -2,6 +2,8 @@ import os
 import logging
 
 import json
+import time
+
 import jsonlines
 import torch
 from torch.utils.data import Dataset
@@ -23,6 +25,7 @@ class OurDataset(Dataset):
                  use_euler,
                  use_quaternion,
                  use_xyz,
+                 # save_action,
                  normalize,
                  metadata_path,
                  seq_rate,
@@ -93,6 +96,7 @@ class OurDataset(Dataset):
                 len_seq = seq_tensor[self.tensor_keys[0]].shape[0]
                 indexes = indexes + [(len(data)-1, i)
                                      for i in range(0, len_seq-total_len+1, seq_rate)]
+
         self.keypoints_num = 3
         self.obs_frames_num = self.len_observed
         self.future_frames_num = self.len_future
@@ -120,5 +124,7 @@ class OurDataset(Dataset):
             temp_seq = temp_seq.view(-1,self.frame_rate, s[1], s[2])[:, 0, :, :]
             outputs["observed_"+k] = temp_seq[:self.len_observed]
             outputs["future_"+k] = temp_seq[self.len_observed:]
+
+        outputs["action"] = seq["action"]
 
         return outputs
