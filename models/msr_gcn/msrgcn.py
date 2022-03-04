@@ -180,6 +180,7 @@ class MSRGCN(nn.Module):
         observed = inputs['observed_expmap_pose'].clone()
         observed = observed.reshape((observed.shape[0], observed.shape[1], -1))
         observed = self.proc(observed, True)
+        x_p32 = observed['p32']
         x_p22 = observed['p22']
         x_p12 = observed['p12']
         x_p7 = observed['p7']
