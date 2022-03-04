@@ -19,8 +19,10 @@ from utils.others import expmap_to_quaternion, qfix, expmap_to_rotmat, expmap_to
 logger = logging.getLogger(__name__)
 
 SPLIT = {
-    'train': ['S1', 'S5', 'S6', 'S7', 'S8'],
-    'validation': ['S1', 'S5', 'S6', 'S7', 'S8'],
+    # 'train': ['S1', 'S5', 'S6', 'S7', 'S8'],
+    # 'validation': ['S1', 'S5', 'S6', 'S7', 'S8'],
+    'train': ['S1', 'S5'],
+    'validation': ['S1', 'S5'],
     'test': ['S9', 'S11']
 }
 
@@ -80,7 +82,7 @@ class PreprocessorOur(Processor):
                 canonical_name = action.replace('TakingPhoto', 'Photo') \
                     .replace('WalkingDog', 'WalkDog')
                 # hf = cdflib.CDF(f)
-                # positions = hf['Pose'].reshape(-1, 96)
+                # positions = hf['xyz_pose'].reshape(-1, 96)
                 # if data_type == 'train':
                 #     positions = positions[:95 * positions.shape[0] // 100]
                 # elif data_type == 'validation':
@@ -108,14 +110,14 @@ class PreprocessorOur(Processor):
                 #         total_frame_num * (self.skip_frame_num + 1)) if self.use_video_once is False else 1
                 # for i in range(section_range):
                 video_data = {
-                    'pose': positions.reshape(positions.shape[0], -1, 3).tolist()[::self.skip_frame_num + 1],
+                    'xyz_pose': positions.reshape(positions.shape[0], -1, 3).tolist()[::self.skip_frame_num + 1],
                     'quaternion_pose': quat.reshape(quat.shape[0], -1, 4).tolist()[::self.skip_frame_num + 1],
                     'expmap_pose': expmap.reshape(expmap.shape[0], -1, 3).tolist()[::self.skip_frame_num + 1],
                     'rotmat_pose': rotmat.tolist()[::self.skip_frame_num + 1],
                     'euler_pose': euler.tolist()[::self.skip_frame_num + 1]
                     # ,'image_path': list()
                 }
-                # print('video',len(video_data['pose']), len(positions.tolist()), len(video_data['expmap_pose']), len(expmap.tolist()),
+                # print('video',len(video_data['xyz_pose']), len(positions.tolist()), len(video_data['expmap_pose']), len(expmap.tolist()),
                 # len(video_data['euler_pose']), len(euler.tolist()))
 
                 print(f'shape {subject} {action}', positions.reshape(positions.shape[0], -1, 3).shape,
@@ -124,12 +126,13 @@ class PreprocessorOur(Processor):
                 # for j in range(0, positions.shape[0], self.skip_frame_num + 1):
                 #     video_data['image_path'].append(f'{os.path.basename(f).split(".cdf")[0]}_{j:05}')
                 
-                self.update_meta_data(self.meta_data, video_data['pose'], 3)
+                self.update_meta_data(self.meta_data, video_data['xyz_pose'], 3)
                 # print(,positions.shape,
                 with jsonlines.open(os.path.join(self.output_dir, output_file_name), mode='a') as writer:
                     writer.write({
                         'video_section': f'{subject}-{canonical_name}',
-                        'pose': video_data['pose'],
+                        'action': f'{canonical_name}',
+                        'xyz_pose': video_data['xyz_pose'],
                         'quaternion_pose': video_data['quaternion_pose'],
                         'expmap_pose': video_data['expmap_pose'],
                         'rotmat_pose': video_data['rotmat_pose'],
