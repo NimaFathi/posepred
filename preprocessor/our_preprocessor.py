@@ -19,10 +19,8 @@ from utils.others import expmap_to_quaternion, qfix, expmap_to_rotmat, expmap_to
 logger = logging.getLogger(__name__)
 
 SPLIT = {
-    # 'train': ['S1', 'S5', 'S6', 'S7', 'S8'],
-    # 'validation': ['S1', 'S5', 'S6', 'S7', 'S8'],
-    'train': ['S1', 'S5'],
-    'validation': ['S1', 'S5'],
+    'train': ['S1', 'S5', 'S6', 'S7', 'S8'],
+    'validation': ['S1', 'S5', 'S6', 'S7', 'S8'],
     'test': ['S9', 'S11']
 }
 

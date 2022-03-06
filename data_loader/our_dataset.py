@@ -1,8 +1,6 @@
-import os
-import logging
-
 import json
-import time
+import logging
+import os
 
 import jsonlines
 import torch
@@ -25,14 +23,12 @@ class OurDataset(Dataset):
                  use_euler,
                  use_quaternion,
                  use_xyz,
-                 # save_action,
                  normalize,
                  metadata_path,
                  seq_rate,
                  frame_rate,
                  len_observed,
                  len_future):
-
 
         print("Initialzing Dataset:")
 
@@ -42,7 +38,7 @@ class OurDataset(Dataset):
         self.use_euler = use_euler
         self.use_quaternion = use_quaternion
         self.use_xyz = use_xyz
-        total_len = (len_observed+len_future)*frame_rate
+        total_len = (len_observed + len_future) * frame_rate
         self.frame_rate = frame_rate
         self.total_len = total_len
         self.len_observed = len_observed
@@ -59,43 +55,36 @@ class OurDataset(Dataset):
             self.std_pose = None
 
         data = list()
-        self.tensor_keys = [
-        ]
+        self.tensor_keys_to_keep = []
+        self.tensor_keys_to_ignore = []
 
-        if self.use_expmap:
-            self.tensor_keys.append('expmap_pose')
-
-        if self.use_rotmat:
-            self.tensor_keys.append('rotmat_pose')
-
-        if self.use_euler:
-            self.tensor_keys.append('euler_pose')
-
-        if self.use_quaternion:
-            self.tensor_keys.append('quaternion_pose')
-
-        if self.use_xyz:
-            self.tensor_keys.append('xyz_pose')
+        for key, value in zip(
+                ['expmap_pose', 'rotmat_pose', 'euler_pose', 'quaternion_pose', 'xyz_pose'],
+                [self.use_expmap, self.use_rotmat, self.use_euler, self.use_quaternion, self.use_xyz]
+        ):
+            if value:
+                self.tensor_keys_to_keep.append(key)
+            else:
+                self.tensor_keys_to_ignore.append(key)
 
         assert len(
-            self.tensor_keys) > 0, "please determine the kind(s) of pose(es) you want to use in config file"
-        if 'xyz_pose' in self.tensor_keys:
-            assert len(self.tensor_keys)==1, "you can't use xyz with other poses"
+            self.tensor_keys_to_keep) > 0, "please determine the kind(s) of pose(es) you want to use in config file"
 
         indexes = []
         with jsonlines.open(dataset_path) as reader:
             for seq in reader:
+
                 seq_tensor = {}
                 for k, v in seq.items():
-                    if k in self.tensor_keys:
+                    if k in self.tensor_keys_to_keep:
                         seq_tensor[k] = torch.tensor(v, dtype=torch.float32)
-
-                    else:
+                    elif k not in self.tensor_keys_to_ignore:
                         seq_tensor[k] = v
+
                 data.append(seq_tensor)
-                len_seq = seq_tensor[self.tensor_keys[0]].shape[0]
-                indexes = indexes + [(len(data)-1, i)
-                                     for i in range(0, len_seq-total_len+1, seq_rate)]
+                len_seq = seq_tensor[self.tensor_keys_to_keep[0]].shape[0]
+                indexes = indexes + [(len(data) - 1, i)
+                                     for i in range(0, len_seq - total_len + 1, seq_rate)]
 
         self.keypoints_num = 3
         self.obs_frames_num = self.len_observed
@@ -117,14 +106,15 @@ class OurDataset(Dataset):
         data_index, seq_index = self.indexes[index]
         seq = self.data[data_index]
         outputs = {}
-        
-        for k in self.tensor_keys:
-            temp_seq = seq[k][seq_index:seq_index+self.total_len]
+
+        for k in self.tensor_keys_to_keep:
+            temp_seq = seq[k][seq_index:seq_index + self.total_len]
             s = temp_seq.shape
-            temp_seq = temp_seq.view(-1,self.frame_rate, s[1], s[2])[:, 0, :, :]
-            outputs["observed_"+k] = temp_seq[:self.len_observed]
-            outputs["future_"+k] = temp_seq[self.len_observed:]
+            temp_seq = temp_seq.view(-1, self.frame_rate, s[1], s[2])[:, 0, :, :]
+            outputs["observed_" + k] = temp_seq[:self.len_observed]
+            outputs["future_" + k] = temp_seq[self.len_observed:]
 
         outputs["action"] = seq["action"]
+        # todo: save other keys as well, not just the actions
 
         return outputs
