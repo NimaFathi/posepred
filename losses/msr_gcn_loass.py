@@ -123,14 +123,26 @@ class MSRGCNLoss(nn.Module):
         gt = gt.reshape((gt.shape[0], gt.shape[1], -1))
         gt = self.proc(gt, True)
         out = model_outputs["pred_pose"]
-        losses = 0
+        losses = {}
+        for k in out.keys():
+            losses[k] = 0
+        frames = [2,4,8,10,14,25]
+        
         for k in out.keys():
             temp = out[k]
             temp = (temp+1)/2
             temp = temp *(self.global_max-self.global_min)+self.global_min
             temp = reverse_dct_torch(temp, self.idct_m.to(out[k].device), self.input_n+self.output_n)
-            losses += L2NormLoss_train(gt[k], temp)
-
+            if "22" in k:
+                batch_size, _, seq_len = gt[k].shape
+                for frame in frames:
+                    losses[frame]=torch.mean(torch.norm(gt[k].view(batch_size,-1,3,seq_len)[:,:,:,frame+10-1]- \
+                                                        temp.view(batch_size, -1, 3, seq_len)[:,:,:,frame+10-1], 2, -1))
+            losses[k] += L2NormLoss_train(gt[k], temp)
+        
+        final_loss = 0
+        for k in out.keys():
+            final_loss+= losses[k]
         # print(gt["p22"].shape)
         # print(model_outputs["pred_pose"]["p22"].shape)
 
@@ -154,4 +166,6 @@ class MSRGCNLoss(nn.Module):
 
 
 
-        return {'loss': losses}
+        return {'loss': final_loss, 'loss_p22':losses['p22'],'loss_p12':losses['p12'],'loss_p7':losses['p7'],'loss_p4':losses['p4'],
+                'loss_1000':losses[25], 'loss_560': losses[14], 'loss_400':losses[10], 'loss_320':losses[8], 'loss_160':losses[4],
+                'loss_80':losses[2]}
