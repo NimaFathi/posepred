@@ -9,4 +9,4 @@ txc_kernel_size: [3, 3]
 txc_dropout: 0
 
 loss:
-  type: mpjpe
+  type: sts_gcn

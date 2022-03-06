@@ -14,6 +14,7 @@ from .pv_lstm_pro import PVLSTMPro
 from .keyplast import Keyplast
 from .mpjpe import MPJPE
 from .msr_gcn_loass import MSRGCNLoss
+from models.sts_gcn.sts_gcn_loss import STSGCNLoss
 from models.potr.potr_loss import POTRLoss
 
 LOSSES = {'mse_vel': MSEVel,
@@ -32,5 +33,6 @@ LOSSES = {'mse_vel': MSEVel,
           'keyplast': Keyplast,
           'mpjpe': MPJPE,
           'msr_gcn':MSRGCNLoss,
-          'potr': POTRLoss
+          'potr': POTRLoss,
+          'sts_gcn': STSGCNLoss
           }
