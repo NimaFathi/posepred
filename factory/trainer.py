@@ -31,6 +31,7 @@ class Trainer:
     def train(self):
         logger.info("Training started.")
         time0 = time.time()
+        best_loss = 0.0
         for epoch in range(self.args.start_epoch, self.args.epochs):
             self.__train()
             if self.use_validation:
@@ -45,6 +46,7 @@ class Trainer:
                     self.valid_reporter.save_data(self.model.args.use_mask, self.args.save_dir)
                 Reporter.save_plots(self.model.args.use_mask, self.args.save_dir, self.train_reporter.history,
                                     self.valid_reporter.history, self.use_validation)
+            #if self.use_validation and 
         self.tensor_board.close()
         logger.info("-" * 100)
         logger.info('Training is completed in %.2f seconds.' % (time.time() - time0))

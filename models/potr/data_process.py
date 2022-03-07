@@ -110,7 +110,6 @@ def convert_to_euler(action_sequence_, n_major_joints, pose_format, is_normalize
     action_sequence: Pose exponential maps [batch_size, sequence_length, pose_size].
       The input should not contain the one hot encoding in the vector.
   """
-  print('seq shape', action_sequence_.shape)
   B, S, D = action_sequence_.shape
   # first unnormalize data to then convert to euler
   #if is_normalized:
@@ -122,7 +121,6 @@ def convert_to_euler(action_sequence_, n_major_joints, pose_format, is_normalize
   euler_maps = rotmat_to_euler(rotmats)
   
   euler_maps = euler_maps.reshape((B, S, -1))
-  print('euler shape', euler_maps.shape)
   return euler_maps
 
 def post_process_to_euler(norm_seq, n_major_joints, n_h36m_joints, pose_format):

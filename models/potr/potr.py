@@ -248,7 +248,6 @@ class POTR(nn.Module):
             out_sequence_ = out_sequence_.reshape((*shape[:-1], self.args.n_major_joints, self.args.pose_dim))
             out_sequence.append(out_sequence_)
 
-        #print('attn_output, memory', len(attn_output), attn_output[0].shape, len(memory), memory[0].shape)
 
         pred_euler_pose = torch.tensor(post_process_to_euler( # convert to post_process_to_format
             out_sequence[-1].detach().cpu().numpy(), 
@@ -279,9 +278,6 @@ class POTR(nn.Module):
 
             return out_sequence, out_class, attn_weights, enc_weights, mat
         """        
-
-
-        
 
 
         return outputs#out_sequence, attn_weights, enc_weights, mat

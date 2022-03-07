@@ -79,7 +79,7 @@ class POTRLoss(nn.Module):
             assert class_gt is not None
             assert uncertainty_matrix.shape == (self.args.num_activities, self.args.n_major_joints)
             uncertainty_vector = uncertainty_matrix[class_gt].reshape(B, 1, self.args.n_major_joints, 1) # (n_joints, )
-            u_coeff = (torch.arange(1, T+1) / T).reshape(1, T, 1, 1)
+            u_coeff = (torch.arange(1, T+1) / T).reshape(1, T, 1, 1).to(self.args.device)
         else:
             uncertainty_vector = 1
             u_coeff = 0
@@ -108,7 +108,7 @@ class POTRLoss(nn.Module):
 
 
 
-    def forward(self, model_outputs, input_data, use_uncertainty):
+    def forward(self, model_outputs, input_data):
         input_data = train_preprocess(input_data, self.args)
         
         '''selection_loss = 0
@@ -164,9 +164,13 @@ class POTRLoss(nn.Module):
             'loss': step_loss, 
             #'selection_loss': selection_loss,
             'pose_loss': pl,
-            'activity_loss': activity_loss.item(),
-            'uncertainty_loss': uncertainty_loss.item()
             }
+
+        if self.args.predict_activity:
+            outputs['activity_loss'] = activity_loss.item()
+
+        if self.args.consider_uncertainty:
+            outputs['uncertainty_loss'] = uncertainty_loss.item()
 
         return outputs
 
@@ -238,7 +242,7 @@ if __name__ == '__main__':
 
     loss_func = POTRLoss(args)
 
-    loss_outputs1 = loss_func(model_outputs, inputs, use_uncertainty=False)
+    loss_outputs1 = loss_func(model_outputs, inputs)#, use_uncertainty=False)
     #loss_outputs2 = loss_func(model_outputs, inputs, use_uncertainty=True)
     print(loss_outputs1)
     #print(loss_outputs2)

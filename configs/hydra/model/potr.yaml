@@ -36,10 +36,10 @@ n_joints: &n_joints 21
 n_h36m_joints: 32
 pose_dim: ${train_keypoint_dim}
 pred_keypoint_dim: ${pred_keypoint_dim}
-num_activities: 15
+num_activities: &num_activities 15
 
 device: &device cuda
-consider_uncertainty: &consider_uncertainty true
+consider_uncertainty: &consider_uncertainty false
 
 loss:
   type: potr
@@ -53,8 +53,9 @@ loss:
   obs_frames_num: ${obs_frames_num} #*obs_frames_num
   include_last_obs: *include_last_obs
   pose_dim: ${train_keypoint_dim} #*keypoint_dim
-  n_joints: *n_joints
+  n_major_joints: *n_joints
   pad_decoder_inputs: *pad_decoder_inputs
   device: *device
   consider_uncertainty: *consider_uncertainty
+  num_activities: *num_activities
   #pred_pose_format: pred_pose_format
