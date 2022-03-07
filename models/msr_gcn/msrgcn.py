@@ -18,10 +18,23 @@ from .preprocessor import Proc
 class MSRGCN(nn.Module):
     def __init__(self, args):
         super(MSRGCN, self).__init__()
-
+        action_list = ["walking", "eating", "smoking", "discussion", "directions", "greeting", "phoning", "posing",
+                            "purchases", "sitting", "sittingdown", "takingphoto", "waiting", "walkingdog", "walkingtogether"]
 
         self.proc = Proc(args)
-
+        
+        self.alphas_22 = nn.ParameterDict(
+            {act:nn.parameter.Parameter(torch.randn((22))) for act in action_list}
+        )
+        self.alphas_12 = nn.ParameterDict(
+            {act:nn.parameter.Parameter(torch.randn((12))) for act in action_list}
+        )
+        self.alphas_7 = nn.ParameterDict(
+            {act:nn.parameter.Parameter(torch.randn((7))) for act in action_list}
+        )
+        self.alphas_4 = nn.ParameterDict(
+            {act:nn.parameter.Parameter(torch.randn((4))) for act in action_list}
+        )
         self.args = args
 
         p_dropout = args.p_dropout
@@ -234,7 +247,13 @@ class MSRGCN(nn.Module):
         pred_fourth = self.fourth_out(fusion_fourth) + x_p4  # 大残差连接
 
         return {
-            "pred_pose":{"p22": pred_first, "p12": pred_second, "p7": pred_third, "p4": pred_fourth}
+            "pred_pose":{"p22": pred_first, "p12": pred_second, "p7": pred_third, "p4": pred_fourth},
+            "alphas":{
+                "p22":torch.sigmoid(self.alphas_22),
+                "p12":torch.sigmoid(self.alphas_12),
+                "p7":torch.sigmoid(self.alphas_7),
+                "p4":torch.sigmoid(self.alphas_4)
+            }
         }
 
 
