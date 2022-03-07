@@ -103,6 +103,16 @@ def L2NormLoss_train(gt, out):
     loss = torch.mean(torch.norm(gt - out, 2, dim=-1))
     return loss
 
+def uncertain_loss(gt, out, alphas, lamda):
+    batch_size, _, seq_len = gt.shape
+    T = seq_len
+    gt = gt.view(batch_size, -1, seq_len, 3).permute(0, 3, 1, 2).contiguous()
+    out = out.view(batch_size, -1, seq_len, 3).permute(0, 3, 1, 2).contiguous()
+    temp = torch.norm(gt-out, 2, dim = -1)
+    time_coeff = torch.arange(1,T+1)/T
+    final_coeff = torch.pow(time_coeff, alphas.unsqueeze(-1).repeat(1,1,T))
+    return (temp*(1-final_coeff)).sum()-lamda*torch.log(alphas).sum()
+
 class MSRGCNLoss(nn.Module):
 
     def __init__(self, args):
@@ -115,9 +125,11 @@ class MSRGCNLoss(nn.Module):
         self.dct_m, self.idct_m = get_dct_matrix(self.input_n + self.output_n)
         self.global_min = args.global_min
         self.global_max = args.global_max   
+        self.uncertainty_aware = args.uncertainty_aware
+        self.lamda = args.lamda
 
     def forward(self, model_outputs, input_data):
-        # print(input_data['observed_pose'].shape, input_data['future_pose'].shape)
+        print("keyssssssss", input_data.keys())
         gt = torch.cat([input_data['observed_expmap_pose'].clone(), input_data['future_expmap_pose'].clone()], dim=1)
     
         gt = gt.reshape((gt.shape[0], gt.shape[1], -1))
@@ -138,7 +150,10 @@ class MSRGCNLoss(nn.Module):
                 for frame in frames:
                     losses[frame]=torch.mean(torch.norm(gt[k].view(batch_size,-1,3,seq_len)[:,:,:,frame+10-1]- \
                                                         temp.view(batch_size, -1, 3, seq_len)[:,:,:,frame+10-1], 2, -1))
-            losses[k] += L2NormLoss_train(gt[k], temp)
+            if self.uncertainty_aware:
+                losses[k] += uncertain_loss(gt[k], temp, model_outputs["alphas"][k], self.lamda)
+            else:
+                losses[k] += L2NormLoss_train(gt[k], temp)
         
         final_loss = 0
         for k in out.keys():

@@ -21,3 +21,5 @@ loss:
   dct_used: 35
   input_n: 10
   output_n: 25
+  lamda: 70
+  uncertainty_aware: true
