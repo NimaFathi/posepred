@@ -158,7 +158,7 @@ class POTRLoss(nn.Module):
             step_loss += self.args.activity_weight*activity_loss
 
         if self.args.consider_uncertainty:
-            step_loss += self.args.uncertainty_weight*uncertainty_loss
+            step_loss -= self.args.uncertainty_weight*uncertainty_loss
          
         outputs = {
             'loss': step_loss, 
