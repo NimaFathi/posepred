@@ -34,13 +34,18 @@ class PreprocessorHuman36m(Processor):
         )
         if not os.path.exists(self.output_dir):
             os.makedirs(self.output_dir)
-        self.meta_data = {
-            'avg_person': [],
-            'max_pose': np.zeros(3),
-            'min_pose': np.array([1000.0, 1000.0, 1000.0]),
-            'count': 0,
-            'sum2_pose': np.zeros(3),
-            'sum_pose': np.zeros(3)
+
+        self.pose_formats = ['3D', 'rotmat', 'expmap', 'quat', 'euler']
+
+        self.meta_data = {pose_format: {
+                'avg_person': [],
+                'max_pose': np.zeros(3),
+                'min_pose': np.array([1000.0, 1000.0, 1000.0]),
+                'count': 0,
+                'sum2_pose': np.zeros(3),
+                'sum_pose': np.zeros(3)
+            }
+            for pose_format in self.pose_formats
         }
         self.subjects = ['S1', 'S5', 'S6', 'S7', 'S8', 'S9', 'S11']
 
@@ -49,121 +54,102 @@ class PreprocessorHuman36m(Processor):
         logger.info(
                 'start creating Human3.6m normal static data \
                         from original Human3.6m dataset (CDF files) ... ')
+        
+        suffix = 'human3.6m' if self.custom_name is None else self.custom_name
+        
+        output_file_names = {}
+        for pose_format in self.pose_formats:
+            output_file_names[pose_format] = \
+                 {f'{data_type}_{self.obs_frame_num}_{self.pred_frame_num}_{self.skip_frame_num}_{pose_format}_{suffix}.jsonl'}
+
+        """
         if self.custom_name:
             output_file_name = \
                     f'{data_type}_{self.obs_frame_num}_{self.pred_frame_num}_{self.skip_frame_num}_{self.custom_name}.jsonl'
         else:
             output_file_name = \
                     f'{data_type}_{self.obs_frame_num}_{self.pred_frame_num}_{self.skip_frame_num}_human3.6m.jsonl'
-        assert os.path.exists(os.path.join(
-            self.output_dir,
-            output_file_name
-        )) is False, f"preprocessed file exists at {os.path.join(self.output_dir, output_file_name)}"
-        for subject in self.subjects:
-            logger.info("handling subject: {}".format(subject))
-            subject_pose_path = os.path.join(self.dataset_path, subject, 'MyPoseFeatures/D3_Positions/*.cdf')
-            print('subject_pose_path:', subject_pose_path)
-            file_list_pose = glob(subject_pose_path)
-            assert len(file_list_pose) == 30, "Expected 30 files for subject " + subject + ", got " + str(
-                len(file_list_pose))
-            for f in file_list_pose:
-                action = os.path.splitext(os.path.basename(f))[0]
-                print(action)
-                if subject == 'S11' and action == 'Directions':
-                    continue  # Discard corrupted video
-                canonical_name = action.replace('TakingPhoto', 'Photo') \
-                    .replace('WalkingDog', 'WalkDog')
-                hf = cdflib.CDF(f)
-                positions = hf['Pose'].reshape(-1, 96)
-                if data_type == 'train':
-                    positions = positions[:95 * positions.shape[0] // 100]
-                elif data_type == 'validation':
-                    positions = positions[95 * positions.shape[0] // 100:]
-                positions /= 1000
-                expmap = self.expmap_rep(f, subject, data_type)
-                rotmat = self.rotmat_rep(f, subject, data_type)
-                euler = self.euler_rep(f, subject, data_type)
-                #print('rotmat shape', rotmat.shape)
-                #print(expmap.shape)
-                quat = self.quaternion_rep(f, subject, data_type)
-                if positions.shape[0] != expmap.shape[0]:
-                    print(f'''\
-                            corrupted:
-                            subject: {subject}
-                            file: {f}
-                            positions shape: {positions.shape}
-                            expmap shape: {expmap.shape}
-                            rotmat shape: {rotmat.shape}
-                            quat shape: {quat.shape}
-                    ''')
-                    positions = positions[:min(positions.shape[0], expmap.shape[0])]
-                
-                total_frame_num = self.obs_frame_num + self.pred_frame_num
-                section_range = positions.shape[0] // (
-                        total_frame_num * (self.skip_frame_num + 1)) if self.use_video_once is False else 1
-                for i in range(section_range):
-                    video_data = {
-                        'observed_pose': list(),
-                        'future_pose': list(),
-                        'observed_quaternion_pose': list(),
-                        'future_quaternion_pose': list(),
-                        'observed_expmap_pose': list(),
-                        'future_expmap_pose': list(),
-                        'observed_rotmat_pose': list(),
-                        'future_rotmat_pose': list(),
-                        'observed_euler_pose': list(),
-                        'future_euler_pose': list(),
-                        'observed_image_path': list(),
-                        'future_image_path': list()
-                    }
-                    for j in range(0, total_frame_num * (self.skip_frame_num + 1), self.skip_frame_num + 1):
-                        if j < (self.skip_frame_num + 1) * self.obs_frame_num:
-                            video_data['observed_pose'].append(
-                                positions[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
-                            # video_data['observed_quaternion_pose'].append(
-                            #     quat[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
-                            video_data['observed_expmap_pose'].append(
-                                expmap[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
-                            video_data['observed_rotmat_pose'].append(
-                                rotmat[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
-                            video_data['observed_euler_pose'].append(
-                                euler[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())                                         
-                            video_data['observed_image_path'].append(
-                                f'{os.path.basename(f).split(".cdf")[0]}_{i * total_frame_num * (self.skip_frame_num + 1) + j:05}')
-                        else:
-                            video_data['future_pose'].append(
-                                positions[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
-                            # video_data['future_quaternion_pose'].append(
-                            #     quat[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
-                            video_data['future_expmap_pose'].append(
-                                expmap[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
-                            video_data['future_rotmat_pose'].append(
-                                rotmat[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
-                            video_data['future_euler_pose'].append(
-                                euler[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
-                            video_data['future_image_path'].append(
-                                f'{os.path.basename(f).split(".cdf")[0]}_{i * total_frame_num * (self.skip_frame_num + 1) + j:05}'
-                            )
-                    self.update_meta_data(self.meta_data, video_data['observed_pose'], 3)
-                    with jsonlines.open(os.path.join(self.output_dir, output_file_name), mode='a') as writer:
-                        writer.write({
-                            'video_section': f'{subject}-{canonical_name}-{i}',
-                            'observed_pose': video_data['observed_pose'],
-                            'future_pose': video_data['future_pose'],
-                            # 'observed_quaternion_pose': video_data['observed_quaternion_pose'],
-                            # 'future_quaternion_pose': video_data['future_quaternion_pose'],
-                            'observed_expmap_pose': video_data['observed_expmap_pose'],
-                            'future_expmap_pose': video_data['future_expmap_pose'],
-                            'observed_rotmat_pose': video_data['observed_rotmat_pose'],
-                            'future_rotmat_pose': video_data['future_rotmat_pose'],
-                            'observed_euler_pose': video_data['observed_euler_pose'],
-                            'future_euler_pose': video_data['future_euler_pose'],                            
-                            'observed_image_path': video_data['observed_image_path'],
-                            'future_image_path': video_data['future_image_path'],
-                            'action': action.split()[0]
-                        })
-        self.save_meta_data(self.meta_data, self.output_dir, True, data_type)
-        # self.delete_redundant_files()
+        """
+        for output_file_name in output_file_names.values():
+            assert os.path.exists(os.path.join(
+                self.output_dir,
+                output_file_name
+            )) is False, f"preprocessed file exists at {os.path.join(self.output_dir, output_file_name)}"
+
+        
+        for pose_format in self.pose_formats:
+
+            for subject in self.subjects:
+                logger.info("handling subject: {}".format(subject))
+                subject_pose_path = os.path.join(self.dataset_path, subject, 'MyPoseFeatures/D3_Positions/*.cdf')
+                print('subject_pose_path:', subject_pose_path)
+                file_list_pose = glob(subject_pose_path)
+                assert len(file_list_pose) == 30, "Expected 30 files for subject " + subject + ", got " + str(
+                    len(file_list_pose))
+                for f in file_list_pose:
+                    action = os.path.splitext(os.path.basename(f))[0]
+                    print(action)
+                    if subject == 'S11' and action == 'Directions':
+                        continue  # Discard corrupted video
+                    canonical_name = action.replace('TakingPhoto', 'Photo') \
+                        .replace('WalkingDog', 'WalkDog')
+                    
+                    positions = self.get_positions(pose_format, f, subject, data_type)
+                    
+                    total_frame_num = self.obs_frame_num + self.pred_frame_num
+                    section_range = positions.shape[0] // (
+                            total_frame_num * (self.skip_frame_num + 1)) if self.use_video_once is False else 1
+                    for i in range(section_range):
+                        video_data = {
+                            'observed_pose': list(),
+                            'future_pose': list(),
+                        }
+                        for j in range(0, total_frame_num * (self.skip_frame_num + 1), self.skip_frame_num + 1):
+                            if j < (self.skip_frame_num + 1) * self.obs_frame_num:
+                                video_data['observed_pose'].append(
+                                    positions[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())                                
+                                video_data['observed_image_path'].append(
+                                    f'{os.path.basename(f).split(".cdf")[0]}_{i * total_frame_num * (self.skip_frame_num + 1) + j:05}')
+                            else:
+                                video_data['future_pose'].append(
+                                    positions[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
+                                video_data['future_image_path'].append(
+                                    f'{os.path.basename(f).split(".cdf")[0]}_{i * total_frame_num * (self.skip_frame_num + 1) + j:05}'
+                                )
+                        self.update_meta_data(self.meta_data[pose_format], video_data['observed_pose'], 3)
+
+                        with jsonlines.open(os.path.join(self.output_dir, output_file_names[pose_format]), mode='a') as writer:
+                            writer.write({
+                                'video_section': f'{subject}-{canonical_name}-{i}',
+                                'observed_pose': video_data['observed_pose'],
+                                'future_pose': video_data['future_pose'],                          
+                                'observed_image_path': video_data['observed_image_path'],
+                                'future_image_path': video_data['future_image_path'],
+                                'action': action.split()[0]
+                            })
+            self.save_meta_data(self.meta_data, self.output_dir, pose_format, data_type)
+            ##self.save_meta_data(self.meta_data, self.output_dir, True, data_type)
+            # self.delete_redundant_files()
+
+    def get_positions(self, pose_format, file_path, subject, data_type):
+        func = {
+            '3D': self.xyz_rep,
+            'euler': self.euler_rep,
+            'expmap': self.expmap_rep,
+            'rotmat': self.rotmat_rep,
+            'quat': self.quaternion_rep
+        }
+        return func[pose_format](file_path, subject, data_type)
+
+    def xyz_rep(self, file_path, subject, data_type):
+        hf = cdflib.CDF(file_path)
+        positions = hf['Pose'].reshape(-1, 96)
+        if data_type == 'train':
+            positions = positions[:95 * positions.shape[0] // 100]
+        elif data_type == 'validation':
+            positions = positions[95 * positions.shape[0] // 100:]
+        positions /= 1000
+        return positions
     
     def expmap_rep(self, file_path, subject, data_type):
         output_directory = os.path.join(PREPROCESSED_DATA_DIR, 'H3.6m_rotations')
@@ -194,8 +180,12 @@ class PreprocessorHuman36m(Processor):
         data = expmap_to_euler(data)
         return data
 
-    def quaternion_rep(self, file_path, subject, data_type):
-        data = self.expmap_rep(file_path, subject, data_type)
+    def quaternion_rep(self, file_path, subject, data_type, expmap=None):
+        if expmap is None:
+            data = self.expmap_rep(file_path, subject, data_type)
+        else:
+            data = expmap
+
         quat = expmap_to_quaternion(-data)
         quat = qfix(quat)
         quat = quat.reshape(-1, 32 * 4)

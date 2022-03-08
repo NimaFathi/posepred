@@ -123,4 +123,5 @@ class Preprocessor3DPW(Processor):
                         'future_cam_extrinsic': data_row[6],
                         'cam_intrinsic': data_row[7]
                     })
-        self.save_meta_data(self.meta_data, self.output_dir, True, data_type)
+        self.save_meta_data(self.meta_data, self.output_dir, '3D', data_type)
+        #self.save_meta_data(self.meta_data, self.output_dir, True, data_type)
