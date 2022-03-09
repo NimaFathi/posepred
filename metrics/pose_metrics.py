@@ -142,6 +142,7 @@ def MSE(pred, target, dim=None, mask=None):
         pred -- predicted sequence : (batch_size, sequence_length, pose_dim*n_joints)
 
     """
+    target = target.reshape(*target.shape[:-2], -1) 
     assert pred.shape == target.shape
     B, S, D = pred.shape
     

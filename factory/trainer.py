@@ -97,8 +97,8 @@ class Trainer:
                 metric_value = metric_func(
                     #model_outputs['pred_pose'],
                     #data[f'future_pose'].to(self.args.device),
-                    model_outputs[f'pred_{self.args.pred_pose_format}_pose'].to(self.args.device), 
-                    data[f'future_{self.args.pred_pose_format}_pose'].to(self.args.device),
+                    model_outputs[f'{self.args.pred_pose_format}_pred_pose'].to(self.args.device), 
+                    data[f'{self.args.pred_pose_format}_future_pose'].to(self.args.device),
                     self.model.args.pred_keypoint_dim, pred_mask
                     )
 
