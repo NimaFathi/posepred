@@ -27,28 +27,6 @@ class SolitaryDataset(Dataset):
         self.normalize = normalize
         self.use_action = use_action
 
-        self.actions_dict = {
-            	"walking": 0,
-                "eating": 1,
-                "smoking": 2,
-                "discussion": 3,
-                "directions": 4,
-                "greeting": 5,
-                "phoning": 6,
-                "posing": 7,
-                "purchases": 8,
-                "sitting": 9,
-                "sittingdown": 10,
-                "takingphoto": 11,
-                "photo": 11,
-                "takephoto": 11,
-                "waiting": 12,
-                "walkingdog": 13,
-                "walkdog": 13,
-                "walkingtogether": 14,
-                "walktogether": 14
-        }
-
         if normalize:
             assert metadata_path, "Specify metadata_path when normalize is true."
             with open(os.path.join(PREPROCESSED_DATA_DIR, metadata_path)) as meta_file:
@@ -97,8 +75,8 @@ class SolitaryDataset(Dataset):
                 assert 'future_pose' in seq.keys(), 'dataset must include future_pose'
                 self.future_frames_num = seq['future_pose'].shape[-2]
 
-    def __len__(self):
-        return len(self.data)
+    def __len__(self):        
+        return min(len(self.data[pose_format]) for pose_format in self.pose_formats) 
 
     def __getitem__(self, index):
         sequences = {pose_format: self.data[pose_format][index] for pose_format in self.pose_formats}
@@ -110,8 +88,13 @@ class SolitaryDataset(Dataset):
             outputs_keys.append('future_pose')
             if self.use_mask:
                 outputs_keys.append('future_mask')
-
+        
+        
         outputs = dict()
+
+        if self.use_action:
+            outputs['action_ids'] = torch.tensor(sequences[self.pose_formats[0]]['action'])
+   
         for pose_format in self.pose_formats:
             seq = sequences[pose_format]
             for key in outputs_keys:
@@ -119,11 +102,8 @@ class SolitaryDataset(Dataset):
                     outputs[pose_format + '_' + key] = seq[key]
                 else:
                     raise Exception('dataset must include ' + key)
-        
-        if self.use_action:
-            outputs['action_ids'] = torch.tensor(self.actions_dict[seq['action'].lower()])
 
-        #print(outputs['action_ids'])
+
         if self.is_visualizing:
             if 'observed_image_path' in seq.keys():
                 outputs['observed_image'] = seq['observed_image_path']
