@@ -37,6 +37,28 @@ class PreprocessorHuman36m(Processor):
 
         self.pose_formats = ['3D', 'rotmat', 'expmap', 'quat', 'euler']
 
+        self.actions_dict = {
+            "walking": 0,
+            "eating": 1,
+            "smoking": 2,
+            "discussion": 3,
+            "directions": 4,
+            "greeting": 5,
+            "phoning": 6,
+            "posing": 7,
+            "purchases": 8,
+            "sitting": 9,
+            "sittingdown": 10,
+            "takingphoto": 11,
+            "photo": 11,
+            "takephoto": 11,
+            "waiting": 12,
+            "walkingdog": 13,
+            "walkdog": 13,
+            "walkingtogether": 14,
+            "walktogether": 14
+        }
+
         self.meta_data = {pose_format: {
                 'avg_person': [],
                 'max_pose': np.zeros(3),
@@ -125,7 +147,7 @@ class PreprocessorHuman36m(Processor):
                                 'future_pose': video_data['future_pose'],                          
                                 'observed_image_path': video_data['observed_image_path'],
                                 'future_image_path': video_data['future_image_path'],
-                                'action': action.split()[0]
+                                'action': self.actions_dict[action.split()[0].lower()]
                             })
             self.save_meta_data(self.meta_data, self.output_dir, pose_format, data_type)
             ##self.save_meta_data(self.meta_data, self.output_dir, True, data_type)
