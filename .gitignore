@@ -249,3 +249,5 @@ raw_data/
 visualization/example.py
 outputs/
 #slurm*
+#
+**/*.sh
