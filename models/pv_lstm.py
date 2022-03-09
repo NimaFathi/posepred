@@ -20,7 +20,7 @@ class PVLSTM(nn.Module):
                                         args.n_layers, args.dropout_mask_dec, 'sigmoid')
 
     def forward(self, inputs):
-        pose = inputs['observed_pose']
+        pose = inputs['observed_xyz_pose']
         vel = pose[..., 1:, :] - pose[..., :-1, :]
 
         (hidden_vel, cell_vel) = self.vel_encoder(vel.permute(1, 0, 2))
