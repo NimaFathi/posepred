@@ -106,8 +106,8 @@ def L2NormLoss_train(gt, out):
 def uncertain_loss(gt, out, alphas, lamda):
     batch_size, _, seq_len = gt.shape
     T = seq_len
-    gt = gt.view(batch_size, -1, seq_len, 3)
-    out = out.view(batch_size, -1, seq_len, 3)
+    gt = gt.view(batch_size, -1, 3, seq_len).permute(0, 1, 3, 2).contiguous()
+    out = out.view(batch_size, -1, 3, seq_len).permute(0, 1, 3, 2).contiguous()
     temp = torch.norm(gt-out, 2, dim = -1)
     time_coeff = torch.arange(1,T+1)/T
     final_coeff = torch.pow(time_coeff, alphas.unsqueeze(-1).repeat(1,1,T))
@@ -129,7 +129,6 @@ class MSRGCNLoss(nn.Module):
         self.lamda = args.lamda
 
     def forward(self, model_outputs, input_data):
-        print("keyssssssss", input_data.keys())
         gt = torch.cat([input_data['observed_expmap_pose'].clone(), input_data['future_expmap_pose'].clone()], dim=1)
     
         gt = gt.reshape((gt.shape[0], gt.shape[1], -1))
@@ -158,28 +157,6 @@ class MSRGCNLoss(nn.Module):
         final_loss = 0
         for k in out.keys():
             final_loss+= losses[k]
-        # print(gt["p22"].shape)
-        # print(model_outputs["pred_pose"]["p22"].shape)
-
-        # observed_pose = input_data['observed_pose']
-        # future_pose = input_data['future_pose']
-        # observed_vel = observed_pose[..., 1:, :] - observed_pose[..., :-1, :]
-        # future_vel = torch.cat(((future_pose[..., 0, :] - observed_pose[..., -1, :]).unsqueeze(-2),
-        #                         future_pose[..., 1:, :] - future_pose[..., :-1, :]), -2)
-
-        # # prediction loss
-        # pred_vel_loss = self.mse1(model_outputs['pred_vel'], future_vel)
-
-        # # completion loss
-        # comp_vel_loss = self.mse2(model_outputs['comp_vel'], observed_vel)
-        # comp_ade = ADE(model_outputs['comp_pose'], input_data['observed_pose'], self.args.keypoint_dim)
-        # comp_ade_noise_only = ADE(model_outputs['comp_pose_noise_only'], observed_pose, self.args.keypoint_dim)
-
-        # loss = (self.args.pred_weight * pred_vel_loss) + (self.args.comp_weight * comp_vel_loss)
-        # outputs = {'loss': loss, 'pred_vel_loss': pred_vel_loss, 'comp_vel_loss': comp_vel_loss, 'comp_ade': comp_ade,
-        #            'comp_ade_noise_only': comp_ade_noise_only}
-
-
 
         return {'loss': final_loss, 'loss_p22':losses['p22'],'loss_p12':losses['p12'],'loss_p7':losses['p7'],'loss_p4':losses['p4'],
                 'loss_1000':losses[25], 'loss_560': losses[14], 'loss_400':losses[10], 'loss_320':losses[8], 'loss_160':losses[4],

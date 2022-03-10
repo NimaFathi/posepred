@@ -19,8 +19,10 @@ from utils.others import expmap_to_quaternion, qfix, expmap_to_rotmat, expmap_to
 logger = logging.getLogger(__name__)
 
 SPLIT = {
-    'train': ['S1', 'S5', 'S6', 'S7', 'S8'],
-    'validation': ['S1', 'S5', 'S6', 'S7', 'S8'],
+    # 'train': ['S1', 'S5', 'S6', 'S7', 'S8'],
+    # 'validation': ['S1', 'S5', 'S6', 'S7', 'S8'],
+    'train': ['S1', 'S5'],
+    'validation': ['S1', 'S5'],
     'test': ['S9', 'S11']
 }
 
@@ -87,7 +89,7 @@ class PreprocessorOur(Processor):
                 #     positions = positions[95 * positions.shape[0] // 100:]
                 # positions /= 1000
                 expmap = self.expmap_rep(action, subject, data_type)
-                positions = self.expmap2xyz_torch(torch.from_numpy(copy.deepcopy(expmap)).float().cuda())
+                positions = self.expmap2xyz_torch(torch.from_numpy(copy.deepcopy(expmap)).float())
                 rotmat = self.rotmat_rep(action, subject, data_type)
                 euler = self.euler_rep(action, subject, data_type)
                 quat = self.quaternion_rep(action, subject, data_type)
@@ -130,11 +132,11 @@ class PreprocessorOur(Processor):
                     writer.write({
                         'video_section': f'{subject}-{canonical_name}',
                         'action': f'{canonical_name}',
-                        'xyz_pose': video_data['xyz_pose'],
-                        'quaternion_pose': video_data['quaternion_pose'],
+                        # 'xyz_pose': video_data['xyz_pose'],
+                        # 'quaternion_pose': video_data['quaternion_pose'],
                         'expmap_pose': video_data['expmap_pose'],
-                        'rotmat_pose': video_data['rotmat_pose'],
-                        'euler_pose': video_data['euler_pose']
+                        # 'rotmat_pose': video_data['rotmat_pose'],
+                        # 'euler_pose': video_data['euler_pose']
                         # ,'image_path': video_data['image_path']
                     })
         self.save_meta_data(self.meta_data, self.output_dir, True, data_type)
@@ -272,7 +274,7 @@ class PreprocessorOur(Processor):
         """
         n_a = angles.data.shape[0]
         j_n = offset.shape[0]
-        p3d = Variable(torch.from_numpy(offset)).float().cuda().unsqueeze(0).repeat(n_a, 1, 1)
+        p3d = Variable(torch.from_numpy(offset)).float().unsqueeze(0).repeat(n_a, 1, 1)
         angles = angles[:, 3:].contiguous().view(-1, 3)
 
         theta = torch.norm(angles, 2, 1)
@@ -284,7 +286,7 @@ class PreprocessorOur(Processor):
         r1 = r1.view(-1, 3, 3)
         r1 = r1 - r1.transpose(1, 2)
         n = r1.data.shape[0]
-        R = (torch.eye(3, 3).repeat(n, 1, 1).float().cuda() + torch.mul(
+        R = (torch.eye(3, 3).repeat(n, 1, 1).float() + torch.mul(
             torch.sin(theta).unsqueeze(1).repeat(1, 9).view(-1, 3, 3), r1) + torch.mul(
             (1 - torch.cos(theta).unsqueeze(1).repeat(1, 9).view(-1, 3, 3)), torch.matmul(r1, r1))).view(n_a, j_n, 3, 3)
         

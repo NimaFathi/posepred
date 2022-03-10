@@ -1,3 +1,5 @@
+from __future__ import print_function
+from matplotlib.pyplot import get
 import numpy as np
 from torch import nn
 import torch
@@ -74,6 +76,24 @@ class Proc(nn.Module):
             da[:, i, :, :] = torch.mean(my_data[:, index[i], :, :], dim=1)
         da = da.reshape(N, -1, seq_len)
         return da
+    
+    def get_index(self, key):
+        if key == "p12":
+            return self.Index2212
+        if key == "p7":
+            return self.Index127
+
+        if key == "p4":
+            return self.Index74
+
+    def down_alpha(self, alphas, key):
+        index = self.get_index(key)
+        N, j = alphas.shape
+        new_alphas = torch.zeros((N, len(index)))
+        for i in range(len(index)):
+            new_alphas[:, i] = torch.mean(alphas[:, index[i]], dim=1)
+        return new_alphas
+
 
     def forward(self, x, preproc):
         if preproc:

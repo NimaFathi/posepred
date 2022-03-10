@@ -189,8 +189,6 @@ class MSRGCN(nn.Module):
         :return:
         '''
 
-        print(inputs.keys, inputs["action"])
-
         # print(inputs['observed_pose'].shape, inputs['future_pose'].shape)
         observed = inputs['observed_expmap_pose'].clone()
         observed = observed.reshape((observed.shape[0], observed.shape[1], -1))
@@ -207,11 +205,23 @@ class MSRGCN(nn.Module):
             "p7":[],
             "p4":[]
         }
-        for action in inputs["action"]:
-            alphas["p22"].append(self.alphas_22[action])
-            alphas["p12"].append(self.alphas_12[action])
-            alphas["p7"].append(self.alphas_7[action])
-            alphas["p4"].append(self.alphas_4[action])
+        if self.args.uncertainty_per_scale == True:
+            for action in inputs["action"]:
+                alphas["p22"].append(self.alphas_22[action])
+                alphas["p12"].append(self.alphas_12[action])
+                alphas["p7"].append(self.alphas_7[action])
+                alphas["p4"].append(self.alphas_4[action])
+            alphas["p22"] = torch.cat(alphas["p22"], dim=0)
+            alphas["p12"] = torch.cat(alphas["p12"], dim=0)
+            alphas["p7"] = torch.cat(alphas["p7"], dim=0)
+            alphas["p4"] = torch.cat(alphas["p4"], dim=0)
+        else:
+            for action in inputs["action"]:
+                alphas["p22"].append(self.alphas_22[action])
+            alphas["p22"] = torch.cat(alphas["p22"], dim=0)
+            alphas["p12"] = self.proc.down_alpha(alphas["p22"], "p12")
+            alphas["p7"] = self.proc.down_alpha(alphas["p12"], "p7")
+            alphas["p4"] = self.proc.down_alpha(alphas["p7"], "p4")
 
         # 左半部分
         enhance_first_left = self.first_enhance(x_p22)  # B, 66, 64
@@ -259,14 +269,15 @@ class MSRGCN(nn.Module):
 
         fusion_fourth = self.fourth_extra(bottom_right) + bottom_right  # 残差连接
         pred_fourth = self.fourth_out(fusion_fourth) + x_p4  # 大残差连接
-        print("shappepepepepepep", torch.cat(alphas["p22"], dim=0).shape)
+
+
         return {
             "pred_pose":{"p22": pred_first, "p12": pred_second, "p7": pred_third, "p4": pred_fourth},
             "alphas":{
-                "p22":torch.sigmoid(torch.cat(alphas["p22"], dim=0)),
-                "p12":torch.sigmoid(torch.cat(alphas["p12"], dim =0)),
-                "p7":torch.sigmoid(torch.cat(alphas["p7"], dim =0)),
-                "p4":torch.sigmoid(torch.cat(alphas["p4"], dim =0))
+                "p22":torch.sigmoid(alphas["p22"]),
+                "p12":torch.sigmoid(alphas["p12"]),
+                "p7":torch.sigmoid(alphas["p7"]),
+                "p4":torch.sigmoid(alphas["p4"])
             }
         }
 
