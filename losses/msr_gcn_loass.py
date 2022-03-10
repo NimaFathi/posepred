@@ -103,15 +103,18 @@ def L2NormLoss_train(gt, out):
     loss = torch.mean(torch.norm(gt - out, 2, dim=-1))
     return loss
 
-def uncertain_loss(gt, out, alphas, lamda):
+def uncertain_loss(gt, out, alphas, lamda, T):
     batch_size, _, seq_len = gt.shape
-    T = seq_len
     gt = gt.view(batch_size, -1, 3, seq_len).permute(0, 1, 3, 2).contiguous()
     out = out.view(batch_size, -1, 3, seq_len).permute(0, 1, 3, 2).contiguous()
     temp = torch.norm(gt-out, 2, dim = -1)
-    time_coeff = torch.arange(1,T+1).to(gt.device)/T
-    final_coeff = torch.pow(time_coeff, alphas.unsqueeze(-1).repeat(1,1,T))
-    return (temp*(1-final_coeff)).sum()-lamda*torch.log(alphas).sum()
+    time_coeff = torch.arange(1,seq_len+1).to(gt.device)/T
+    final_coeff = torch.pow(time_coeff, alphas.unsqueeze(-1).repeat(1,1,seq_len))
+    print(alphas)
+    print(lamda*torch.log(alphas).mean())
+    print("coeff", final_coeff)
+    # print(temp)
+    return (temp*(1-final_coeff)).mean()-lamda*torch.log(alphas).mean()
 
 class MSRGCNLoss(nn.Module):
 
@@ -127,6 +130,7 @@ class MSRGCNLoss(nn.Module):
         self.global_max = args.global_max   
         self.uncertainty_aware = args.uncertainty_aware
         self.lamda = args.lamda
+        self.T = args.T
 
     def forward(self, model_outputs, input_data):
         gt = torch.cat([input_data['observed_expmap_pose'].clone(), input_data['future_expmap_pose'].clone()], dim=1)
@@ -150,7 +154,7 @@ class MSRGCNLoss(nn.Module):
                     losses[frame]=torch.mean(torch.norm(gt[k].view(batch_size,-1,3,seq_len)[:,:,:,frame+10-1]- \
                                                         temp.view(batch_size, -1, 3, seq_len)[:,:,:,frame+10-1], 2, -1))
             if self.uncertainty_aware:
-                losses[k] += uncertain_loss(gt[k], temp, model_outputs["alphas"][k], self.lamda)
+                losses[k] += uncertain_loss(gt[k], temp, model_outputs["alphas"][k], self.lamda, self.T)
             else:
                 losses[k] += L2NormLoss_train(gt[k], temp)
         
