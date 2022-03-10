@@ -179,4 +179,7 @@ class JTAPreprocessor(Processor):
                         })
         print("mask percentage: {}".format(count_mask_data / count_total_data))
         self.meta_data['mask_percentage'] = count_mask_data / count_total_data
-        self.save_meta_data(self.meta_data, self.output_dir, self.is_3d, data_type)
+
+        pose_format = '3D' if self.is_3d else '2D'
+        self.save_meta_data(self.meta_data, self.output_dir, pose_format, data_type)
+        #self.save_meta_data(self.meta_data, self.output_dir, self.is_3d, data_type)

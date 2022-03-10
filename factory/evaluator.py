@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 class Evaluator:
     # evaluator = Evaluator(cfg, eval_dataloader, model, loss_module, eval_reporter)
     def __init__(self, args, dataloader, model, loss_module, reporter):
+        self.args = args
         self.dataloader = dataloader
         self.model = model.to(args.device)
         self.loss_module = loss_module.to(args.device)
@@ -28,7 +29,9 @@ class Evaluator:
         for i in range(self.rounds_num):
             logger.info('round ' + str(i + 1) + '/' + str(self.rounds_num))
             self.__evaluate()
-            logger.info('ADE: ' + str(self.reporter.history['ADE'][-1]))
+            #for metric in self.args.pose_metrics:
+            #    logger.info(f'{metric}: ' + str(self.reporter.history[metric][-1]))
+            logger.info(f'MSE: ' + str(self.reporter.history['MSE'][-1]))
         self.reporter.print_mean_std(logger, self.model.args.use_mask)
         logger.info("Evaluation has been completed.")
 
@@ -37,11 +40,13 @@ class Evaluator:
         for data in self.dataloader:
             batch_size = data['observed_pose'].shape[0]
 
+            data['future_euler_pose'] = data['future_euler_pose'].reshape(*data['future_euler_pose'].shape[:-2], -1)# temporart
+            #print(data.device, self.model.device)
             with torch.no_grad():
                 # predict & calculate loss
                 model_outputs = self.model(dict_to_device(data, self.device))
                 loss_outputs = self.loss_module(model_outputs, dict_to_device(data, self.device))
-                assert 'pred_pose' in model_outputs.keys(), 'outputs of model should include pred_pose'
+                assert f'pred_{self.args.pred_pose_format}_pose' in model_outputs.keys(), 'outputs of model should include pred_pose'
 
                 if self.model.args.use_mask:
                     assert 'pred_mask' in model_outputs.keys(), 'outputs of model should include pred_mask'
@@ -53,8 +58,8 @@ class Evaluator:
                 report_attrs = loss_outputs
                 for metric_name in self.pose_metrics:
                     metric_func = POSE_METRICS[metric_name]
-                    metric_value = metric_func(model_outputs['pred_pose'], data['future_pose'].to(self.device),
-                                               self.model.args.keypoint_dim, pred_mask)
+                    metric_value = metric_func(model_outputs[f'pred_{self.args.pred_pose_format}_pose'].to(self.device), data[f'future_{self.args.pred_pose_format}_pose'].to(self.device),
+                                               self.model.args.pred_keypoint_dim, pred_mask)
                     report_attrs[metric_name] = metric_value
 
                 # calculate mask_metrics

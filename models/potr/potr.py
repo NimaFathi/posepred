@@ -58,6 +58,12 @@ class POTR(nn.Module):
                 nn.Linear(self.action_head_size, args.num_activities),
             )
 
+        if args.consider_uncertainty:
+            self.uncertainty_matrix = nn.parameter.Parameter(data=torch.zeros(args.num_activities, args.n_major_joints), requires_grad=True)
+            nn.init.xavier_uniform_(self.uncertainty_matrix.data)
+            #self.uncertainty_matrix.data
+
+
     def init_query_embedding(self):
         """Initialization of query sequence embedding."""
         self.query_embed = nn.Embedding(self.args.future_frames_num, self.args.model_dim)
@@ -155,9 +161,12 @@ class POTR(nn.Module):
         A tensor of the predicted sequence with shape [batch_size, 
         tgt_sequence_length, dim_pose].
         """
+
         preprocessed_inputs = train_preprocess(inputs, self.args)
-        input_pose_seq = preprocessed_inputs['encoder_inputs']
-        target_pose_seq = preprocessed_inputs['decoder_inputs']
+        enc_shape = preprocessed_inputs['encoder_inputs'].shape
+        dec_shape = preprocessed_inputs['decoder_inputs'].shape
+        input_pose_seq = preprocessed_inputs['encoder_inputs'].reshape((*enc_shape[:-2], -1))
+        target_pose_seq = preprocessed_inputs['decoder_inputs'].reshape((*dec_shape[:-2], -1))
 
         return self.forward_training(
                 input_pose_seq, target_pose_seq, mask_target_padding, get_attn_weights)
@@ -167,7 +176,7 @@ class POTR(nn.Module):
                        input_pose_seq_,
                        target_pose_seq_,
                        mask_target_padding,
-                       get_attn_weights=False):
+                       get_attn_weights):
         """Compute forward pass for training and non recursive inference.
         Args:
         input_pose_seq_: Source sequence [batch_size, src_len, skeleton_dim].
@@ -213,7 +222,7 @@ class POTR(nn.Module):
             query_selection_fn=query_copy_fn
         )
 
-        end = self.args.pose_dim * self.args.n_joints
+        end = self.args.pose_dim * self.args.n_major_joints
         out_sequence = []
         target_pose_seq_ = mat[0] if self.args.query_selection else \
             torch.transpose(target_pose_seq_, 0, 1)
@@ -227,18 +236,19 @@ class POTR(nn.Module):
                 attn_output[l].view(-1, self.args.model_dim))
             # [target_seq_length, batch_size, pose_dim]
             out_sequence_ = out_sequence_.view(
-                self.args.future_frames_num, -1, self.args.pose_dim * self.args.n_joints)
+                self.args.future_frames_num, -1, self.args.pose_dim * self.args.n_major_joints)
             # apply residual connection between target query and predicted pose
-            # [tgt_seq_len, batch_size, pose_dim]
+            # [tgt_seq_len, batch_size, pose_dim * n_joints]
             out_sequence_ = out_sequence_ + target_pose_seq_[:, :, 0:end]
-            # [batch_size, tgt_seq_len, pose_dim]
+            # [batch_size, tgt_seq_len, pose_dim * n_joints]
+            
             out_sequence_ = torch.transpose(out_sequence_, 0, 1)
+
+            shape = out_sequence_.shape
+            out_sequence_ = out_sequence_.reshape((*shape[:-1], self.args.n_major_joints, self.args.pose_dim))
             out_sequence.append(out_sequence_)
 
-        if self.args.predict_activity:
-            out_class = self.predict_activity(attn_output, memory)
-            return out_sequence, out_class, attn_weights, enc_weights, mat
-        
+
         pred_euler_pose = torch.tensor(post_process_to_euler( # convert to post_process_to_format
             out_sequence[-1].detach().cpu().numpy(), 
             self.args.n_major_joints, 
@@ -246,13 +256,29 @@ class POTR(nn.Module):
             self.args.pose_format))
 
         assert self.args.pred_pose_format == 'euler'
+
         outputs = {
-            f'pred_euler_pose': pred_euler_pose,
-            'out_sequences': out_sequence,
-            'attn_weights': attn_weights,
-            'enc_weights': enc_weights,
-            'mat': mat
+                'pred_euler_pose': pred_euler_pose,
+                'out_sequences': out_sequence,
+                'attn_weights': attn_weights,
+                'enc_weights': enc_weights,
+                'mat': mat
         }
+
+        if self.args.predict_activity:
+            outputs['out_class'] = self.predict_activity(attn_output, memory)
+
+        if self.args.consider_uncertainty:
+            outputs['uncertainty_matrix'] = torch.sigmoid(self.uncertainty_matrix)
+        
+        """
+        if self.args.predict_activity:
+            out_class = self.predict_activity(attn_output, memory)
+            print('out_class', len(out_class), out_class[0].shape)
+
+            return out_sequence, out_class, attn_weights, enc_weights, mat
+        """        
+
 
         return outputs#out_sequence, attn_weights, enc_weights, mat
 
@@ -278,6 +304,7 @@ class POTR(nn.Module):
         # [batch_size, src_len*model_dim]
         in_act = torch.reshape(in_act, (-1, self.action_head_size))
         actions = self.action_head(in_act)
+        #print('actions', actions.shape)
         return [actions]
 
 

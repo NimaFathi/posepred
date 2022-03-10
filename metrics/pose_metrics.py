@@ -143,36 +143,12 @@ def MSE(pred, target, dim=None, mask=None):
         pred -- predicted sequence : (batch_size, sequence_length, pose_dim*n_joints)
 
     """
-    #keypoints_num = int(pred.shape[-1] / dim)
-    #pred = torch.reshape(pred, pred.shape[:-1] + (keypoints_num, dim))
-    #target = torch.reshape(target, target.shape[:-1] + (keypoints_num, dim))
-    #displacement = 0
-    #for d in range(dim):
-    #    displacement += (pred[..., d] - target[..., d]) ** 2
-    #ade = torch.mean(torch.sqrt(displacement))
-
-
-    #action = action[0]
-    #print('action', action)
-    #decoder_pred =  decoder_pred_[ai, :, :, :]
-
-    #print('decoder_pred', decoder_pred.shape)
-    #if self._params['dataset'] == 'h36m':
-    
+    target = target.reshape(*target.shape[:-2], -1) 
     assert pred.shape == target.shape
     B, S, D = pred.shape
-    # seq_len x n_seeds x pose_dim
-    #pred = pred.permute((1, 0, 2))
-
-      # a list or a vector of length n_seeds
-      # each entry of: shape seq_len x complete_pose_dim (H36M == 99)
-    #srnn_pred_euler = self._eval_dataset_fn.dataset.post_process_to_euler(decoder_pred) 
-    #print('srnn_pred_euler', srnn_pred_euler.shape)
-    # n_seeds x seq_len
     
     mean_errors = torch.zeros((B, S))
 
-    #print('mean_errors', mean_errors.shape)
     # Training is done in exponential map or rotation matrix or quaternion
     # but the error is reported in Euler angles, as in previous work [3,4,5] 
     for i in np.arange(B):
@@ -189,14 +165,9 @@ def MSE(pred, target, dim=None, mask=None):
         # here [2,4,5] remove data based on the std of the batch THIS IS WEIRD!
         # (seq_len, 96) - (seq_len, 96)
         idx_to_use = np.where(np.std(gt_i.detach().cpu().numpy(), 0) > 1e-4)[0]
-        #print('gt_i', gt_i.shape)
-        #print('eulerchannels_pred', eulerchannels_pred.shape)
-        #print(type(gt_i), type(eulerchannels_pred))
         euc_error = torch.pow(gt_i[:,idx_to_use] - eulerchannels_pred[:,idx_to_use], 2)
-        #print('euc_error1', euc_error.shape)
         # shape: seq_len
         euc_error = torch.sum(euc_error, 1)
-        #print('euc_error2', euc_error.shape)
         # shape: seq_len
         euc_error = torch.sqrt(euc_error)
         mean_errors[i,:] = euc_error
@@ -204,19 +175,12 @@ def MSE(pred, target, dim=None, mask=None):
       # This is simply the mean error over the eval_num_seeds examples
       # with shape [eval_num_seeds]
     mean_mean_errors = torch.mean(mean_errors, 0)
-    #print('mean_mean_errors', mean_mean_errors.shape)
-    #mean_eval_error_dict[action] = self.print_range_summary(action, mean_mean_errors)
-    #print()
-    #import sys
-    #sys.exit()
-    #print(mean_mean_errors.shape)
-    return mean_mean_errors.mean()#mean_eval_error_dict
-
-    #return ade
+    return mean_mean_errors.mean() #mean_eval_error_dict
 
 
-
-# print('here1')
-pred = torch.rand(2, 25, 96)
-target = torch.rand(2, 25, 96)
-# print(MSE(pred, target))
+"""
+print('here1')
+pred = torch.rand(2, 2, 96)
+target = torch.rand(2, 2, 96)
+print(MSE(pred, target))
+"""

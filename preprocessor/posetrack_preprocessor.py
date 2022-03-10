@@ -166,4 +166,5 @@ class PoseTrackPreprocessor(Processor):
                             'observed_image_path': data_row[5],
                             'future_image_path': data_row[6],
                         })
-        self.save_meta_data(self.meta_data, self.output_dir, False, data_type)
+        self.save_meta_data(self.meta_data, self.output_dir, '2D', data_type)
+        #self.save_meta_data(self.meta_data, self.output_dir, False, data_type)

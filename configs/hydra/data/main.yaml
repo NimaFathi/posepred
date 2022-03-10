@@ -10,22 +10,24 @@ use_mask: ${use_mask}
 train_pose_format: ${train_pose_format}
 pred_pose_format: ${pred_pose_format}
 
-use_expmap: true
-use_rotmat: true
-use_euler: true
-use_quaternion: true
+use_expmap: false
+use_rotmat: false
+use_euler: false
+use_quaternion: false
 use_xyz: false
+use_action: false
+pose_formats: []
 
 is_testing: false
 is_visualizing: false
-batch_size: 256
+batch_size: 16
 shuffle: false
 pin_memory: false
 num_workers: 10
 overfit:
 normalize: ${normalize}
 metadata_path:
-seq_rate: 2
+seq_rate: 100
 frame_rate: 2
 len_observed: 10
 len_future: 25

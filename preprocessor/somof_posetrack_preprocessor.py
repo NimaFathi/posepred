@@ -37,7 +37,8 @@ class SoMoFPoseTrackPreprocessor(Processor):
         logger.info('start creating SoMoF-PoseTrack normal static data ... ')
         preprocessed_data = self.__clean_data(data_type)
         self.__save_csv(data_type, preprocessed_data)
-        self.save_meta_data(self.meta_data, self.output_dir, False, data_type)
+        self.save_meta_data(self.meta_data, self.output_dir, '2D', data_type)
+        #self.save_meta_data(self.meta_data, self.output_dir, False, data_type)
 
     def __save_csv(self, data_type, processed_data, file_type=None):
         if self.custom_name:

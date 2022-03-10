@@ -14,6 +14,8 @@ VISUALIZING_TYPES = ['observed', 'future', 'predicted', 'completed']
 def get_dataloader(dataset_path, args, is_train=True):
     if dataset_path is None:
         return None
+    use_format = (args.use_expmap or args.use_rotmat or args.use_euler or args.use_quaternion or args.use_xyz)
+    assert use_format == True, "Please define the required pose_format for the data"
     if args.is_interactive:
         dataset = InteractiveDataset(
             dataset_path,
@@ -58,7 +60,7 @@ def get_dataloader(dataset_path, args, is_train=True):
                 args.use_rotmat,
                 args.use_euler,
                 args.use_quaternion,
-                args.use_xyz,
+                args.use_xyz, # TODO: add action
                 args.normalize,
                 args.metadata_path, 
                 args.seq_rate,
@@ -77,6 +79,8 @@ def get_dataloader(dataset_path, args, is_train=True):
                 args.use_rotmat,
                 args.use_euler,
                 args.use_quaternion,
+                args.use_xyz,
+                args.use_action,
                 args.normalize,
                 args.metadata_path
             )

@@ -252,4 +252,4 @@ results
 tmp/
 jobs
 **/slurm*
-*.sh
+**/*.sh

@@ -30,7 +30,7 @@ class OurDataset(Dataset):
                  len_observed,
                  len_future):
 
-        print("Initialzing Dataset:")
+        print("Initialzing Our Dataset:")
 
         self.normalize = normalize
         self.use_expmap = use_expmap
@@ -113,7 +113,7 @@ class OurDataset(Dataset):
             temp_seq = temp_seq.view(-1, self.frame_rate, s[1], s[2])[:, 0, :, :]
             outputs["observed_" + k] = temp_seq[:self.len_observed]
             outputs["future_" + k] = temp_seq[self.len_observed:]
-
+        # print("akslfdjahdslkfjsahlkdjfm", outputs.keys())
         outputs["action"] = seq["action"]
         # todo: save other keys as well, not just the actions
 

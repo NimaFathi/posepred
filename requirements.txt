@@ -15,3 +15,5 @@ jsonlines
 tensorboard
 hydra-core
 cdflib
+astropy
+seaborn

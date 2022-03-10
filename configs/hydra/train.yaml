@@ -2,7 +2,7 @@ defaults:
   - _self_
   - data: main
   - model: ???
-  - optimizer: adam
+  - optimizer: adamw
   - scheduler: reduce_lr_on_plateau
   - metrics
 

@@ -31,6 +31,7 @@ class Trainer:
     def train(self):
         logger.info("Training started.")
         time0 = time.time()
+        best_loss = 0.0
         for epoch in range(self.args.start_epoch, self.args.epochs):
             self.__train()
             if self.use_validation:
@@ -45,6 +46,7 @@ class Trainer:
                     self.valid_reporter.save_data(self.model.args.use_mask, self.args.save_dir)
                 Reporter.save_plots(self.model.args.use_mask, self.args.save_dir, self.train_reporter.history,
                                     self.valid_reporter.history, self.use_validation)
+            #if self.use_validation and 
         self.tensor_board.close()
         logger.info("-" * 100)
         logger.info('Training is completed in %.2f seconds.' % (time.time() - time0))
@@ -59,10 +61,14 @@ class Trainer:
                 pose_key = [k for k in data.keys() if "pose" in k][0]
             batch_size =data[pose_key].shape[0]
             data = dict_to_device(data, self.args.device)
+            #print('data', data.keys())
+            #print(data['action_ids'])
             # predict & calculate loss
             self.model.zero_grad()
             model_outputs = self.model(data)
-            loss_outputs = self.loss_module(model_outputs, dict_to_device(data, self.args.device))
+            #print(type(model_outputs), type(model_outputs[0]))
+            #print('keys', model_outputs.keys())
+            loss_outputs = self.loss_module(model_outputs, data)
             
             pred_pose_format = "_"+self.args.pred_pose_format if self.args.pred_pose_format!= "" else ""
             assert f'pred{pred_pose_format}_pose' in model_outputs.keys(), 'outputs of model should include pred_pose'
@@ -81,8 +87,8 @@ class Trainer:
             else:
                 pred_mask = None
 
-            if self.args.data.use_euler:
-                data['future_euler_pose'] = data['future_euler_pose'].reshape(*data['future_euler_pose'].shape[:-2], -1)# temporart
+            # if self.args.data.use_euler:
+            #     data['future_euler_pose'] = data['future_euler_pose'].reshape(*data['future_euler_pose'].shape[:-2], -1)# temporart
 
             #import sys
             #sys.exit()
@@ -92,8 +98,6 @@ class Trainer:
             for metric_name in self.args.pose_metrics:
                 metric_func = POSE_METRICS[metric_name]
                 metric_value = metric_func(
-                    #model_outputs['pred_pose'],
-                    #data[f'future_pose'].to(self.args.device),
                     model_outputs[f'pred{pred_pose_format}_pose'].to(self.args.device), 
                     data[f'future{pred_pose_format}_pose'].to(self.args.device),
                     self.model.args.pred_keypoint_dim, pred_mask
