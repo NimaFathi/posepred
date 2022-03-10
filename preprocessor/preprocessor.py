@@ -49,8 +49,7 @@ class Processor:
                 meta_data['min_pose'][i] = new_min[i]
 
     @staticmethod
-    def save_meta_data(meta_data, outputdir, pose_format, data_type):
-    # def save_meta_data(meta_data, outputdir, is_3d, data_type):
+    def save_meta_data(meta_data, outputdir, is_3d, data_type):
         """
         :param meta_data: pass existing and also final meta data
         :param outputdir: pass output directory in which you want to save meta data
@@ -60,8 +59,7 @@ class Processor:
         if data_type != 'train':
             return
         assert meta_data['count'] > 0
-        output_file_path = os.path.join(outputdir, f'{pose_format}_meta.json')
-        # output_file_path = os.path.join(outputdir, f'3D_meta.json' if is_3d else f'2D_meta.json')
+        output_file_path = os.path.join(outputdir, f'3D_meta.json' if is_3d else f'2D_meta.json')
         meta = {
             'avg_person': np.mean(np.array(meta_data['avg_person'])),
             'std_person': np.std(np.array(meta_data['avg_person'])),

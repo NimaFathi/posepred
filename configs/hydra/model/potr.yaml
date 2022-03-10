@@ -38,7 +38,7 @@ pose_dim: ${train_keypoint_dim}
 pred_keypoint_dim: ${pred_keypoint_dim}
 num_activities: &num_activities 15
 
-device: &device cuda
+device: &device cpu
 consider_uncertainty: &consider_uncertainty false
 
 loss:

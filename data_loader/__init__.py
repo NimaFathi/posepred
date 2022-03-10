@@ -79,7 +79,6 @@ def get_dataloader(dataset_path, args, is_train=True):
                 args.use_rotmat,
                 args.use_euler,
                 args.use_quaternion,
-                args.use_xyz,
                 args.use_action,
                 args.normalize,
                 args.metadata_path
