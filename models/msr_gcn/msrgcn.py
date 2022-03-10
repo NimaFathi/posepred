@@ -219,9 +219,9 @@ class MSRGCN(nn.Module):
             for action in inputs["action"]:
                 alphas["p22"].append(self.alphas_22[action])
             alphas["p22"] = torch.cat(alphas["p22"], dim=0)
-            alphas["p12"] = self.proc.down_alpha(alphas["p22"], "p12")
-            alphas["p7"] = self.proc.down_alpha(alphas["p12"], "p7")
-            alphas["p4"] = self.proc.down_alpha(alphas["p7"], "p4")
+            alphas["p12"] = self.proc.down_alpha(alphas["p22"], "p12").to(alphas["p22"].device)
+            alphas["p7"] = self.proc.down_alpha(alphas["p12"], "p7").to(alphas["p22"].device)
+            alphas["p4"] = self.proc.down_alpha(alphas["p7"], "p4").to(alphas["p22"].device)
 
         # 左半部分
         enhance_first_left = self.first_enhance(x_p22)  # B, 66, 64

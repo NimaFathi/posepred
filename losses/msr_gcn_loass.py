@@ -109,7 +109,8 @@ def uncertain_loss(gt, out, alphas, lamda):
     gt = gt.view(batch_size, -1, 3, seq_len).permute(0, 1, 3, 2).contiguous()
     out = out.view(batch_size, -1, 3, seq_len).permute(0, 1, 3, 2).contiguous()
     temp = torch.norm(gt-out, 2, dim = -1)
-    time_coeff = torch.arange(1,T+1)/T
+    time_coeff = torch.arange(1,T+1).to(gt.device)/T
+    print(time_coeff.device, alphas.device)
     final_coeff = torch.pow(time_coeff, alphas.unsqueeze(-1).repeat(1,1,T))
     return (temp*(1-final_coeff)).sum()-lamda*torch.log(alphas).sum()
 
