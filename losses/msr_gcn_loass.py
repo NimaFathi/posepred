@@ -106,8 +106,8 @@ def L2NormLoss_train(gt, out):
 def uncertain_loss(gt, out, alphas, lamda):
     batch_size, _, seq_len = gt.shape
     T = seq_len
-    gt = gt.view(batch_size, -1, seq_len, 3).permute(0, 3, 1, 2).contiguous()
-    out = out.view(batch_size, -1, seq_len, 3).permute(0, 3, 1, 2).contiguous()
+    gt = gt.view(batch_size, -1, seq_len, 3)
+    out = out.view(batch_size, -1, seq_len, 3)
     temp = torch.norm(gt-out, 2, dim = -1)
     time_coeff = torch.arange(1,T+1)/T
     final_coeff = torch.pow(time_coeff, alphas.unsqueeze(-1).repeat(1,1,T))
