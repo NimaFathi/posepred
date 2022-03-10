@@ -19,10 +19,8 @@ from utils.others import expmap_to_quaternion, qfix, expmap_to_rotmat, expmap_to
 logger = logging.getLogger(__name__)
 
 SPLIT = {
-    # 'train': ['S1', 'S5', 'S6', 'S7', 'S8'],
-    # 'validation': ['S1', 'S5', 'S6', 'S7', 'S8'],
-    'train': ['S1', 'S5'],
-    'validation': ['S1', 'S5'],
+    'train': ['S1', 'S5', 'S6', 'S7', 'S8'],
+    'validation': ['S1', 'S5', 'S6', 'S7', 'S8'],
     'test': ['S9', 'S11']
 }
 
@@ -132,12 +130,12 @@ class PreprocessorOur(Processor):
                     writer.write({
                         'video_section': f'{subject}-{canonical_name}',
                         'action': f'{canonical_name}',
-                        # 'xyz_pose': video_data['xyz_pose'],
-                        # 'quaternion_pose': video_data['quaternion_pose'],
+                        'xyz_pose': video_data['xyz_pose'],
+                        'quaternion_pose': video_data['quaternion_pose'],
                         'expmap_pose': video_data['expmap_pose'],
-                        # 'rotmat_pose': video_data['rotmat_pose'],
-                        # 'euler_pose': video_data['euler_pose']
-                        # ,'image_path': video_data['image_path']
+                        'rotmat_pose': video_data['rotmat_pose'],
+                        'euler_pose': video_data['euler_pose']
+                        ,'image_path': video_data['image_path']
                     })
         self.save_meta_data(self.meta_data, self.output_dir, True, data_type)
         # self.delete_redundant_files()
