@@ -135,7 +135,7 @@ class PreprocessorOur(Processor):
                         'expmap_pose': video_data['expmap_pose'],
                         'rotmat_pose': video_data['rotmat_pose'],
                         'euler_pose': video_data['euler_pose']
-                        ,'image_path': video_data['image_path']
+                        # ,'image_path': video_data['image_path']
                     })
         self.save_meta_data(self.meta_data, self.output_dir, True, data_type)
         # self.delete_redundant_files()
