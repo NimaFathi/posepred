@@ -110,9 +110,9 @@ def uncertain_loss(gt, out, alphas, lamda, T):
     temp = torch.norm(gt-out, 2, dim = -1)
     time_coeff = torch.arange(1,seq_len+1).to(gt.device)/T
     final_coeff = torch.pow(time_coeff, alphas.unsqueeze(-1).repeat(1,1,seq_len))
-    print(alphas)
-    print(lamda*torch.log(alphas).mean())
-    print("coeff", final_coeff)
+    # print("alphas", alphas)
+    # print("reg", -lamda*torch.log(alphas).mean())
+    # print("coeff", final_coeff)
     # print(temp)
     return (temp*(1-final_coeff)).mean()-lamda*torch.log(alphas).mean()
 
