@@ -122,7 +122,12 @@ class MSRGCNLoss(nn.Module):
     
         gt = gt.reshape((gt.shape[0], gt.shape[1], -1))
         gt = self.proc(gt, True)
-        out = model_outputs["pred_pose"]
+        out = {
+            "p22":model_outputs["p22"],
+            "p12":model_outputs["p12"],
+            "p7":model_outputs["p7"],
+            "p4":model_outputs["p4"]
+        }
         losses = {}
         for k in out.keys():
             losses[k] = 0

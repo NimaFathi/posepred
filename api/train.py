@@ -40,6 +40,7 @@ def train(cfg: DictConfig):
         cfg.model.keypoints_num = train_dataloader.dataset.keypoints_num
         cfg.model.mean_pose = train_dataloader.dataset.mean_pose
         cfg.model.std_pose = train_dataloader.dataset.std_pose
+        # TODO: fix pred_keypoint_dim
         model = MODELS[cfg.model.type](cfg.model)
         loss_module = LOSSES[cfg.model.loss.type](cfg.model.loss)
         optimizer = OPTIMIZERS[cfg.optimizer.type](model.parameters(), cfg.optimizer)
