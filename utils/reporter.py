@@ -1,11 +1,15 @@
 import sys
 import os
+from tempfile import tempdir
 import time
 import json
+from traceback import print_tb
+from cv2 import sort
 import matplotlib.pyplot as plt
 
 import numpy as np
 import torch
+import pandas as pd
 
 from utils.average_meter import AverageMeter
 
@@ -73,6 +77,44 @@ class Reporter:
             if not use_mask and 'mask' in key:
                 continue
             logger.info(str(key) + ': (mean=%.5f, std=%.6f)' % (np.mean(value), np.std(value)))
+
+    def print_pretty_metrics(self, logger, use_mask, metrics):
+        actions = []
+        for k in self.history.keys():
+            if not use_mask and 'mask' in k:
+                continue
+            if metrics[0] in k:
+                actions.append(k[len(metrics[0])+1:])
+        actions = list(sorted(actions))
+        logger.info(' |'.join(["actions".ljust(15)]+[a.center(15) for a in list(metrics)]))
+        logger.info("_"*20*(len(list(metrics))+1))
+        for action in actions:
+            to_print = []
+            for metric in list(metrics):
+                to_print.append(np.mean(self.history.get(f'{metric}_{action}')))
+            logger.info(' |'.join([action.ljust(15)]+ [str(np.around(a, 4)).center(15) for a in to_print]))
+            
+    def save_csv_metrics(self, use_mask, metrics, addr):
+        actions = []
+        for k in self.history.keys():
+            if not use_mask and 'mask' in k:
+                continue
+            if metrics[0] in k:
+                actions.append(k[len(metrics[0])+1:])
+        actions = list(sorted(actions))
+        out = pd.DataFrame(columns=["action"]+list(metrics))
+
+        for action in actions:
+            to_print = []
+            out_dict = {}
+            for metric in list(metrics):
+                out_dict[metric] = [np.mean(self.history.get(f'{metric}_{action}'))]
+            out_dict["action"] = action
+            temp = [action]+ [a for a in to_print]
+            # out=out.append(temp)
+            df_temp = pd.DataFrame(out_dict)
+            out = pd.concat([out, df_temp], ignore_index=True, axis = 0)
+        # TODO: save csv file
 
     @staticmethod
     def save_plots(use_mask, save_dir, train_history, validiation_history, use_validation):

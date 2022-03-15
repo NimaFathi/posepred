@@ -32,7 +32,8 @@ class Evaluator:
             #for metric in self.args.pose_metrics:
             #    logger.info(f'{metric}: ' + str(self.reporter.history[metric][-1]))
             # logger.info(f'MSE: ' + str(self.reporter.history['MSE'][-1]))
-        self.reporter.print_mean_std(logger, self.model.args.use_mask)
+        self.reporter.print_pretty_metrics(logger, self.model.args.use_mask, self.pose_metrics)
+        self.reporter.save_csv_metrics(self.model.args.use_mask, self.pose_metrics, None)
         logger.info("Evaluation has been completed.")
 
     def __evaluate(self):
