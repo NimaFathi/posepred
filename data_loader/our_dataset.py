@@ -81,7 +81,6 @@ class OurDataset(Dataset):
                         seq_tensor[k] = torch.tensor(v, dtype=torch.float32)
                     elif k not in self.tensor_keys_to_ignore:
                         seq_tensor[k] = v
-                print(seq_tensor.keys())
                 data.append(seq_tensor)
                 len_seq = seq_tensor[self.tensor_keys_to_keep[0]].shape[0]
                 indexes = indexes + [(len(data) - 1, i)

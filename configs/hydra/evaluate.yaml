@@ -7,17 +7,16 @@ defaults:
 dataset: ???
 #keypoint_dim: ???
 train_keypoint_dim: ???
-pred_keypoint_dim: ???
+pred_keypoint_dim: 3
 normalize: false
 loader: "ours"
 use_mask: false
 load_path:
 rounds_num: 1
 device: cuda
+keypoint_dim: 3
 
 
 # added
-obs_frames_num: ???
-pred_frames_num: ???
-train_pose_format: ???
-pred_pose_format: ??? 
+model_pose_format: ""
+metric_pose_format: "xyz"

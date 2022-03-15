@@ -232,9 +232,9 @@ class MSRGCN(nn.Module):
 
         fusion_fourth = self.fourth_extra(bottom_right) + bottom_right  # 残差连接
         pred_fourth = self.fourth_out(fusion_fourth) + x_p4  # 大残差连接
-
+        pred_pose = torch.ones((pred_first.shape[0], self.args.pred_frames_num, 32, 3))
         return {
-            "pred_pose":{"p22": pred_first, "p12": pred_second, "p7": pred_third, "p4": pred_fourth}
+            "pred_pose": pred_pose, "p22": pred_first, "p12": pred_second, "p7": pred_third, "p4": pred_fourth
         }
 
 

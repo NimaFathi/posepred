@@ -37,7 +37,6 @@ class Proc(nn.Module):
         self.dct_used = args.dct_used
         self.input_n = args.input_n
         self.output_n = args.output_n
-        print("helll", args.device)
         self.dct_m, self.idct_m = get_dct_matrix(self.input_n + self.output_n, args.device)
         self.global_min = args.global_min
         self.global_max = args.global_max
