@@ -24,8 +24,6 @@ def evaluate(cfg: DictConfig):
     eval_reporter = Reporter(state='')
     if cfg.load_path is not None:
         model, loss_module, _, _, _, _, _ = load_snapshot(cfg.load_path)
-        # TODO: remove line below
-        model.args.pred_keypoint_dim = 3
     else:
         cfg.model.pred_frames_num = dataloader.dataset.future_frames_num
         cfg.model.keypoints_num = dataloader.dataset.keypoints_num

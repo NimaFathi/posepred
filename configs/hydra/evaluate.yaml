@@ -5,16 +5,12 @@ defaults:
   - metrics
 
 dataset: ???
-#keypoint_dim: ???
-train_keypoint_dim: ???
-pred_keypoint_dim: 3
+keypoint_dim: ???
 normalize: false
-loader: "ours"
 use_mask: false
 load_path:
 rounds_num: 1
 device: cuda
-keypoint_dim: 3
 
 
 # added

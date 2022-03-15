@@ -67,12 +67,12 @@ class Evaluator:
                     for action in actions:
                         if action == "all":
                             metric_value = metric_func(model_outputs[f'pred{model_pose_format}_pose'].to(self.device), data[f'future{metric_pose_format}_pose'].to(self.device),
-                                                        self.model.args.pred_keypoint_dim, pred_mask)
+                                                        self.model.args.keypoint_dim, pred_mask)
                             report_attrs[f'{metric_name}_all'] = metric_value
                         else:
                             indexes = [i==action for i in data['action']]
                             metric_value = metric_func(model_outputs[f'pred{model_pose_format}_pose'].to(self.device)[indexes], data[f'future{metric_pose_format}_pose'].to(self.device)[indexes],
-                                                        self.model.args.pred_keypoint_dim, pred_mask)
+                                                        self.model.args.keypoint_dim, pred_mask)
                             report_attrs[f'{metric_name}_{action}'] = metric_value
                 # print(report_attrs)
                 # calculate mask_metrics

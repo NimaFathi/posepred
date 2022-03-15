@@ -1,18 +1,18 @@
-import os
 import logging
+import os
+
 import hydra
 from omegaconf import DictConfig
 
 from data_loader import get_dataloader
-from models import MODELS
-from losses import LOSSES
-from optimizers import OPTIMIZERS
-from schedulers import SCHEDULERS
 from factory.trainer import Trainer
+from losses import LOSSES
+from models import MODELS
+from optimizers import OPTIMIZERS
+from path_definition import HYDRA_PATH
+from schedulers import SCHEDULERS
 from utils.reporter import Reporter
 from utils.save_load import load_snapshot, save_snapshot, setup_training_dir
-
-from path_definition import HYDRA_PATH
 
 logger = logging.getLogger(__name__)
 
@@ -23,10 +23,9 @@ def train(cfg: DictConfig):
         msg = 'either specify a load_path or config a model.'
         logger.error(msg)
         raise Exception(msg)
-    
+
     train_dataloader = get_dataloader(cfg.train_dataset, cfg.data)
     valid_dataloader = get_dataloader(cfg.valid_dataset, cfg.data)
-    
 
     if cfg.load_path is not None:
         model, loss_module, optimizer, optimizer_args, epoch, train_reporter, valid_reporter = load_snapshot(
@@ -40,7 +39,7 @@ def train(cfg: DictConfig):
         cfg.model.keypoints_num = train_dataloader.dataset.keypoints_num
         cfg.model.mean_pose = train_dataloader.dataset.mean_pose
         cfg.model.std_pose = train_dataloader.dataset.std_pose
-        # TODO: fix pred_keypoint_dim
+
         model = MODELS[cfg.model.type](cfg.model)
         loss_module = LOSSES[cfg.model.loss.type](cfg.model.loss)
         optimizer = OPTIMIZERS[cfg.optimizer.type](model.parameters(), cfg.optimizer)

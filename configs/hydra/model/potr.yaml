@@ -34,8 +34,7 @@ future_frames_num: &pred_frames_num ${pred_frames_num} # convert to pred frames 
 n_major_joints: &n_major_joints 21
 n_joints: &n_joints 21
 n_h36m_joints: 32
-pose_dim: ${train_keypoint_dim}
-pred_keypoint_dim: ${pred_keypoint_dim}
+pose_dim: ${keypoint_dim}
 num_activities: &num_activities 15
 
 device: &device cpu
@@ -52,7 +51,7 @@ loss:
   future_frames_num: *pred_frames_num
   obs_frames_num: ${obs_frames_num} #*obs_frames_num
   include_last_obs: *include_last_obs
-  pose_dim: ${train_keypoint_dim} #*keypoint_dim
+  pose_dim: ${keypoint_dim} #*keypoint_dim
   n_major_joints: *n_joints
   pad_decoder_inputs: *pad_decoder_inputs
   device: *device

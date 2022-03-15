@@ -2,8 +2,8 @@ from torch.utils.data import DataLoader
 
 from .interactive_dataset import InteractiveDataset
 from .noisy_solitary_dataset import NoisySolitaryDataset
-from .solitary_dataset import SolitaryDataset
 from .our_dataset import OurDataset
+from .solitary_dataset import SolitaryDataset
 
 DATASETS = ['somof_posetrack', 'posetrack', 'somof_3dpw',
             '3dpw', 'jta', 'jaad', 'pie', 'human3.6m', 'our']
@@ -11,84 +11,27 @@ DATA_TYPES = ['train', 'validation', 'test']
 VISUALIZING_TYPES = ['observed', 'future', 'predicted', 'completed']
 
 
-def get_dataloader(dataset_path, args, is_train=True):
+def get_dataloader(dataset_path, args):
     if dataset_path is None:
         return None
-    use_format = (args.use_expmap or args.use_rotmat or args.use_euler or args.use_quaternion or args.use_xyz)
-    assert use_format == True, "Please define the required pose_format for the data"
+    assert args.is_noisy + args.is_solitary + args.is_interactive + args.is_random_crop == 1, \
+        "Please specify exactly on dataloader type"
     if args.is_interactive:
-        dataset = InteractiveDataset(
-            dataset_path,
-            args.keypoint_dim,
-            args.persons_num,
-            args.is_testing,
-            args.use_mask,
-            args.is_visualizing,
-            args.use_expmap,
-            args.use_rotmat,
-            args.use_euler,
-            args.use_quaternion,
-            args.normalize,
-            args.metadata_path
+        dataset = InteractiveDataset(dataset_path, args.keypoint_dim, args.persons_num, args.is_testing, args.use_mask,
+                                     args.is_visualizing, args.use_quaternion, args.normalize, args.metadata_path)
+    elif args.is_noisy:
+        dataset = NoisySolitaryDataset(dataset_path, args.keypoint_dim, args.is_testing, args.use_mask,
+                                       args.is_visualizing, args.use_quaternion, args.normalize, args.metadata_path,
+                                       args.noise_rate, args.noise_keypoint, args.overfit)
+    elif args.is_random_crop:
+        dataset = OurDataset(
+            dataset_path, args.keypoint_dim, args.is_testing, args.use_mask, args.is_visualizing, args.use_expmap,
+            args.use_rotmat, args.use_euler, args.use_quaternion, args.use_xyz, args.normalize, args.metadata_path,
+            args.seq_rate, args.frame_rate, args.len_observed, args.len_future
         )
-    else:
-        if args.loader == "noisy":
-            dataset = NoisySolitaryDataset(
-                dataset_path,
-                args.keypoint_dim,
-                args.is_testing,
-                args.use_mask,
-                args.is_visualizing,
-                args.use_expmap,
-                args.use_rotmat,
-                args.use_euler,
-                args.use_quaternion,
-                args.normalize,
-                args.metadata_path,
-                args.noise_rate,
-                args.noise_keypoint,
-                args.overfit
-            )
-        elif args.loader == "ours":
-            dataset = OurDataset(
-                dataset_path,
-                args.keypoint_dim,
-                args.is_testing,
-                args.use_mask,
-                args.is_visualizing,
-                args.use_expmap,
-                args.use_rotmat,
-                args.use_euler,
-                args.use_quaternion,
-                args.use_xyz, # TODO: add action
-                args.normalize,
-                args.metadata_path, 
-                args.seq_rate,
-                args.frame_rate,
-                args.len_observed,
-                args.len_future
-            )
-        else:
-            dataset = SolitaryDataset(
-                dataset_path,
-                args.keypoint_dim,
-                args.is_testing,
-                args.use_mask,
-                args.is_visualizing,
-                args.use_expmap,
-                args.use_rotmat,
-                args.use_euler,
-                args.use_quaternion,
-                args.use_action,
-                args.normalize,
-                args.metadata_path
-            )
-    dataloader = DataLoader(
-        dataset,
-        batch_size=args.batch_size,
-        shuffle=args.shuffle,
-        pin_memory=args.pin_memory,
-        num_workers=args.num_workers
-    )
-
+    elif args.is_solitary:
+        dataset = SolitaryDataset(dataset_path, args.keypoint_dim, args.is_testing, args.use_mask,
+                                  args.is_visualizing, args.use_quaternion, args.normalize, args.metadata_path)
+    dataloader = DataLoader(dataset, batch_size=args.batch_size, shuffle=args.shuffle, pin_memory=args.pin_memory,
+                            num_workers=args.num_workers)
     return dataloader

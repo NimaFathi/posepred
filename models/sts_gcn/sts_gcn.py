@@ -245,4 +245,4 @@ class STsGCN(nn.Module):
                                           self.args.keypoints_num * self.args.keypoint_dim)
 
         x = self.proc(x, False)
-        return {'pred_pose': x}
+        return {'pred_xyz_pose': x}

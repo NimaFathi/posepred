@@ -6,7 +6,6 @@ defaults:
 dataset: ???
 pred_frames_num: ???
 keypoint_dim: ???
-loader: "ours"
 use_mask: false
 normalize: false
 device: cuda
