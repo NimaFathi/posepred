@@ -255,11 +255,9 @@ class POTR(nn.Module):
             self.args.n_h36m_joints, 
             self.args.pose_format))
 
-        assert self.args.pred_pose_format == 'euler'
-
         outputs = {
-                'pred_euler_pose': pred_euler_pose,
-                'out_sequences': out_sequence,
+                'pred_metric_pose': pred_euler_pose,
+                'pred_pose': out_sequence,
                 'attn_weights': attn_weights,
                 'enc_weights': enc_weights,
                 'mat': mat

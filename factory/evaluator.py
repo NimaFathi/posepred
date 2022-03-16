@@ -29,7 +29,7 @@ class Evaluator:
         for i in range(self.rounds_num):
             logger.info('round ' + str(i + 1) + '/' + str(self.rounds_num))
             self.__evaluate()
-            #for metric in self.args.pose_metrics:
+            # for metric in self.args.pose_metrics:
             #    logger.info(f'{metric}: ' + str(self.reporter.history[metric][-1]))
             # logger.info(f'MSE: ' + str(self.reporter.history['MSE'][-1]))
         self.reporter.print_pretty_metrics(logger, self.model.args.use_mask, self.pose_metrics)
@@ -44,14 +44,12 @@ class Evaluator:
             actions.add("all")
             if pose_key is None:
                 pose_key = [k for k in data.keys() if "pose" in k][0]
-            batch_size =data[pose_key].shape[0]
+            batch_size = data[pose_key].shape[0]
             with torch.no_grad():
                 # predict & calculate loss
                 model_outputs = self.model(dict_to_device(data, self.device))
                 loss_outputs = self.loss_module(model_outputs, dict_to_device(data, self.device))
-                model_pose_format = "_"+self.args.model_pose_format if self.args.model_pose_format!= "" else ""
-                metric_pose_format = "_"+self.args.metric_pose_format if self.args.metric_pose_format!= "" else ""
-                assert f'pred{model_pose_format}_pose' in model_outputs.keys(), 'outputs of model should include pred_pose'
+                assert 'pred_pose' in model_outputs.keys(), 'outputs of model should include pred_pose'
 
                 if self.model.args.use_mask:
                     assert 'pred_mask' in model_outputs.keys(), 'outputs of model should include pred_mask'
@@ -63,18 +61,30 @@ class Evaluator:
                 report_attrs = loss_outputs
                 for metric_name in self.pose_metrics:
                     metric_func = POSE_METRICS[metric_name]
-                    
+
+                    pred_metric_pose = model_outputs['pred_pose']
+                    if 'pred_metric_pose' in model_outputs:
+                        pred_metric_pose = model_outputs['pred_metric_pose']
+
+                    # TODO: write write a warning =D
+
+                    future_metric_pose = data['future_pose']
+                    if 'future_metric_pose' in data:
+                        future_metric_pose = data['pred_metric_pose']
+
                     for action in actions:
                         if action == "all":
-                            metric_value = metric_func(model_outputs[f'pred{model_pose_format}_pose'].to(self.device), data[f'future{metric_pose_format}_pose'].to(self.device),
-                                                        self.model.args.keypoint_dim, pred_mask)
+                            metric_value = metric_func(pred_metric_pose.to(self.device),
+                                                       future_metric_pose.to(self.device),
+                                                       self.model.args.keypoint_dim, pred_mask)
                             report_attrs[f'{metric_name}_all'] = metric_value
                         else:
-                            indexes = [i==action for i in data['action']]
-                            metric_value = metric_func(model_outputs[f'pred{model_pose_format}_pose'].to(self.device)[indexes], data[f'future{metric_pose_format}_pose'].to(self.device)[indexes],
-                                                        self.model.args.keypoint_dim, pred_mask)
+                            indexes = [i == action for i in data['action']]
+                            metric_value = metric_func(pred_metric_pose.to(self.device)[indexes],
+                                                       future_metric_pose.to(self.device)[indexes],
+                                                       self.model.args.keypoint_dim, pred_mask)
                             report_attrs[f'{metric_name}_{action}'] = metric_value
-                # print(report_attrs)
+
                 # calculate mask_metrics
                 if self.model.args.use_mask:
                     for metric_name in self.mask_metrics:

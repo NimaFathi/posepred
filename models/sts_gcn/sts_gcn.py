@@ -224,7 +224,7 @@ class STsGCN(nn.Module):
 
     def forward(self, x):
 
-        x = self.proc(x['observed_xyz_pose'], True)
+        x = self.proc(x['observed_pose'], True)
 
         x = x.view(-1,
                    self.args.obs_frames_num,
@@ -245,4 +245,4 @@ class STsGCN(nn.Module):
                                           self.args.keypoints_num * self.args.keypoint_dim)
 
         x = self.proc(x, False)
-        return {'pred_xyz_pose': x}
+        return {'pred_pose': x}

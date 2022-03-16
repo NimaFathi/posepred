@@ -23,10 +23,10 @@ class STSGCNLoss(nn.Module):
         self.index_to_equal = index_to_equal
 
     def forward(self, y_pred, y_true):
-        y_pred_real = y_pred['pred_xyz_pose']
+        y_pred_real = y_pred['pred_pose']
         y_pred_real = y_pred_real.view((-1, y_pred_real.shape[-1]))
 
-        y_true = y_true['future_xyz_pose']
+        y_true = y_true['future_pose']
         y_true = y_true.view(y_true.shape[0] * y_true.shape[1], y_true.shape[2], y_true.shape[3]).view(
             y_true.shape[0] * y_true.shape[1], -1)
 

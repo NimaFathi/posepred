@@ -25,13 +25,16 @@ def get_dataloader(dataset_path, args):
                                        args.noise_rate, args.noise_keypoint, args.overfit)
     elif args.is_random_crop:
         dataset = OurDataset(
-            dataset_path, args.keypoint_dim, args.is_testing, args.use_mask, args.is_visualizing, args.use_expmap,
-            args.use_rotmat, args.use_euler, args.use_quaternion, args.use_xyz, args.normalize, args.metadata_path,
+            dataset_path, args.keypoint_dim, args.is_testing, args.use_mask, args.is_visualizing,
+            args.model_pose_format, args.metric_pose_format, args.normalize, args.metadata_path,
             args.seq_rate, args.frame_rate, args.len_observed, args.len_future
         )
     elif args.is_solitary:
         dataset = SolitaryDataset(dataset_path, args.keypoint_dim, args.is_testing, args.use_mask,
                                   args.is_visualizing, args.use_quaternion, args.normalize, args.metadata_path)
+
+    print(len(dataset))
+
     dataloader = DataLoader(dataset, batch_size=args.batch_size, shuffle=args.shuffle, pin_memory=args.pin_memory,
                             num_workers=args.num_workers)
     return dataloader

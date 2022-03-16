@@ -57,27 +57,15 @@ class Trainer:
         pose_key = None
         for data in self.train_dataloader:
             # TODO: fix later
-            if pose_key is None:
-                pose_key = [k for k in data.keys() if "pose" in k][0]
-            batch_size = data[pose_key].shape[0]
+            batch_size = data['observed_pose'].shape[0]
             data = dict_to_device(data, self.args.device)
-            # print('data', data.keys())
-            # print(data['action_ids'])
             # predict & calculate loss
             self.model.zero_grad()
             model_outputs = self.model(data)
-            # print(type(model_outputs), type(model_outputs[0]))
-            # print('keys', model_outputs.keys())
             loss_outputs = self.loss_module(model_outputs, data)
 
-            print(self.args.pred_pose_format)
-            pred_pose_format = "_" + self.args.pred_pose_format if self.args.pred_pose_format != "" else ""
-            assert f'pred{pred_pose_format}_pose' in model_outputs.keys(), 'outputs of model should include {}'.format(
-                f'pred{pred_pose_format}_pose'
-            )
+            assert 'pred_pose' in model_outputs.keys(), 'outputs of model should include pred_pose'
             assert 'loss' in loss_outputs.keys(), 'outputs of loss should include loss'
-            # assert f'pred_pose' in model_outputs.keys(), 'outputs of model should include pred_pose'
-            # assert 'loss' in loss_outputs.keys(), 'outputs of loss should include loss'
 
             # backpropagate and optimize
             loss = loss_outputs['loss']
@@ -90,19 +78,25 @@ class Trainer:
             else:
                 pred_mask = None
 
-            # if self.args.data.use_euler:
-            #     data['future_euler_pose'] = data['future_euler_pose'].reshape(*data['future_euler_pose'].shape[:-2], -1)# temporart
-
-            # import sys
-            # sys.exit()
             # calculate pose_metrics
 
             report_attrs = loss_outputs
             for metric_name in self.args.pose_metrics:
                 metric_func = POSE_METRICS[metric_name]
+
+                pred_metric_pose = model_outputs['pred_pose']
+                if 'pred_metric_pose' in model_outputs:
+                    pred_metric_pose = model_outputs['pred_metric_pose']
+
+                # TODO: write write a warning =D
+
+                future_metric_pose = data['future_pose']
+                if 'future_metric_pose' in data:
+                    future_metric_pose = data['pred_metric_pose']
+
                 metric_value = metric_func(
-                    model_outputs[f'pred{pred_pose_format}_pose'].to(self.args.device),
-                    data[f'future{pred_pose_format}_pose'].to(self.args.device),
+                    pred_metric_pose.to(self.args.device),
+                    future_metric_pose.to(self.args.device),
                     self.model.args.keypoint_dim, pred_mask
                 )
 
@@ -126,33 +120,40 @@ class Trainer:
         pose_key = None
         for data in self.valid_dataloader:
             data = dict_to_device(data, self.args.device)
-            if pose_key is None:
-                pose_key = [k for k in data.keys() if "pose" in k][0]
-            batch_size = data[pose_key].shape[0]
-            pred_pose_format = "_" + self.args.pred_pose_format if self.args.pred_pose_format != "" else ""
+            batch_size = data['observed_pose'].shape[0]
 
             with torch.no_grad():
                 # predict & calculate loss
                 model_outputs = dict_to_device(self.model(data), self.args.device)
                 loss_outputs = self.loss_module(model_outputs, dict_to_device(data, self.args.device))
-                assert f'pred{pred_pose_format}_pose' in model_outputs.keys(), 'outputs of model should include pred_pose'
-                # assert f'pred_pose' in model_outputs.keys(), 'outputs of model should include pred_pose'
+                assert 'pred_pose' in model_outputs.keys(), 'outputs of model should include pred_pose'
 
                 if self.model.args.use_mask:
                     assert 'pred_mask' in model_outputs.keys(), 'outputs of model should include pred_mask'
                     pred_mask = model_outputs['pred_mask']
                 else:
                     pred_mask = None
-                if self.args.data.use_euler:
-                    data['future_euler_pose'] = data['future_euler_pose'].reshape(*data['future_euler_pose'].shape[:-2],
-                                                                                  -1)  # temporart
+
                 # calculate pose_metrics
                 report_attrs = loss_outputs
                 for metric_name in self.args.pose_metrics:
                     metric_func = POSE_METRICS[metric_name]
-                    metric_value = metric_func(model_outputs[f'pred{pred_pose_format}_pose'],
-                                               data[f'future{pred_pose_format}_pose'],
-                                               self.model.args.keypoint_dim, pred_mask)
+
+                    pred_metric_pose = model_outputs['pred_pose']
+                    if 'pred_metric_pose' in model_outputs:
+                        pred_metric_pose = model_outputs['pred_metric_pose']
+
+                    # TODO: write write a warning =D
+
+                    future_metric_pose = data['future_pose']
+                    if 'future_metric_pose' in data:
+                        future_metric_pose = data['pred_metric_pose']
+
+                    metric_value = metric_func(
+                        pred_metric_pose.to(self.args.device),
+                        future_metric_pose.to(self.args.device),
+                        self.model.args.keypoint_dim, pred_mask
+                    )
                     report_attrs[metric_name] = metric_value
 
                 # calculate mask_metrics

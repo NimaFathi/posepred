@@ -14,5 +14,5 @@ device: cuda
 
 
 # added
-model_pose_format: ""
-metric_pose_format: "xyz"
+model_pose_format: "xyz"
+metric_pose_format:

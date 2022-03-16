@@ -18,11 +18,8 @@ class OurDataset(Dataset):
                  is_testing,
                  use_mask,
                  is_visualizing,
-                 use_expmap,
-                 use_rotmat,
-                 use_euler,
-                 use_quaternion,
-                 use_xyz,
+                 model_pose_format,
+                 metric_pose_format,
                  normalize,
                  metadata_path,
                  seq_rate,
@@ -33,11 +30,6 @@ class OurDataset(Dataset):
         print("Initialzing Our Dataset:")
 
         self.normalize = normalize
-        self.use_expmap = use_expmap
-        self.use_rotmat = use_rotmat
-        self.use_euler = use_euler
-        self.use_quaternion = use_quaternion
-        self.use_xyz = use_xyz
         total_len = (len_observed + len_future) * frame_rate
         self.frame_rate = frame_rate
         self.total_len = total_len
@@ -58,37 +50,37 @@ class OurDataset(Dataset):
         self.tensor_keys_to_keep = []
         self.tensor_keys_to_ignore = []
 
-        for key, value in zip(
-                ['expmap_pose', 'rotmat_pose', 'euler_pose', 'quaternion_pose', 'xyz_pose'],
-                [self.use_expmap, self.use_rotmat, self.use_euler, self.use_quaternion, self.use_xyz]
-        ):
-            if value:
-                self.tensor_keys_to_keep.append(key)
-            else:
-                self.tensor_keys_to_ignore.append(key)
-
-        assert len(
-            self.tensor_keys_to_keep) > 0, "please determine the kind(s) of pose(es) you want to use in config file"
+        if not metric_pose_format:
+            metric_pose_format = model_pose_format
 
         indexes = []
+
+        self.extra_keys_to_keep = ['video_section', 'action'] # TODO : remove this
         
         with jsonlines.open(dataset_path) as reader:
             for seq in reader:
 
                 seq_tensor = {}
                 for k, v in seq.items():
-                    if k in self.tensor_keys_to_keep:
-                        seq_tensor[k] = torch.tensor(v, dtype=torch.float32)
-                    elif k not in self.tensor_keys_to_ignore:
+                    if k == "{}_pose".format(model_pose_format):
+                        seq_tensor["pose"] = torch.tensor(v, dtype=torch.float32)
+                    if k == "{}_pose".format(metric_pose_format):
+                        seq_tensor["metric_pose"] = torch.tensor(v, dtype=torch.float32)
+                    if k in self.extra_keys_to_keep:
                         seq_tensor[k] = v
+
+                assert "pose" in seq_tensor, "model pose format not found in the sequence"
+                assert "metric_pose" in seq_tensor, "metric pose format not found in the sequence"
+
                 data.append(seq_tensor)
-                len_seq = seq_tensor[self.tensor_keys_to_keep[0]].shape[0]
+                len_seq = seq_tensor['pose'].shape[0]
                 indexes = indexes + [(len(data) - 1, i)
                                      for i in range(0, len_seq - total_len + 1, seq_rate)]
 
-        self.keypoints_num = 3
         self.obs_frames_num = self.len_observed
         self.future_frames_num = self.len_future
+
+        self.keypoints_num = int(data[0]['pose'].shape[-2]) # TODO remember to flat things
 
         self.data = data
         self.indexes = indexes
@@ -96,8 +88,6 @@ class OurDataset(Dataset):
         self.is_testing = is_testing
         self.use_mask = use_mask
         self.is_visualizing = is_visualizing
-        self.use_expmap = use_expmap
-        self.use_quaternion = use_quaternion
 
     def __len__(self):
         return len(self.indexes)
@@ -107,14 +97,15 @@ class OurDataset(Dataset):
         seq = self.data[data_index]
         outputs = {}
 
-        for k in self.tensor_keys_to_keep:
+        for k in ['metric_pose', 'pose']:
             temp_seq = seq[k][seq_index:seq_index + self.total_len]
             s = temp_seq.shape
             temp_seq = temp_seq.view(-1, self.frame_rate, s[1], s[2])[:, 0, :, :]
             outputs["observed_" + k] = temp_seq[:self.len_observed]
             outputs["future_" + k] = temp_seq[self.len_observed:]
-        # print("akslfdjahdslkfjsahlkdjfm", outputs.keys())
-        outputs["action"] = seq["action"]
-        # todo: save other keys as well, not just the actions
+
+        for k in self.extra_keys_to_keep:
+            if k in seq:
+                outputs[k] = seq[k]
 
         return outputs

@@ -22,5 +22,5 @@ save_dir:
 # added
 obs_frames_num: ???
 pred_frames_num: ???
-train_pose_format: xyz
-pred_pose_format: xyz
+model_pose_format: xyz
+metric_pose_format:
