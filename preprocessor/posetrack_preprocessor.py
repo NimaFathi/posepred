@@ -14,14 +14,17 @@ logger = logging.getLogger(__name__)
 
 class PoseTrackPreprocessor(Processor):
     def __init__(self, dataset_path, is_interactive, obs_frame_num, pred_frame_num,
-                 skip_frame_num, use_video_once, custom_name):
+                 skip_frame_num, use_video_once, custom_name, save_total_frames):
         super(PoseTrackPreprocessor, self).__init__(dataset_path, is_interactive, obs_frame_num,
-                                                    pred_frame_num, skip_frame_num, use_video_once, custom_name)
+                                                    pred_frame_num, skip_frame_num, use_video_once,
+                                                    custom_name, save_total_frames)
         self.dataset_total_frame_num = 30
-        self.output_dir = os.path.join(
-            PREPROCESSED_DATA_DIR, 'PoseTrack_interactive') if self.is_interactive else os.path.join(
-            PREPROCESSED_DATA_DIR, 'PoseTrack'
-        )
+        self.output_dir = os.path.join(PREPROCESSED_DATA_DIR, 'PoseTrack')
+        if self.is_interactive:
+            self.output_dir = os.path.join(PREPROCESSED_DATA_DIR, 'PoseTrack_interactive')
+        elif self.save_total_frames:
+            self.output_dir = os.path.join(PREPROCESSED_DATA_DIR, 'PoseTrack_total')
+
         if not os.path.exists(self.output_dir):
             os.makedirs(self.output_dir)
         self.meta_data = {
@@ -86,6 +89,14 @@ class PoseTrackPreprocessor(Processor):
                 annotations = json_data.get('annotations')
                 section_range = json_data['images'][0]['nframes'] // (
                             total_frame_num * 1) if self.use_video_once is False else 1
+
+                if self.save_total_frames:
+                    section_range = 1
+                    total_frame_num = json_data['images'][0]['nframes']
+                    self.obs_frame_num = total_frame_num
+                    self.pred_frame_num = 0
+                    self.skip_frame_num = 0
+
                 if not annotations:
                     continue
                 logger.info(f'file name: {entry.name}')
@@ -157,13 +168,21 @@ class PoseTrackPreprocessor(Processor):
                             )
                 with jsonlines.open(os.path.join(self.output_dir, output_file_name), 'a') as writer:
                     for data_row in data:
-                        writer.write({
-                            'video_section': data_row[0],
-                            'observed_pose': data_row[1],
-                            'future_pose': data_row[2],
-                            'observed_mask': data_row[3],
-                            'future_mask': data_row[4],
-                            'observed_image_path': data_row[5],
-                            'future_image_path': data_row[6],
-                        })
+                        if not self.save_total_frames:
+                            writer.write({
+                                'video_section': data_row[0],
+                                'observed_pose': data_row[1],
+                                'future_pose': data_row[2],
+                                'observed_mask': data_row[3],
+                                'future_mask': data_row[4],
+                                'observed_image_path': data_row[5],
+                                'future_image_path': data_row[6],
+                            })
+                        else:
+                            writer.write({
+                                'video_section': data_row[0],
+                                'total_pose': data_row[1],
+                                'total_mask': data_row[3],
+                                'total_image_path': data_row[5],
+                            })
         self.save_meta_data(self.meta_data, self.output_dir, False, data_type)

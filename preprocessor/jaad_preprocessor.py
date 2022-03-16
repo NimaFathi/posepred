@@ -22,14 +22,17 @@ logger = logging.getLogger(__name__)
 
 class JAADPreprocessor(Processor):
     def __init__(self, dataset_path, is_interactive, obs_frame_num, pred_frame_num, skip_frame_num,
-                 use_video_once, custom_name, annotate, image_dir, annotation_path):
+                 use_video_once, custom_name, annotate, image_dir, annotation_path, save_total_frames):
         super(JAADPreprocessor, self).__init__(dataset_path, is_interactive, obs_frame_num,
-                                               pred_frame_num, skip_frame_num, use_video_once, custom_name)
+                                               pred_frame_num, skip_frame_num,
+                                               use_video_once, save_total_frames)
 
-        self.output_dir = os.path.join(
-            PREPROCESSED_DATA_DIR, 'JAAD_interactive') if self.is_interactive else os.path.join(
-            PREPROCESSED_DATA_DIR, 'JAAD'
-        )
+        self.output_dir = os.path.join(PREPROCESSED_DATA_DIR, 'JAAD')
+        if self.is_interactive:
+            self.output_dir = os.path.join(PREPROCESSED_DATA_DIR, 'JAAD_interactive')
+        elif self.save_total_frames:
+            self.output_dir = os.path.join(PREPROCESSED_DATA_DIR, 'JAAD_total')
+
         if not os.path.exists(self.output_dir):
             os.makedirs(self.output_dir)
         self.meta_data = {
@@ -78,6 +81,14 @@ class JAADPreprocessor(Processor):
                 section_range = (max_frame - min_frame + 1) // (
                         total_frame_num * (self.skip_frame_num + 1)
                 ) if not self.use_video_once else 1
+
+                if self.save_total_frames:
+                    section_range = 1
+                    total_frame_num = max_frame - min_frame + 1
+                    self.obs_frame_num = total_frame_num
+                    self.pred_frame_num = 0
+                    self.skip_frame_num = 0
+
                 for i in range(section_range):
                     obs_frame_range = [
                         i for i in range(
@@ -140,13 +151,20 @@ class JAADPreprocessor(Processor):
                     })
                 else:
                     for i in range(len(obs_poses)):
-                        writer.write({
-                            'video_section': video_name,
-                            'observed_pose': obs_poses[i],
-                            'future_pose': pred_poses[i],
-                            'observed_image_path': obs_image_path[i],
-                            'future_image_path': pred_image_path[i]
-                        })
+                        if not self.save_total_frames:
+                            writer.write({
+                                'video_section': video_name,
+                                'observed_pose': obs_poses[i],
+                                'future_pose': pred_poses[i],
+                                'observed_image_path': obs_image_path[i],
+                                'future_image_path': pred_image_path[i]
+                            })
+                        else:
+                            writer.write({
+                                'video_section': video_name,
+                                'total_pose': obs_poses[i],
+                                'total_image_path': obs_image_path[i],
+                            })
 
     def __create_frame_poses(self):
         if self.annotate is not False:

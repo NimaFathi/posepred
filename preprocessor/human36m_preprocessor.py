@@ -26,14 +26,18 @@ SPLIT = {
 
 class PreprocessorHuman36m(Processor):
     def __init__(self, dataset_path, is_interactive, obs_frame_num, pred_frame_num, skip_frame_num,
-                 use_video_once, custom_name):
+                 use_video_once, custom_name, save_total_frames):
         super(PreprocessorHuman36m, self).__init__(dataset_path, is_interactive, obs_frame_num,
-                                                   pred_frame_num, skip_frame_num, use_video_once, custom_name)
+                                                   pred_frame_num, skip_frame_num, use_video_once,
+                                                   custom_name, save_total_frames)
         assert self.is_interactive is False, 'human3.6m is not interactive'
-        self.output_dir = os.path.join(
-            PREPROCESSED_DATA_DIR, 'human36m_interactive') if self.is_interactive else os.path.join(
-            PREPROCESSED_DATA_DIR, 'human36m'
-        )
+
+        self.output_dir = os.path.join(PREPROCESSED_DATA_DIR, 'human36m')
+        if self.is_interactive:
+            self.output_dir = os.path.join(PREPROCESSED_DATA_DIR, 'human36m_interactive')
+        elif self.save_total_frames:
+            self.output_dir = os.path.join(PREPROCESSED_DATA_DIR, 'human36m_total')
+
         if not os.path.exists(self.output_dir):
             os.makedirs(self.output_dir)
         self.meta_data = {
@@ -80,6 +84,14 @@ class PreprocessorHuman36m(Processor):
                 total_frame_num = self.obs_frame_num + self.pred_frame_num
                 section_range = positions.shape[0] // (
                         total_frame_num * (self.skip_frame_num + 1)) if self.use_video_once is False else 1
+
+                if self.save_total_frames:
+                    section_range = 1
+                    total_frame_num = positions.shape[0]
+                    self.obs_frame_num = total_frame_num
+                    self.pred_frame_num = 0
+                    self.skip_frame_num = 0
+
                 for i in range(section_range):
                     video_data = {
                         'observed_pose': list(),
@@ -103,13 +115,21 @@ class PreprocessorHuman36m(Processor):
                             )
                     self.update_meta_data(self.meta_data, video_data['observed_pose'], 3)
                     with jsonlines.open(os.path.join(self.output_dir, output_file_name), mode='a') as writer:
-                        writer.write({
-                            'video_section': f'{subject}-{canonical_name}-{i}',
-                            'observed_pose': video_data['observed_pose'],
-                            'future_pose': video_data['future_pose'],
-                            'observed_image_path': video_data['observed_image_path'],
-                            'future_image_path': video_data['future_image_path']
-                        })
+                        if not self.save_total_frames:
+                            writer.write({
+                                'video_section': f'{subject}-{canonical_name}-{i}',
+                                'observed_pose': video_data['observed_pose'],
+                                'future_pose': video_data['future_pose'],
+                                'observed_image_path': video_data['observed_image_path'],
+                                'future_image_path': video_data['future_image_path']
+                            })
+                        else:
+                            writer.write({
+                                'video_section': f'{subject}-{canonical_name}-{i}',
+                                'total_pose': video_data['observed_pose'],
+                                'total_image_path': video_data['observed_image_path'],
+                            })
+
         self.save_meta_data(self.meta_data, self.output_dir, True, data_type)
 
     def quaternion_rep(self, file_path, subject, data_type):
@@ -140,7 +160,8 @@ class PreprocessorHuman36m(Processor):
         Read an individual file in expmap format,
         and return a NumPy tensor with shape (sequence length, number of joints, 3).
         '''
-        action = os.path.splitext(os.path.basename(file_path))[0].replace('WalkTogether', 'WalkingTogether').replace('WalkDog', 'WalkingDog')
+        action = os.path.splitext(os.path.basename(file_path))[0].replace('WalkTogether', 'WalkingTogether').replace(
+            'WalkDog', 'WalkingDog')
         if subject == 'S5' and action.lower().__contains__('photo'):
             action = 'TakingPhoto'
         action_number = 1 if len(action.split(" ")) == 2 else 2
