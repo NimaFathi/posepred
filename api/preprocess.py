@@ -63,7 +63,8 @@ def preprocess(cfg: DictConfig):
         preprocessor = Preprocessor3DPW(
             dataset_path=cfg.official_annotation_path,
             obs_frame_num=cfg.obs_frames_num, custom_name=cfg.output_name, is_interactive=cfg.interactive,
-            pred_frame_num=cfg.pred_frames_num, skip_frame_num=cfg.skip_num, use_video_once=cfg.use_video_once
+            pred_frame_num=cfg.pred_frames_num, skip_frame_num=cfg.skip_num, use_video_once=cfg.use_video_once,
+            save_total_frames=cfg.save_total_frames
         )
     elif cfg.dataset == 'jaad':
         preprocessor = JAADPreprocessor(

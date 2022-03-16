@@ -2,7 +2,7 @@ defaults:
   - _self_
   - data: main
   - model: ???
-  - optimizer: adamw
+  - optimizer: adam
   - scheduler: reduce_lr_on_plateau
   - metrics
 
@@ -22,5 +22,5 @@ save_dir:
 # added
 obs_frames_num: ???
 pred_frames_num: ???
-model_pose_format: xyz
+model_pose_format: total
 metric_pose_format:

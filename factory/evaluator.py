@@ -42,6 +42,7 @@ class Evaluator:
         for data in self.dataloader:
             actions = set(data['action']) if 'action' in data.keys() else set()
             actions.add("all")
+            # TODO
             if pose_key is None:
                 pose_key = [k for k in data.keys() if "pose" in k][0]
             batch_size = data[pose_key].shape[0]
@@ -77,13 +78,12 @@ class Evaluator:
                             metric_value = metric_func(pred_metric_pose.to(self.device),
                                                        future_metric_pose.to(self.device),
                                                        self.model.args.keypoint_dim, pred_mask)
-                            report_attrs[f'{metric_name}_all'] = metric_value
                         else:
                             indexes = [i == action for i in data['action']]
                             metric_value = metric_func(pred_metric_pose.to(self.device)[indexes],
                                                        future_metric_pose.to(self.device)[indexes],
                                                        self.model.args.keypoint_dim, pred_mask)
-                            report_attrs[f'{metric_name}_{action}'] = metric_value
+                        report_attrs[f'{metric_name}_{action}'] = metric_value
 
                 # calculate mask_metrics
                 if self.model.args.use_mask:

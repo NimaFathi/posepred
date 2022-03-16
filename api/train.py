@@ -34,6 +34,7 @@ def train(cfg: DictConfig):
         cfg.optimizer = optimizer_args
         cfg.save_dir = cfg.load_path[:cfg.load_path.rindex('snapshots/')]
     else:
+        # TODO remove this
         cfg.model.pred_frames_num = train_dataloader.dataset.future_frames_num
         cfg.model.obs_frames_num = train_dataloader.dataset.obs_frames_num
         cfg.model.keypoints_num = train_dataloader.dataset.keypoints_num

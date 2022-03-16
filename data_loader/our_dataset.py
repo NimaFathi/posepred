@@ -50,12 +50,12 @@ class OurDataset(Dataset):
         self.tensor_keys_to_keep = []
         self.tensor_keys_to_ignore = []
 
+        # TODO
         if not metric_pose_format:
             metric_pose_format = model_pose_format
 
         indexes = []
-
-        self.extra_keys_to_keep = ['video_section', 'action'] # TODO : remove this
+        self.extra_keys_to_keep = ['video_section', 'action', 'cam_intrinsic']
         
         with jsonlines.open(dataset_path) as reader:
             for seq in reader:
@@ -66,6 +66,10 @@ class OurDataset(Dataset):
                         seq_tensor["pose"] = torch.tensor(v, dtype=torch.float32)
                     if k == "{}_pose".format(metric_pose_format):
                         seq_tensor["metric_pose"] = torch.tensor(v, dtype=torch.float32)
+                    if k in 'total_mask':
+                        seq_tensor['mask'] = torch.tensor(v, dtype=torch.float32)
+                    if k in ['total_image_path', 'total_cam_extrinsic']:
+                        seq_tensor[k[6:]] = torch.tensor(v)
                     if k in self.extra_keys_to_keep:
                         seq_tensor[k] = v
 
@@ -97,7 +101,16 @@ class OurDataset(Dataset):
         seq = self.data[data_index]
         outputs = {}
 
-        for k in ['metric_pose', 'pose']:
+        output_keys = ['metric_pose', 'pose']
+        if self.use_mask:
+            output_keys.append('mask')
+        if self.is_visualizing:
+            if 'image_path' in seq.keys():
+                output_keys.append('image_path')
+            if 'cam_extrinsic' in seq.keys():
+                output_keys.append('cam_extrinsic')
+
+        for k in output_keys:
             temp_seq = seq[k][seq_index:seq_index + self.total_len]
             s = temp_seq.shape
             temp_seq = temp_seq.view(-1, self.frame_rate, s[1], s[2])[:, 0, :, :]
