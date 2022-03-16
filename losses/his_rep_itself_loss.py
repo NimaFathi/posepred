@@ -13,6 +13,7 @@ class HisRepItselfLoss(nn.Module):
         self.args = args
         self.output_n = args.output_n
         self.seq_in = args.kernel_size
+        self.device = args.device
         self.dim = 3
         self.dim_used = np.array([6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 21, 22, 23, 24, 25,
                                   26, 27, 28, 29, 30, 31, 32, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45,
@@ -33,21 +34,21 @@ class HisRepItselfLoss(nn.Module):
 
     def forward(self, model_outputs, input_data):
         seq1 = torch.cat((input_data['observed_pose'], input_data['future_pose']), dim=1)
-        p3d_h36 = HistoryRepeatsItself.exp2xyz(seq1)
+        p3d_h36 =  seq1.reshape(seq1.shape[0], seq1.shape[1], -1)
         batch_size, seq_n, joints = p3d_h36.shape
-        p3d_h36 = p3d_h36.float().cuda()  # todo
+        p3d_h36 = p3d_h36.float().to(self.device)  # todo
         p3d_sup = p3d_h36.clone()[:, :, self.dim_used][:, -self.output_n - self.seq_in:].reshape(
             [-1, self.seq_in + self.output_n, len(self.dim_used) // 3, 3])
         p3d_out_all = model_outputs['pred_pose']
         loss_p3d = torch.mean(torch.norm(p3d_out_all[:, :, 0] - p3d_sup, dim=3))
 
-        p3d_out = model_outputs['pred_pose_output_only']
+        p3d_out = model_outputs['pred_metric_pose']
         # print('loss mp', p3d_h36[:, -self.output_n:].shape, p3d_out.shape, joints//3)
         mpjpe_p3d_h36 = torch.mean(torch.norm(p3d_h36[:, -self.output_n:].reshape(
             [-1, self.output_n, (joints // 3), 3]) - p3d_out, dim=3))
 
 
-        outputs =  {'loss':loss_p3d, 'loss_all':mpjpe_p3d_h36}
+        outputs =  {'loss':loss_p3d, 'mpjpe':mpjpe_p3d_h36}
         # print(outputs)
         if 'pred_mask' in model_outputs.keys():
             mask_loss = self.bce(model_outputs['pred_mask'], input_data['future_mask'])

@@ -13,13 +13,13 @@ class HistoryRepeatsItself(nn.Module):
     def __init__(self, args):
         super(HistoryRepeatsItself, self).__init__()
         self.args = args
+        self.device = args.device
         self.net_pred = AttModel(in_features=args.in_features, kernel_size=args.kernel_size, d_model=args.d_model,
-                                 num_stage=args.num_stage, dct_n=args.dct_n)
+                                 num_stage=args.num_stage, dct_n=args.dct_n, device=self.device)
         # if is_train == 0:
         #     net_pred.train()
         # else:
         #     net_pred.eval()
-
         l_p3d = 0
         # if is_train <= 1:
         #     m_p3d_h36 = 0
@@ -27,48 +27,53 @@ class HistoryRepeatsItself(nn.Module):
         #     titles = np.array(range(opt.output_n)) + 1
         #     m_p3d_h36 = np.zeros([opt.output_n])
         # n = 0
+        # todo
         self.in_n = args.input_n
         self.out_n = args.output_n
+
         self.dim_used = np.array([6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 21, 22, 23, 24, 25,
-                             26, 27, 28, 29, 30, 31, 32, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45,
-                             46, 47, 51, 52, 53, 54, 55, 56, 57, 58, 59, 63, 64, 65, 66, 67, 68,
-                             75, 76, 77, 78, 79, 80, 81, 82, 83, 87, 88, 89, 90, 91, 92])
+                                  26, 27, 28, 29, 30, 31, 32, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45,
+                                  46, 47, 51, 52, 53, 54, 55, 56, 57, 58, 59, 63, 64, 65, 66, 67, 68,
+                                  75, 76, 77, 78, 79, 80, 81, 82, 83, 87, 88, 89, 90, 91, 92])
         self.seq_in = args.kernel_size
         self.sample_rate = 2
         # joints at same loc
         self.joint_to_ignore = np.array([16, 20, 23, 24, 28, 31])
-        self.index_to_ignore = np.concatenate((self.joint_to_ignore * 3, self.joint_to_ignore * 3 + 1, self.joint_to_ignore * 3 + 2))
+        self.index_to_ignore = np.concatenate(
+            (self.joint_to_ignore * 3, self.joint_to_ignore * 3 + 1, self.joint_to_ignore * 3 + 2))
         self.joint_equal = np.array([13, 19, 22, 13, 27, 30])
         self.index_to_equal = np.concatenate((self.joint_equal * 3, self.joint_equal * 3 + 1, self.joint_equal * 3 + 2))
         self.itera = 1
         self.idx = np.expand_dims(np.arange(self.seq_in + self.out_n), axis=1) + (
                 self.out_n - self.seq_in + np.expand_dims(np.arange(self.itera), axis=0))
 
-    @staticmethod
-    def exp2xyz(inputs):
-        is_cuda_type = False
-        if inputs.is_cuda:
-          is_cuda_type = True
-        # print(inputs.shape)
-        b,n, d = inputs.shape
-        the_sequence = np.array(inputs.cpu())
-        the_sequence = np.reshape(the_sequence, (-1, the_sequence.shape[-1]))
-        the_sequence = torch.from_numpy(the_sequence).float().cpu() #todo
-        # remove global rotation and translation
-        the_sequence[:, 0:6] = 0
-        p3d = data_utils.expmap2xyz_torch(the_sequence)
-        p3d = np.reshape(p3d,(b, n, -1))
-        if is_cuda_type:
-          p3d = p3d.cuda()
-        # print(p3d.shape)
-        return p3d
+    # @staticmethod
+    # def exp2xyz(inputs):
+    #     is_cuda_type = False
+    #     if inputs.is_cuda:
+    #       is_cuda_type = True
+    #     # print(inputs.shape)
+    #     b,n, d = inputs.shape
+    #     the_sequence = np.array(inputs.cpu())
+    #     the_sequence = np.reshape(the_sequence, (-1, the_sequence.shape[-1]))
+    #     the_sequence = torch.from_numpy(the_sequence).float().cpu() #todo
+    #     # remove global rotation and translation
+    #     the_sequence[:, 0:6] = 0
+    #     p3d = data_utils.expmap2xyz_torch(the_sequence)
+    #     p3d = np.reshape(p3d,(b, n, -1))
+    #     if is_cuda_type:
+    #       p3d = p3d.cuda()
+    #     # print(p3d.shape)
+    #     return p3d
 
     def forward(self, inputs):
         seq = torch.cat((inputs['observed_pose'], inputs['future_pose']), dim=1)
-        p3d_h36 = self.exp2xyz(seq)
+        # p3d_h36 = self.exp2xyz(seq)
+        p3d_h36 = seq.reshape(seq.shape[0], seq.shape[1], -1)
+        # print('kk', p3d_h36.shape)
         # print(i)
         batch_size, seq_n, _ = p3d_h36.shape
-        p3d_h36 = p3d_h36.float() #todo
+        p3d_h36 = p3d_h36.float()  # todo
         p3d_sup = p3d_h36.clone()[:, :, self.dim_used][:, -self.out_n - self.seq_in:].reshape(
             [-1, self.seq_in + self.out_n, len(self.dim_used) // 3, 3])
         p3d_src = p3d_h36.clone()[:, :, self.dim_used]
@@ -81,14 +86,15 @@ class HistoryRepeatsItself(nn.Module):
 
         # p3d_h36 = p3d_h36.reshape([-1, self.in_n + self.out_n, 32, 3])
 
-        p3d_out_all = p3d_out_all.reshape([batch_size, self.seq_in + self.out_n, self.itera, len(self.dim_used) // 3, 3])
+        p3d_out_all = p3d_out_all.reshape(
+            [batch_size, self.seq_in + self.out_n, self.itera, len(self.dim_used) // 3, 3])
 
-        return {'pred_pose':p3d_out_all, 'pred_pose_output_only':p3d_out}
+        return {'pred_pose': p3d_out_all, 'pred_metric_pose': p3d_out}
 
 
 class AttModel(nn.Module):
 
-    def __init__(self, in_features=48, kernel_size=5, d_model=512, num_stage=2, dct_n=10):
+    def __init__(self, in_features=48, kernel_size=5, d_model=512, num_stage=2, dct_n=10, device='cpu'):
         super(AttModel, self).__init__()
 
         self.kernel_size = kernel_size
@@ -96,6 +102,7 @@ class AttModel(nn.Module):
         # self.seq_in = seq_in
         self.dct_n = dct_n
         # ks = int((kernel_size + 1) / 2)
+        self.device = device
         assert kernel_size == 10
 
         self.convQ = nn.Sequential(nn.Conv1d(in_channels=in_features, out_channels=d_model, kernel_size=6,
@@ -113,8 +120,8 @@ class AttModel(nn.Module):
                                    nn.ReLU())
 
         self.gcn = GCN(input_feature=(dct_n) * 2, hidden_feature=d_model, p_dropout=0.3,
-                           num_stage=num_stage,
-                           node_n=in_features)
+                       num_stage=num_stage,
+                       node_n=in_features)
 
     def forward(self, src, output_n=25, input_n=50, itera=1):
         """
@@ -135,8 +142,8 @@ class AttModel(nn.Module):
         src_query_tmp = src_tmp.transpose(1, 2)[:, :, -self.kernel_size:].clone()
 
         dct_m, idct_m = util.get_dct_matrix(self.kernel_size + output_n)
-        dct_m = torch.from_numpy(dct_m).float().cuda() #todo
-        idct_m = torch.from_numpy(idct_m).float().cuda() #todo
+        dct_m = torch.from_numpy(dct_m).float().to(self.device)  # todo
+        idct_m = torch.from_numpy(idct_m).float().to(self.device)  # todo
 
         vn = input_n - self.kernel_size - output_n + 1
         vl = self.kernel_size + output_n
@@ -144,6 +151,9 @@ class AttModel(nn.Module):
               np.expand_dims(np.arange(vn), axis=1)
         src_value_tmp = src_tmp[:, idx].clone().reshape(
             [bs * vn, vl, -1])
+        # print('ss', src_value_tmp.shape, dct_m[:dct_n].unsqueeze(dim=0).shape)
+        # print('dd', bs, vn, dct_n)
+        # print('m', torch.matmul(dct_m[:dct_n].unsqueeze(dim=0).cpu(), src_value_tmp.cpu()).shape)
         src_value_tmp = torch.matmul(dct_m[:dct_n].unsqueeze(dim=0), src_value_tmp).reshape(
             [bs, vn, dct_n, -1]).transpose(2, 3).reshape(
             [bs, vn, -1])  # [32,40,66*11]
@@ -312,18 +322,17 @@ class GCN(nn.Module):
 
         return y
 
-
 # '''
 # C:\Users\samen\Desktop\term7\b\git_pose\datasets
 # python -m api.preprocess dataset=human3.6m official_annotation_path=C:\Users\samen\Desktop\term7\b\git_pose\datasets\Poses\ data_type=validation keypoint_dim=3 skip_num=1 obs_frames_num=50 pred_frames_num=10 interactive=false
 #
 # '''
-#python -m api.train model=history_repeats_itself keypoint_dim=3 train_dataset=C:\Users\samen\Desktop\term7\b\git_pose\preprocessed_data\human36m\train_50_10_1_human3.6m.jsonl valid_dataset=C:\Users\samen\Desktop\term7\b\git_pose\preprocessed_data\human36m\validation_50_10_1_human3.6m.jsonl epochs=10 data.shuffle=True device=cpu snapshot_interval=10 hydra.run.dir=.\outputs\21
+# python -m api.train model=history_repeats_itself keypoint_dim=3 train_dataset=C:\Users\samen\Desktop\term7\b\git_pose\preprocessed_data\human36m\train_50_10_1_human3.6m.jsonl valid_dataset=C:\Users\samen\Desktop\term7\b\git_pose\preprocessed_data\human36m\validation_50_10_1_human3.6m.jsonl epochs=10 data.shuffle=True device=cpu snapshot_interval=10 hydra.run.dir=.\outputs\21
 #
 # '''
 # python -m api.train model=hisroty_repeats_itself keypoint_dim=3 train_dataset=C:\Users\samen\Desktop\term7\b\git_pose\preprocessed_data\human36m\train_50_10_1_human3.6m.jsonl valid_dataset=C:\Users\samen\Desktop\term7\b\git_pose\preprocessed_data\human36m\validation_50_10_1_human3.6m.jsonl epochs=10 data.shuffle=True device=cpu snapshot_interval=10 hydra.run.dir=./
 
-#python -m api.train model=history_repeats_itself keypoint_dim=3 train_dataset=C:\Users\samen\Desktop\term7\b\git_pose\preprocessed_data\human36m\train_50_10_1_human3.6m.jsonl valid_dataset=C:\Users\samen\Desktop\term7\b\git_pose\preprocessed_data\human36m\validation_50_10_1_human3.6m.jsonl epochs=1 data.shuffle=True device=cpu snapshot_interval=10 hydra.run.dir=.\outputs\59
+# python -m api.train model=history_repeats_itself keypoint_dim=3 train_dataset=C:\Users\samen\Desktop\term7\b\git_pose\preprocessed_data\human36m\train_50_10_1_human3.6m.jsonl valid_dataset=C:\Users\samen\Desktop\term7\b\git_pose\preprocessed_data\human36m\validation_50_10_1_human3.6m.jsonl epochs=1 data.shuffle=True device=cpu snapshot_interval=10 hydra.run.dir=.\outputs\59
 
 
 # '''
