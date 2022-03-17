@@ -52,9 +52,12 @@ def compute_difference_matrix(self, src_seq, tgt_seq):
 
 def train_preprocess(inputs, args):
     
-    obs_pose = inputs[f'observed_pose']  
-    future_pose = inputs[f'future_pose']
-    
+    obs_pose = inputs['observed_pose']
+    future_pose = inputs['future_pose']
+
+    obs_pose = obs_pose.reshape(obs_pose.shape[0], obs_pose.shape[1], -1, args.pose_dim)
+    future_pose = future_pose.reshape(future_pose.shape[0], future_pose.shape[1], -1, args.pose_dim)
+
     n_major_joints = len(_MAJOR_JOINTS)
     obs_pose = obs_pose[:, :, _MAJOR_JOINTS]
     future_pose = future_pose[:, :, _MAJOR_JOINTS]
