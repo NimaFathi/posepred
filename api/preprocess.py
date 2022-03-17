@@ -12,7 +12,7 @@ from preprocessor.pie_preprocessor import PIEPreprocessor
 from preprocessor.posetrack_preprocessor import PoseTrackPreprocessor
 from preprocessor.somof_3dpw_preprocessor import SoMoF3DPWPreprocessor
 from preprocessor.somof_posetrack_preprocessor import SoMoFPoseTrackPreprocessor
-from preprocessor.our_preprocessor import PreprocessorOur
+from preprocessor.stanford_preprocessor import StanfordPreprocessor
 from data_loader import DATASETS, DATA_TYPES
 
 logger = logging.getLogger(__name__)
@@ -44,8 +44,8 @@ def preprocess(cfg: DictConfig):
             pred_frame_num=cfg.pred_frames_num, skip_frame_num=cfg.skip_num, use_video_once=cfg.use_video_once,
             save_total_frames=cfg.save_total_frames
         )
-    elif cfg.dataset == 'our':
-        preprocessor = PreprocessorOur(
+    elif cfg.dataset == 'stanford3.6m':
+        preprocessor = StanfordPreprocessor(
             dataset_path=cfg.official_annotation_path,
             custom_name=cfg.output_name, is_interactive=cfg.interactive,
             skip_frame_num=cfg.skip_num, use_video_once=cfg.use_video_once,

@@ -11,7 +11,7 @@ from path_definition import PREPROCESSED_DATA_DIR
 logger = logging.getLogger(__name__)
 
 
-class OurDataset(Dataset):
+class RandomCropDataset(Dataset):
     def __init__(self,
                  dataset_path,
                  keypoint_dim,

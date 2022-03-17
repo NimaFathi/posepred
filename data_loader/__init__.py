@@ -2,11 +2,11 @@ from torch.utils.data import DataLoader
 
 from .interactive_dataset import InteractiveDataset
 from .noisy_solitary_dataset import NoisySolitaryDataset
-from .our_dataset import OurDataset
+from .random_crop_dataset import RandomCropDataset
 from .solitary_dataset import SolitaryDataset
 
 DATASETS = ['somof_posetrack', 'posetrack', 'somof_3dpw',
-            '3dpw', 'jta', 'jaad', 'pie', 'human3.6m', 'our']
+            '3dpw', 'jta', 'jaad', 'pie', 'human3.6m', 'stanford3.6m']
 DATA_TYPES = ['train', 'validation', 'test']
 VISUALIZING_TYPES = ['observed', 'future', 'predicted', 'completed']
 
@@ -24,7 +24,7 @@ def get_dataloader(dataset_path, args):
                                        args.is_visualizing, args.use_quaternion, args.normalize, args.metadata_path,
                                        args.noise_rate, args.noise_keypoint, args.overfit)
     elif args.is_random_crop:
-        dataset = OurDataset(
+        dataset = RandomCropDataset(
             dataset_path, args.keypoint_dim, args.is_testing, args.use_mask, args.is_visualizing,
             args.model_pose_format, args.metric_pose_format, args.normalize, args.metadata_path,
             args.seq_rate, args.frame_rate, args.len_observed, args.len_future

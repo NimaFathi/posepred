@@ -28,11 +28,11 @@ SPLIT = {
 }
 
 
-class PreprocessorOur(Processor):
+class StanfordPreprocessor(Processor):
     def __init__(self, dataset_path, is_interactive, skip_frame_num,
                  use_video_once, custom_name, save_total_frames):
-        super(PreprocessorOur, self).__init__(dataset_path, is_interactive, 0,
-                                              0, skip_frame_num, use_video_once, custom_name, save_total_frames)
+        super(StanfordPreprocessor, self).__init__(dataset_path, is_interactive, 0,
+                                                   0, skip_frame_num, use_video_once, custom_name, save_total_frames)
         assert self.is_interactive is False, 'human3.6m is not interactive'
         self.output_dir = os.path.join(
             PREPROCESSED_DATA_DIR, 'stanford36m_interactive') if self.is_interactive else os.path.join(
