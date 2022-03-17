@@ -134,9 +134,9 @@ class PreprocessorOur(Processor):
                         'action': f'{canonical_name}',
                         'xyz_pose': video_data['xyz_pose'],
                         # 'quaternion_pose': video_data['quaternion_pose'],
-                        'expmap_pose': video_data['expmap_pose'],
-                        # 'rotmat_pose': video_data['rotmat_pose'],
-                        # 'euler_pose': video_data['euler_pose']
+                        #'expmap_pose': video_data['expmap_pose'],
+                        'rotmat_pose': video_data['rotmat_pose'],
+                        'euler_pose': video_data['euler_pose']
                         # ,'image_path': video_data['image_path']
                     })
         self.save_meta_data(self.meta_data, self.output_dir, True, data_type)

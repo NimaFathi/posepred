@@ -124,31 +124,7 @@ class Pose1DTemporalEncoder(nn.Module):
     )
     
   def forward(self, x):
-    """
-    Args:
-      x: [batch_size, seq_len, skeleton_dim].
-    """
-    # batch_size, skeleton_dim, seq_len
     x = torch.transpose(x, 1,2)
     x = self._model(x)
-    # batch_size, seq_len, skeleton_dim
     x = torch.transpose(x, 1, 2)
     return x
-
-
-if __name__ == '__main__':
-  dof = 9
-  output_channels = 128
-  n_joints = 21
-  seq_len = 49
-
-  model = Pose1DTemporalEncoder(input_channels=dof*n_joints, output_channels=output_channels)
-  inputs = torch.FloatTensor(10, seq_len, dof*n_joints)
-  X = model(inputs)
-  print(X.size())
-
-#  model = Pose1DEncoder(input_channels=dof, output_channels=output_channels)
-#  inputs = torch.FloatTensor(10, seq_len, dof*n_joints)
-#  X = model(inputs)
-#  print(X.size())
-

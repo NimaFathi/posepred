@@ -166,21 +166,12 @@ def MSE(pred, target, dim=None, mask=None):
         # (seq_len, 96) - (seq_len, 96)
         idx_to_use = np.where(np.std(gt_i.detach().cpu().numpy(), 0) > 1e-4)[0]
         euc_error = torch.pow(gt_i[:,idx_to_use] - eulerchannels_pred[:,idx_to_use], 2)
-        # shape: seq_len
+
         euc_error = torch.sum(euc_error, 1)
-        # shape: seq_len
+
         euc_error = torch.sqrt(euc_error)
         mean_errors[i,:] = euc_error
 
-      # This is simply the mean error over the eval_num_seeds examples
-      # with shape [eval_num_seeds]
     mean_mean_errors = torch.mean(mean_errors, 0)
-    return mean_mean_errors.mean() #mean_eval_error_dict
+    return mean_mean_errors.mean()
 
-
-"""
-print('here1')
-pred = torch.rand(2, 2, 96)
-target = torch.rand(2, 2, 96)
-print(MSE(pred, target))
-"""

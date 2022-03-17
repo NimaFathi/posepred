@@ -69,6 +69,7 @@ class OurDataset(Dataset):
                     if k in self.extra_keys_to_keep:
                         seq_tensor[k] = v
 
+                #print(seq.keys())
                 assert "pose" in seq_tensor, "model pose format not found in the sequence"
                 assert "metric_pose" in seq_tensor, "metric pose format not found in the sequence"
 

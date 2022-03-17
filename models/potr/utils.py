@@ -6,7 +6,7 @@ def xavier_init(layer, mean_, sd_, bias, norm_bias=True):
   if classname.find('Linear')!=-1:
     print('[INFO] (xavier_init) Initializing layer {}'.format(classname))
     nn.init.xavier_uniform_(layer.weight.data)
-    # nninit.xavier_normal(layer.bias.data)
+    # nn.init.xavier_normal(layer.bias.data)
     if norm_bias:
       layer.bias.data.normal_(0, 0.05)
     else:
@@ -16,7 +16,6 @@ def normal_init(layer, mean_, sd_, bias, norm_bias=True):
   """Intialization of layers with normal distribution with mean and bias"""
   classname = layer.__class__.__name__
   # Only use the convolutional layers of the module
-  #if (classname.find('Conv') != -1 ) or (classname.find('Linear')!=-1):
   if classname.find('Linear') != -1:
     print('[INFO] (normal_init) Initializing layer {}'.format(classname))
     layer.weight.data.normal_(mean_, sd_)

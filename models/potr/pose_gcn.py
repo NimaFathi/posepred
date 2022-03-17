@@ -313,7 +313,6 @@ class SimpleEncoder(nn.Module):
 
     B, S, D = x.size()
     
-    # [batch_size, n_joints, model_dim]
     y = self.gc1(x.view(-1, self._output_nodes, self._input_features))
     b, n, f = y.shape
     y = self.bn1(y.view(b, -1)).view(b, n, f)
@@ -323,13 +322,10 @@ class SimpleEncoder(nn.Module):
     for i in range(self._num_stage):
         y = self.gcbs[i](y)
 
-    # [batch_size, n_joints, model_dim]
     y = self.gc2(y)
 
-    # [batch_size, model_dim]
     y = self._back(y.view(-1, self._model_dim*self._output_nodes))
 
-    # [batch_size, n_poses, model_dim]
     y = y.view(B, S, self._model_dim)
 
     return y
