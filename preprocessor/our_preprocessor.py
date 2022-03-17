@@ -17,10 +17,11 @@ from preprocessor.preprocessor import Processor
 from utils.others import expmap_to_quaternion, qfix, expmap_to_rotmat, expmap_to_euler
 
 logger = logging.getLogger(__name__)
+# TODO: check preprocessor count
 
 SPLIT = {
     # 'train': ['S1', 'S5', 'S6', 'S7', 'S8'],
-    # 'validation': ['S1', 'S5', 'S6', 'S7', 'S8'],
+    # 'validation': ['S1', 'S5', 'S6', 'S7', 'S8'], #TODO: uncomment
     'train': ['S1', 'S5'],
     'validation': ['S1', 'S5'],
     'test': ['S9', 'S11']
@@ -29,13 +30,13 @@ SPLIT = {
 
 class PreprocessorOur(Processor):
     def __init__(self, dataset_path, is_interactive, skip_frame_num,
-                 use_video_once, custom_name):
+                 use_video_once, custom_name, save_total_frames):
         super(PreprocessorOur, self).__init__(dataset_path, is_interactive, 0,
-                                              0, skip_frame_num, use_video_once, custom_name)
+                                              0, skip_frame_num, use_video_once, custom_name, save_total_frames)
         assert self.is_interactive is False, 'human3.6m is not interactive'
         self.output_dir = os.path.join(
-            PREPROCESSED_DATA_DIR, 'human36m_interactive') if self.is_interactive else os.path.join(
-            PREPROCESSED_DATA_DIR, 'human36m'
+            PREPROCESSED_DATA_DIR, 'stanford36m_interactive') if self.is_interactive else os.path.join(
+            PREPROCESSED_DATA_DIR, 'stanford36m'
         )
         if not os.path.exists(self.output_dir):
             os.makedirs(self.output_dir)
@@ -57,69 +58,53 @@ class PreprocessorOur(Processor):
     def normal(self, data_type='train'):
         self.subjects = SPLIT[data_type]
         logger.info(
-            'start creating Human3.6m normal static data \
-                    from original Human3.6m dataset (CDF files) ... ')
-        if self.custom_name:
-            output_file_name = \
-                f'{data_type}_{self.skip_frame_num}_{self.custom_name}.jsonl'
+            'start creating Stanford3.6m preprocessed data from Stanford\'s Human3.6m dataset ... ')
+
+        if self.save_total_frames:
+            list_format = ["total"]
         else:
-            output_file_name = \
-                f'{data_type}_{self.skip_frame_num}_human3.6m.jsonl'
-        assert os.path.exists(os.path.join(
-            self.output_dir,
-            output_file_name
-        )) is False, f"preprocessed file exists at {os.path.join(self.output_dir, output_file_name)}"
+            list_format = ["xyz", "quaternion", "expmap", "rotmat", "euler"]
+
+        for format_data in list_format:
+            if self.custom_name:
+                output_file_name = \
+                    f'{data_type}_{format_data}_{self.custom_name}.jsonl'
+            else:
+                output_file_name = \
+                    f'{data_type}_{format_data}_stanford3.6m.jsonl'
+
+            assert os.path.exists(os.path.join(
+                self.output_dir,
+                output_file_name
+            )) is False, f"preprocessed file exists at {os.path.join(self.output_dir, output_file_name)}"
+            
+
         for subject in self.subjects:
             logger.info("handling subject: {}".format(subject))
-            # subject_pose_path = os.path.join(self.dataset_path, subject, 'MyPoseFeatures/D3_Positions/*.cdf')
-            # file_list_pose = glob(subject_pose_path)
-            # assert len(file_list_pose) == 30, "Expected 30 files for subject " + subject + ", got " + str(
-            # len(file_list_pose))
             for action in self.acts:
-                # action = os.path.splitext(os.path.basename(f))[0]
-                if subject == 'S11' and action == 'Directions':
-                    continue  # Discard corrupted video
-                canonical_name = action.replace('TakingPhoto', 'Photo') \
-                    .replace('WalkingDog', 'WalkDog')
-                # hf = cdflib.CDF(f)
-                # positions = hf['xyz_pose'].reshape(-1, 96)
-                # if data_type == 'train':
-                #     positions = positions[:95 * positions.shape[0] // 100]
-                # elif data_type == 'validation':
-                #     positions = positions[95 * positions.shape[0] // 100:]
-                # positions /= 1000
                 expmap = self.expmap_rep(action, subject, data_type)
                 positions = self.expmap2xyz_torch(torch.from_numpy(copy.deepcopy(expmap)).float())
                 rotmat = self.rotmat_rep(action, subject, data_type)
                 euler = self.euler_rep(action, subject, data_type)
                 quat = self.quaternion_rep(action, subject, data_type)
-                if positions.shape[0] != expmap.shape[0]:
-                    print(f'''\
-                            corrupted:
-                            subject: {subject}
-                            file: {f}
-                            positions shape: {positions.shape}
-                            expmap shape: {expmap.shape}
-                            rotmat shape: {rotmat.shape}
-                            quat shape: {quat.shape}
-                    ''')
-                    positions = positions[:min(positions.shape[0], expmap.shape[0])]
 
-                # total_frame_num = self.obs_frame_num + self.pred_frame_num
-                # section_range = positions.shape[0] // (
-                #         total_frame_num * (self.skip_frame_num + 1)) if self.use_video_once is False else 1
-                # for i in range(section_range):
-                booli = True
-                if booli:
+                expmap = expmap.reshape(expmap.shape[0], -1)
+                positions = positions.reshape(positions.shape[0], -1)
+                rotmat = rotmat.reshape(rotmat.shape[0], -1)
+                euler = euler.reshape(euler.shape[0], -1)
+                quat = quat.reshape(quat.shape[0], -1)
+
+                if self.save_total_frames == False:
                     self.obs_frame_num = 50
                     self.pred_frame_num = 25
                     total_frame_num = self.obs_frame_num + self.pred_frame_num
                     section_range = positions.shape[0] // (
-                            total_frame_num * (self.skip_frame_num + 1)) if self.use_video_once is False else 1
+                            total_frame_num * (self.skip_frame_num + 1)) if self.use_video_once is False else 1 # TODO: remove condition
+                    
                     for i in range(section_range):
                         video_data = {
-                            'observed_pose': list(),
-                            'future_pose': list(),
+                            'observed_xyz_pose': list(),
+                            'future_xyz_pose': list(),
                             'observed_quaternion_pose': list(),
                             'future_quaternion_pose': list(),
                             'observed_expmap_pose': list(),
@@ -127,16 +112,14 @@ class PreprocessorOur(Processor):
                             'observed_rotmat_pose': list(),
                             'future_rotmat_pose': list(),
                             'observed_euler_pose': list(),
-                            'future_euler_pose': list(),
-                            # 'observed_image_path': list(),
-                            # 'future_image_path': list()
+                            'future_euler_pose': list()
                         }
                         for j in range(0, total_frame_num * (self.skip_frame_num + 1), self.skip_frame_num + 1):
                             if j < (self.skip_frame_num + 1) * self.obs_frame_num:
-                                video_data['observed_pose'].append(
+                                video_data['observed_xyz_pose'].append(
                                     positions[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
-                                # video_data['observed_quaternion_pose'].append(
-                                #     quat[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
+                                video_data['observed_quaternion_pose'].append(
+                                    quat[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
                                 video_data['observed_expmap_pose'].append(
                                     expmap[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
                                 video_data['observed_rotmat_pose'].append(
@@ -144,10 +127,10 @@ class PreprocessorOur(Processor):
                                 video_data['observed_euler_pose'].append(
                                     euler[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
                             else:
-                                video_data['future_pose'].append(
+                                video_data['future_xyz_pose'].append(
                                     positions[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
-                                # video_data['future_quaternion_pose'].append(
-                                #     quat[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
+                                video_data['future_quaternion_pose'].append(
+                                    quat[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
                                 video_data['future_expmap_pose'].append(
                                     expmap[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
                                 video_data['future_rotmat_pose'].append(
@@ -155,58 +138,58 @@ class PreprocessorOur(Processor):
                                 video_data['future_euler_pose'].append(
                                     euler[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
 
-                        self.update_meta_data(self.meta_data, video_data['observed_pose'], 3)
-                        with jsonlines.open(os.path.join(self.output_dir, output_file_name), mode='a') as writer:
-                            writer.write({
-                                'video_section': f'{subject}-{canonical_name}-{i}',
-                                'observed_pose': video_data['observed_pose'],
-                                'future_pose': video_data['future_pose'],
-                                # 'observed_quaternion_pose': video_data['observed_quaternion_pose'],
-                                # 'future_quaternion_pose': video_data['future_quaternion_pose'],
-                                'observed_expmap_pose': video_data['observed_expmap_pose'],
-                                'future_expmap_pose': video_data['future_expmap_pose'],
-                                'observed_rotmat_pose': video_data['observed_rotmat_pose'],
-                                'future_rotmat_pose': video_data['future_rotmat_pose'],
-                                'observed_euler_pose': video_data['observed_euler_pose'],
-                                'future_euler_pose': video_data['future_euler_pose'],
-                                # 'observed_image_path': video_data['observed_image_path'],
-                                # 'future_image_path': video_data['future_image_path'],
-                                'action': action.split()[0]
-                            })
+                        for format_data in ["xyz", "quaternion", "expmap", "rotmat", "euler"]:
+                            self.update_meta_data(self.meta_data, video_data['observed_xyz_pose'], 3)
+                            if self.custom_name:
+                                output_file_name = \
+                                    f'{data_type}_{format_data}_{self.custom_name}.jsonl'
+                            else:
+                                output_file_name = \
+                                    f'{data_type}_{format_data}_stanford3.6m.jsonl'
+                            with jsonlines.open(os.path.join(self.output_dir, output_file_name), mode='a') as writer:
+                                writer.write({
+                                    'video_section': f'{subject}-{action}-{i}',
+                                    'observed_pose': video_data[f'observed_{format_data}_pose'],
+                                    'future_pose': video_data[f'future_{format_data}_pose'],
+                                    'action': action
+                                })
                 else:
                     video_data = {
-                        'xyz_pose': positions.reshape(positions.shape[0], -1, 3).tolist()[::self.skip_frame_num + 1],
-                        'quaternion_pose': quat.reshape(quat.shape[0], -1, 4).tolist()[::self.skip_frame_num + 1],
-                        'expmap_pose': expmap.reshape(expmap.shape[0], -1, 3).tolist()[::self.skip_frame_num + 1],
+                        'xyz_pose': positions.tolist()[::self.skip_frame_num + 1],
+                        'quaternion_pose': quat.tolist()[::self.skip_frame_num + 1],
+                        'expmap_pose': expmap.tolist()[::self.skip_frame_num + 1],
                         'rotmat_pose': rotmat.tolist()[::self.skip_frame_num + 1],
                         'euler_pose': euler.tolist()[::self.skip_frame_num + 1],
-                        # ,'image_path': list()
-                        'action': action.split()[0]
+                        'action': action #TODO: fix action
                     }
-                    # print('video',len(video_data['xyz_pose']), len(positions.tolist()), len(video_data['expmap_pose']), len(expmap.tolist()),
-                    # len(video_data['euler_pose']), len(euler.tolist()))
 
-                    print(f'shape {subject} {action}', positions.reshape(positions.shape[0], -1, 3).shape,
-                          expmap.reshape(expmap.shape[0], -1, 3).shape,
-                          euler[0].shape, rotmat[0].shape, quat.reshape(quat.shape[0], -1, 4).shape)
-                    # for j in range(0, positions.shape[0], self.skip_frame_num + 1):
-                    #     video_data['image_path'].append(f'{os.path.basename(f).split(".cdf")[0]}_{j:05}')
+                    print(video_data['action'], action)
+
+                    print(f'shape {subject} {action}', positions.shape,
+                          expmap.shape,
+                          euler.shape, rotmat.shape, quat.shape)
+
+                    if self.custom_name:
+                        output_file_name = \
+                            f'{data_type}_total_{self.custom_name}.jsonl'
+                    else:
+                        output_file_name = \
+                            f'{data_type}_total_stanford3.6m.jsonl'
+
 
                     self.update_meta_data(self.meta_data, video_data['xyz_pose'], 3)
-                    # print(,positions.shape,
                     with jsonlines.open(os.path.join(self.output_dir, output_file_name), mode='a') as writer:
                         writer.write({
-                            'video_section': f'{subject}-{canonical_name}',
-                            'action': f'{canonical_name}',
+                            'video_section': f'{subject}-{action}',
+                            'action': f'{action}',
                             'xyz_pose': video_data['xyz_pose'],
-                            # 'quaternion_pose': video_data['quaternion_pose'],
+                            'quaternion_pose': video_data['quaternion_pose'],
                             'expmap_pose': video_data['expmap_pose'],
-                            # 'rotmat_pose': video_data['rotmat_pose'],
-                            # 'euler_pose': video_data['euler_pose']
+                            'rotmat_pose': video_data['rotmat_pose'],
+                            'euler_pose': video_data['euler_pose']
                             # ,'image_path': video_data['image_path']
                         })
         self.save_meta_data(self.meta_data, self.output_dir, True, data_type)
-        # self.delete_redundant_files()
 
     def expmap_rep(self, action, subject, data_type):
         output_directory = os.path.join(PREPROCESSED_DATA_DIR, 'H3.6m_rotations')
@@ -384,11 +367,10 @@ class PreprocessorOur(Processor):
         elif data_type == 'validation':
             data = data[95 * data.shape[0] // 100:]
         return data
-        # return data.reshape(data.shape[0], -1, 3)[:, 1:]
 
     @staticmethod
     def delete_redundant_files():
         output_directory = os.path.join(PREPROCESSED_DATA_DIR, 'H3.6m_rotations')
         h36_folder = os.path.join(output_directory, 'h3.6m')
         os.remove(h36_folder + ".zip")
-        # rmtree(h36_folder)
+
