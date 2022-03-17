@@ -37,7 +37,7 @@ n_h36m_joints: 32
 pose_dim: ${keypoint_dim}
 num_activities: &num_activities 15
 
-device: &device cpu
+device: &device ${device}
 consider_uncertainty: &consider_uncertainty false
 
 loss:

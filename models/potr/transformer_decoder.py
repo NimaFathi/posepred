@@ -51,14 +51,7 @@ class DecoderLayer(nn.Module):
                 query_embedding=None,
                 mask_look_ahead=None, 
                 mask_target_padding=None):
-        """Forward pass of the layer.
 
-        Args:
-        target_seq: [target_seq_length, batch_size, model_dim]
-        memory: [source_seq_length, batch_size, model_dim]
-        mask_look_ahead: []
-        mask_target_padding:
-        """
         return self.forward_fn(
             target_seq,
             memory,
@@ -82,32 +75,20 @@ class DecoderLayer(nn.Module):
                 query_embedding=None,
                 mask_look_ahead=None, 
                 mask_target_padding=None):
-        """Forward pass of the layer with post normalization.
 
-        Args:
-        target_seq: [target_seq_length, batch_size, model_dim]
-        memory: [source_seq_length, batch_size, model_dim]
-        mask_look_ahead: []
-        mask_target_padding:
-        """
-        # 1) Compute self attention with current sequence of inferred tokens
-        # query is the same as key for self attention
-        # [batch_size, seq_length, model_dim]
         if self.use_query_embedding:
             q = k = v = target_seq + query_embedding
         else:
             q = k = v =  target_seq + pos_encodings
 
         self_attn, self_attn_weights = self.self_attn(
-            query=q, key=k, value=v, #target_seq,
+            query=q, key=k, value=v, 
             attn_mask=mask_look_ahead,
             key_padding_mask=mask_target_padding
         )
         self_attn = self.dropout1(self_attn)
         out_self_attn = self.norm1(self_attn + target_seq)
 
-        # 2) Attend the encoder's memory given the comptued self attention
-        # [batch_size, seq_length, model_dim]
         attn, attn_weights = self.multihead_attn(
             query=self.handle_query_embedding(out_self_attn, query_embedding), 
             key=self.handle_query_embedding(memory, pos_encodings), 
@@ -115,13 +96,11 @@ class DecoderLayer(nn.Module):
         attn = self.dropout2(attn)
         out_attn = self.norm2(attn + out_self_attn)
 
-        # 3) Compute pointwise embeding by expanding and projecting + dropout
         ffn_output = self.linear1(out_attn)
         ffn_output = self.relu(ffn_output)
         ffn_output = self.dropout4(ffn_output)
         ffn_output = self.linear2(ffn_output)
 
-        # 4) Compute residual connection as final output
         ffn_output = self.dropout3(ffn_output)
         outputs = self.norm3(ffn_output + out_attn)
 
@@ -145,7 +124,6 @@ class DecoderLayer(nn.Module):
         target_seq = self.norm1(target_seq_)
         # 1) Compute self attention with current sequence of inferred tokens
         # query is the same as key for self attention
-        # [batch_size, seq_length, model_dim]
         if self.use_query_embedding:
             # in case of using only the query embedding follow DETR [2] which drops
             # values to zero and uses only the query embeddings
@@ -163,7 +141,6 @@ class DecoderLayer(nn.Module):
         out_self_attn = self.norm2(self_attn + target_seq_)
 
         # 2) Attend the encoder's memory given the comptued self attention
-        # [batch_size, seq_length, model_dim]
         attn, attn_weights = self.multihead_attn(
             query=self.handle_query_embedding(out_self_attn, query_embedding), 
             key=self.handle_query_embedding(memory, pos_encodings),
@@ -177,7 +154,6 @@ class DecoderLayer(nn.Module):
         ffn_output = self.dropout4(ffn_output)
         ffn_output = self.linear2(ffn_output)
 
-        # 4) Compute residual connection as final output
         ffn_output = self.dropout3(ffn_output)
 
         return ffn_output, self_attn_weights, attn_weights

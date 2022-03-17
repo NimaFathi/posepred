@@ -55,29 +55,20 @@ class Transformer(nn.Module):
         A tuple with two list of i and j matrix entries of m
         """
         batch_size = self_attn.size()[1]
-        # batch_size x src_seq_len x model_dim
         in_pos = torch.transpose(self_attn, 0, 1)
-        # predict the matrix of similitudes
-        # batch_size x src_seq_len x tgt_seq_len 
         prob_matrix = self.position_predictor(in_pos)
-        # apply softmax on the similutes to get probabilities on positions
-        # batch_size x src_seq_len x tgt_seq_len
 
         if one_to_one_selection:
             soft_matrix = F.softmax(prob_matrix, dim=2)
-        # predict assignments in a one to one fashion maximizing the sum of probs
             indices = [linear_sum_assignment(soft_matrix[i].cpu().detach(), maximize=True) 
                         for i in range(batch_size)]
         else:
-        # perform softmax by rows to have many targets to one input assignements
             soft_matrix = F.softmax(prob_matrix, dim=1)
             indices_rows = torch.argmax(soft_matrix, 1)
             indices = [(indices_rows[i], list(range(prob_matrix.size()[2]))) 
                 for i in range(batch_size)]
 
         return indices, soft_matrix 
-
-
 
     def forward(self,
                 source_seq,
@@ -98,7 +89,6 @@ class Transformer(nn.Module):
         memory, enc_weights = self.encoder(source_seq, encoder_position_encodings)
 
         tgt_plain = None
-        # perform selection from input sequence
         if self.query_selection:
             indices, prob_matrix = self.process_index_selection(memory)
             tgt_plain, target_seq = query_selection_fn(indices)
@@ -123,43 +113,3 @@ class Transformer(nn.Module):
             prob_matrix_ =  prob_matrix
 
         return out_attn, memory, out_weights_, enc_weights_, (tgt_plain, prob_matrix_)
-
-
-if __name__ == '__main__':
-    thispath = os.path.dirname(os.path.abspath(__file__))
-    sys.path.insert(0, thispath+"/../")
-    import potr.utils as utils
-
-    import argparse
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--num_encoder_layers', default=4)
-    parser.add_argument('--num_decoder_layers', default=4)
-    parser.add_argument('--query_selection', default=False)
-    parser.add_argument('--future_frames_num', default=20)
-    parser.add_argument('--use_query_embedding', default=False)
-    parser.add_argument('--num_layers', default=6)
-    parser.add_argument('--model_dim', default=128)
-    parser.add_argument('--num_heads', default=2)
-    parser.add_argument('--dim_ffn', default=16)
-    parser.add_argument('--dropout', default=0.5)
-    parser.add_argument('--init_fn_name', default='xavier')
-    parser.add_argument('--pre_normalization', default=True)
-
-    args = parser.parse_args()
-
-
-    src_seq_length = 50
-    tgt_seq_length = args.future_frames_num
-    batch_size = 8
-
-    src_seq = torch.FloatTensor(src_seq_length, batch_size, args.model_dim).uniform_(0, 1)
-    tgt_seq = torch.FloatTensor(tgt_seq_length, batch_size, args.model_dim).fill_(1)
-    
-
-    mask_look_ahead = utils.create_look_ahead_mask(tgt_seq_length)
-    mask_look_ahead = torch.from_numpy(mask_look_ahead)
-
-    encodings = torch.FloatTensor(tgt_seq_length, 1, args.model_dim).uniform_(0,1)
-
-    model = Transformer(args)
-    out_attn, memory, out_weights_, enc_weights_, (tgt_plain, prob_matrix_) = model(src_seq, tgt_seq, src_seq, tgt_seq, mask_look_ahead=mask_look_ahead)

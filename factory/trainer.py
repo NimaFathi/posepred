@@ -1,6 +1,6 @@
 import logging
 import time
-
+from tqdm import tqdm
 import torch
 from torch.utils.tensorboard import SummaryWriter
 
@@ -147,7 +147,7 @@ class Trainer:
 
                     future_metric_pose = data['future_pose']
                     if 'future_metric_pose' in data:
-                        future_metric_pose = data['pred_metric_pose']
+                        future_metric_pose = data['future_metric_pose']
 
                     metric_value = metric_func(
                         pred_metric_pose.to(self.args.device),

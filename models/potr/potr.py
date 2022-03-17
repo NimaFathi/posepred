@@ -104,13 +104,6 @@ class POTR(nn.Module):
             mask_look_ahead, requires_grad=False)
 
     def handle_class_token(self, input_pose_seq):
-        """
-        Args:
-        input_pose_seq: [src_len, batch_size, model_dim]
-        """
-        # concatenate extra token for activity prediction as an extra
-        # element of the input sequence
-        # specialized token is not a skeleton
         _, B, _ = input_pose_seq.size()
         token = self.class_token.squeeze().repeat(1, B, 1)
         input_pose_seq = torch.cat([token, input_pose_seq], axis=0)
@@ -118,20 +111,7 @@ class POTR(nn.Module):
         return input_pose_seq
 
     def handle_copy_query(self, indices, input_pose_seq_):
-        """Handles the way queries are generated copying items from the inputs.
 
-        Args:
-        indices: A list of tuples len `batch_size`. Each tuple contains has the
-            form (input_list, target_list) where input_list contains indices of
-            elements in the input to be copy to elements in the target specified by
-            target_list.
-        input_pose_seq_: Source skeleton sequence [batch_size, src_len, pose_dim * n_joints].
-
-        Returns:
-        A tuple with first elements the decoder input skeletons with shape
-        [tgt_len, batch_size, skeleton_dim], and the skeleton embeddings of the 
-        input sequence with shape [tgt_len, batch_size, pose_dim * n_joints].
-        """
         batch_size = input_pose_seq_.size()[0]
         decoder_inputs = torch.FloatTensor(
             batch_size,
@@ -151,16 +131,6 @@ class POTR(nn.Module):
               inputs,
               mask_target_padding=None,
               get_attn_weights=False):
-        """Performs the forward pass of the pose transformers.
-
-        Args:
-        input_pose_seq: Shape [batch_size, src_sequence_length, dim_pose].
-        target_pose_seq: Shape [batch_size, tgt_sequence_length, dim_pose].
-
-        Returns:
-        A tensor of the predicted sequence with shape [batch_size, 
-        tgt_sequence_length, dim_pose].
-        """
 
         preprocessed_inputs = train_preprocess(inputs, self.args)
         enc_shape = preprocessed_inputs['encoder_inputs'].shape
@@ -177,38 +147,22 @@ class POTR(nn.Module):
                        target_pose_seq_,
                        mask_target_padding,
                        get_attn_weights):
-        """Compute forward pass for training and non recursive inference.
-        Args:
-        input_pose_seq_: Source sequence [batch_size, src_len, skeleton_dim].
-        target_pose_seq_: Query target sequence [batch_size, tgt_len, skeleton_dim].
-        mask_target_padding: Mask for target masking with ones where elements 
-            belong to the padding elements of shape [batch_size, tgt_len, skeleton_dim].
-        get_attn_weights: Boolean to indicate if attention weights should be returned.
-        Returns:
-        """
-        # 1) Encode the sequence with given pose encoder
-        # [batch_size, sequence_length, model_dim]
+                       
         input_pose_seq = input_pose_seq_
         target_pose_seq = target_pose_seq_
         if self.pose_embedding is not None:
             input_pose_seq = self.pose_embedding(input_pose_seq)
             target_pose_seq = self.pose_embedding(target_pose_seq)
 
-        # 2) compute the look-ahead mask and the positional encodings
-        # [sequence_length, batch_size, model_dim]
         input_pose_seq = torch.transpose(input_pose_seq, 0, 1)
         target_pose_seq = torch.transpose(target_pose_seq, 0, 1)
 
         def query_copy_fn(indices):
             return self.handle_copy_query(indices, input_pose_seq_)
 
-        # concatenate extra token for activity prediction as an extr element of the 
-        # input sequence, i.e. specialized token is not a skeleton
         if self.args.use_class_token:
             input_pose_seq = self.handle_class_token(input_pose_seq)
 
-        # 3) compute the attention weights using the transformer
-        # [target_sequence_length, batch_size, model_dim]
         
         attn_output, memory, attn_weights, enc_weights, mat = self.transformer(
             input_pose_seq,
@@ -227,20 +181,12 @@ class POTR(nn.Module):
         target_pose_seq_ = mat[0] if self.args.query_selection else \
             torch.transpose(target_pose_seq_, 0, 1)
 
-        # 4) decode sequence with pose decoder. The decoding process is time
-        # independent. It means non-autoregressive or parallel decoding.
-        # [batch_size, target_sequence_length, pose_dim]
         for l in range(self.args.num_decoder_layers):
-        # [target_seq_length*batch_size, pose_dim]
             out_sequence_ = self.pose_decoder(
                 attn_output[l].view(-1, self.args.model_dim))
-            # [target_seq_length, batch_size, pose_dim]
             out_sequence_ = out_sequence_.view(
                 self.args.future_frames_num, -1, self.args.pose_dim * self.args.n_major_joints)
-            # apply residual connection between target query and predicted pose
-            # [tgt_seq_len, batch_size, pose_dim * n_joints]
             out_sequence_ = out_sequence_ + target_pose_seq_[:, :, 0:end]
-            # [batch_size, tgt_seq_len, pose_dim * n_joints]
             
             out_sequence_ = torch.transpose(out_sequence_, 0, 1)
 
@@ -268,41 +214,22 @@ class POTR(nn.Module):
 
         if self.args.consider_uncertainty:
             outputs['uncertainty_matrix'] = torch.sigmoid(self.uncertainty_matrix)
-        
-        """
-        if self.args.predict_activity:
-            out_class = self.predict_activity(attn_output, memory)
-            print('out_class', len(out_class), out_class[0].shape)
-
-            return out_sequence, out_class, attn_weights, enc_weights, mat
-        """        
 
 
-        return outputs#out_sequence, attn_weights, enc_weights, mat
+        return outputs
 
 
 
     def predict_activity(self, attn_output, memory):
-        """Performs activity prediction either from memory or class token.
-
-        attn_output: Encoder memory. Shape [src_seq_len, batch_size, model_dim].
-        """
-        # [batch_size, src_len, model_dim]
         in_act = torch.transpose(memory, 0, 1)
 
-        # use a single specialized token for predicting activity
-        # the specialized token is in the first element of the sequence
         if self.args.use_class_token:
-            # [batch_size, model_dim]
             token = in_act[:, 0]
             actions = self.action_head(token)
             return [actions]      
 
-        # use all the input sequence attention to predict activity
-        # [batch_size, src_len*model_dim]
         in_act = torch.reshape(in_act, (-1, self.action_head_size))
         actions = self.action_head(in_act)
-        #print('actions', actions.shape)
         return [actions]
 
 

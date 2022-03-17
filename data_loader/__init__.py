@@ -33,7 +33,6 @@ def get_dataloader(dataset_path, args):
         dataset = SolitaryDataset(dataset_path, args.keypoint_dim, args.is_testing, args.use_mask,
                                   args.is_visualizing, args.use_quaternion, args.normalize, args.metadata_path)
 
-    print(len(dataset))
 
     dataloader = DataLoader(dataset, batch_size=args.batch_size, shuffle=args.shuffle, pin_memory=args.pin_memory,
                             num_workers=args.num_workers)

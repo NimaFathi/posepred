@@ -12,8 +12,6 @@ def pose_encoder_gcn(args):
   encoder = SimpleEncoder(
       n_nodes=args.n_major_joints,
       input_features=9 if args.pose_format == 'rotmat' else 3,
-      #n_nodes=params['pose_dim'],
-      #input_features=1,
       model_dim=args.model_dim, 
       p_dropout=args.dropout
   )
