@@ -27,8 +27,6 @@ class RandomCropDataset(Dataset):
                  len_observed,
                  len_future):
 
-        print("Initialzing Our Dataset:")
-
         self.normalize = normalize
         total_len = (len_observed + len_future) * frame_rate
         self.frame_rate = frame_rate
@@ -69,11 +67,10 @@ class RandomCropDataset(Dataset):
                     if k in 'total_mask':
                         seq_tensor['mask'] = torch.tensor(v, dtype=torch.float32)
                     if k in ['total_image_path', 'total_cam_extrinsic']:
-                        seq_tensor[k[6:]] = torch.tensor(v)
+                        seq_tensor[k[6:]] = v
                     if k in self.extra_keys_to_keep:
                         seq_tensor[k] = v
 
-                # print(seq.keys())
                 assert "pose" in seq_tensor, "model pose format not found in the sequence"
                 assert "metric_pose" in seq_tensor, "metric pose format not found in the sequence"
 
@@ -113,8 +110,7 @@ class RandomCropDataset(Dataset):
 
         for k in output_keys:
             temp_seq = seq[k][seq_index:seq_index + self.total_len]
-            s = temp_seq.shape  # T , JD
-            temp_seq = temp_seq.view(-1, self.frame_rate, s[1])[:, 0, :]
+            temp_seq = temp_seq[::self.frame_rate]
             outputs["observed_" + k] = temp_seq[:self.len_observed]
             outputs["future_" + k] = temp_seq[self.len_observed:]
 

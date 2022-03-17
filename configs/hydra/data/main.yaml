@@ -7,6 +7,7 @@ noise_rate: mask
 noise_keypoint:
 persons_num: 1
 use_mask: ${use_mask}
+use_quaternion: false
 
 model_pose_format: ${model_pose_format}
 metric_pose_format: ${metric_pose_format}
@@ -15,7 +16,7 @@ pose_formats: []
 
 is_testing: false
 is_visualizing: false
-batch_size: 256
+batch_size: 16
 shuffle: false
 pin_memory: false
 num_workers: 4
