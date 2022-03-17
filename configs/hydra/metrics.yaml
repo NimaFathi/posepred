@@ -1,9 +1,9 @@
 pose_metrics: #[]
-#  - ADE
-  - MSE
-  #- FDE
-  #- local_ade
-  #- local_fde
+  - ADE
+#  - MSE
+  - FDE
+  - local_ade
+  - local_fde
   #- VIM
   #- VAM
 

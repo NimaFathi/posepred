@@ -1,9 +1,7 @@
+import numpy as np
 import torch
 import torch.nn as nn
-import numpy as np
 
-from models.history_repeats_itself.utils import data_utils, util
-from models.history_repeats_itself.history_repeats_itself import HistoryRepeatsItself
 
 class HisRepItselfLoss(nn.Module):
 
@@ -30,11 +28,9 @@ class HisRepItselfLoss(nn.Module):
         # self.idx = np.expand_dims(np.arange(self.seq_in + self.out_n), axis=1) + (
         #         self.out_n - self.seq_in + np.expand_dims(np.arange(self.itera), axis=0))
 
-
-
     def forward(self, model_outputs, input_data):
         seq1 = torch.cat((input_data['observed_pose'], input_data['future_pose']), dim=1)
-        p3d_h36 =  seq1.reshape(seq1.shape[0], seq1.shape[1], -1)
+        p3d_h36 = seq1.reshape(seq1.shape[0], seq1.shape[1], -1)
         batch_size, seq_n, joints = p3d_h36.shape
         p3d_h36 = p3d_h36.float().to(self.device)  # todo
         p3d_sup = p3d_h36.clone()[:, :, self.dim_used][:, -self.output_n - self.seq_in:].reshape(
@@ -44,11 +40,15 @@ class HisRepItselfLoss(nn.Module):
 
         p3d_out = model_outputs['pred_metric_pose']
         # print('loss mp', p3d_h36[:, -self.output_n:].shape, p3d_out.shape, joints//3)
-        mpjpe_p3d_h36 = torch.mean(torch.norm(p3d_h36[:, -self.output_n:].reshape(
-            [-1, self.output_n, (joints // 3), 3]) - p3d_out, dim=3))
+        mpjpe_p3d_h36 = torch.mean(
+            torch.norm(p3d_h36[:, -self.output_n:].reshape(
+                [-1, self.output_n, (joints // 3), 3]
+            ) - p3d_out.reshape(
+                p3d_out.shape[0], p3d_out.shape[1], p3d_out.shape[2] // 3, 3), dim=3
+            )
+        )
 
-
-        outputs =  {'loss':loss_p3d, 'mpjpe':mpjpe_p3d_h36}
+        outputs = {'loss': loss_p3d, 'mpjpe': mpjpe_p3d_h36}
         # print(outputs)
         if 'pred_mask' in model_outputs.keys():
             mask_loss = self.bce(model_outputs['pred_mask'], input_data['future_mask'])

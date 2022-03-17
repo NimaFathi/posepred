@@ -82,7 +82,7 @@ class HistoryRepeatsItself(nn.Module):
         # print(self.dim_used, self.seq_in, p3d_out_all.shape, p3d_out.shape)
         p3d_out[:, :, self.dim_used] = p3d_out_all[:, self.seq_in:, 0]
         p3d_out[:, :, self.index_to_ignore] = p3d_out[:, :, self.index_to_equal]
-        p3d_out = p3d_out.reshape([-1, self.out_n, 32, 3])
+        p3d_out = p3d_out.reshape([-1, self.out_n, 96])
 
         # p3d_h36 = p3d_h36.reshape([-1, self.in_n + self.out_n, 32, 3])
 

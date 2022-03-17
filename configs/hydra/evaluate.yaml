@@ -12,7 +12,7 @@ load_path:
 rounds_num: 1
 device: cuda
 
-
-# added
-model_pose_format: "xyz"
+obs_frames_num: ???
+pred_frames_num: ???
+model_pose_format: ???
 metric_pose_format:

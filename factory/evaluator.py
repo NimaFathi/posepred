@@ -2,6 +2,7 @@ import logging
 import time
 
 import torch
+import numpy as np
 
 from metrics import POSE_METRICS, MASK_METRICS
 from utils.others import dict_to_device
@@ -79,7 +80,7 @@ class Evaluator:
                                                        future_metric_pose.to(self.device),
                                                        self.model.args.keypoint_dim, pred_mask)
                         else:
-                            indexes = [i == action for i in data['action']]
+                            indexes = np.where(np.asarray(data['action']) == action)[0]
                             metric_value = metric_func(pred_metric_pose.to(self.device)[indexes],
                                                        future_metric_pose.to(self.device)[indexes],
                                                        self.model.args.keypoint_dim, pred_mask)
