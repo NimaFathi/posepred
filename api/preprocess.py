@@ -34,30 +34,36 @@ def preprocess(cfg: DictConfig):
         preprocessor = PoseTrackPreprocessor(
             dataset_path=cfg.official_annotation_path,
             obs_frame_num=cfg.obs_frames_num, custom_name=cfg.output_name, is_interactive=cfg.interactive,
-            pred_frame_num=cfg.pred_frames_num, skip_frame_num=0, use_video_once=cfg.use_video_once)
+            pred_frame_num=cfg.pred_frames_num, skip_frame_num=0, use_video_once=cfg.use_video_once,
+            save_total_frames=cfg.save_total_frames
+        )
     elif cfg.dataset == 'jta':
         preprocessor = JTAPreprocessor(
             is_3d=is_3D, dataset_path=cfg.official_annotation_path,
             obs_frame_num=cfg.obs_frames_num, custom_name=cfg.output_name, is_interactive=cfg.interactive,
-            pred_frame_num=cfg.pred_frames_num, skip_frame_num=cfg.skip_num, use_video_once=cfg.use_video_once
+            pred_frame_num=cfg.pred_frames_num, skip_frame_num=cfg.skip_num, use_video_once=cfg.use_video_once,
+            save_total_frames=cfg.save_total_frames
         )
     elif cfg.dataset == 'our':
         preprocessor = PreprocessorOur(
             dataset_path=cfg.official_annotation_path,
             custom_name=cfg.output_name, is_interactive=cfg.interactive,
-            skip_frame_num=cfg.skip_num, use_video_once=cfg.use_video_once
+            skip_frame_num=cfg.skip_num, use_video_once=cfg.use_video_once,
+            save_total_frames=cfg.save_total_frames
         )
     elif cfg.dataset == 'somof_posetrack':
         preprocessor = SoMoFPoseTrackPreprocessor(
             dataset_path=cfg.official_annotation_path,
             obs_frame_num=16, custom_name=cfg.output_name, is_interactive=cfg.interactive,
-            pred_frame_num=14, skip_frame_num=1, use_video_once=True
+            pred_frame_num=14, skip_frame_num=1, use_video_once=True,
+            save_total_frames=cfg.save_total_frames
         )
     elif cfg.dataset == 'somof_3dpw':
         preprocessor = SoMoF3DPWPreprocessor(
             dataset_path=cfg.official_annotation_path,
             obs_frame_num=16, custom_name=cfg.output_name, is_interactive=cfg.interactive,
-            pred_frame_num=14, skip_frame_num=0, use_video_once=True
+            pred_frame_num=14, skip_frame_num=0, use_video_once=True,
+            save_total_frames=cfg.save_total_frames
         )
     elif cfg.dataset == '3dpw':
         preprocessor = Preprocessor3DPW(
@@ -71,20 +77,23 @@ def preprocess(cfg: DictConfig):
             dataset_path=cfg.official_annotation_path, annotate=cfg.annotate, image_dir=cfg.image_dir,
             obs_frame_num=cfg.obs_frames_num, custom_name=cfg.output_name, is_interactive=cfg.interactive,
             pred_frame_num=cfg.pred_frames_num, skip_frame_num=cfg.skip_num, use_video_once=cfg.use_video_once,
-            annotation_path=cfg.joints_annotation_path
+            annotation_path=cfg.joints_annotation_path,
+            save_total_frames=cfg.save_total_frames
         )
     elif cfg.dataset == 'pie':
         preprocessor = PIEPreprocessor(
             dataset_path=cfg.official_annotation_path, annotate=cfg.annotate, image_dir=cfg.image_dir,
             obs_frame_num=cfg.obs_frames_num, custom_name=cfg.output_name, is_interactive=cfg.interactive,
             pred_frame_num=cfg.pred_frames_num, skip_frame_num=cfg.skip_num, use_video_once=cfg.use_video_once,
-            annotation_path=cfg.joints_annotation_path
+            annotation_path=cfg.joints_annotation_path,
+            save_total_frames=cfg.save_total_frames
         )
     elif cfg.dataset == 'human3.6m':
         preprocessor = PreprocessorHuman36m(
             dataset_path=cfg.official_annotation_path,
             obs_frame_num=cfg.obs_frames_num, custom_name=cfg.output_name, is_interactive=cfg.interactive,
-            pred_frame_num=cfg.pred_frames_num, skip_frame_num=cfg.skip_num, use_video_once=cfg.use_video_once
+            pred_frame_num=cfg.pred_frames_num, skip_frame_num=cfg.skip_num, use_video_once=cfg.use_video_once,
+            save_total_frames=cfg.save_total_frames
         )
     else:
         msg = "Invalid preprocessor."
