@@ -48,11 +48,11 @@ class PreprocessorOur(Processor):
             'sum_pose': np.zeros(3)
         }
         self.subjects = ['S1', 'S5', 'S6', 'S7', 'S8', 'S9', 'S11']
-        
+
         self.acts = ["walking", "eating", "smoking", "discussion", "directions",
-                    "greeting", "phoning", "posing", "purchases", "sitting",
-                    "sittingdown", "takingphoto", "waiting", "walkingdog",
-                    "walkingtogether"]
+                     "greeting", "phoning", "posing", "purchases", "sitting",
+                     "sittingdown", "takingphoto", "waiting", "walkingdog",
+                     "walkingtogether"]
 
     def normal(self, data_type='train'):
         self.subjects = SPLIT[data_type]
@@ -74,7 +74,7 @@ class PreprocessorOur(Processor):
             # subject_pose_path = os.path.join(self.dataset_path, subject, 'MyPoseFeatures/D3_Positions/*.cdf')
             # file_list_pose = glob(subject_pose_path)
             # assert len(file_list_pose) == 30, "Expected 30 files for subject " + subject + ", got " + str(
-                # len(file_list_pose))
+            # len(file_list_pose))
             for action in self.acts:
                 # action = os.path.splitext(os.path.basename(f))[0]
                 if subject == 'S11' and action == 'Directions':
@@ -109,36 +109,102 @@ class PreprocessorOur(Processor):
                 # section_range = positions.shape[0] // (
                 #         total_frame_num * (self.skip_frame_num + 1)) if self.use_video_once is False else 1
                 # for i in range(section_range):
-                video_data = {
-                    'xyz_pose': positions.reshape(positions.shape[0], -1, 3).tolist()[::self.skip_frame_num + 1],
-                    'quaternion_pose': quat.reshape(quat.shape[0], -1, 4).tolist()[::self.skip_frame_num + 1],
-                    'expmap_pose': expmap.reshape(expmap.shape[0], -1, 3).tolist()[::self.skip_frame_num + 1],
-                    'rotmat_pose': rotmat.tolist()[::self.skip_frame_num + 1],
-                    'euler_pose': euler.tolist()[::self.skip_frame_num + 1]
-                    # ,'image_path': list()
-                }
-                # print('video',len(video_data['xyz_pose']), len(positions.tolist()), len(video_data['expmap_pose']), len(expmap.tolist()),
-                # len(video_data['euler_pose']), len(euler.tolist()))
+                booli = True
+                if booli:
+                    self.obs_frame_num = 50
+                    self.pred_frame_num = 25
+                    total_frame_num = self.obs_frame_num + self.pred_frame_num
+                    section_range = positions.shape[0] // (
+                            total_frame_num * (self.skip_frame_num + 1)) if self.use_video_once is False else 1
+                    for i in range(section_range):
+                        video_data = {
+                            'observed_pose': list(),
+                            'future_pose': list(),
+                            'observed_quaternion_pose': list(),
+                            'future_quaternion_pose': list(),
+                            'observed_expmap_pose': list(),
+                            'future_expmap_pose': list(),
+                            'observed_rotmat_pose': list(),
+                            'future_rotmat_pose': list(),
+                            'observed_euler_pose': list(),
+                            'future_euler_pose': list(),
+                            # 'observed_image_path': list(),
+                            # 'future_image_path': list()
+                        }
+                        for j in range(0, total_frame_num * (self.skip_frame_num + 1), self.skip_frame_num + 1):
+                            if j < (self.skip_frame_num + 1) * self.obs_frame_num:
+                                video_data['observed_pose'].append(
+                                    positions[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
+                                # video_data['observed_quaternion_pose'].append(
+                                #     quat[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
+                                video_data['observed_expmap_pose'].append(
+                                    expmap[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
+                                video_data['observed_rotmat_pose'].append(
+                                    rotmat[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
+                                video_data['observed_euler_pose'].append(
+                                    euler[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
+                            else:
+                                video_data['future_pose'].append(
+                                    positions[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
+                                # video_data['future_quaternion_pose'].append(
+                                #     quat[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
+                                video_data['future_expmap_pose'].append(
+                                    expmap[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
+                                video_data['future_rotmat_pose'].append(
+                                    rotmat[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
+                                video_data['future_euler_pose'].append(
+                                    euler[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
 
-                print(f'shape {subject} {action}', positions.reshape(positions.shape[0], -1, 3).shape,
-                      expmap.reshape(expmap.shape[0], -1, 3).shape,
-                      euler[0].shape, rotmat[0].shape, quat.reshape(quat.shape[0], -1, 4).shape)
-                # for j in range(0, positions.shape[0], self.skip_frame_num + 1):
-                #     video_data['image_path'].append(f'{os.path.basename(f).split(".cdf")[0]}_{j:05}')
-                
-                self.update_meta_data(self.meta_data, video_data['xyz_pose'], 3)
-                # print(,positions.shape,
-                with jsonlines.open(os.path.join(self.output_dir, output_file_name), mode='a') as writer:
-                    writer.write({
-                        'video_section': f'{subject}-{canonical_name}',
-                        'action': f'{canonical_name}',
-                        'xyz_pose': video_data['xyz_pose'],
-                        # 'quaternion_pose': video_data['quaternion_pose'],
-                        'expmap_pose': video_data['expmap_pose'],
-                        # 'rotmat_pose': video_data['rotmat_pose'],
-                        # 'euler_pose': video_data['euler_pose']
-                        # ,'image_path': video_data['image_path']
-                    })
+                        self.update_meta_data(self.meta_data, video_data['observed_pose'], 3)
+                        with jsonlines.open(os.path.join(self.output_dir, output_file_name), mode='a') as writer:
+                            writer.write({
+                                'video_section': f'{subject}-{canonical_name}-{i}',
+                                'observed_pose': video_data['observed_pose'],
+                                'future_pose': video_data['future_pose'],
+                                # 'observed_quaternion_pose': video_data['observed_quaternion_pose'],
+                                # 'future_quaternion_pose': video_data['future_quaternion_pose'],
+                                'observed_expmap_pose': video_data['observed_expmap_pose'],
+                                'future_expmap_pose': video_data['future_expmap_pose'],
+                                'observed_rotmat_pose': video_data['observed_rotmat_pose'],
+                                'future_rotmat_pose': video_data['future_rotmat_pose'],
+                                'observed_euler_pose': video_data['observed_euler_pose'],
+                                'future_euler_pose': video_data['future_euler_pose'],
+                                # 'observed_image_path': video_data['observed_image_path'],
+                                # 'future_image_path': video_data['future_image_path'],
+                                'action': action.split()[0]
+                            })
+                else:
+                    video_data = {
+                        'xyz_pose': positions.reshape(positions.shape[0], -1, 3).tolist()[::self.skip_frame_num + 1],
+                        'quaternion_pose': quat.reshape(quat.shape[0], -1, 4).tolist()[::self.skip_frame_num + 1],
+                        'expmap_pose': expmap.reshape(expmap.shape[0], -1, 3).tolist()[::self.skip_frame_num + 1],
+                        'rotmat_pose': rotmat.tolist()[::self.skip_frame_num + 1],
+                        'euler_pose': euler.tolist()[::self.skip_frame_num + 1],
+                        # ,'image_path': list()
+                        'action': action.split()[0]
+                    }
+                    # print('video',len(video_data['xyz_pose']), len(positions.tolist()), len(video_data['expmap_pose']), len(expmap.tolist()),
+                    # len(video_data['euler_pose']), len(euler.tolist()))
+
+                    print(f'shape {subject} {action}', positions.reshape(positions.shape[0], -1, 3).shape,
+                          expmap.reshape(expmap.shape[0], -1, 3).shape,
+                          euler[0].shape, rotmat[0].shape, quat.reshape(quat.shape[0], -1, 4).shape)
+                    # for j in range(0, positions.shape[0], self.skip_frame_num + 1):
+                    #     video_data['image_path'].append(f'{os.path.basename(f).split(".cdf")[0]}_{j:05}')
+
+                    self.update_meta_data(self.meta_data, video_data['xyz_pose'], 3)
+                    # print(,positions.shape,
+                    with jsonlines.open(os.path.join(self.output_dir, output_file_name), mode='a') as writer:
+                        writer.write({
+                            'video_section': f'{subject}-{canonical_name}',
+                            'action': f'{canonical_name}',
+                            'xyz_pose': video_data['xyz_pose'],
+                            # 'quaternion_pose': video_data['quaternion_pose'],
+                            'expmap_pose': video_data['expmap_pose'],
+                            # 'rotmat_pose': video_data['rotmat_pose'],
+                            # 'euler_pose': video_data['euler_pose']
+                            # ,'image_path': video_data['image_path']
+                        })
         self.save_meta_data(self.meta_data, self.output_dir, True, data_type)
         # self.delete_redundant_files()
 
@@ -147,7 +213,6 @@ class PreprocessorOur(Processor):
         os.makedirs(output_directory, exist_ok=True)
         h36m_rotations_dataset_url = 'http://www.cs.stanford.edu/people/ashesh/h3.6m.zip'
         h36m_path = os.path.join(output_directory, 'h3.6m')
-
         if not os.path.exists(h36m_path):
             zip_path = h36m_path + ".zip"
 
@@ -180,7 +245,7 @@ class PreprocessorOur(Processor):
         quat = qfix(quat)
         quat = quat.reshape(-1, 32 * 4)
         return quat.reshape(-1, 32 * 4)
-    
+
     def expmap2xyz_torch(self, expmap):
         """
         convert expmaps to joint locations
@@ -191,7 +256,7 @@ class PreprocessorOur(Processor):
         parent, offset, rotInd, expmapInd = self._some_variables()
         xyz = self.fkl_torch(expmap, parent, offset, rotInd, expmapInd)
         return xyz
-    
+
     def _some_variables(self):
         """
         borrowed from
@@ -259,7 +324,6 @@ class PreprocessorOur(Processor):
 
         return parent, offset, rotInd, expmapInd
 
-    
     def fkl_torch(self, angles, parent, offset, rotInd, expmapInd):
         """
         pytorch version of fkl.
@@ -289,13 +353,13 @@ class PreprocessorOur(Processor):
         R = (torch.eye(3, 3).repeat(n, 1, 1).float() + torch.mul(
             torch.sin(theta).unsqueeze(1).repeat(1, 9).view(-1, 3, 3), r1) + torch.mul(
             (1 - torch.cos(theta).unsqueeze(1).repeat(1, 9).view(-1, 3, 3)), torch.matmul(r1, r1))).view(n_a, j_n, 3, 3)
-        
+
         for i in np.arange(1, j_n):
             if parent[i] > 0:
                 R[:, i, :, :] = torch.matmul(R[:, i, :, :], R[:, parent[i], :, :]).clone()
                 p3d[:, i, :] = torch.matmul(p3d[0, i, :], R[:, parent[i], :, :]) + p3d[:, parent[i], :]
         return p3d
-    
+
     @staticmethod
     def __read_file(action, rot_dir_path, subject, data_type):
         '''
