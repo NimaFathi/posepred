@@ -1,6 +1,5 @@
 import logging
 import time
-from tqdm import tqdm
 import torch
 from torch.utils.tensorboard import SummaryWriter
 
