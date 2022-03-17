@@ -20,10 +20,10 @@ logger = logging.getLogger(__name__)
 # TODO: check preprocessor count
 
 SPLIT = {
-    # 'train': ['S1', 'S5', 'S6', 'S7', 'S8'],
-    # 'validation': ['S1', 'S5', 'S6', 'S7', 'S8'], #TODO: uncomment
-    'train': ['S1', 'S5'],
-    'validation': ['S1', 'S5'],
+    'train': ['S1', 'S5', 'S6', 'S7', 'S8'],
+    'validation': ['S1', 'S5', 'S6', 'S7', 'S8'], #TODO: uncomment
+    # 'train': ['S1', 'S5'],
+    # 'validation': ['S1', 'S5'],
     'test': ['S9', 'S11']
 }
 
@@ -162,12 +162,6 @@ class PreprocessorOur(Processor):
                         'euler_pose': euler.tolist()[::self.skip_frame_num + 1],
                         'action': action #TODO: fix action
                     }
-
-                    print(video_data['action'], action)
-
-                    print(f'shape {subject} {action}', positions.shape,
-                          expmap.shape,
-                          euler.shape, rotmat.shape, quat.shape)
 
                     if self.custom_name:
                         output_file_name = \

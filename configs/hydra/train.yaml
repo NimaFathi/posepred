@@ -22,5 +22,5 @@ save_dir:
 # added
 obs_frames_num: ???
 pred_frames_num: ???
-model_pose_format: total
+model_pose_format: ???
 metric_pose_format:

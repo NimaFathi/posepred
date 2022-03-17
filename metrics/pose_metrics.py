@@ -10,7 +10,7 @@ def ADE(pred, target, dim, mask=None):
     """
     Average Displacement Error
     """
-    # print(pred.shape)
+
     keypoints_num = int(pred.shape[-1] / dim)
     pred = torch.reshape(pred, pred.shape[:-1] + (keypoints_num, dim))
     target = torch.reshape(target, target.shape[:-1] + (keypoints_num, dim))
@@ -143,7 +143,7 @@ def MSE(pred, target, dim=None, mask=None):
         pred -- predicted sequence : (batch_size, sequence_length, pose_dim*n_joints)
 
     """
-    target = target.reshape(*target.shape[:-2], -1) 
+    # target = target.reshape(*target.shape[:-2], -1)
     assert pred.shape == target.shape
     B, S, D = pred.shape
     

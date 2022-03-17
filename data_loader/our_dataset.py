@@ -56,7 +56,7 @@ class OurDataset(Dataset):
 
         indexes = []
         self.extra_keys_to_keep = ['video_section', 'action', 'cam_intrinsic']
-        
+
         with jsonlines.open(dataset_path) as reader:
             for seq in reader:
 
@@ -73,7 +73,7 @@ class OurDataset(Dataset):
                     if k in self.extra_keys_to_keep:
                         seq_tensor[k] = v
 
-                #print(seq.keys())
+                # print(seq.keys())
                 assert "pose" in seq_tensor, "model pose format not found in the sequence"
                 assert "metric_pose" in seq_tensor, "metric pose format not found in the sequence"
 
@@ -85,7 +85,7 @@ class OurDataset(Dataset):
         self.obs_frames_num = self.len_observed
         self.future_frames_num = self.len_future
 
-        self.keypoints_num = int(data[0]['pose'].shape[-2]) # TODO remember to flat things
+        self.keypoints_num = int(data[0]['pose'].shape[-1] // keypoint_dim)
 
         self.data = data
         self.indexes = indexes
@@ -113,8 +113,8 @@ class OurDataset(Dataset):
 
         for k in output_keys:
             temp_seq = seq[k][seq_index:seq_index + self.total_len]
-            s = temp_seq.shape
-            temp_seq = temp_seq.view(-1, self.frame_rate, s[1], s[2])[:, 0, :, :]
+            s = temp_seq.shape  # T , JD
+            temp_seq = temp_seq.view(-1, self.frame_rate, s[1])[:, 0, :]
             outputs["observed_" + k] = temp_seq[:self.len_observed]
             outputs["future_" + k] = temp_seq[self.len_observed:]
 

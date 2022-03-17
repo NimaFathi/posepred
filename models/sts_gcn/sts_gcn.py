@@ -185,12 +185,11 @@ class STsGCN(nn.Module):
         super(STsGCN, self).__init__()
 
         self.args = args
-        self.args.keypoints_num = 22
 
         input_channels = args.keypoint_dim
         input_time_frame = args.obs_frames_num
         output_time_frame = args.pred_frames_num
-        joints_to_consider = args.keypoints_num
+        joints_to_consider = args.n_major_joints
         st_gcnn_dropout = args.st_gcnn_dropout
         n_txcnn_layers = args.n_txcnn_layers
         txc_kernel_size = args.txc_kernel_size
@@ -228,7 +227,7 @@ class STsGCN(nn.Module):
 
         x = x.view(-1,
                    self.args.obs_frames_num,
-                   self.args.keypoints_num,
+                   self.args.n_major_joints,
                    self.args.keypoint_dim).permute(0, 3, 1, 2)
 
         for gcn in self.st_gcnns:
@@ -242,7 +241,7 @@ class STsGCN(nn.Module):
             x = self.prelus[i](self.txcnns[i](x)) + x  # residual connection
 
         x = x.permute(0, 1, 3, 2).reshape(-1, self.args.pred_frames_num,
-                                          self.args.keypoints_num * self.args.keypoint_dim)
+                                          self.args.n_major_joints * self.args.keypoint_dim)
 
         x = self.proc(x, False)
         return {'pred_pose': x}

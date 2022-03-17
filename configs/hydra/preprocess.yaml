@@ -15,5 +15,5 @@ joints_annotation_path:
 keypoint_dim: ???
 skip_num: 0
 interactive: false
-save_total_frames: true
+save_total_frames: false
 

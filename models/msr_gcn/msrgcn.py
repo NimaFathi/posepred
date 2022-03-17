@@ -177,8 +177,8 @@ class MSRGCN(nn.Module):
         '''
 
         # print(inputs['observed_pose'].shape, inputs['future_pose'].shape)
-        observed = inputs['observed_expmap_pose'].clone()
-        observed = observed.reshape((observed.shape[0], observed.shape[1], -1))
+        observed = inputs['observed_pose'].clone()
+        # observed = observed.reshape((observed.shape[0], observed.shape[1], -1))
         observed = self.proc(observed, True)
         x_p32 = observed['p32']
         x_p22 = observed['p22']
@@ -232,7 +232,7 @@ class MSRGCN(nn.Module):
 
         fusion_fourth = self.fourth_extra(bottom_right) + bottom_right  # 残差连接
         pred_fourth = self.fourth_out(fusion_fourth) + x_p4  # 大残差连接
-        pred_pose = torch.ones((pred_first.shape[0], self.args.pred_frames_num, 32, 3))
+        pred_pose = torch.ones((pred_first.shape[0], self.args.pred_frames_num, 32 * 3))
         return {
             "pred_pose": pred_pose, "p22": pred_first, "p12": pred_second, "p7": pred_third, "p4": pred_fourth
         }

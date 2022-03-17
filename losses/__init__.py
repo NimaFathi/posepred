@@ -13,7 +13,7 @@ from .pv_lstm_noisy import PVLSTMNoisy
 from .pv_lstm_pro import PVLSTMPro
 from .keyplast import Keyplast
 from .mpjpe import MPJPE
-from .msr_gcn_loass import MSRGCNLoss
+from .msr_gcn_loss import MSRGCNLoss
 from models.sts_gcn.sts_gcn_loss import STSGCNLoss
 from .potr_loss import POTRLoss
 
