@@ -186,21 +186,7 @@ class StanfordPreprocessor(Processor):
         self.save_meta_data(self.meta_data, self.output_dir, True, data_type)
 
     def expmap_rep(self, action, subject, data_type):
-        output_directory = os.path.join(PREPROCESSED_DATA_DIR, 'H3.6m_rotations')
-        os.makedirs(output_directory, exist_ok=True)
-        h36m_rotations_dataset_url = 'http://www.cs.stanford.edu/people/ashesh/h3.6m.zip'
-        h36m_path = os.path.join(output_directory, 'h3.6m')
-        if not os.path.exists(h36m_path):
-            zip_path = h36m_path + ".zip"
-
-            logger.info('Downloading Human3.6M dataset (it may take a while)...')
-            if not os.path.exists(zip_path):
-                urlretrieve(h36m_rotations_dataset_url, zip_path)
-            if not os.path.exists(os.path.join(h36m_path, 'dataset')):
-                logger.info('Extracting Human3.6M dataset...')
-                with zipfile.ZipFile(zip_path, 'r') as archive:
-                    archive.extractall(output_directory)
-        data = self.__read_file(action, h36m_path, subject, data_type)
+        data = self.__read_file(action, self.dataset_path, subject, data_type)
         return data
 
     def rotmat_rep(self, action, subject, data_type):
