@@ -17,13 +17,10 @@ from preprocessor.preprocessor import Processor
 from utils.others import expmap_to_quaternion, qfix, expmap_to_rotmat, expmap_to_euler
 
 logger = logging.getLogger(__name__)
-# TODO: check preprocessor count
 
 SPLIT = {
     'train': ['S1', 'S5', 'S6', 'S7', 'S8'],
-    'validation': ['S1', 'S5', 'S6', 'S7', 'S8'], #TODO: uncomment
-    # 'train': ['S1', 'S5'],
-    # 'validation': ['S1', 'S5'],
+    'validation': ['S1', 'S5', 'S6', 'S7', 'S8'],
     'test': ['S9', 'S11']
 }
 
@@ -160,7 +157,7 @@ class StanfordPreprocessor(Processor):
                         'expmap_pose': expmap.tolist()[::self.skip_frame_num + 1],
                         'rotmat_pose': rotmat.tolist()[::self.skip_frame_num + 1],
                         'euler_pose': euler.tolist()[::self.skip_frame_num + 1],
-                        'action': action #TODO: fix action
+                        'action': action
                     }
 
                     if self.custom_name:
@@ -181,7 +178,6 @@ class StanfordPreprocessor(Processor):
                             'expmap_pose': video_data['expmap_pose'],
                             'rotmat_pose': video_data['rotmat_pose'],
                             'euler_pose': video_data['euler_pose']
-                            # ,'image_path': video_data['image_path']
                         })
         self.save_meta_data(self.meta_data, self.output_dir, True, data_type)
 
