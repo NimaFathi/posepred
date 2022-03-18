@@ -49,6 +49,7 @@ def preprocess(cfg: DictConfig):
             dataset_path=cfg.official_annotation_path,
             custom_name=cfg.output_name, is_interactive=cfg.interactive,
             skip_frame_num=cfg.skip_num, use_video_once=cfg.use_video_once,
+            obs_frame_num=cfg.obs_frames_num, pred_frame_num= cfg.pred_frames_num,
             save_total_frames=cfg.save_total_frames
         )
     elif cfg.dataset == 'somof_posetrack':

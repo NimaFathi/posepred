@@ -27,7 +27,7 @@ SPLIT = {
 
 class StanfordPreprocessor(Processor):
     def __init__(self, dataset_path, is_interactive, skip_frame_num,
-                 use_video_once, custom_name, save_total_frames):
+                 use_video_once, custom_name,obs_frame_num, pred_frame_num, save_total_frames):
         super(StanfordPreprocessor, self).__init__(dataset_path, is_interactive, 0,
                                                    0, skip_frame_num, use_video_once, custom_name, save_total_frames)
         assert self.is_interactive is False, 'human3.6m is not interactive'
@@ -46,6 +46,9 @@ class StanfordPreprocessor(Processor):
             'sum_pose': np.zeros(3)
         }
         self.subjects = ['S1', 'S5', 'S6', 'S7', 'S8', 'S9', 'S11']
+
+        self.obs_frame_num = obs_frame_num
+        self.pred_frame_num = pred_frame_num
 
         self.acts = ["walking", "eating", "smoking", "discussion", "directions",
                      "greeting", "phoning", "posing", "purchases", "sitting",
@@ -92,8 +95,6 @@ class StanfordPreprocessor(Processor):
                 quat = quat.reshape(quat.shape[0], -1)
 
                 if self.save_total_frames == False:
-                    self.obs_frame_num = 50
-                    self.pred_frame_num = 25
                     total_frame_num = self.obs_frame_num + self.pred_frame_num
                     section_range = positions.shape[0] // (
                             total_frame_num * (self.skip_frame_num + 1)) if self.use_video_once is False else 1 # TODO: remove condition
