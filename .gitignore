@@ -254,3 +254,4 @@ tmp/
 jobs
 **/slurm*
 **/*.sh
+**/.ipynb_checkpoints/
