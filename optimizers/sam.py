@@ -68,8 +68,7 @@ def sam(params, args):
         optimizer = SAM(
                 params, 
                 base_optimizer, 
-                lr=args.base_optimizer.lr, 
-                momentum=args.base_optimizer.momentum
+                lr=args.base_optimizer.lr
                 )
         return optimizer
     else:

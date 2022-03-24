@@ -70,14 +70,14 @@ class Trainer:
             loss = loss_outputs['loss']
             loss.backward()
             
-            if self.args.optimizer == 'sam':
-                optimizer.first_step(zero_grad=True)
+            if self.args.optimizer.type == 'sam':
+                self.optimizer.first_step(zero_grad=True)
 
                 model_outputs = self.model(data)
                 loss_outputs = self.loss_module(model_outputs, data)
                 loss = loss_outputs['loss']
                 loss.backward()
-                optimizer.second_step(zero_grad=True)
+                self.optimizer.second_step(zero_grad=True)
 
             else:
                 self.optimizer.step()
