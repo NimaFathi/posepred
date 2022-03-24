@@ -69,7 +69,19 @@ class Trainer:
             # backpropagate and optimize
             loss = loss_outputs['loss']
             loss.backward()
-            self.optimizer.step()
+            
+            if self.args.optimizer == 'sam':
+                optimizer.first_step(zero_grad=True)
+
+                model_outputs = self.model(data)
+                loss_outputs = self.loss_module(model_outputs, data)
+                loss = loss_outputs['loss']
+                loss.backward()
+                optimizer.second_step(zero_grad=True)
+
+            else:
+                self.optimizer.step()
+
 
             if self.model.args.use_mask:
                 assert 'pred_mask' in model_outputs.keys(), 'outputs of model should include pred_mask'
