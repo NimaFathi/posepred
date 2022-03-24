@@ -66,7 +66,7 @@ def sam(params, args):
     if args.base_optimizer.type == 'adam':
         base_optimizer = optim.Adam
         optimizer = SAM(
-                model.parameters(), 
+                params, 
                 base_optimizer, 
                 lr=args.base_optimizer.lr, 
                 momentum=args.base_optimizer.momentum
