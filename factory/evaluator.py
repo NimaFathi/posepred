@@ -3,6 +3,7 @@ import time
 
 import torch
 import numpy as np
+from tqdm import tqdm
 
 from metrics import POSE_METRICS, MASK_METRICS
 from utils.others import dict_to_device
@@ -40,7 +41,7 @@ class Evaluator:
     def __evaluate(self):
         self.reporter.start_time = time.time()
         pose_key = None
-        for data in self.dataloader:
+        for data in tqdm(self.dataloader):
             actions = set(data['action']) if 'action' in data.keys() else set()
             actions.add("all")
             # TODO

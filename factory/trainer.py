@@ -2,7 +2,9 @@ import logging
 import time
 import torch
 from torch.utils.tensorboard import SummaryWriter
+
 from tqdm import tqdm
+
 from metrics import POSE_METRICS, MASK_METRICS
 from utils.others import dict_to_device
 from utils.reporter import Reporter
@@ -104,7 +106,7 @@ class Trainer:
                 future_metric_pose = data['future_pose']
                 if 'future_metric_pose' in data:
                     future_metric_pose = data['future_metric_pose']
-
+                future_metric_pose = future_metric_pose[:,:25]
                 metric_value = metric_func(
                     pred_metric_pose.to(self.args.device),
                     future_metric_pose.to(self.args.device),
@@ -159,7 +161,7 @@ class Trainer:
                     future_metric_pose = data['future_pose']
                     if 'future_metric_pose' in data:
                         future_metric_pose = data['future_metric_pose']
-
+                    future_metric_pose = future_metric_pose[:, :25, :]
                     metric_value = metric_func(
                         pred_metric_pose.to(self.args.device),
                         future_metric_pose.to(self.args.device),
