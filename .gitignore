@@ -244,6 +244,7 @@ venv/
 *.pyc
 exps/
 
+**/jupyter-log*
 preprocessed_data/
 raw_data/
 visualization/example.py
