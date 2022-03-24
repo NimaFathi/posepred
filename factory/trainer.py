@@ -2,7 +2,7 @@ import logging
 import time
 import torch
 from torch.utils.tensorboard import SummaryWriter
-
+from tqdm import tqdm
 from metrics import POSE_METRICS, MASK_METRICS
 from utils.others import dict_to_device
 from utils.reporter import Reporter
@@ -54,7 +54,7 @@ class Trainer:
         self.model.train()
         self.train_reporter.start_time = time.time()
         pose_key = None
-        for data in self.train_dataloader:
+        for data in tqdm(self.train_dataloader):
             # TODO: fix later
             batch_size = data['observed_pose'].shape[0]
             data = dict_to_device(data, self.args.device)
