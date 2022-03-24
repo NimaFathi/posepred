@@ -2,7 +2,7 @@ import logging
 import time
 import torch
 from torch.utils.tensorboard import SummaryWriter
-
+from tqdm import tqdm
 from metrics import POSE_METRICS, MASK_METRICS
 from utils.others import dict_to_device
 from utils.reporter import Reporter
@@ -54,7 +54,7 @@ class Trainer:
         self.model.train()
         self.train_reporter.start_time = time.time()
         pose_key = None
-        for data in self.train_dataloader:
+        for data in tqdm(self.train_dataloader):
             # TODO: fix later
             batch_size = data['observed_pose'].shape[0]
             data = dict_to_device(data, self.args.device)
@@ -69,7 +69,19 @@ class Trainer:
             # backpropagate and optimize
             loss = loss_outputs['loss']
             loss.backward()
-            self.optimizer.step()
+            
+            if self.args.optimizer.type == 'sam':
+                self.optimizer.first_step(zero_grad=True)
+
+                model_outputs = self.model(data)
+                loss_outputs = self.loss_module(model_outputs, data)
+                loss = loss_outputs['loss']
+                loss.backward()
+                self.optimizer.second_step(zero_grad=True)
+
+            else:
+                self.optimizer.step()
+
 
             if self.model.args.use_mask:
                 assert 'pred_mask' in model_outputs.keys(), 'outputs of model should include pred_mask'
