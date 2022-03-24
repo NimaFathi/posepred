@@ -1,0 +1,2 @@
+type: sam
+base_optimizer: adam
