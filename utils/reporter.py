@@ -31,7 +31,7 @@ class Reporter:
             self.history[attr] = []
         self.history['time'] = []
 
-    def update(self, attrs, batch_size, dynamic=False):
+    def update(self, attrs, batch_size, dynamic=False, counts=None):
         if self.attrs is None or self.history is None:
             self.setup(attrs)
         for key, value in attrs.items():
@@ -39,7 +39,10 @@ class Reporter:
                 if key not in self.attrs.keys():
                     self.attrs[key] = AverageMeter()
                     self.history[key] = []
-            self.attrs.get(key).update(value, batch_size)
+            if counts is not None and key in counts.keys():
+                self.attrs.get(key).update(value, counts[key])
+            else:
+                self.attrs.get(key).update(value, batch_size)
 
     def epoch_finished(self, tb=None):
         self.history.get('time').append(time.time() - self.start_time)

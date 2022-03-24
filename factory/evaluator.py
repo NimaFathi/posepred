@@ -61,6 +61,7 @@ class Evaluator:
 
                 # calculate pose_metrics
                 report_attrs = loss_outputs
+                dynamic_counts = {}
                 for metric_name in self.pose_metrics:
                     metric_func = POSE_METRICS[metric_name]
 
@@ -84,6 +85,7 @@ class Evaluator:
                             metric_value = metric_func(pred_metric_pose.to(self.device)[indexes],
                                                        future_metric_pose.to(self.device)[indexes],
                                                        self.model.args.keypoint_dim, pred_mask)
+                            dynamic_counts[f'{metric_name}_{action}']=len(indexes)
                         report_attrs[f'{metric_name}_{action}'] = metric_value
 
                 # calculate mask_metrics
@@ -93,6 +95,6 @@ class Evaluator:
                         metric_value = metric_func(pred_mask, data['future_mask'].to(self.device), self.device)
                         report_attrs[metric_name] = metric_value
 
-                self.reporter.update(report_attrs, batch_size, True)
+                self.reporter.update(report_attrs, batch_size, True, dynamic_counts)
 
         self.reporter.epoch_finished()
