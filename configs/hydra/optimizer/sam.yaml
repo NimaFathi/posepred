@@ -1,2 +1,5 @@
 type: sam
-base_optimizer: adam
+base_optimizer: 
+        type: adam
+        lr: 0.1
+        momentum: 0.9
