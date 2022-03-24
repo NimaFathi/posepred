@@ -19,9 +19,9 @@ from utils.others import expmap_to_quaternion, qfix, expmap_to_rotmat, expmap_to
 logger = logging.getLogger(__name__)
 
 SPLIT = {
-    'train': ['S1', 'S5', 'S6', 'S7', 'S8'],
-    'validation': ['S1', 'S5', 'S6', 'S7', 'S8'],
-    'test': ['S9', 'S11']
+    'train': ['S1', 'S6', 'S7', 'S8', 'S9'],
+    'validation': ['S5'],
+    'test': ['S11']
 }
 
 
@@ -339,10 +339,7 @@ class StanfordPreprocessor(Processor):
             for row in reader:
                 data.append(row)
         data = np.array(data, dtype='float64')
-        if data_type == 'train':
-            data = data[:95 * data.shape[0] // 100]
-        elif data_type == 'validation':
-            data = data[95 * data.shape[0] // 100:]
+        
         return data
 
     @staticmethod
