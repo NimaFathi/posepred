@@ -146,7 +146,6 @@ def MSE(pred, target, dim=None, mask=None):
     # target = target.reshape(*target.shape[:-2], -1)
     assert pred.shape == target.shape
     B, S, D = pred.shape
-    
     mean_errors = torch.zeros((B, S))
 
     # Training is done in exponential map or rotation matrix or quaternion
@@ -158,7 +157,7 @@ def MSE(pred, target, dim=None, mask=None):
         action_gt = target#srnn_gts_euler[action]
         
         # seq_len x complete_pose_dim (H36M==96)
-        gt_i = action_gt.squeeze()[i]#np.copy(action_gt.squeeze()[i].numpy())
+        gt_i = action_gt[i]#np.copy(action_gt.squeeze()[i].numpy())
         # Only remove global rotation. Global translation was removed before
         gt_i[:, 0:3] = 0
 
