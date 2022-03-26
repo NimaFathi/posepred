@@ -13,7 +13,7 @@ from .keyplast import Keyplast
 from .sts_gcn.sts_gcn import STsGCN
 from .msr_gcn.msrgcn import MSRGCN
 from .potr.potr import POTR
-
+from .transnet.transnet import TransNet
 MODELS = {'zero_vel': ZeroVel,
           'nearest_neighbor': NearestNeighbor,
           'pv_lstm': PVLSTM,
@@ -28,5 +28,6 @@ MODELS = {'zero_vel': ZeroVel,
           'keyplast': Keyplast,
           'potr': POTR,
           'sts_gcn': STsGCN,
-          'msr_gcn': MSRGCN
+          'msr_gcn': MSRGCN,
+          'transnet': TransNet
           }
