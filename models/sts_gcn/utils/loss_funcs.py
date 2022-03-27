@@ -2,7 +2,7 @@
 # coding: utf-8
 
 import torch
-from utils import data_utils
+from models.sts_gcn.utils import data_utils
 
 
 

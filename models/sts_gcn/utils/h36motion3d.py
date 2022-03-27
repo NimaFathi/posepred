@@ -2,7 +2,7 @@ from torch.utils.data import Dataset
 import numpy as np
 from h5py import File
 import scipy.io as sio
-from utils import data_utils
+from models.sts_gcn.utils import data_utils
 from matplotlib import pyplot as plt
 import torch
 
