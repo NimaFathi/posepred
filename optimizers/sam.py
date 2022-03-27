@@ -70,7 +70,17 @@ def sam(params, args):
                 base_optimizer, 
                 lr=args.base_optimizer.lr
                 )
-        return optimizer
+    elif args.base_optimizer.type == 'sgd':
+        base_optimizer = optim.SGD
+        optimizer = SAM(
+            params,
+            base_optimizer,
+            lr=args.base_optimizer.lr,
+            momentum=args.base_optimizer.momentum,
+            weight_decay=args.base_optimizer.weight_decay
+            )
     else:
         raise Exception('Defined base optimizer is not supported')
+
+    return optimizer
 

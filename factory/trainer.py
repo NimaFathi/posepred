@@ -56,7 +56,7 @@ class Trainer:
         self.model.train()
         self.train_reporter.start_time = time.time()
         pose_key = None
-        for data in tqdm(self.train_dataloader):
+        for data in self.train_dataloader:
             # TODO: fix later
             batch_size = data['observed_pose'].shape[0]
             data = dict_to_device(data, self.args.device)

@@ -1,4 +1,6 @@
 type: sam
 base_optimizer: 
         type: adam
-        lr: 0.01
+        lr: 0.1
+        # weight_decay: 0.001
+        # momentum: 0.9

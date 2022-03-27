@@ -14,7 +14,7 @@ VISUALIZING_TYPES = ['observed', 'future', 'predicted', 'completed']
 def get_dataloader(dataset_path, args):
     if dataset_path is None:
         return None
-    assert args.is_noisy + args.is_solitary + args.is_interactive + args.is_random_crop == 1, \
+    assert (args.is_noisy + args.is_solitary + args.is_interactive + args.is_random_crop) == 1, \
         "Please specify exactly on dataloader type"
     if args.is_interactive:
         dataset = InteractiveDataset(dataset_path, args.keypoint_dim, args.persons_num, args.is_testing, args.use_mask,
