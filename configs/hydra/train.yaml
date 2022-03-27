@@ -11,7 +11,7 @@ valid_dataset:
 epochs: ???
 snapshot_interval: ${epochs}
 start_epoch: 0
-device: cpu
+device: cuda
 keypoint_dim: ???
 use_mask: false
 use_dct: false

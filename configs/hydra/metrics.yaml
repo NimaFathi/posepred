@@ -1,7 +1,7 @@
 pose_metrics: #[]
   - ADE
 #  - MSE
-  # - FDE
+  - FDE
   # - local_ade
   # - local_fde
   #- VIM

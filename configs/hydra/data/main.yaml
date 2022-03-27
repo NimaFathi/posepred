@@ -16,9 +16,9 @@ pose_formats: []
 
 is_testing: false
 is_visualizing: false
-batch_size: 16
-shuffle: false
-pin_memory: false
+batch_size: 256
+shuffle: true
+pin_memory: true
 num_workers: 4
 overfit:
 normalize: ${normalize}

@@ -3,7 +3,7 @@ import math
 import torch
 from torch import nn
 
-from .data_proc import Proc
+from .data_proc import Preprocess, Postprocess
 
 
 class ConvTemporalGraphical(nn.Module):
@@ -195,7 +195,9 @@ class STsGCN(nn.Module):
         txc_kernel_size = args.txc_kernel_size
         txc_dropout = args.txc_dropout
 
-        self.proc = Proc(args)
+        self.preprocess = Preprocess(args).to(args.device)
+        self.postprocess = Postprocess(args).to(args.device)
+
         self.st_gcnns = nn.ModuleList()
         self.n_txcnn_layers = n_txcnn_layers
         self.txcnns = nn.ModuleList()
@@ -221,9 +223,9 @@ class STsGCN(nn.Module):
         for j in range(n_txcnn_layers):
             self.prelus.append(nn.PReLU())
 
-    def forward(self, x):
+    def forward(self, input_dict):
 
-        x = self.proc(x['observed_pose'], True)
+        x = self.preprocess(input_dict['observed_pose'])
 
         x = x.view(-1,
                    self.args.obs_frames_num,
@@ -243,5 +245,5 @@ class STsGCN(nn.Module):
         x = x.permute(0, 1, 3, 2).reshape(-1, self.args.pred_frames_num,
                                           self.args.n_major_joints * self.args.keypoint_dim)
 
-        x = self.proc(x, False)
+        x = self.postprocess(input_dict['observed_pose'], x)
         return {'pred_pose': x}

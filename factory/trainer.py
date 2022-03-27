@@ -1,8 +1,8 @@
 import logging
 import time
+
 import torch
 from torch.utils.tensorboard import SummaryWriter
-
 from tqdm import tqdm
 
 from metrics import POSE_METRICS, MASK_METRICS
@@ -28,6 +28,9 @@ class Trainer:
         self.valid_reporter = valid_reporter
         self.tensor_board = SummaryWriter(args.save_dir)
         self.use_validation = False if valid_dataloader is None else True
+
+        print("train dataset size is:", len(train_dataloader.dataset))
+        print("valid dataset size is:", len(valid_dataloader.dataset))
 
     def train(self):
         logger.info("Training started.")
@@ -71,7 +74,7 @@ class Trainer:
             # backpropagate and optimize
             loss = loss_outputs['loss']
             loss.backward()
-            
+
             if self.args.optimizer.type == 'sam':
                 self.optimizer.first_step(zero_grad=True)
 
@@ -83,7 +86,6 @@ class Trainer:
 
             else:
                 self.optimizer.step()
-
 
             if self.model.args.use_mask:
                 assert 'pred_mask' in model_outputs.keys(), 'outputs of model should include pred_mask'
