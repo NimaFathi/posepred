@@ -1,7 +1,8 @@
 import torch
 from torch import nn
 import numpy as np
-from utils.others import rotmat_to_euler, expmap_to_rotmat
+from utils.others import rotmat_to_euler, expmap_to_rotmat, rotmat_to_expmap, expmap_to_xyz_torch
+from preprocessor.stanford_preprocessor import StanfordPreprocessor
 _MAJOR_JOINTS = [
     0, 1, 2, 3, 4, 6, 7, 8, 9, 11, 12, 13, 14, 16, 17, 18, 19, 24, 25, 26, 27
 ]
@@ -115,6 +116,23 @@ def convert_to_euler(action_sequence_, n_major_joints, pose_format, is_normalize
   euler_maps = euler_maps.reshape((B, S, -1))
   return euler_maps
 
+def convert_to_xyz(action_sequence_, n_major_joints, pose_format, is_normalized=True):
+  """Convert the input exponential maps to euler angles.
+
+  Args:
+    action_sequence: Pose exponential maps [batch_size, sequence_length, pose_size].
+      The input should not contain the one hot encoding in the vector.
+  """
+  B, S, D = action_sequence_.shape
+  expmap = action_sequence_.reshape((B*S, n_major_joints, -1))
+  if pose_format == 'rotmat':
+      expmap = rotmat_to_expmap(rotmats)
+  
+  xyz = expmap_to_xyz_torch(torch.from_numpy(copy.deepcopy(expmap)).float()).numpy()
+  xyz = xyz.reshape((B, S, -1))
+
+  return xyz
+
 def post_process_to_euler(norm_seq, n_major_joints, n_h36m_joints, pose_format):
 
     batch_size, seq_length, n_major_joints, pose_dim = norm_seq.shape
@@ -125,3 +143,14 @@ def post_process_to_euler(norm_seq, n_major_joints, n_h36m_joints, pose_format):
     p_euler_padded[:, :, _MAJOR_JOINTS] = euler_seq
     p_euler_padded = np.reshape(p_euler_padded, [batch_size, seq_length, -1])
     return p_euler_padded
+
+def post_process_to_xyz(norm_seq, n_major_joints, n_h36m_joints, pose_format):
+
+    batch_size, seq_length, n_major_joints, pose_dim = norm_seq.shape
+    norm_seq = norm_seq.reshape(batch_size, seq_length, n_major_joints*pose_dim)
+    xyz_seq = convert_to_xyz(norm_seq, n_major_joints, pose_format)
+    xyz_seq = xyz_seq.reshape((batch_size, seq_length, n_major_joints, 3))
+    p_xyz_padded = np.zeros([batch_size, seq_length, n_h36m_joints, 3])
+    p_xyz_padded[:, :, _MAJOR_JOINTS] = xyz_seq
+    p_xyz_padded = np.reshape(p_xyz_padded, [batch_size, seq_length, -1])
+    return p_xyz_padded
