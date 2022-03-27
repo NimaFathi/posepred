@@ -76,11 +76,7 @@ class Proc(nn.Module):
 
     def forward(self, x, preproc):
         if preproc:
-            shape = x.shape
-            x = x.view((-1, x.shape[-1]))
-            x[:, 0:6] = 0
-            x = data_utils.expmap2xyz_torch(x, x.device)
-            x32 = x.view((shape[0], shape[1], -1)).permute((0,2,1))
+            x32 = x.permute((0,2,1))
             x32 = torch.cat([x32, x32[:,:,-1].unsqueeze(-1).repeat(1,1,self.output_n)], dim=2)
             # print(x32.shape, x32.sum(dim=(0,1)))
             

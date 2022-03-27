@@ -67,11 +67,7 @@ class Proc(nn.Module):
 
     def forward(self, x, preproc):
         if preproc:
-            shape = x.shape
-            x = x.view((-1, x.shape[-1]))
-            x[:, 0:6] = 0
-            x = data_utils.expmap2xyz_torch(x, x.device)
-            x32 = x.view((shape[0], shape[1], -1)).permute((0,2,1))
+            x32 = x.permute((0,2,1))
             # x32 = torch.concat([x32, x32[:,:,-1].unsqueeze(-1).repeat(1,1,25)], dim=2)
             # print(x32.shape, x32.sum(dim=(0,1)))
             
@@ -121,9 +117,9 @@ class MSRGCNLoss(nn.Module):
         gt = torch.cat([input_data['observed_pose'].clone(), input_data['future_pose'].clone()], dim=1)
     
         gt = gt.reshape((gt.shape[0], gt.shape[1], -1))
-        gt = self.proc(gt, True)
+        gt = self.proc(gt, True) # batch_size * (66|36|21|12) * T
         out = {
-            "p22":model_outputs["p22"],
+            "p22":model_outputs["p22"], # batch_size * (66|36|21|12) * T
             "p12":model_outputs["p12"],
             "p7":model_outputs["p7"],
             "p4":model_outputs["p4"]
@@ -148,28 +144,6 @@ class MSRGCNLoss(nn.Module):
         final_loss = 0
         for k in out.keys():
             final_loss+= losses[k]
-        # print(gt["p22"].shape)
-        # print(model_outputs["pred_pose"]["p22"].shape)
-
-        # observed_pose = input_data['observed_pose']
-        # future_pose = input_data['future_pose']
-        # observed_vel = observed_pose[..., 1:, :] - observed_pose[..., :-1, :]
-        # future_vel = torch.cat(((future_pose[..., 0, :] - observed_pose[..., -1, :]).unsqueeze(-2),
-        #                         future_pose[..., 1:, :] - future_pose[..., :-1, :]), -2)
-
-        # # prediction loss
-        # pred_vel_loss = self.mse1(model_outputs['pred_vel'], future_vel)
-
-        # # completion loss
-        # comp_vel_loss = self.mse2(model_outputs['comp_vel'], observed_vel)
-        # comp_ade = ADE(model_outputs['comp_pose'], input_data['observed_pose'], self.args.keypoint_dim)
-        # comp_ade_noise_only = ADE(model_outputs['comp_pose_noise_only'], observed_pose, self.args.keypoint_dim)
-
-        # loss = (self.args.pred_weight * pred_vel_loss) + (self.args.comp_weight * comp_vel_loss)
-        # outputs = {'loss': loss, 'pred_vel_loss': pred_vel_loss, 'comp_vel_loss': comp_vel_loss, 'comp_ade': comp_ade,
-        #            'comp_ade_noise_only': comp_ade_noise_only}
-
-
 
         return {'loss': final_loss, 'loss_p22':losses['p22'],'loss_p12':losses['p12'],'loss_p7':losses['p7'],'loss_p4':losses['p4'],
                 'loss_1000':losses[25], 'loss_560': losses[14], 'loss_400':losses[10], 'loss_320':losses[8], 'loss_160':losses[4],
