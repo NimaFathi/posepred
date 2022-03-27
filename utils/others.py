@@ -64,6 +64,24 @@ def expmap_to_quaternion(e):
     xyz = 0.5 * np.sinc(0.5 * theta / np.pi) * e
     return np.concatenate((w, xyz), axis=1).reshape(original_shape)
 
+def rotmat_to_expmap(action_sequence):
+  """Convert exponential maps to rotmats.
+
+  Args:
+    action_sequence: [n_samples, n_joints, 9]
+  Returns:
+    Rotation matrices for exponenital maps [n_samples, n_joints, 3].
+  """
+  n_samples, n_joints, _ = action_sequence.shape
+  rotmat = np.reshape(action_sequence, [n_samples*n_joints, 3, 3])
+  # first three values are positions, so technically it's meaningless to convert them,
+  # but we do it anyway because later we discard this values anywho
+  expmap = np.zeros([n_samples*n_joints, 3, 1])
+  for i in range(expmap.shape[0]):
+    expmap[i] = cv2.Rodrigues(rotmat[i])[0]
+  expmap = np.reshape(expmap, [n_samples, n_joints, 3])
+  return expmap
+
 def expmap_to_rotmat(action_sequence):
   """Convert exponential maps to rotmats.
 
