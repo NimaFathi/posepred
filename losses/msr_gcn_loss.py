@@ -6,27 +6,6 @@ import numpy as np
 
 from models.msr_gcn.utils import data_utils
 
-def get_dct_matrix(N):
-    dct_m = np.eye(N)
-    for k in np.arange(N):
-        for i in np.arange(N):
-            w = np.sqrt(2 / N)
-            if k == 0:
-                w = np.sqrt(1 / N)
-            dct_m[k, i] = w * np.cos(np.pi * (i + 1 / 2) * k / N)
-    idct_m = np.linalg.inv(dct_m)
-    return torch.FloatTensor(dct_m), torch.FloatTensor(idct_m)
-
-def reverse_dct_torch(dct_data, idct_m, seq_len):
-    '''
-    B, 60, 35
-    '''
-    batch_size, features, dct_n = dct_data.shape
-
-    dct_data = dct_data.permute(2, 0, 1).contiguous().view(dct_n, -1)  # dct_n, B*60
-    out_data = torch.matmul(idct_m[:, :dct_n], dct_data).contiguous().view(seq_len, batch_size, -1).permute(1, 2, 0)
-    return out_data
-
 class Proc(nn.Module):
     def __init__(self, args):
         super(Proc, self).__init__()
@@ -105,12 +84,6 @@ class MSRGCNLoss(nn.Module):
         super().__init__()
         self.proc = Proc(args)
         self.args = args
-        self.dct_used = args.dct_used
-        self.input_n = args.input_n
-        self.output_n = args.output_n
-        self.dct_m, self.idct_m = get_dct_matrix(self.input_n + self.output_n)
-        self.global_min = args.global_min
-        self.global_max = args.global_max   
 
     def forward(self, model_outputs, input_data):
         # print(input_data['observed_pose'].shape, input_data['future_pose'].shape)
@@ -131,9 +104,6 @@ class MSRGCNLoss(nn.Module):
         
         for k in out.keys():
             temp = out[k]
-            temp = (temp+1)/2
-            temp = temp *(self.global_max-self.global_min)+self.global_min
-            temp = reverse_dct_torch(temp, self.idct_m.to(out[k].device), self.input_n+self.output_n)
             if "22" in k:
                 batch_size, _, seq_len = gt[k].shape
                 for frame in frames:

@@ -13,7 +13,7 @@ import torch
 import torch.nn as nn
 from .layers import SingleLeftLinear, SingleRightLinear, PreGCN, GC_Block, PostGCN
 from .preprocessor import Proc
-
+from .preprocessor import reverse_dct_torch
 
 class MSRGCN(nn.Module):
     def __init__(self, args):
@@ -178,6 +178,8 @@ class MSRGCN(nn.Module):
 
         # print(inputs['observed_pose'].shape, inputs['future_pose'].shape)
         observed = inputs['observed_pose'].clone()
+
+        device = inputs['observed_pose'].device
         # observed = observed.reshape((observed.shape[0], observed.shape[1], -1))
         observed = self.proc(observed, True)
         x_p32 = observed['p32']
@@ -232,9 +234,35 @@ class MSRGCN(nn.Module):
 
         fusion_fourth = self.fourth_extra(bottom_right) + bottom_right  # 残差连接
         pred_fourth = self.fourth_out(fusion_fourth) + x_p4  # 大残差连接
+
+
+
+        pred_first = (pred_first+1)/2
+        pred_first = pred_first *(self.proc.global_max-self.proc.global_min)+self.proc.global_min
+        pred_first = reverse_dct_torch(pred_first, self.proc.idct_m.to(device), self.proc.input_n+self.proc.output_n)
+
+        pred_second = (pred_second+1)/2
+        pred_second = pred_second *(self.proc.global_max-self.proc.global_min)+self.proc.global_min
+        pred_second = reverse_dct_torch(pred_second, self.proc.idct_m.to(device), self.proc.input_n+self.proc.output_n)
+
+        pred_third = (pred_third+1)/2
+        pred_third = pred_third *(self.proc.global_max-self.proc.global_min)+self.proc.global_min
+        pred_third = reverse_dct_torch(pred_third, self.proc.idct_m.to(device), self.proc.input_n+self.proc.output_n)
+
+        pred_fourth = (pred_fourth+1)/2
+        pred_fourth = pred_fourth *(self.proc.global_max-self.proc.global_min)+self.proc.global_min
+        pred_fourth = reverse_dct_torch(pred_fourth, self.proc.idct_m.to(device), self.proc.input_n+self.proc.output_n)
+
+
+        temp = pred_first.permute(0,2,1)
+
         pred_pose = torch.ones((pred_first.shape[0], self.args.pred_frames_num, 32 * 3))
+
+        pred_pose[:,:,self.proc.dim_used] = temp
+        pred_pose[:,:,self.proc.dim_repeat_32] = temp[:,:,self.proc.dim_repeat_22]
+        pred_pose[:,:,self.proc.dim_replace] = inputs['observed_pose'][:,-1,self.proc.dim_replace]
         return {
-            "pred_pose": pred_pose, "p22": pred_first, "p12": pred_second, "p7": pred_third, "p4": pred_fourth
+            "pred_pose_metric":pred_pose,"pred_pose": pred_first, "p22": pred_first, "p12": pred_second, "p7": pred_third, "p4": pred_fourth
         }
 
 

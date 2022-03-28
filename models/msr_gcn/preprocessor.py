@@ -29,6 +29,16 @@ def dct_transform_torch(data, dct_m, dct_n):
     out_data = out_data.permute(1, 0).contiguous().view(-1, features, dct_n)  # [b, 60, dct_n]
     return out_data
 
+def reverse_dct_torch(dct_data, idct_m, seq_len):
+    '''
+    B, 60, 35
+    '''
+    batch_size, features, dct_n = dct_data.shape
+
+    dct_data = dct_data.permute(2, 0, 1).contiguous().view(dct_n, -1)  # dct_n, B*60
+    out_data = torch.matmul(idct_m[:, :dct_n], dct_data).contiguous().view(seq_len, batch_size, -1).permute(1, 2, 0)
+    return out_data
+
 
 class Proc(nn.Module):
     def __init__(self, args):
@@ -47,17 +57,17 @@ class Proc(nn.Module):
         # index_to_ignore = np.concatenate((joint_to_ignore * 3, joint_to_ignore * 3 + 1, joint_to_ignore * 3 + 2))
         # joint_equal = np.array([13, 19, 22, 13, 27, 30])
         # index_to_equal = np.concatenate((joint_equal * 3, joint_equal * 3 + 1, joint_equal * 3 + 2))
-        
+        self.dim_repeat_22 = [27, 28, 29, 27, 28, 29, 42, 43, 44, 48, 49, 50, 57, 58, 59, 63, 64, 65]
+        self.dim_repeat_32 = [48,49,50, 72,73,74, 60,61,62, 69,70,71, 84,85,86, 93,94,95]
+
+        self.dim_replace = [0,1,2, 3,4,5, 18,19,20, 33,34,35]
 
         joint_to_ignore = np.array([0, 1, 6, 11, 16, 20, 23, 24, 28, 31])
         # 2, 3, 4, 5, 7, 8, 9, 10, 12, 13, 14, 15, 17, 18, 19, 21, 22, 25, 26, 27, 29, 30
         dimensions_to_ignore = np.concatenate((joint_to_ignore * 3, joint_to_ignore * 3 + 1, joint_to_ignore * 3 + 2))
         dimensions_to_use = np.setdiff1d(np.arange(96), dimensions_to_ignore)
         self.dim_used = dimensions_to_use
-        # self.dim_used = np.array([6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 21, 22, 23, 24, 25,
-        #                           26, 27, 28, 29, 30, 31, 32, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45,
-        #                           46, 47, 51, 52, 53, 54, 55, 56, 57, 58, 59, 63, 64, 65, 66, 67, 68,
-        #                           75, 76, 77, 78, 79, 80, 81, 82, 83, 87, 88, 89, 90, 91, 92])
+
         # self.index_to_ignore = index_to_ignore
         # self.index_to_equal = index_to_equal
 
