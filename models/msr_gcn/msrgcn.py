@@ -176,11 +176,9 @@ class MSRGCN(nn.Module):
         :return:
         '''
 
-        # print(inputs['observed_pose'].shape, inputs['future_pose'].shape)
         observed = inputs['observed_pose'].clone()
 
         device = inputs['observed_pose'].device
-        # observed = observed.reshape((observed.shape[0], observed.shape[1], -1))
         observed = self.proc(observed, True)
         x_p32 = observed['p32']
         x_p22 = observed['p22']
@@ -188,7 +186,6 @@ class MSRGCN(nn.Module):
         x_p7 = observed['p7']
         x_p4 = observed['p4']
 
-        # 左半部分
         enhance_first_left = self.first_enhance(x_p22)  # B, 66, 64
         out_first_left = self.first_left(enhance_first_left) + enhance_first_left  # 残差连接
         second_left = self.first_down(out_first_left)  # 8, 36, 64
@@ -204,7 +201,6 @@ class MSRGCN(nn.Module):
         enhance_bottom = self.fourth_enhance(fourth_left)  # 8, 12, 512
         bottom = self.fourth_left(enhance_bottom) + enhance_bottom  # 残差连接
 
-        # 右半部分
         bottom_right = self.fourth_right(bottom) + bottom  # 残差连接
 
         in_third_right = self.fourth_up(bottom_right)
@@ -222,7 +218,6 @@ class MSRGCN(nn.Module):
         crop_first_right = self.first_right_crop(cat_first)
         first_right = self.first_right(crop_first_right) + crop_first_right  # 残差连接
 
-        # 出口部分
         fusion_first = self.first_extra(first_right) + first_right  # 残差连接
         pred_first = self.first_out(fusion_first) + x_p22  # 大残差连接
 

@@ -52,24 +52,16 @@ class Proc(nn.Module):
         self.global_max = args.global_max
 
         self.args = args
-        # joints at same loc
-        # joint_to_ignore = np.array([16, 20, 23, 24, 28, 31])
-        # index_to_ignore = np.concatenate((joint_to_ignore * 3, joint_to_ignore * 3 + 1, joint_to_ignore * 3 + 2))
-        # joint_equal = np.array([13, 19, 22, 13, 27, 30])
-        # index_to_equal = np.concatenate((joint_equal * 3, joint_equal * 3 + 1, joint_equal * 3 + 2))
+
         self.dim_repeat_22 = [27, 28, 29, 27, 28, 29, 42, 43, 44, 48, 49, 50, 57, 58, 59, 63, 64, 65]
         self.dim_repeat_32 = [48,49,50, 72,73,74, 60,61,62, 69,70,71, 84,85,86, 93,94,95]
 
         self.dim_replace = [0,1,2, 3,4,5, 18,19,20, 33,34,35]
 
         joint_to_ignore = np.array([0, 1, 6, 11, 16, 20, 23, 24, 28, 31])
-        # 2, 3, 4, 5, 7, 8, 9, 10, 12, 13, 14, 15, 17, 18, 19, 21, 22, 25, 26, 27, 29, 30
         dimensions_to_ignore = np.concatenate((joint_to_ignore * 3, joint_to_ignore * 3 + 1, joint_to_ignore * 3 + 2))
         dimensions_to_use = np.setdiff1d(np.arange(96), dimensions_to_ignore)
         self.dim_used = dimensions_to_use
-
-        # self.index_to_ignore = index_to_ignore
-        # self.index_to_equal = index_to_equal
 
         self.Index2212 = [[0], [1, 2, 3], [4], [5, 6, 7], [8, 9], [10, 11], [12], [13], [14, 15, 16], [17], [18], [19, 20, 21]]
         self.Index127 = [[0, 1], [2, 3], [4, 5], [6, 7], [7, 8], [9, 10], [10, 11]]
@@ -88,14 +80,11 @@ class Proc(nn.Module):
         if preproc:
             x32 = x.permute((0,2,1))
             x32 = torch.cat([x32, x32[:,:,-1].unsqueeze(-1).repeat(1,1,self.output_n)], dim=2)
-            # print(x32.shape, x32.sum(dim=(0,1)))
             
             x22 = x32[:, self.dim_used, :]
             x12 = self.down(x22, self.Index2212)
             x7 = self.down(x12, self.Index127)
             x4 = self.down(x7, self.Index74)
-
-            # print(x32.shape, x22.shape, x12.shape, x7.shape, x4.shape)
 
             x32 = dct_transform_torch(x32, self.dct_m, self.dct_used)
             x22 = dct_transform_torch(x22, self.dct_m, self.dct_used)
