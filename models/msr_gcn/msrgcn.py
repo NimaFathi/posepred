@@ -257,7 +257,7 @@ class MSRGCN(nn.Module):
         pred_pose[:,:,self.proc.dim_repeat_32] = temp[:,:,self.proc.dim_repeat_22]
         pred_pose[:,:,self.proc.dim_replace] = inputs['observed_pose'][:,-1,self.proc.dim_replace]
         return {
-            "pred_pose_metric":pred_pose,"pred_pose": pred_first, "p22": pred_first, "p12": pred_second, "p7": pred_third, "p4": pred_fourth
+            "pred_metric_pose":pred_pose,"pred_pose": pred_first, "p22": pred_first, "p12": pred_second, "p7": pred_third, "p4": pred_fourth
         }
 
 
