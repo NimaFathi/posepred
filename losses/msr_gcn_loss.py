@@ -69,7 +69,7 @@ class MSRGCNLoss(nn.Module):
 
     def forward(self, model_outputs, input_data):
         gt = torch.cat([input_data['observed_pose'].clone(), input_data['future_pose'].clone()], dim=1)
-    
+        output_size = gt.shape[1]
         gt = gt.reshape((gt.shape[0], gt.shape[1], -1))
         gt = self.proc(gt, True) # batch_size * (66|36|21|12) * T
         out = {
@@ -81,21 +81,19 @@ class MSRGCNLoss(nn.Module):
         losses = {}
         for k in out.keys():
             losses[k] = 0
-        frames = [2,4,8,10,14,25]
+        # frames = [i for i in [11,13,17,19,23,34] if i < output_size]
         
         for k in out.keys():
             temp = out[k]
-            if "22" in k:
-                batch_size, _, seq_len = gt[k].shape
-                for frame in frames:
-                    losses[frame]=torch.mean(torch.norm(gt[k].view(batch_size,-1,3,seq_len)[:,:,:,frame+10-1]- \
-                                                        temp.view(batch_size, -1, 3, seq_len)[:,:,:,frame+10-1], 2, -1))
+            # if "22" in k:
+            #     batch_size, _, seq_len = gt[k].shape
+                # for frame in frames:
+                #     losses[frame]=torch.mean(torch.norm(gt[k].view(batch_size,-1,3,seq_len)[:,:,:,frame+10-1]- \
+                #                                         temp.view(batch_size, -1, 3, seq_len)[:,:,:,frame+10-1], 2, -1))
             losses[k] += L2NormLoss_train(gt[k], temp)
         
         final_loss = 0
         for k in out.keys():
             final_loss+= losses[k]
 
-        return {'loss': final_loss, 'loss_p22':losses['p22'],'loss_p12':losses['p12'],'loss_p7':losses['p7'],'loss_p4':losses['p4'],
-                'loss_1000':losses[25], 'loss_560': losses[14], 'loss_400':losses[10], 'loss_320':losses[8], 'loss_160':losses[4],
-                'loss_80':losses[2]}
+        return {'loss': final_loss}

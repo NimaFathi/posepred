@@ -251,11 +251,11 @@ class MSRGCN(nn.Module):
 
         temp = pred_first.permute(0,2,1)
 
-        pred_pose = torch.ones((pred_first.shape[0], self.args.pred_frames_num, 32 * 3))
+        pred_pose = torch.zeros((pred_first.shape[0], self.args.pred_frames_num, 32 * 3)).to(device)
 
-        pred_pose[:,:,self.proc.dim_used] = temp
-        pred_pose[:,:,self.proc.dim_repeat_32] = temp[:,:,self.proc.dim_repeat_22]
-        pred_pose[:,:,self.proc.dim_replace] = inputs['observed_pose'][:,-1,self.proc.dim_replace]
+        pred_pose[:,:,self.proc.dim_used] = temp[:,self.proc.input_n:,:]
+        pred_pose[:,:,self.proc.dim_repeat_32] = temp[:,self.proc.input_n:,self.proc.dim_repeat_22]
+        pred_pose[:,:,self.proc.dim_replace] = inputs['observed_pose'][:,-1:,self.proc.dim_replace]
         return {
             "pred_metric_pose":pred_pose,"pred_pose": pred_first, "p22": pred_first, "p12": pred_second, "p7": pred_third, "p4": pred_fourth
         }
