@@ -20,8 +20,8 @@ logger = logging.getLogger(__name__)
 
 SPLIT = {
     'train': ['S1', 'S6', 'S7', 'S8', 'S9'],
-    'validation': ['S5'],
-    'test': ['S11']
+    'validation': ['S11'],
+    'test': ['S5']
 }
 
 
