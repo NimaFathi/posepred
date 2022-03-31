@@ -13,6 +13,7 @@ from .keyplast import Keyplast
 from .sts_gcn.sts_gcn import STsGCN
 from .msr_gcn.msrgcn import MSRGCN
 from .potr.potr import POTR
+from .spherical_tcn.spherical_tcn import SphericalTCN
 
 MODELS = {'zero_vel': ZeroVel,
           'nearest_neighbor': NearestNeighbor,
@@ -28,5 +29,6 @@ MODELS = {'zero_vel': ZeroVel,
           'keyplast': Keyplast,
           'potr': POTR,
           'sts_gcn': STsGCN,
-          'msr_gcn': MSRGCN
+          'msr_gcn': MSRGCN,
+          'spherical_tcn': SphericalTCN
           }
