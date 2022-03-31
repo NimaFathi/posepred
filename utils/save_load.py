@@ -19,11 +19,12 @@ def load_snapshot(snapshot_path):
     loss_module.load_state_dict(snapshot['loss_state_dict'])
     optimizer = OPTIMIZERS[snapshot['optimizer_args'].type](model.parameters(), snapshot['optimizer_args'])
     optimizer.load_state_dict(snapshot['optimizer_state_dict'])
+    print(snapshot['epoch'])
     return (model, loss_module, optimizer, snapshot['optimizer_args'], snapshot['epoch'], snapshot['train_reporter'],
             snapshot['valid_reporter'])
 
 
-def save_snapshot(model, loss_module, optimizer, optimizer_args, epoch, train_reporter, valid_reporter, save_path):
+def save_snapshot(model, loss_module, optimizer, optimizer_args, epoch, train_reporter, valid_reporter, save_path, best_state_dict=False):
     logger.info('### Taking Snapshot ###')
     snapshot = {
         'model_state_dict': model.state_dict(),
@@ -36,7 +37,10 @@ def save_snapshot(model, loss_module, optimizer, optimizer_args, epoch, train_re
         'train_reporter': train_reporter,
         'valid_reporter': valid_reporter
     }
-    torch.save(snapshot, os.path.join(save_path, 'snapshots', '%d.pt' % epoch))
+    if not best_state_dict:
+        torch.save(snapshot, os.path.join(save_path, 'snapshots', '%d.pt' % epoch))
+    else:
+        torch.save(snapshot, os.path.join(save_path, 'snapshots', 'best_state_dict.pt'))
     del snapshot
 
 

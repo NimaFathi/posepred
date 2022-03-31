@@ -2,14 +2,14 @@ import logging
 import time
 import torch
 from torch.utils.tensorboard import SummaryWriter
-
+import numpy as np
 from tqdm import tqdm
 
 from metrics import POSE_METRICS, MASK_METRICS
 from utils.others import dict_to_device
 from utils.reporter import Reporter
 from utils.save_load import save_snapshot
-
+torch.autograd.set_detect_anomaly(True)
 logger = logging.getLogger(__name__)
 
 
@@ -32,12 +32,20 @@ class Trainer:
     def train(self):
         logger.info("Training started.")
         time0 = time.time()
-        best_loss = 0.0
+        self.best_loss = np.inf
+        self.best_epoch = -1
         for epoch in range(self.args.start_epoch, self.args.epochs):
             self.__train()
             if self.use_validation:
                 self.__validate()
                 self.scheduler.step(self.valid_reporter.history['loss'][-1])
+            
+            if self.best_state_dict:
+                save_snapshot(self.model, self.loss_module, self.optimizer, self.optimizer_args, epoch + 1,
+                              self.train_reporter,
+                              self.valid_reporter, self.args.save_dir, best_state_dict=True)
+                self.best_state_dict = False
+
             if (epoch + 1) % self.args.snapshot_interval == 0 or (epoch + 1) == self.args.epochs:
                 save_snapshot(self.model, self.loss_module, self.optimizer, self.optimizer_args, epoch + 1,
                               self.train_reporter,
@@ -130,6 +138,7 @@ class Trainer:
         self.model.eval()
         self.valid_reporter.start_time = time.time()
         pose_key = None
+        epoch_loss = 0. 0
         for data in self.valid_dataloader:
             data = dict_to_device(data, self.args.device)
             batch_size = data['observed_pose'].shape[0]
@@ -138,6 +147,8 @@ class Trainer:
                 # predict & calculate loss
                 model_outputs = dict_to_device(self.model(data), self.args.device)
                 loss_outputs = self.loss_module(model_outputs, dict_to_device(data, self.args.device))
+                epoch_loss += loss_outputs['loss'].item()
+                
                 assert 'pred_pose' in model_outputs.keys(), 'outputs of model should include pred_pose'
 
                 if self.model.args.use_mask:
@@ -175,6 +186,10 @@ class Trainer:
                         report_attrs[metric_name] = metric_value
 
                 self.valid_reporter.update(report_attrs, batch_size)
+
+        if epoch_loss < self.best_loss:
+            self.best_state_dict = True
+            self.best_loss = epoch_loss
 
         self.valid_reporter.epoch_finished(self.tensor_board)
         self.valid_reporter.print_values(logger, self.model.args.use_mask)
