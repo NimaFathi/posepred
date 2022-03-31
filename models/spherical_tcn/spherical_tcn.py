@@ -41,7 +41,6 @@ class CNN_layer(nn.Module): # This is the simple CNN layer,that performs a 2-D c
 
 class SphericalTCN(nn.Module):
     def __init__(self, args):
-        
         super(SphericalTCN,self).__init__()
         
         self.args = args
@@ -65,6 +64,7 @@ class SphericalTCN(nn.Module):
         
         for p in self.postprocess.parameters():
             p.requires_grad = False
+
 
         # txc_kernel_size = [1, 1]
 
