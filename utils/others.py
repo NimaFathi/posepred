@@ -243,3 +243,24 @@ def denormalize(in_tensor, mean, std):
     std = std.unsqueeze(0).repeat(bs, frame_n, feature_n // keypoint_dim)
 
     return (in_tensor * std) + mean
+
+
+def xyz_to_spherical(inputs):
+    # inputs: T, 25, 3
+    rho = torch.norm(inputs, dim=-1)
+    theta = torch.arctan(inputs[:, :, 1] / inputs[:, :, 0]).unsqueeze(-1)
+    phi = torch.arccos(inputs[:, :, 2] / rho).unsqueeze(-1)
+    rho = rho.unsqueeze(-1)
+    out = torch.cat([rho, theta, phi], dim=-1)
+
+    return out
+
+def spherical_to_xyz(inputs):
+    # inputs: T, 22, 3 : rho, theta, phi
+    
+    x = inputs[:, :, 0] * torch.sin(inputs[:, :, 2]) * torch.cos(inputs[:, :, 1])
+    y = inputs[:, :, 0] * torch.sin(inputs[:, :, 2]) * torch.sin(inputs[:, :, 1])
+    z = inputs[:, :, 0] * torch.cos(inputs[:, :, 2])
+    x, y, z = x.unsqueeze(-1), y.unsqueeze(-1), z.unsqueeze(-1)
+
+    return torch.cat([x, y, z], dim=-1)
