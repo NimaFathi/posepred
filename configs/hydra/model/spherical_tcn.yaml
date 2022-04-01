@@ -28,4 +28,4 @@ num_activities: &num_activities 15
 device: &device ${device}
 
 loss:
-  type: sts_gcn
+  type: spherical_tcn
