@@ -84,7 +84,8 @@ class SphericalTCN(nn.Module):
 
     def forward(self, input_dict):
         #B, T, D = input_dict['observed_pose'].shape
-        x = self.preprocess(input_dict['observed_pose']) # B, T, 22, 3
+        x = self.preprocess(input_dict['observed_pose']) # B, T, 66
+        x = x.reshape(x.shape[0], x.shape[1], self.args.n_major_joints, -1)
         #x = input_dict['observed_pose'].reshape(B, T, D//3, 3)
         x = x.permute(0, 1, 3, 2) # B, T, 3, 22
 
@@ -112,7 +113,7 @@ class SphericalTCN(nn.Module):
         y = y.reshape(-1, self.args.pred_frames_num, self.args.n_major_joints * self.args.keypoint_dim)
         
         outputs = {
-            'pred_pose': self.postprocess(input_dict['observed_metric_pose'], y),
+            'pred_pose': self.postprocess(input_dict['observed_pose'], y),
             #'pred_metric_pose': self.postprocess(input_dict['observed_metric_pose'], y)
         }
 
