@@ -1,6 +1,6 @@
 import torch
 from torch import nn
-from models.spherical_tcn.data_proc import Preprocess, Postprocess
+from models.spherical_tcn.data_proc_spherical import Preprocess, Postprocess
 
 class CNN_layer(nn.Module): # This is the simple CNN layer,that performs a 2-D convolution while maintaining the dimensions of the input(except for the features dimension)
 
@@ -84,8 +84,8 @@ class SphericalTCN(nn.Module):
 
     def forward(self, input_dict):
 
-        x = self.preprocess(input_dict['observed_pose'])
-
+        x = self.preprocess(input_dict['observed_pose']) # B, T, 22, 3
+        
         x = x.view(-1,
                    self.args.obs_frames_num,
                    self.args.n_major_joints,
