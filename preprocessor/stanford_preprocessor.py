@@ -14,7 +14,7 @@ import copy
 
 from path_definition import PREPROCESSED_DATA_DIR
 from preprocessor.preprocessor import Processor
-from utils.others import expmap_to_quaternion, qfix, expmap_to_rotmat, expmap_to_euler
+from utils.others import expmap_to_quaternion, qfix, expmap_to_rotmat, expmap_to_euler, xyz_to_spherical
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +23,23 @@ SPLIT = {
     'validation': ['S11'],
     'test': ['S5']
 }
+
+connect = [
+    (11, 12), (12, 13), (13, 14), (14, 15),
+    (12, 25), (25, 26), (26, 27), (27, 29), (29, 30),
+    (12, 17), (17, 18), (18, 19), (19, 21), (21, 22),
+    (1, 2), (2, 3), (3, 4), (4, 5),
+    (6, 7), (7, 8), (8, 9), (9, 10)
+]
+
+const = [
+    (0, 11),
+    (0, 1), 
+    (0, 6)
+]
+
+S = np.array([c[0] for c in connect])
+E = np.array([c[1] for c in connect])
 
 
 class StanfordPreprocessor(Processor):
@@ -63,7 +80,7 @@ class StanfordPreprocessor(Processor):
         if self.save_total_frames:
             list_format = ["total"]
         else:
-            list_format = ["xyz", "quaternion", "expmap", "rotmat", "euler"]
+            list_format = ["xyz", "quaternion", "expmap", "rotmat", "euler", "spherical"]
 
         for format_data in list_format:
             if self.custom_name:
@@ -86,12 +103,15 @@ class StanfordPreprocessor(Processor):
                 positions = self.expmap2xyz_torch(torch.from_numpy(copy.deepcopy(expmap)).float())
                 rotmat = self.rotmat_rep(action, subject, data_type)
                 euler = self.euler_rep(action, subject, data_type)
+
+                spherical = self.spherical_rep(positions[:, E] - positions[:, S])
                 quat = self.quaternion_rep(action, subject, data_type)
 
                 expmap = expmap.reshape(expmap.shape[0], -1)
                 positions = positions.reshape(positions.shape[0], -1)
                 rotmat = rotmat.reshape(rotmat.shape[0], -1)
                 euler = euler.reshape(euler.shape[0], -1)
+                spherical = spherical.reshape(spherical.shape[0], -1)
                 quat = quat.reshape(quat.shape[0], -1)
 
                 if self.save_total_frames == False:
@@ -110,7 +130,9 @@ class StanfordPreprocessor(Processor):
                             'observed_rotmat_pose': list(),
                             'future_rotmat_pose': list(),
                             'observed_euler_pose': list(),
-                            'future_euler_pose': list()
+                            'future_euler_pose': list(),
+                            'observed_spherical_pose': list(),
+                            'future_spherical_pose': list()                            
                         }
                         for j in range(0, total_frame_num * (self.skip_frame_num + 1), self.skip_frame_num + 1):
                             if j < (self.skip_frame_num + 1) * self.obs_frame_num:
@@ -124,6 +146,8 @@ class StanfordPreprocessor(Processor):
                                     rotmat[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
                                 video_data['observed_euler_pose'].append(
                                     euler[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
+                                video_data['observed_spherical_pose'].append(
+                                    spherical[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
                             else:
                                 video_data['future_xyz_pose'].append(
                                     positions[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
@@ -135,8 +159,11 @@ class StanfordPreprocessor(Processor):
                                     rotmat[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
                                 video_data['future_euler_pose'].append(
                                     euler[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
+                                video_data['future_spherical_pose'].append(
+                                    spherical[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
 
-                        for format_data in ["xyz", "quaternion", "expmap", "rotmat", "euler"]:
+
+                        for format_data in ["xyz", "quaternion", "expmap", "rotmat", "euler", "spherical"]:
                             self.update_meta_data(self.meta_data, video_data['observed_xyz_pose'], 3)
                             if self.custom_name:
                                 output_file_name = \
@@ -158,6 +185,7 @@ class StanfordPreprocessor(Processor):
                         'expmap_pose': expmap.tolist()[::self.skip_frame_num + 1],
                         'rotmat_pose': rotmat.tolist()[::self.skip_frame_num + 1],
                         'euler_pose': euler.tolist()[::self.skip_frame_num + 1],
+                        'spherical_pose': spherical.tolist()[::self.skip_frame_num + 1],
                         'action': action
                     }
 
@@ -178,7 +206,8 @@ class StanfordPreprocessor(Processor):
                             'quaternion_pose': video_data['quaternion_pose'],
                             'expmap_pose': video_data['expmap_pose'],
                             'rotmat_pose': video_data['rotmat_pose'],
-                            'euler_pose': video_data['euler_pose']
+                            'euler_pose': video_data['euler_pose'],
+                            'spherical_pose': video_data['spherical_pose']
                         })
         self.save_meta_data(self.meta_data, self.output_dir, True, data_type)
 
@@ -197,6 +226,9 @@ class StanfordPreprocessor(Processor):
         data = data.reshape(data.shape[0], -1, 3)[:, 1:]
         data = expmap_to_euler(data)
         return data
+
+    def spherical_rep(self, positions):
+        return xyz_to_spherical(positions)
 
     def quaternion_rep(self, action, subject, data_type):
         data = self.expmap_rep(action, subject, data_type)
