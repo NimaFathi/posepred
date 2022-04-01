@@ -7,7 +7,7 @@ type: spherical_tcn
 
 st_gcnn_dropout: 0.1
 n_txcnn_layers: 12
-txc_kernel_size: [3, 3]
+txc_kernel_size: [2, 3]
 txc_dropout: 0
 n_major_joints: 22
 bias: true
