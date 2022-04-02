@@ -44,7 +44,7 @@ class Reporter:
             else:
                 self.attrs.get(key).update(value, batch_size)
 
-    def epoch_finished(self, tb=None):
+    def epoch_finished(self, tb=None, mf=None):
         self.history.get('time').append(time.time() - self.start_time)
         for key, avg_meter in self.attrs.items():
             value = avg_meter.get_average()
@@ -52,6 +52,8 @@ class Reporter:
             self.history.get(key).append(float(value))
             if tb is not None:
                 tb.add_scalar(self.state + '_' + key, float(value), len(self.history.get(key)))
+            if mf is not None:
+                mf.log_metric(self.state + '_' + key, float(value), len(self.history.get(key)))
         self.reset_avr_meters()
 
     def reset_avr_meters(self):
