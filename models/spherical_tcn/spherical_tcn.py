@@ -13,20 +13,20 @@ class CNN_layer(nn.Module): # This is the simple CNN layer,that performs a 2-D c
         
         super(CNN_layer,self).__init__()
         self.kernel_size = kernel_size
-        #padding = ((kernel_size[0] - 1) // 2, (kernel_size[1] - 1) // 2) # padding so that both dimensions are maintained
-        #assert kernel_size[0] % 2 == 1 and kernel_size[1] % 2 == 1
+        padding = ((kernel_size[0] - 1) // 2, (kernel_size[1] - 1) // 2) # padding so that both dimensions are maintained
+        assert kernel_size[0] % 2 == 1 and kernel_size[1] % 2 == 1
 
         if not first_layer:
             self.block= [
-            nn.Conv2d(in_channels + out_channels,out_channels,kernel_size=kernel_size,padding='same') #padding)
+            nn.Conv2d(in_channels + out_channels,out_channels,kernel_size=kernel_size,padding=padding)
             ,nn.PReLU()
-            ,nn.Conv2d(out_channels,out_channels,kernel_size=kernel_size,padding='same') #padding)
+            ,nn.Conv2d(out_channels,out_channels,kernel_size=kernel_size,padding=padding)
             ,nn.BatchNorm2d(out_channels)
             # ,nn.Dropout(dropout, inplace=True)
                     ]
         else:
             self.block= [
-            nn.Conv2d(in_channels,out_channels,kernel_size=kernel_size,padding='same') #padding)
+            nn.Conv2d(in_channels,out_channels,kernel_size=kernel_size,padding=padding)
             ,nn.BatchNorm2d(out_channels)
             # ,nn.Dropout(dropout, inplace=True)
                     ]
@@ -83,31 +83,21 @@ class SphericalTCN(nn.Module):
         
 
     def forward(self, input_dict):
-        #B, T, D = input_dict['observed_pose'].shape
         x = self.preprocess(input_dict['observed_pose']) # B, T, 66
         x = x.reshape(x.shape[0], x.shape[1], self.args.n_major_joints, -1)
-        #x = input_dict['observed_pose'].reshape(B, T, D//3, 3)
         x = x.permute(0, 1, 3, 2) # B, T, 3, 22
 
-        # x = x.view(-1,
-        #            self.args.obs_frames_num,
-        #            self.args.n_major_joints,
-        #            self.args.keypoint_dim).permute(0, 3, 1, 2) # B, 3, T, 22
+        #rho = x[:, :, 0, :].unsqueeze(2) # B, T, 1, 22
+        #input = x[:, :, 1:, :] # B, T, 2, 22
 
-        # x = x.permute(0, 2, 1, 3) # B, T, 3, 22
-
-        rho = x[:, :, 0, :].unsqueeze(2) # B, T, 1, 22
-        input = x[:, :, 1:, :] # B, T, 2, 22
-
-        y = self.txcnns[0](input)
-        #print(y.shape)
+        y = self.txcnns[0](x) #input)
         for i in range(1,self.n_txcnn_layers):
-            y += self.txcnns[i](torch.cat((input, y), dim=1))
+            y += self.txcnns[i](torch.cat((x, y), dim=1))
             # y = y.permute(0,3, 2, 1)
             # y += self.joint_cnns[i - 1](y)
             # y = y.permute(0, 3, 2, 1)
-        #print(y.shape, rho[:, -1].unsqueeze(1).repeat(1, y.shape[1], 1, 1).shape)
-        y = torch.cat([y, rho[:, -1].unsqueeze(1).repeat(1, y.shape[1], 1, 1)], dim=2)
+
+        #y = torch.cat([y, rho[:, -1].unsqueeze(1).repeat(1, y.shape[1], 1, 1)], dim=2)
 
         y = y.permute(0, 1, 3, 2)
         y = y.reshape(-1, self.args.pred_frames_num, self.args.n_major_joints * self.args.keypoint_dim)
