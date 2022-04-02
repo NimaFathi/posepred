@@ -15,15 +15,16 @@ bias: true
 
 
 # data related
-model_pose_format: &model_pose_format ${model_pose_format}
-metric_pose_format: ${metric_pose_format}
-future_frames_num: &pred_frames_num ${pred_frames_num} # convert to pred frames num which is in common
+# model_pose_format: &model_pose_format ${model_pose_format}
+# metric_pose_format: ${metric_pose_format}
+
+# future_frames_num: &pred_frames_num ${pred_frames_num} # convert to pred frames num which is in common
 
 
 
-n_h36m_joints: 32
-keypoint_dim: ${keypoint_dim}
-num_activities: &num_activities 15
+# n_h36m_joints: 32
+# keypoint_dim: ${keypoint_dim}
+# num_activities: &num_activities 15
 
 device: &device ${device}
 
