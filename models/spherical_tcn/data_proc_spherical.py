@@ -10,8 +10,8 @@ def joint_to_index(x):
 
 connect = [
     (11, 12), (12, 13), (13, 14), (14, 15),
-    (12, 25), (25, 26), (26, 27), (27, 29), (29, 30),
-    (12, 17), (17, 18), (18, 19), (19, 21), (21, 22),
+    (13, 25), (25, 26), (26, 27), (27, 29), (29, 30),
+    (13, 17), (17, 18), (18, 19), (19, 21), (21, 22),
     (1, 2), (2, 3), (3, 4), (4, 5),
     (6, 7), (7, 8), (8, 9), (9, 10)
 ]
@@ -111,11 +111,11 @@ if __name__ == "__main__":
         for seq in reader:
             sequences.append(np.array(seq['xyz_pose']))
             i += 1
-            if i == 1: break
+            if i == 10: break
 
+    #for i in range(10):
     sequence_gt = sequences[0] # T, 96
-    inputs = torch.tensor(sequence_gt[:1]).unsqueeze(0).to(args.device).float() # 1, 10, 96
-    #inputs = inputs.reshape(1, 1, 32, 3)  
+    inputs = torch.tensor(sequence_gt[:10]).unsqueeze(0).to(args.device).float() # 1, 10, 96
     spherical = preproc(inputs)
     outputs = postproc(inputs, spherical)
     
