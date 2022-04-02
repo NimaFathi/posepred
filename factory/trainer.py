@@ -4,17 +4,17 @@ import torch
 from torch.utils.tensorboard import SummaryWriter
 import numpy as np
 from tqdm import tqdm
-
+from path_definition import *
 from metrics import POSE_METRICS, MASK_METRICS
 from utils.others import dict_to_device
 from utils.reporter import Reporter
 from utils.save_load import save_snapshot
 torch.autograd.set_detect_anomaly(True)
 logger = logging.getLogger(__name__)
-
+import os
 import mlflow
 import mlflow.pytorch
-
+from mlflow.tracking import MlflowClient
 
 class Trainer:
     def __init__(self, args, train_dataloader, valid_dataloader, model, loss_module, optimizer, optimizer_args,
@@ -32,17 +32,18 @@ class Trainer:
         self.tensor_board = SummaryWriter(args.save_dir)
         self.use_validation = False if valid_dataloader is None else True
 
-        try:
-            mlflow.set_experiment(args.model.type)
-            print('Set experiment:', args.model.type)
-        except Exception as e:
-            print(e)
-            mlflow.create_experiment(args.model.type)
-            print('Create experiment:', args.model.type)
-
+        mlflow.set_tracking_uri(os.path.join(ROOT_DIR, 'mlruns'))
+        mlflow.set_experiment(args.experiment_name)
+           
         self.run = mlflow.start_run()
+
+        config_path = os.path.join(os.getcwd(), '.hydra', 'config.yaml')
+        mlflow.log_artifact(config_path)
+
+        #model_params = {k: v for k, v in dict(args.model) if k in args.log_model_params}
         params = {
-            'batch_size': args.data.batch_size,
+            'model': args.model.type,
+            **dict(args.model),
             'optimizer': args.optimizer.type,
             **dict(args.optimizer),
             'loss': args.model.loss.type,
@@ -52,11 +53,9 @@ class Trainer:
             'obs_frames_num': args.obs_frames_num,
             'pred_frames_num': args.pred_frames_num
         }
-        self.run = mlflow.start_run()
-        print(self.run.info.run_id)
+        del params['type']
+
         mlflow.log_params(params)
-
-
 
     def train(self):
         logger.info("Training started.")
@@ -86,7 +85,7 @@ class Trainer:
                                     self.valid_reporter.history, self.use_validation)
             # if self.use_validation and
         self.tensor_board.close()
-        #mlflow.end_run()
+        mlflow.end_run()
         logger.info("-" * 100)
         logger.info('Training is completed in %.2f seconds.' % (time.time() - time0))
 
@@ -161,8 +160,9 @@ class Trainer:
 
             self.train_reporter.update(report_attrs, batch_size)
 
+        # self.train_reporter.epoch_finished(self.tensor_board)
         self.train_reporter.epoch_finished(self.tensor_board, mlflow)
-        self.train_reporter.print_values(logger, self.model.args.use_mask)
+        # self.train_reporter.print_values(logger, self.model.args.use_mask)
 
     def __validate(self):
         self.model.eval()
@@ -221,5 +221,6 @@ class Trainer:
             self.best_model = True
             self.best_loss = epoch_loss
 
+        # self.valid_reporter.epoch_finished(self.tensor_board)
         self.valid_reporter.epoch_finished(self.tensor_board, mlflow)
         self.valid_reporter.print_values(logger, self.model.args.use_mask)
