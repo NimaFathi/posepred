@@ -51,7 +51,6 @@ class SphericalTCN(nn.Module):
         joints_to_consider = args.n_major_joints
         n_txcnn_layers = args.n_txcnn_layers
 
-        st_gcnn_dropout = args.st_gcnn_dropout
         
         txc_kernel_size = args.txc_kernel_size
         txc_dropout = args.txc_dropout
@@ -87,20 +86,20 @@ class SphericalTCN(nn.Module):
         x = x.reshape(x.shape[0], x.shape[1], self.args.n_major_joints, -1)
         x = x.permute(0, 1, 3, 2) # B, T, 3, 22
 
-        #rho = x[:, :, 0, :].unsqueeze(2) # B, T, 1, 22
-        #input = x[:, :, 1:, :] # B, T, 2, 22
+        rho = x[:, :, 0, :].unsqueeze(2) # B, T, 1, 22
+        input = x[:, :, 1:, :] # B, T, 2, 22
 
-        y = self.txcnns[0](x) #input)
+        y = self.txcnns[0](input) #input)
         for i in range(1,self.n_txcnn_layers):
-            y += self.txcnns[i](torch.cat((x, y), dim=1))
+            y += self.txcnns[i](torch.cat((input, y), dim=1))
             # y = y.permute(0,3, 2, 1)
             # y += self.joint_cnns[i - 1](y)
             # y = y.permute(0, 3, 2, 1)
 
-        #y = torch.cat([y, rho[:, -1].unsqueeze(1).repeat(1, y.shape[1], 1, 1)], dim=2)
-
-        y = y.permute(0, 1, 3, 2)
+        y = torch.cat([rho[:, -1].unsqueeze(1).repeat(1, y.shape[1], 1, 1), y], dim=2) # B, T, 3, 22
+        y = y.permute(0, 1, 3, 2) # B, T, 22, 3
         y = y.reshape(-1, self.args.pred_frames_num, self.args.n_major_joints * self.args.keypoint_dim)
+
         
         outputs = {
             'pred_pose': self.postprocess(input_dict['observed_pose'], y),
