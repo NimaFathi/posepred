@@ -45,7 +45,6 @@ class Reporter:
                 self.attrs.get(key).update(value, batch_size)
 
     def epoch_finished(self, tb=None, mf=None):
-        print(self.start_time)
         self.history.get('time').append(time.time() - self.start_time)
         for key, avg_meter in self.attrs.items():
             value = avg_meter.get_average()

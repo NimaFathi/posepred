@@ -162,7 +162,7 @@ class Trainer:
 
         # self.train_reporter.epoch_finished(self.tensor_board)
         self.train_reporter.epoch_finished(self.tensor_board, mlflow)
-        # self.train_reporter.print_values(logger, self.model.args.use_mask)
+        self.train_reporter.print_values(logger, self.model.args.use_mask)
 
     def __validate(self):
         self.model.eval()
