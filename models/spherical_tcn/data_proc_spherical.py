@@ -50,10 +50,10 @@ class Preprocess(nn.Module):
     def xyz_to_spherical(self, inputs):
         # inputs: B, T, 22, 3
         rho = torch.norm(inputs, p=2, dim=-1)
-        theta = torch.arctan(inputs[..., 2] / inputs[..., 0]).unsqueeze(-1)
+        theta = torch.arctan(inputs[..., 2] / (inputs[..., 0] + 1e-8)).unsqueeze(-1)
         tol = 0
         theta[inputs[..., 0] < tol] = theta[inputs[..., 0] < tol] + torch.pi
-        phi = torch.arccos(inputs[..., 1] / rho).unsqueeze(-1)
+        phi = torch.arccos(inputs[..., 1] / (rho + 1e-8)).unsqueeze(-1)
         rho = rho.unsqueeze(-1)
         out = torch.cat([rho, theta, phi], dim=-1)
         out[out.isnan()] = 0
@@ -115,9 +115,9 @@ if __name__ == "__main__":
 
     sequence_gt = sequences[0] # T, 96
     inputs = torch.tensor(sequence_gt[:1]).unsqueeze(0).to(args.device).float() # 1, 10, 96
-    inputs = inputs.reshape(1, 1, 32, 3)  
-    spherical = preproc.xyz_to_spherical(inputs)
-    outputs = postproc.spherical_to_xyz(spherical)
+    #inputs = inputs.reshape(1, 1, 32, 3)  
+    spherical = preproc(inputs)
+    outputs = postproc(inputs, spherical)
     
     print(torch.allclose(inputs, outputs, atol=1e-4, rtol=1e-4))
 
