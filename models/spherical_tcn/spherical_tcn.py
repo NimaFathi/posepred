@@ -82,7 +82,11 @@ class SphericalTCN(nn.Module):
         
 
     def forward(self, input_dict):
-        x = self.preprocess(input_dict['observed_pose']) # B, T, 66
+        if self.args.loss_on_angle:
+            x = input_dict['observed_pose'] # observed pose is spherical coordinate
+        else:
+            x = self.preprocess(input_dict['observed_pose']) # B, T, 66 # observed pose is cartesian coordinate
+
         x = x.reshape(x.shape[0], x.shape[1], self.args.n_major_joints, -1)
         x = x.permute(0, 1, 3, 2) # B, T, 3, 22
 
@@ -98,12 +102,16 @@ class SphericalTCN(nn.Module):
 
         y = torch.cat([rho[:, -1].unsqueeze(1).repeat(1, y.shape[1], 1, 1), y], dim=2) # B, T, 3, 22
         y = y.permute(0, 1, 3, 2) # B, T, 22, 3
-        y = y.reshape(-1, self.args.pred_frames_num, self.args.n_major_joints * self.args.keypoint_dim)
+        y = y.reshape(-1, self.args.pred_frames_num, self.args.n_major_joints * self.args.keypoint_dim) # B, T, 66
 
-        
-        outputs = {
-            'pred_pose': self.postprocess(input_dict['observed_pose'], y),
-            #'pred_metric_pose': self.postprocess(input_dict['observed_metric_pose'], y)
-        }
+        if self.args.loss_on_angle:
+            outputs = {
+                'pred_pose': y,  # B, T, 66
+                'pred_metric_pose': self.postprocess(input_dict['observed_metric_pose'], y) # B, T, 96
+            }
+        else:
+            outputs = {
+                'pred_pose': self.postprocess(input_dict['observed_pose'], y), # B, T, 96
+            }
 
         return outputs
