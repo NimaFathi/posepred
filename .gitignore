@@ -255,3 +255,10 @@ jobs
 **/slurm*
 **/*.sh
 **/.ipynb_checkpoints/
+
+# Images
+*.jpg
+*.png
+
+# Mlflow
+mlruns/
