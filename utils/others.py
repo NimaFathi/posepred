@@ -246,21 +246,39 @@ def denormalize(in_tensor, mean, std):
 
 
 def xyz_to_spherical(inputs):
-    # inputs: T, 25, 3
-    rho = torch.norm(inputs, dim=-1)
-    theta = torch.arctan(inputs[:, :, 1] / inputs[:, :, 0]).unsqueeze(-1)
-    phi = torch.arccos(inputs[:, :, 2] / rho).unsqueeze(-1)
+    """
+    Convert cartesian representation to spherical representation.
+    Args:
+      inputs -- cartesian coordinates. (..., 3)
+    
+    Returns:
+      out -- spherical coordinate. (..., 3)
+    """
+    
+    rho = torch.norm(inputs, p=2, dim=-1)
+    theta = torch.arctan(inputs[..., 2] / (inputs[..., 0] + 1e-8)).unsqueeze(-1)
+    tol = 0
+    theta[inputs[..., 0] < tol] = theta[inputs[..., 0] < tol] + torch.pi
+    phi = torch.arccos(inputs[..., 1] / (rho + 1e-8)).unsqueeze(-1)
     rho = rho.unsqueeze(-1)
     out = torch.cat([rho, theta, phi], dim=-1)
+    out[out.isnan()] = 0
 
     return out
 
-def spherical_to_xyz(inputs):
-    # inputs: T, 22, 3 : rho, theta, phi
+def spherical_to_xyz(self, inputs):
+    """
+    Convert cartesian representation to spherical representation.
+    Args:
+      inputs -- spherical coordinates. (..., 3)
     
-    x = inputs[:, :, 0] * torch.sin(inputs[:, :, 2]) * torch.cos(inputs[:, :, 1])
-    y = inputs[:, :, 0] * torch.sin(inputs[:, :, 2]) * torch.sin(inputs[:, :, 1])
-    z = inputs[:, :, 0] * torch.cos(inputs[:, :, 2])
+    Returns:
+      out -- cartesian coordinate. (..., 3)
+    """
+    
+    x = inputs[..., 0] * torch.sin(inputs[..., 2]) * torch.cos(inputs[..., 1])
+    y = inputs[..., 0] * torch.sin(inputs[..., 2]) * torch.sin(inputs[..., 1])
+    z = inputs[..., 0] * torch.cos(inputs[..., 2])
     x, y, z = x.unsqueeze(-1), y.unsqueeze(-1), z.unsqueeze(-1)
 
-    return torch.cat([x, y, z], dim=-1)
+    return torch.cat([x, z, y], dim=-1)
