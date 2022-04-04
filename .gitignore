@@ -255,3 +255,4 @@ jobs
 **/slurm*
 **/*.sh
 **/.ipynb_checkpoints/
+viz.ipynb
