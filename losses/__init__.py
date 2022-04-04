@@ -16,6 +16,7 @@ from .mpjpe import MPJPE
 from .msr_gcn_loss import MSRGCNLoss
 from models.sts_gcn.sts_gcn_loss import STSGCNLoss
 from .potr_loss import POTRLoss
+from .ae_loss import AELoss
 
 LOSSES = {'mse_vel': MSEVel,
           'mse_pose': MSEPose,
@@ -34,5 +35,6 @@ LOSSES = {'mse_vel': MSEVel,
           'mpjpe': MPJPE,
           'msr_gcn':MSRGCNLoss,
           'potr': POTRLoss,
-          'sts_gcn': STSGCNLoss
+          'sts_gcn': STSGCNLoss,
+          'ae_loss': AELoss
           }
