@@ -109,7 +109,6 @@ class Trainer:
             # backpropagate and optimize
             loss = loss_outputs['loss']
             loss.backward()
-            print(next(iter(self.model.parameters())).grad)
             if self.args.optimizer.type == 'sam':
                 self.optimizer.first_step(zero_grad=True)
 
