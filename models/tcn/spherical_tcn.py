@@ -1,6 +1,6 @@
 import torch
 from torch import nn
-from models.spherical_tcn.data_proc_spherical import Preprocess, Postprocess
+from models.tcn.data_proc import Preprocess, Postprocess
 
 class CNN_layer(nn.Module): # This is the simple CNN layer,that performs a 2-D convolution while maintaining the dimensions of the input(except for the features dimension)
 
