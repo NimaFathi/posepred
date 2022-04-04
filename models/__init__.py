@@ -15,6 +15,7 @@ from .msr_gcn.msrgcn import MSRGCN
 from .potr.potr import POTR
 from .tcn.spherical_tcn import SphericalTCN
 from .tcn.constant_bone_tcn import ConstantBoneTcn
+from .ae import AE
 
 MODELS = {'zero_vel': ZeroVel,
           'nearest_neighbor': NearestNeighbor,
@@ -32,5 +33,6 @@ MODELS = {'zero_vel': ZeroVel,
           'sts_gcn': STsGCN,
           'msr_gcn': MSRGCN,
           'spherical_tcn': SphericalTCN,
-          'constant_bone_tcn': ConstantBoneTcn
+          'constant_bone_tcn': ConstantBoneTcn,
+          'ae': AE
           }
