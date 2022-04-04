@@ -62,6 +62,7 @@ class Trainer:
         time0 = time.time()
         self.best_loss = np.inf
         self.best_epoch = -1
+        self.best_model = False
         for epoch in range(self.args.start_epoch, self.args.epochs):
             self.__train()
             if self.use_validation:
@@ -108,7 +109,7 @@ class Trainer:
             # backpropagate and optimize
             loss = loss_outputs['loss']
             loss.backward()
-            
+            print(next(iter(self.model.parameters())).grad)
             if self.args.optimizer.type == 'sam':
                 self.optimizer.first_step(zero_grad=True)
 
