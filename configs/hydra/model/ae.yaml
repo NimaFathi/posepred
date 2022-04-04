@@ -1,0 +1,9 @@
+defaults:
+  - _self_
+  - common
+
+type: ae
+
+
+loss:
+  type: ae_loss
