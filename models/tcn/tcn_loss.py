@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 
 
-class SphericalLoss(nn.Module):
+class TCNLoss(nn.Module):
 
     def __init__(self, args):
         super().__init__()
