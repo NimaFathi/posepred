@@ -17,6 +17,7 @@ from .tcn.spherical_tcn import SphericalTCN
 from .tcn.constant_bone_tcn import ConstantBoneTcn
 from .ae import AE
 from tcn.ae_tcn import AETCN
+from tcn.sp_tcn import SPTCN
 
 MODELS = {'zero_vel': ZeroVel,
           'nearest_neighbor': NearestNeighbor,
@@ -36,5 +37,6 @@ MODELS = {'zero_vel': ZeroVel,
           'spherical_tcn': SphericalTCN,
           'constant_bone_tcn': ConstantBoneTcn,
           'ae': AE,
-          'ae_tcn': AETCN
+          'ae_tcn': AETCN,
+          'sp_tcn': SPTCN
           }

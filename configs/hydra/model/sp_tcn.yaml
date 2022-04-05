@@ -1,0 +1,20 @@
+defaults:
+  - _self_
+  - common
+
+type: ae_tcn
+
+
+T_in: ${obs_frames_num}
+T_out: ${pred_frames_num}
+n_major_joints: 22
+t_kernel_size: [7, 1]
+s_kernel_size: [1, 1]
+c_kernel_size: [1, 1]
+tags: []
+
+
+device: &device ${device}
+
+loss:
+  type: spherical_tcn
