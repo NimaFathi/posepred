@@ -16,6 +16,14 @@ class TCN(nn.Module):
         self.conv4 = nn.Conv2d(n_major_joints * 2, n_major_joints, kernel_size=s_kernel_size, padding='same')
         # B, 22, T_in, 3 > B, T_in, 22, 3 > B, T_out, 22, 3
         self.conv5 = nn.Conv2d(T_in, T_out, kernel_size=c_kernel_size, padding='same')
+
+        # B, T_out, 22, 3 > B, 3, T_out, 22 > B, 3, T_out, 22     # kernel_size=[t, 1]
+        self.conv6 = nn.Conv2d(3, 3, kernel_size=t_kernel_size, padding='same')
+        # B, 3, T_out, 22 > B, 22, T_out, 3 > B, 22, T_out, 3
+        self.conv7 = nn.Conv2d(n_major_joints, n_major_joints, kernel_size=s_kernel_size, padding='same')
+        # self.conv8 = nn.Conv2d(n_major_joints, n_major_joints * 2, kernel_size=s_kernel_size, padding='same')
+        # self.conv9 = nn.Conv2d(n_major_joints * 2, n_major_joints, kernel_size=s_kernel_size, padding='same')
+
         
 
 
@@ -43,7 +51,15 @@ class TCN(nn.Module):
         y = y.permute(0, 2, 1, 3) # B, T_in, 22, 3
         y = self.conv5(y) # B, T_out, 22, 3
 
-        return y
+        y = x
+        x = x.permute(0, 3, 1, 2) # B, 3, T_in, 22
+        x = self.conv6(x) # B, 3, T_in, 22
+        x = torch.relu(x)
+
+        x = x.permute(0, 3, 2, 1) # B, 22, T_in, 3
+        x = self.conv7(x) # B, 22, T_in, 3
+
+        return x
 
 
 
