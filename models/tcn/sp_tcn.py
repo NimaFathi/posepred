@@ -50,15 +50,14 @@ class TCN(nn.Module):
 
         y = y.permute(0, 2, 1, 3) # B, T_in, 22, 3
         y = self.conv5(y) # B, T_out, 22, 3
-
-        y = x
-        x = x.permute(0, 3, 1, 2) # B, 3, T_in, 22
-        x = self.conv6(x) # B, 3, T_in, 22
+        
+        x = y
+        x = x.permute(0, 3, 1, 2) # B, 3, T_out, 22
+        x = self.conv6(x) # B, 3, T_out, 22
         x = torch.relu(x)
 
-        x = x.permute(0, 3, 2, 1) # B, 22, T_in, 3
-        x = self.conv7(x) # B, 22, T_in, 3
-
+        x = x.permute(0, 3, 2, 1) # B, 22, T_out, 3
+        x = self.conv7(x) # B, 22, T_out, 3
         return x
 
 
