@@ -1,0 +1,33 @@
+defaults:
+  - _self_
+  - common
+
+type: ae_tcn
+
+
+n_txcnn_layers: 12
+txc_kernel_size: [3, 3]
+txc_dropout: 0
+ae_dim: 24
+bias: true
+loss_on_angle: false
+tags: []
+ae_path: '/home/zahra/models/pose_ae/linear_24.pt'
+
+
+# data related
+# model_pose_format: &model_pose_format ${model_pose_format}
+# metric_pose_format: ${metric_pose_format}
+
+# future_frames_num: &pred_frames_num ${pred_frames_num} # convert to pred frames num which is in common
+
+
+
+# n_h36m_joints: 32
+# keypoint_dim: ${keypoint_dim}
+# num_activities: &num_activities 15
+
+device: &device ${device}
+
+loss:
+  type: spherical_tcn
