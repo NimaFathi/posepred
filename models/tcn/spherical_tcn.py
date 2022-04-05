@@ -19,17 +19,18 @@ class CNN_layer(nn.Module): # This is the simple CNN layer,that performs a 2-D c
             self.block= [
             nn.Conv2d(in_channels + out_channels,out_channels,kernel_size=kernel_size,padding=padding),
             nn.PReLU(),
+            nn.BatchNorm2d(out_channels),
             nn.Conv2d(out_channels,out_channels,kernel_size=kernel_size,padding=padding),
             nn.BatchNorm2d(out_channels),
-            # nn.PReLU(),
-            nn.Dropout(dropout, inplace=False)
+            nn.PReLU(),
+            # nn.Dropout(dropout, inplace=False)
                     ]
         else:
             self.block= [
             nn.Conv2d(in_channels,out_channels,kernel_size=kernel_size,padding=padding),
             nn.BatchNorm2d(out_channels),
-            # nn.PReLU(),
-            nn.Dropout(dropout, inplace=False)
+            nn.PReLU(),
+            # nn.Dropout(dropout, inplace=False)
                     ]
 
         self.block=nn.Sequential(*self.block)
