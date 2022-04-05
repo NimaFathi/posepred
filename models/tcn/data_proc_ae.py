@@ -3,10 +3,10 @@ from torch import nn
 import numpy as np
 
 import sys
-sys.path.append('/home/zahra/workshop/posepred/')
-sys.path.append('/home/zahra/workshop/h36m_exp/')
-from utils.save_load import load_snapshot
-from viz import *
+# sys.path.append('/home/zahra/workshop/')
+# sys.path.append('/home/zahra/workshop/h36m_exp/')
+# from posepred.utils.save_load import load_snapshot
+# from viz import *
 
 def joint_to_index(x):
     return np.concatenate((x * 3, x * 3 + 1, x * 3 + 2))
@@ -28,11 +28,11 @@ index_to_copy = joint_to_index(index_to_copy)
 
 
 class Preprocess(nn.Module):
-    def __init__(self, args):
+    def __init__(self, args, encoder):
         super(Preprocess, self).__init__()
         self.args = args
-        ae, _, _, _, _, _, _ = load_snapshot(args.ae_path, model_only=True)
-        self.encoder = ae.encoder
+        # ae = load_snapshot(args.ae_path, model_only=True)
+        self.encoder = encoder
         self.encoder = self.encoder.to(args.device)
 
     def forward(self, observed_pose):
@@ -40,11 +40,11 @@ class Preprocess(nn.Module):
 
 
 class Postprocess(nn.Module):
-    def __init__(self, args):
+    def __init__(self, args, decoder):
         super(Postprocess, self).__init__()
         self.args = args
-        ae, _, _, _, _, _, _ = load_snapshot(args.ae_path, model_only=True)
-        self.decoder = ae.decoder
+        # ae = load_snapshot(args.ae_path, model_only=True)
+        self.decoder = decoder
         self.decoder = self.decoder.to(args.device)
 
     def forward(self, observed_pose, pred_pose):
