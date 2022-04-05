@@ -111,13 +111,20 @@ if __name__ == "__main__":
         for seq in reader:
             sequences.append(np.array(seq['xyz_pose']))
             i += 1
-            if i == 10: break
+            if i == 100: break
 
-    #for i in range(10):
-    sequence_gt = sequences[0] # T, 96
-    inputs = torch.tensor(sequence_gt[:10]).unsqueeze(0).to(args.device).float() # 1, 10, 96
-    spherical = preproc(inputs)
-    outputs = postproc(inputs, spherical)
-    
-    print(torch.allclose(inputs, outputs, atol=1e-4, rtol=1e-4))
+    for i in [21]:
+        sequence_gt = sequences[i] # T, 96
+        inputs = torch.tensor(sequence_gt[:1]).unsqueeze(0).to(args.device).float() # 1, 10, 96
+        spherical = preproc(inputs)
+        outputs = postproc(inputs, spherical)
+        # print(i, torch.allclose(inputs, outputs, atol=1e-4, rtol=1e-4))
+        for i in range(32):
+            inx = inputs.reshape(32, 3)[i].cpu().detach().numpy()
+            outx = outputs.reshape(32, 3)[i].cpu().detach().numpy()
+            print(i, np.allclose(inx, outx, atol=1e-4, rtol=1e-4), inx, outx)
+
+
+        
+        #print(i, torch.allclose(inputs, outputs, atol=1e-4, rtol=1e-4))
 
