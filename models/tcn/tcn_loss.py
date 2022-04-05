@@ -16,13 +16,15 @@ class TCNLoss(nn.Module):
 
         y_true = y_true['future_pose']
         y_true = y_true.view(y_true.shape[0] * y_true.shape[1], -1) # BT, JD
-
-        vel_true = y_true[..., 1:, :] - y_true[..., :-1, :]
-        vel_pred = y_pred[..., 1:, :] - y_pred[..., :-1, :]
+        # print(y_true.shape)
+        # for i , j in enumerate(range(32)):
+        #     print(i, (y_pred - y_true).reshape(25, 32, 3)[0, j], y_true.reshape(25, 32, 3)[0, j], y_pred.reshape(25, 32, 3)[0, j])
+        #vel_true = y_true[..., 1:, :] - y_true[..., :-1, :]
+        #vel_pred = y_pred[..., 1:, :] - y_pred[..., :-1, :]
 
         pose_loss = torch.mean(torch.norm(y_true.contiguous().view(-1, 3) - y_pred.contiguous().view(-1, 3), 2, 1))
-        vel_loss = torch.mean(torch.norm(vel_true.contiguous().view(-1, 3) - vel_pred.contiguous().view(-1, 3), 2, 1))
-        loss = pose_loss + vel_loss
-        outputs = {'loss': loss, 'pose_loss': pose_loss, 'vel_loss': vel_loss}
+        #vel_loss = torch.mean(torch.norm(vel_true.contiguous().view(-1, 3) - vel_pred.contiguous().view(-1, 3), 2, 1))
+        loss = pose_loss #+ vel_loss
+        outputs = {'loss': loss} # , 'pose_loss': pose_loss, 'vel_loss': vel_loss}
 
         return outputs
