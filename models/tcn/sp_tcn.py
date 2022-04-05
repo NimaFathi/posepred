@@ -60,8 +60,10 @@ class SPTCN(nn.Module):
         t_kernel_size = args.t_kernel_size
         c_kernel_size = args.c_kernel_size
 
+        self.preprocess = Preprocess(args).to(args.device)
+        self.postprocess = Postprocess(args).to(args.device)
 
-        self.tcn = TCN(self, T_in, T_out, s_kernel_size, t_kernel_size, c_kernel_size, n_major_joints)
+        self.tcn = TCN(T_in, T_out, s_kernel_size, t_kernel_size, c_kernel_size, n_major_joints)
 
     def forward(self, input_dict):
         x = self.preprocess(input_dict['observed_pose']) # B, T, 66 # observed pose is cartesian coordinate
