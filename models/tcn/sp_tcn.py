@@ -12,7 +12,7 @@ class TemporalLayer(nn.Module):
             nn.BatchNorm2d(n_channels)
         ]
         if use_activation:
-            layers.append(nn.ReLU())
+            layers.append(nn.PReLU())
         
         self.layers = nn.Sequential(*layers)
         
@@ -32,7 +32,7 @@ class SpacialLayer(nn.Module):
             nn.BatchNorm2d(n_channels)
         ]
         if use_activation:
-            layers.append(nn.ReLU())
+            layers.append(nn.PReLU())
 
         self.layers = nn.Sequential(*layers)
         
@@ -52,7 +52,7 @@ class D3Layer(nn.Module):
             nn.BatchNorm2d(n_channels)
         ]
         if use_activation:
-            layers.append(nn.ReLU())
+            layers.append(nn.PReLU())
 
         self.layers = nn.Sequential(*layers)
 
