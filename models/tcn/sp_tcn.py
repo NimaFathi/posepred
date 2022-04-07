@@ -25,9 +25,8 @@ class SpacialLayer(nn.Module):
     def __init__(self, n_channels, ksize=[1, 1], use_activation=True):
         super(SpacialLayer, self).__init__()
         layers = [
-            nn.Conv2d(in_channels=n_channels, out_channels=int(1.5*n_channels), kernel_size=ksize),
+            nn.Conv2d(in_channels=n_channels, out_channels=n_channels, kernel_size=ksize),
             nn.ReLU(),
-            nn.Conv2d(in_channels=int(1.5*n_channels), out_channels=n_channels, kernel_size=ksize),
         ]
         if use_activation:
             layers.append(nn.ReLU())
@@ -89,14 +88,18 @@ class SPTCN(nn.Module):
         
         layers.append(SPLayer(args.n_major_joints, args.tksize, args.sksize, use_activation=False))
 
-        self.layers = nn.Sequential(*layers)
-        print(self.layers)
+        self.layers = nn.ModuleList(layers)
+        
 
     def forward(self, input_dict):
         x = self.preprocess(input_dict['observed_pose']) # B, T, 66 # observed pose is cartesian coordinate
-        x = x.reshape(x.shape[0], x.shape[1], self.args.n_major_joints, self.args.keypoint_dim)
+        x = x.reshape(x.shape[0], x.shape[1], self.args.n_major_joints, self.args.keypoint_dim) # B, T, 22, 3
         
-        x = self.layers(x)
+        last_frame = x[:, -1, :, :].unsqueeze(1)
+        for i in range(self.args.n_layers - 1):
+            x = self.layers[i](x) + last_frame
+        
+        x = self.layers[-1](x)
         
         x = x.reshape(-1, self.args.pred_frames_num, self.args.n_major_joints * self.args.keypoint_dim) # B, T, 66
 
