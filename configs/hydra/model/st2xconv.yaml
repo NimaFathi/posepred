@@ -28,4 +28,4 @@ tags: []
 device: &device ${device}
 
 loss:
-  type: sts_gcn
+  type: spherical_tcn

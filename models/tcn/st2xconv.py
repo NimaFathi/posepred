@@ -18,17 +18,17 @@ class CNN_layer(nn.Module): # This is the simple CNN layer,that performs a 2-D c
 
         if not first_layer:
             self.block= [
-            nn.Conv2d(in_channels + out_channels,out_channels,kernel_size=kernel_size,padding=padding)
-            ,nn.PReLU()
-            ,nn.Conv2d(out_channels,out_channels,kernel_size=kernel_size,padding=padding)
-            ,nn.BatchNorm2d(out_channels)
-            # ,nn.Dropout(dropout, inplace=True)
+            nn.Conv2d(in_channels + out_channels,out_channels,kernel_size=kernel_size,padding=padding),
+            nn.PReLU(),
+            nn.Conv2d(out_channels,out_channels,kernel_size=kernel_size,padding=padding),
+            nn.BatchNorm2d(out_channels),
+            nn.Dropout(dropout, inplace=False)
                     ]
         else:
             self.block= [
-            nn.Conv2d(in_channels,out_channels,kernel_size=kernel_size,padding=padding)
-            ,nn.BatchNorm2d(out_channels)
-            # ,nn.Dropout(dropout, inplace=True)
+            nn.Conv2d(in_channels,out_channels,kernel_size=kernel_size,padding=padding),
+            nn.BatchNorm2d(out_channels),
+            nn.Dropout(dropout, inplace=False)
                     ]
 
         self.block=nn.Sequential(*self.block)
@@ -87,7 +87,6 @@ class ST2xConv(nn.Module):
         x = x.reshape(x.shape[0], x.shape[1], self.args.n_major_joints, -1)
         x = x.permute(0, 1, 3, 2) # B, T, 3, 22
 
-        x.requires_grad = False
 
         y = self.txcnns[0](x)
 
