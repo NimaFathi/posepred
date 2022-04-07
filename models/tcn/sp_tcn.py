@@ -7,16 +7,18 @@ import torch.nn.functional as F
 class TemporalLayer(nn.Module):
     def __init__(self, n_channels, ksize, use_activation=True):
         super(TemporalLayer, self).__init__()
-        self.conv = nn.Conv2d(in_channels=n_channels, out_channels=n_channels, kernel_size=ksize, groups=n_channels)
-        self.activation = nn.ReLU()
-        self.use_activation = use_activation
+        layers = [
+            nn.Conv2d(in_channels=n_channels, out_channels=n_channels, kernel_size=ksize, groups=n_channels),
+        ]
+        if use_activation:
+            layers.append(nn.ReLU())
+        
+        self.layers = nn.Sequential(*layers)
         
     def forward(self, x):
         # x: B, T, J, D
         x = x.permute(0, 2, 3, 1) # B, J, D, T
-        x = self.conv(x) # B, J, D, T
-        if self.use_activation:
-            x = self.activation(x)
+        x = self.layers(x) # B, J, D, T
         x = x.permute(0, 3, 1, 2) # B, T, J, D
 
         return x
@@ -26,7 +28,6 @@ class SpacialLayer(nn.Module):
         super(SpacialLayer, self).__init__()
         layers = [
             nn.Conv2d(in_channels=n_channels, out_channels=n_channels, kernel_size=ksize),
-            nn.ReLU(),
         ]
         if use_activation:
             layers.append(nn.ReLU())
