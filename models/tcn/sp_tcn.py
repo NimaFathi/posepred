@@ -9,6 +9,7 @@ class TemporalLayer(nn.Module):
         super(TemporalLayer, self).__init__()
         layers = [
             nn.Conv2d(in_channels=n_channels, out_channels=n_channels, kernel_size=ksize, groups=n_channels),
+            nn.BatchNorm2d(n_channels)
         ]
         if use_activation:
             layers.append(nn.ReLU())
@@ -28,6 +29,7 @@ class SpacialLayer(nn.Module):
         super(SpacialLayer, self).__init__()
         layers = [
             nn.Conv2d(in_channels=n_channels, out_channels=n_channels, kernel_size=ksize),
+            nn.BatchNorm2d(n_channels)
         ]
         if use_activation:
             layers.append(nn.ReLU())
@@ -45,16 +47,19 @@ class SpacialLayer(nn.Module):
 class D3Layer(nn.Module):
     def __init__(self, n_channels=3, ksize=[1, 1], use_activation=True):
         super(D3Layer, self).__init__()
-        self.conv = nn.Conv2d(in_channels=n_channels, out_channels=n_channels, kernel_size=ksize)
-        self.activation = nn.ReLU()
-        self.use_activation = use_activation
+        layers = [
+            nn.Conv2d(in_channels=n_channels, out_channels=n_channels, kernel_size=ksize),
+            nn.BatchNorm2d(n_channels)
+        ]
+        if use_activation:
+            layers.append(nn.ReLU())
+
+        self.layers = nn.Sequential(*layers)
 
     def forward(self, x):
         # x: B, T, J, D
         x = x.permute(0, 3, 2, 1) # B, D, J, T
-        x = self.conv(x) # B, D, J, T
-        if self.use_activation:
-            x = self.activation(x)
+        x = self.layers(x) # B, D, J, T
         x = x.permute(0, 3, 2, 1) # B, T, J, D
 
         return x       
