@@ -12,7 +12,7 @@ class TemporalLayer(nn.Module):
             nn.BatchNorm2d(n_channels)
         ]
         if use_activation:
-            layers.append(nn.PReLU())
+            layers.append(nn.ReLU())
         
         self.layers = nn.Sequential(*layers)
         

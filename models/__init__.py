@@ -18,6 +18,7 @@ from .tcn.constant_bone_tcn import ConstantBoneTcn
 from .ae import AE
 from tcn.ae_tcn import AETCN
 from tcn.sp_tcn import SPTCN
+from tcn.st2xconv import ST2xConv
 
 MODELS = {'zero_vel': ZeroVel,
           'nearest_neighbor': NearestNeighbor,
@@ -38,5 +39,6 @@ MODELS = {'zero_vel': ZeroVel,
           'constant_bone_tcn': ConstantBoneTcn,
           'ae': AE,
           'ae_tcn': AETCN,
-          'sp_tcn': SPTCN
+          'sp_tcn': SPTCN,
+          'st2xconv': ST2xConv
           }
