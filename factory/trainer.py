@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 import os
 import mlflow
 import mlflow.pytorch
+import gc
 from mlflow.tracking import MlflowClient
 
 class Trainer:
@@ -94,6 +95,7 @@ class Trainer:
         self.train_reporter.start_time = time.time()
         pose_key = None
         for data in tqdm(self.train_dataloader):
+            gc.collect()
             # TODO: fix later
             batch_size = data['observed_pose'].shape[0]
             data = dict_to_device(data, self.args.device)
@@ -106,9 +108,12 @@ class Trainer:
             assert 'loss' in loss_outputs.keys(), 'outputs of loss should include loss'
 
             # backpropagate and optimize
+
             loss = loss_outputs['loss']
             loss.backward()
-            
+
+            # print(model.para)
+
             if self.args.optimizer.type == 'sam':
                 self.optimizer.first_step(zero_grad=True)
 
@@ -121,6 +126,7 @@ class Trainer:
             else:
                 self.optimizer.step()
 
+            loss_outputs['loss'] = loss_outputs['loss'].detach().item()
 
             if self.model.args.use_mask:
                 assert 'pred_mask' in model_outputs.keys(), 'outputs of model should include pred_mask'
@@ -149,7 +155,7 @@ class Trainer:
                     self.model.args.keypoint_dim, pred_mask
                 )
 
-                report_attrs[metric_name] = metric_value
+                report_attrs[metric_name] = metric_value.detach().item()
 
             # calculate mask_metrics
             if self.model.args.use_mask:
@@ -169,7 +175,7 @@ class Trainer:
         self.valid_reporter.start_time = time.time()
         pose_key = None
         epoch_loss = 0.0
-        for data in self.valid_dataloader:
+        for data in tqdm(self.valid_dataloader):
             data = dict_to_device(data, self.args.device)
             batch_size = data['observed_pose'].shape[0]
 

@@ -11,7 +11,7 @@ class CNN_layer(nn.Module):
                  in_channels,
                  out_channels,
                  kernel_size,
-                 dropout, first_layer=False):
+                 first_layer=False):
 
         super(CNN_layer, self).__init__()
         self.kernel_size = kernel_size
@@ -25,15 +25,11 @@ class CNN_layer(nn.Module):
                 nn.PReLU(),
                 nn.Conv2d(out_channels, out_channels, kernel_size=kernel_size, padding=padding),
                 nn.BatchNorm2d(out_channels),
-                # nn.PReLU(),
-                nn.Dropout(dropout, inplace=False)
             ]
         else:
             self.block = [
                 nn.Conv2d(in_channels, out_channels, kernel_size=kernel_size, padding=padding),
-                nn.BatchNorm2d(out_channels),
-                # nn.PReLU(),
-                nn.Dropout(dropout, inplace=False)
+                nn.BatchNorm2d(out_channels)
             ]
 
         self.block = nn.Sequential(*self.block)
@@ -49,17 +45,15 @@ class ConstantBoneTcn(nn.Module):
 
         self.args = args
 
-        input_channels = args.keypoint_dim
         input_time_frame = args.obs_frames_num
         output_time_frame = args.pred_frames_num
         joints_to_consider = args.n_major_joints
         n_txcnn_layers = args.n_txcnn_layers
 
         txc_kernel_size = args.txc_kernel_size
-        txc_dropout = args.txc_dropout
 
-        self.preprocess = Preprocess(args).to(args.device)
-        self.postprocess = Postprocess(args).to(args.device)
+        self.preprocess = Preprocess().to(args.device)
+        self.postprocess = Postprocess().to(args.device)
 
         for p in self.preprocess.parameters():
             p.requires_grad = False
@@ -67,31 +61,28 @@ class ConstantBoneTcn(nn.Module):
         for p in self.postprocess.parameters():
             p.requires_grad = False
 
-        # txc_kernel_size = [1, 1]
-
         self.st_gcnns = nn.ModuleList()
         self.n_txcnn_layers = n_txcnn_layers
         self.txcnns = nn.ModuleList()
+        self.Atxcnns = []
         self.joint_cnns = nn.ModuleList()
 
-        # at this point, we must permute the dimensions of the gcn network, from (N,C,T,V) into (N,T,C,V)
-
-        self.txcnns.append(CNN_layer(input_time_frame, output_time_frame, txc_kernel_size, txc_dropout,
-                                     True))  # with kernel_size[3,3] the dimensinons of C,V will be maintained
+        self.txcnns.append(CNN_layer(input_time_frame, output_time_frame, txc_kernel_size, True))
         for i in range(1, n_txcnn_layers):
-            self.txcnns.append(CNN_layer(input_time_frame, output_time_frame, txc_kernel_size, txc_dropout))
+            self.txcnns.append(CNN_layer(input_time_frame, output_time_frame, txc_kernel_size))
+            self.Atxcnns.append(torch.rand(22, 22, requires_grad=True,device=self.args.device))
             self.joint_cnns.append(
-                CNN_layer(joints_to_consider, joints_to_consider, txc_kernel_size, txc_dropout, True))
+                CNN_layer(joints_to_consider, joints_to_consider, txc_kernel_size, True))
 
     def forward(self, input_dict):
-
+        B, _, _ = input_dict['observed_pose'].shape
         x = self.preprocess(input_dict['observed_pose'])  # B, T, 66 # observed pose is cartesian coordinate
         x = x.reshape(x.shape[0], x.shape[1], self.args.n_major_joints, -1)
-        input = x.permute(0, 1, 3, 2)  # B, T, 3, 22
+        x = x.permute(0, 1, 3, 2)  # B, T, 3, 22
 
-        y = self.txcnns[0](input)
+        y = self.txcnns[0](x)
         for i in range(1, self.n_txcnn_layers):
-            y = y + self.txcnns[i](torch.cat((input, y), dim=1))
+            y = y + self.txcnns[i](torch.einsum('IJ,BTCJ->BTCI', self.Atxcnns[i - 1], torch.cat((x, y), dim=1)))
             y = y.permute(0, 3, 2, 1)
             y = y + self.joint_cnns[i - 1](y)
             y = y.permute(0, 3, 2, 1)
@@ -102,4 +93,7 @@ class ConstantBoneTcn(nn.Module):
         outputs = {
             'pred_pose': self.postprocess(input_dict['observed_pose'], y),  # B, T, 96
         }
+        # outputs = {
+        #     'pred_pose' : y
+        # }
         return outputs

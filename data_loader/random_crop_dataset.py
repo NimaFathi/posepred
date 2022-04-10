@@ -79,6 +79,8 @@ class RandomCropDataset(Dataset):
                 indexes = indexes + [(len(data) - 1, i)
                                      for i in range(0, len_seq - total_len + 1, seq_rate)]
 
+                # break
+
         self.obs_frames_num = self.len_observed
         self.future_frames_num = self.len_future
 
@@ -93,8 +95,10 @@ class RandomCropDataset(Dataset):
 
     def __len__(self):
         return len(self.indexes)
+        # return 50
 
     def __getitem__(self, index):
+        # index = 100
         data_index, seq_index = self.indexes[index]
         seq = self.data[data_index]
         outputs = {}

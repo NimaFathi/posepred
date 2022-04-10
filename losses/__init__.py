@@ -17,6 +17,8 @@ from .msr_gcn_loss import MSRGCNLoss
 from models.sts_gcn.sts_gcn_loss import STSGCNLoss
 from models.tcn.tcn_loss import TCNLoss
 from .potr_loss import POTRLoss
+from models.tcn.constant_bone_loss import CBLoss
+from models.st_transformer.st_transformer_loss import STTransformerLoss
 
 LOSSES = {'mse_vel': MSEVel,
           'mse_pose': MSEPose,
@@ -36,5 +38,7 @@ LOSSES = {'mse_vel': MSEVel,
           'msr_gcn':MSRGCNLoss,
           'potr': POTRLoss,
           'sts_gcn': STSGCNLoss,
-          'spherical_tcn': TCNLoss     
+          'spherical_tcn': TCNLoss,
+          'constant_bone_tcn': CBLoss,
+          'st_transformer_loss': STTransformerLoss
           }

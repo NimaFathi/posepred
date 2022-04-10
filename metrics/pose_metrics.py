@@ -20,6 +20,24 @@ def ADE(pred, target, dim, mask=None):
     ade = torch.mean(torch.sqrt(displacement))
     return ade
 
+# from models.tcn.data_proc_constant_bone import Postprocess
+# post = Postprocess()
+# def ADE(pred, target, dim, mask=None):
+#     """
+#     Average Displacement Error
+#     """
+#     pred = post(target, pred)
+#
+#
+#     keypoints_num = int(pred.shape[-1] / dim)
+#     pred = torch.reshape(pred, pred.shape[:-1] + (keypoints_num, dim))
+#     target = torch.reshape(target, target.shape[:-1] + (keypoints_num, dim))
+#     displacement = 0
+#     for d in range(dim):
+#         displacement += (pred[..., d] - target[..., d]) ** 2
+#     ade = torch.mean(torch.sqrt(displacement))
+#     return ade
+
 
 def FDE(pred, target, dim, mask=None):
     """

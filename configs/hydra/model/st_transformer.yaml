@@ -1,0 +1,20 @@
+defaults:
+  - _self_
+  - common
+
+type: st_transformer
+
+n_major_joints: 22
+diff_layers: 4
+diff_channels: 64
+diff_nheads: 8
+
+model_is_unconditional: 0
+model_timeemb: 128
+model_featureemb: 16
+
+
+device: &device ${device}
+
+loss:
+  type: st_transformer_loss

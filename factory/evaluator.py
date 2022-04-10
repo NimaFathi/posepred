@@ -25,6 +25,9 @@ class Evaluator:
         self.rounds_num = args.rounds_num
         self.device = args.device
 
+        print('total number of parameters of the network is: ' + str(
+            sum(p.numel() for p in model.parameters() if p.requires_grad)))
+
     def evaluate(self):
         logger.info('Evaluation started.')
         self.model.eval()
