@@ -9,7 +9,7 @@ class STTransformerLoss(nn.Module):
 
     def __init__(self, args):
         super().__init__()
-        self.pre = Preprocess(args).to('cuda')
+        # self.pre = Preprocess(args).to('cuda')
         self.args = args
         # self.output_normalizer = nn.BatchNorm1d(66, affine=False, track_running_stats=False)
 
