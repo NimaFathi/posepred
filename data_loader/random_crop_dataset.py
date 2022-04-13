@@ -3,12 +3,44 @@ import logging
 import os
 
 import jsonlines
+import numpy as np
 import torch
 from torch.utils.data import Dataset
 
 from path_definition import PREPROCESSED_DATA_DIR
 
 logger = logging.getLogger(__name__)
+
+
+def find_indices_256(frame_num1, frame_num2, seq_len, input_n=10):
+    """
+    Adapted from https://github.com/una-dinosauria/human-motion-prediction/blob/master/src/seq2seq_model.py#L478
+    which originaly from
+    In order to find the same action indices as in SRNN.
+    https://github.com/asheshjain399/RNNexp/blob/master/structural_rnn/CRFProblems/H3.6m/processdata.py#L325
+    """
+
+    # Used a fixed dummy seed, following
+    # https://github.com/asheshjain399/RNNexp/blob/srnn/structural_rnn/forecastTrajectories.py#L29
+    SEED = 1234567890
+    rng = np.random.RandomState(SEED)
+
+    T1 = frame_num1 - 150
+    T2 = frame_num2 - 150  # seq_len
+    idxo1 = None
+    idxo2 = None
+    for _ in np.arange(0, 128):
+        idx_ran1 = rng.randint(16, T1)
+        idx_ran2 = rng.randint(16, T2)
+        idxs1 = np.arange(idx_ran1 + 50 - input_n, idx_ran1 + 50 - input_n + seq_len)
+        idxs2 = np.arange(idx_ran2 + 50 - input_n, idx_ran2 + 50 - input_n + seq_len)
+        if idxo1 is None:
+            idxo1 = idxs1
+            idxo2 = idxs2
+        else:
+            idxo1 = np.vstack((idxo1, idxs1))
+            idxo2 = np.vstack((idxo2, idxs2))
+    return idxo1, idxo2
 
 
 class RandomCropDataset(Dataset):
@@ -25,7 +57,8 @@ class RandomCropDataset(Dataset):
                  seq_rate,
                  frame_rate,
                  len_observed,
-                 len_future):
+                 len_future,
+                 is_h36_testing):
 
         self.normalize = normalize
         total_len = (len_observed + len_future) * frame_rate
@@ -79,7 +112,13 @@ class RandomCropDataset(Dataset):
                 indexes = indexes + [(len(data) - 1, i)
                                      for i in range(0, len_seq - total_len + 1, seq_rate)]
 
-                # break
+        if is_h36_testing:
+            indexes = []
+            for i in range(0, len(data), 2):
+                idxo1, idxo2 = find_indices_256(data[i]['pose'].shape[0], data[i + 1]['pose'].shape[0],
+                                                len_observed + len_future, len_observed)
+                indexes = indexes + [(i, j) for j in idxo1[:, 0]]
+                indexes = indexes + [(i + 1, j) for j in idxo2[:, 0]]
 
         self.obs_frames_num = self.len_observed
         self.future_frames_num = self.len_future
@@ -95,10 +134,8 @@ class RandomCropDataset(Dataset):
 
     def __len__(self):
         return len(self.indexes)
-        # return 50
 
     def __getitem__(self, index):
-        # index = 100
         data_index, seq_index = self.indexes[index]
         seq = self.data[data_index]
         outputs = {}

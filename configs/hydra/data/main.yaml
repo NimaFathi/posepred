@@ -14,9 +14,10 @@ metric_pose_format: ${metric_pose_format}
 
 pose_formats: []
 
+is_h36_testing: false
 is_testing: false
 is_visualizing: false
-batch_size: 16
+batch_size: 1
 shuffle: true
 pin_memory: false
 num_workers: 4
