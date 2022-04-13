@@ -14,7 +14,7 @@ import copy
 
 from path_definition import PREPROCESSED_DATA_DIR
 from preprocessor.preprocessor import Processor
-from utils.others import expmap_to_quaternion, qfix, expmap_to_rotmat, expmap_to_euler, xyz_to_spherical
+from utils.others import expmap_to_quaternion, qfix, expmap_to_rotmat, expmap_to_euler
 
 logger = logging.getLogger(__name__)
 
@@ -24,27 +24,10 @@ SPLIT = {
     'test': ['S5']
 }
 
-connect = [
-    (11, 12), (12, 13), (13, 14), (14, 15),
-    (12, 25), (25, 26), (26, 27), (27, 29), (29, 30),
-    (12, 17), (17, 18), (18, 19), (19, 21), (21, 22),
-    (1, 2), (2, 3), (3, 4), (4, 5),
-    (6, 7), (7, 8), (8, 9), (9, 10)
-]
-
-const = [
-    (0, 11),
-    (0, 1), 
-    (0, 6)
-]
-
-S = np.array([c[0] for c in connect])
-E = np.array([c[1] for c in connect])
-
 
 class StanfordPreprocessor(Processor):
     def __init__(self, dataset_path, is_interactive, skip_frame_num,
-                 use_video_once, custom_name,obs_frame_num, pred_frame_num, save_total_frames):
+                 use_video_once, custom_name, obs_frame_num, pred_frame_num, save_total_frames):
         super(StanfordPreprocessor, self).__init__(dataset_path, is_interactive, 0,
                                                    0, skip_frame_num, use_video_once, custom_name, save_total_frames)
         assert self.is_interactive is False, 'human3.6m is not interactive'
@@ -80,7 +63,7 @@ class StanfordPreprocessor(Processor):
         if self.save_total_frames:
             list_format = ["total"]
         else:
-            list_format = ["xyz", "quaternion", "expmap", "rotmat", "euler", "spherical"]
+            list_format = ["xyz", "quaternion", "expmap", "rotmat", "euler"]
 
         for format_data in list_format:
             if self.custom_name:
@@ -94,121 +77,110 @@ class StanfordPreprocessor(Processor):
                 self.output_dir,
                 output_file_name
             )) is False, f"preprocessed file exists at {os.path.join(self.output_dir, output_file_name)}"
-            
 
         for subject in self.subjects:
             logger.info("handling subject: {}".format(subject))
-            for action in self.acts:
-                expmap = self.expmap_rep(action, subject, data_type)
-                positions = self.expmap2xyz_torch(torch.from_numpy(copy.deepcopy(expmap)).float())
-                rotmat = self.rotmat_rep(action, subject, data_type)
-                euler = self.euler_rep(action, subject, data_type)
+            for super_action in self.acts:
+                for sub_action in ['_1', '_2']:
+                    action = super_action + sub_action
+                    expmap = self.expmap_rep(action, subject, data_type)
+                    positions = self.expmap2xyz_torch(torch.from_numpy(copy.deepcopy(expmap)).float())
+                    rotmat = self.rotmat_rep(action, subject, data_type)
+                    euler = self.euler_rep(action, subject, data_type)
+                    quat = self.quaternion_rep(action, subject, data_type)
 
-                spherical = self.spherical_rep(positions[:, E] - positions[:, S])
-                quat = self.quaternion_rep(action, subject, data_type)
+                    expmap = expmap.reshape(expmap.shape[0], -1)
+                    positions = positions.reshape(positions.shape[0], -1)
+                    rotmat = rotmat.reshape(rotmat.shape[0], -1)
+                    euler = euler.reshape(euler.shape[0], -1)
+                    quat = quat.reshape(quat.shape[0], -1)
 
-                expmap = expmap.reshape(expmap.shape[0], -1)
-                positions = positions.reshape(positions.shape[0], -1)
-                rotmat = rotmat.reshape(rotmat.shape[0], -1)
-                euler = euler.reshape(euler.shape[0], -1)
-                spherical = spherical.reshape(spherical.shape[0], -1)
-                quat = quat.reshape(quat.shape[0], -1)
+                    if self.save_total_frames == False:
+                        total_frame_num = self.obs_frame_num + self.pred_frame_num
+                        section_range = positions.shape[0] // (
+                                total_frame_num * (
+                                    self.skip_frame_num + 1)) if self.use_video_once is False else 1  # TODO: remove condition
 
-                if self.save_total_frames == False:
-                    total_frame_num = self.obs_frame_num + self.pred_frame_num
-                    section_range = positions.shape[0] // (
-                            total_frame_num * (self.skip_frame_num + 1)) if self.use_video_once is False else 1 # TODO: remove condition
-                    
-                    for i in range(section_range):
-                        video_data = {
-                            'observed_xyz_pose': list(),
-                            'future_xyz_pose': list(),
-                            'observed_quaternion_pose': list(),
-                            'future_quaternion_pose': list(),
-                            'observed_expmap_pose': list(),
-                            'future_expmap_pose': list(),
-                            'observed_rotmat_pose': list(),
-                            'future_rotmat_pose': list(),
-                            'observed_euler_pose': list(),
-                            'future_euler_pose': list(),
-                            'observed_spherical_pose': list(),
-                            'future_spherical_pose': list()                            
-                        }
-                        for j in range(0, total_frame_num * (self.skip_frame_num + 1), self.skip_frame_num + 1):
-                            if j < (self.skip_frame_num + 1) * self.obs_frame_num:
-                                video_data['observed_xyz_pose'].append(
-                                    positions[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
-                                video_data['observed_quaternion_pose'].append(
-                                    quat[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
-                                video_data['observed_expmap_pose'].append(
-                                    expmap[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
-                                video_data['observed_rotmat_pose'].append(
-                                    rotmat[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
-                                video_data['observed_euler_pose'].append(
-                                    euler[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
-                                video_data['observed_spherical_pose'].append(
-                                    spherical[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
-                            else:
-                                video_data['future_xyz_pose'].append(
-                                    positions[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
-                                video_data['future_quaternion_pose'].append(
-                                    quat[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
-                                video_data['future_expmap_pose'].append(
-                                    expmap[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
-                                video_data['future_rotmat_pose'].append(
-                                    rotmat[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
-                                video_data['future_euler_pose'].append(
-                                    euler[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
-                                video_data['future_spherical_pose'].append(
-                                    spherical[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
+                        for i in range(section_range):
+                            video_data = {
+                                'observed_xyz_pose': list(),
+                                'future_xyz_pose': list(),
+                                'observed_quaternion_pose': list(),
+                                'future_quaternion_pose': list(),
+                                'observed_expmap_pose': list(),
+                                'future_expmap_pose': list(),
+                                'observed_rotmat_pose': list(),
+                                'future_rotmat_pose': list(),
+                                'observed_euler_pose': list(),
+                                'future_euler_pose': list()
+                            }
+                            for j in range(0, total_frame_num * (self.skip_frame_num + 1), self.skip_frame_num + 1):
+                                if j < (self.skip_frame_num + 1) * self.obs_frame_num:
+                                    video_data['observed_xyz_pose'].append(
+                                        positions[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
+                                    video_data['observed_quaternion_pose'].append(
+                                        quat[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
+                                    video_data['observed_expmap_pose'].append(
+                                        expmap[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
+                                    video_data['observed_rotmat_pose'].append(
+                                        rotmat[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
+                                    video_data['observed_euler_pose'].append(
+                                        euler[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
+                                else:
+                                    video_data['future_xyz_pose'].append(
+                                        positions[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
+                                    video_data['future_quaternion_pose'].append(
+                                        quat[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
+                                    video_data['future_expmap_pose'].append(
+                                        expmap[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
+                                    video_data['future_rotmat_pose'].append(
+                                        rotmat[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
+                                    video_data['future_euler_pose'].append(
+                                        euler[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
 
-
-                        for format_data in ["xyz", "quaternion", "expmap", "rotmat", "euler", "spherical"]:
-                            self.update_meta_data(self.meta_data, video_data['observed_xyz_pose'], 3)
-                            if self.custom_name:
-                                output_file_name = \
-                                    f'{data_type}_{format_data}_{self.custom_name}.jsonl'
-                            else:
-                                output_file_name = \
-                                    f'{data_type}_{format_data}_stanford3.6m.jsonl'
-                            with jsonlines.open(os.path.join(self.output_dir, output_file_name), mode='a') as writer:
-                                writer.write({
-                                    'video_section': f'{subject}-{action}-{i}',
-                                    'observed_pose': video_data[f'observed_{format_data}_pose'],
-                                    'future_pose': video_data[f'future_{format_data}_pose'],
-                                    'action': action
-                                })
-                else:
-                    video_data = {
-                        'xyz_pose': positions.tolist()[::self.skip_frame_num + 1],
-                        'quaternion_pose': quat.tolist()[::self.skip_frame_num + 1],
-                        'expmap_pose': expmap.tolist()[::self.skip_frame_num + 1],
-                        'rotmat_pose': rotmat.tolist()[::self.skip_frame_num + 1],
-                        'euler_pose': euler.tolist()[::self.skip_frame_num + 1],
-                        'spherical_pose': spherical.tolist()[::self.skip_frame_num + 1],
-                        'action': action
-                    }
-
-                    if self.custom_name:
-                        output_file_name = \
-                            f'{data_type}_total_{self.custom_name}.jsonl'
+                            for format_data in ["xyz", "quaternion", "expmap", "rotmat", "euler"]:
+                                self.update_meta_data(self.meta_data, video_data['observed_xyz_pose'], 3)
+                                if self.custom_name:
+                                    output_file_name = \
+                                        f'{data_type}_{format_data}_{self.custom_name}.jsonl'
+                                else:
+                                    output_file_name = \
+                                        f'{data_type}_{format_data}_stanford3.6m.jsonl'
+                                with jsonlines.open(os.path.join(self.output_dir, output_file_name), mode='a') as writer:
+                                    writer.write({
+                                        'video_section': f'{subject}-{action}-{i}',
+                                        'observed_pose': video_data[f'observed_{format_data}_pose'],
+                                        'future_pose': video_data[f'future_{format_data}_pose'],
+                                        'action': super_action
+                                    })
                     else:
-                        output_file_name = \
-                            f'{data_type}_total_stanford3.6m.jsonl'
+                        video_data = {
+                            'xyz_pose': positions.tolist()[::self.skip_frame_num + 1],
+                            'quaternion_pose': quat.tolist()[::self.skip_frame_num + 1],
+                            'expmap_pose': expmap.tolist()[::self.skip_frame_num + 1],
+                            'rotmat_pose': rotmat.tolist()[::self.skip_frame_num + 1],
+                            'euler_pose': euler.tolist()[::self.skip_frame_num + 1],
+                            'action': super_action
+                        }
 
+                        if self.custom_name:
+                            output_file_name = \
+                                f'{data_type}_total_{self.custom_name}.jsonl'
+                        else:
+                            output_file_name = \
+                                f'{data_type}_total_stanford3.6m.jsonl'
 
-                    self.update_meta_data(self.meta_data, video_data['xyz_pose'], 3)
-                    with jsonlines.open(os.path.join(self.output_dir, output_file_name), mode='a') as writer:
-                        writer.write({
-                            'video_section': f'{subject}-{action}',
-                            'action': f'{action}',
-                            'xyz_pose': video_data['xyz_pose'],
-                            'quaternion_pose': video_data['quaternion_pose'],
-                            'expmap_pose': video_data['expmap_pose'],
-                            'rotmat_pose': video_data['rotmat_pose'],
-                            'euler_pose': video_data['euler_pose'],
-                            'spherical_pose': video_data['spherical_pose']
-                        })
+                        self.update_meta_data(self.meta_data, video_data['xyz_pose'], 3)
+                        with jsonlines.open(os.path.join(self.output_dir, output_file_name), mode='a') as writer:
+                            writer.write({
+                                'video_section': f'{subject}-{action}',
+                                'action': f'{super_action}',
+                                'xyz_pose': video_data['xyz_pose'],
+                                'quaternion_pose': video_data['quaternion_pose'],
+                                'expmap_pose': video_data['expmap_pose'],
+                                'rotmat_pose': video_data['rotmat_pose'],
+                                'euler_pose': video_data['euler_pose']
+                            })
         self.save_meta_data(self.meta_data, self.output_dir, True, data_type)
 
     def expmap_rep(self, action, subject, data_type):
@@ -226,9 +198,6 @@ class StanfordPreprocessor(Processor):
         data = data.reshape(data.shape[0], -1, 3)[:, 1:]
         data = expmap_to_euler(data)
         return data
-
-    def spherical_rep(self, positions):
-        return xyz_to_spherical(positions)
 
     def quaternion_rep(self, action, subject, data_type):
         data = self.expmap_rep(action, subject, data_type)
@@ -358,20 +327,23 @@ class StanfordPreprocessor(Processor):
         Read an individual file in expmap format,
         and return a NumPy tensor with shape (sequence length, number of joints, 3).
         '''
+        action_number = action[-1]
+        action = action[:-2]
         action = action.replace('WalkTogether', 'WalkingTogether').replace(
             'WalkDog', 'WalkingDog')
         if action.lower().__contains__('photo'):
             action = 'TakingPhoto'
-        action_number = 1 if len(action.split(" ")) == 2 else 2
+
         path_to_read = os.path.join(rot_dir_path, 'dataset', subject,
                                     f'{action.split(" ")[0].lower()}_{action_number}.txt')
+
         data = []
         with open(path_to_read, 'r') as csvfile:
             reader = csv.reader(csvfile, delimiter=',')
             for row in reader:
                 data.append(row)
         data = np.array(data, dtype='float64')
-        
+
         return data
 
     @staticmethod
@@ -379,4 +351,3 @@ class StanfordPreprocessor(Processor):
         output_directory = os.path.join(PREPROCESSED_DATA_DIR, 'H3.6m_rotations')
         h36_folder = os.path.join(output_directory, 'h3.6m')
         os.remove(h36_folder + ".zip")
-
