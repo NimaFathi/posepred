@@ -262,3 +262,6 @@ jobs
 
 # Mlflow
 mlruns/
+
+viz.ipynb
+viz/
