@@ -138,7 +138,7 @@ class Trainer:
         self.model.eval()
         self.valid_reporter.start_time = time.time()
         pose_key = None
-        epoch_loss = 0. 0
+        epoch_loss = 0.0
         for data in self.valid_dataloader:
             data = dict_to_device(data, self.args.device)
             batch_size = data['observed_pose'].shape[0]
