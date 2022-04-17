@@ -51,6 +51,7 @@ class Trainer:
             'obs_frames_num': args.obs_frames_num,
             'pred_frames_num': args.pred_frames_num,
             **dict(args.data),
+            'save_dir': args.save_dir
         }
         del params['type']
 
