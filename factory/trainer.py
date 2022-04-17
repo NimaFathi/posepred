@@ -55,6 +55,7 @@ class Trainer:
             'pred_frames_num': args.pred_frames_num,
             'tag': args.experiment_tag
             **dict(args.data),
+            'save_dir': args.save_dir
         }
         del params['type']
 
