@@ -32,7 +32,7 @@ class Trainer:
         self.use_validation = False if valid_dataloader is None else True
 
         mlflow.set_tracking_uri(os.path.join(ROOT_DIR, 'mlruns'))
-        mlflow.set_experiment(args.experiment_name)
+        mlflow.set_experiment(args.experiment_name if args.experiment_name else args.model.type)
            
         self.run = mlflow.start_run()
 
