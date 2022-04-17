@@ -19,7 +19,7 @@ normalize: false
 load_path:
 save_dir:
 experiment_name: Default
-
+experiment_tag:
 # added
 obs_frames_num: ???
 pred_frames_num: ???
