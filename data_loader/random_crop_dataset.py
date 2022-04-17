@@ -8,7 +8,8 @@ import torch
 from torch.utils.data import Dataset
 
 from path_definition import PREPROCESSED_DATA_DIR
-
+from data_augmentation.interpolation import Interpolate
+import random
 logger = logging.getLogger(__name__)
 
 
@@ -132,6 +133,9 @@ class RandomCropDataset(Dataset):
         self.use_mask = use_mask
         self.is_visualizing = is_visualizing
 
+        self.interpolate = Interpolate(0.9)
+        self.p = 0.5
+
     def __len__(self):
         return len(self.indexes)
 
@@ -152,6 +156,8 @@ class RandomCropDataset(Dataset):
         for k in output_keys:
             temp_seq = seq[k][seq_index:seq_index + self.total_len]
             temp_seq = temp_seq[::self.frame_rate]
+            if random.uniform(0, 1) < self.p:
+                temp_seq = self.interpolate(temp_seq)
             outputs["observed_" + k] = temp_seq[:self.len_observed]
             outputs["future_" + k] = temp_seq[self.len_observed:]
 
