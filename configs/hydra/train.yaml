@@ -18,6 +18,7 @@ use_dct: false
 normalize: false
 load_path:
 save_dir:
+experiment_name:
 
 # added
 obs_frames_num: ???
