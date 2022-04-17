@@ -260,6 +260,7 @@ jobs
 # Images
 *.jpg
 *.png
+viz.ipynb
 
 # Mlflow
 mlruns/
