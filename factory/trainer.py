@@ -11,7 +11,9 @@ from utils.reporter import Reporter
 from utils.save_load import save_snapshot
 torch.autograd.set_detect_anomaly(True)
 logger = logging.getLogger(__name__)
-
+import mlflow
+import mlflow.pytorch
+from path_definition import *
 
 class Trainer:
     def __init__(self, args, train_dataloader, valid_dataloader, model, loss_module, optimizer, optimizer_args,
@@ -28,6 +30,31 @@ class Trainer:
         self.valid_reporter = valid_reporter
         self.tensor_board = SummaryWriter(args.save_dir)
         self.use_validation = False if valid_dataloader is None else True
+
+        mlflow.set_tracking_uri(os.path.join(ROOT_DIR, 'mlruns'))
+        mlflow.set_experiment(args.experiment_name)
+           
+        self.run = mlflow.start_run()
+
+        config_path = os.path.join(os.getcwd(), '.hydra', 'config.yaml')
+        mlflow.log_artifact(config_path)
+
+        params = {
+            'model': args.model.type,
+            **dict(args.model),
+            'optimizer': args.optimizer.type,
+            **dict(args.optimizer),
+            'loss': args.model.loss.type,
+            **dict(args.model.loss),
+            'scheduler': args.scheduler.type,
+            **dict(args.scheduler),
+            'obs_frames_num': args.obs_frames_num,
+            'pred_frames_num': args.pred_frames_num
+        }
+        del params['type']
+
+        mlflow.log_params(params)
+        mlflow.end_run()
 
     def train(self):
         logger.info("Training started.")
@@ -57,6 +84,7 @@ class Trainer:
                                     self.valid_reporter.history, self.use_validation)
             # if self.use_validation and
         self.tensor_board.close()
+        
         logger.info("-" * 100)
         logger.info('Training is completed in %.2f seconds.' % (time.time() - time0))
 
@@ -138,7 +166,7 @@ class Trainer:
         self.model.eval()
         self.valid_reporter.start_time = time.time()
         pose_key = None
-        epoch_loss = 0. 0
+        epoch_loss = 0.0
         for data in self.valid_dataloader:
             data = dict_to_device(data, self.args.device)
             batch_size = data['observed_pose'].shape[0]
