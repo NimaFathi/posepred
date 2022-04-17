@@ -212,8 +212,8 @@ class CSDI_H36M(CSDI_base):
         for p in self.postprocess.parameters():
             p.requires_grad = False
 
-        self.input_normalizer = nn.BatchNorm1d(args.keypoint_dim * args.n_major_joints)
-        self.output_normalizer = nn.BatchNorm1d(args.keypoint_dim * args.n_major_joints, affine=True, track_running_stats=False)
+        # self.input_normalizer = nn.BatchNorm1d(args.keypoint_dim * args.n_major_joints)
+        # self.output_normalizer = nn.BatchNorm1d(args.keypoint_dim * args.n_major_joints)
 
     def preprocess_data(self, batch):
         observed_data = batch["observed_pose"].to(self.device)

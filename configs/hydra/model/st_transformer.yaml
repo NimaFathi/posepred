@@ -5,7 +5,7 @@ defaults:
 type: st_transformer
 
 n_major_joints: 22
-diff_layers: 4
+diff_layers: 3
 diff_channels: 64
 diff_nheads: 8
 

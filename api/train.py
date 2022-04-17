@@ -25,6 +25,7 @@ def train(cfg: DictConfig):
         raise Exception(msg)
 
     train_dataloader = get_dataloader(cfg.train_dataset, cfg.data)
+    cfg.data.is_testing = True
     valid_dataloader = get_dataloader(cfg.valid_dataset, cfg.data)
 
     if cfg.load_path is not None:
