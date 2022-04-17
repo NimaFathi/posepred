@@ -137,31 +137,41 @@ You can change preprocessor via commandline like below:
 ```  
 usage: python -m api.preprocess  	[official_annotation_path] [dataset] [data_type]                          	
 	                                [obs_frames_num] [pred_frames_num] [keypoint_dim]
-				        [use_video_once] [skip_num] [interactive]  
+				                    [use_video_once] [skip_num] [interactive]  
 	                             	[annotate_openpifpaf] [annotate] [image_dir]
 	                             	[output_name]
   
 mandatory arguments:  
-  official_annotation_path        Name of using dataset Ex: 'posetrack' or '3dpw' (str)  
-  dataset             Name of Dataset []  
-  data_type          Type of data to use Ex: 'train', 'validation' or 'test' (str)  
-  obs_frames_num      Number of frames to observe (int)  
-  pred_frames_num     Number of frames to predict (int)    
-  keypoint_dim        Number of dim data should have Ex: 2 for 2D and 3 for 3D (int)  
+  - official_annotation_path  Name of using dataset Ex: 'posetrack' or '3dpw' (str)  
+  - dataset             Name of Dataset []  
+  - data_type           Type of data to use Ex: 'train', 'validation' or 'test' (str)  
+  - obs_frames_num      Number of frames to observe (int)  
+  - pred_frames_num     Number of frames to predict (int)    
+  - keypoint_dim        Number of dim data should have Ex: 2 for 2D and 3 for 3D (int) 
     
 optional arguments:  
-  interactive         Use interactions between persons (bool)
-  annotate		    (only for JAAD and PIE) Implies that to use dataset_path as annotation path or a path to images. in this context, we generate annotations using openpifpaf then create static files afterward. (bool)
-  image_dir           (only for JAAd and PIE) define this parameter if annotate = True and it implies the directory for images to creat annotation based on. (str)
-  annotation_path     (only for JAAD and PIE) define this parameter if annotate = False and it indicates the path to annotations. (str)  
-  skip_num        	Number of frame to skip between each two used frames (int) (0 implies no skip) (str)
-  use_video_once      Use whole video just once or use until last frame (bool) (default: false)  
-  output_name         Name of generated csv file (str) (for default we have specific conventions for each dataset)
+  - interactive         Use interactions between persons (bool)
+  - annotate		    (only for JAAD and PIE) Implies that to use dataset_path as annotation path or a path to images. in this context, we generate annotations using openpifpaf then create static files afterward. (bool)
+  - image_dir           (only for JAAd and PIE) define this parameter if annotate = True and it implies the directory for images to creat annotation based on. (str)
+  - annotation_path     (only for JAAD and PIE) define this parameter if annotate = False and it indicates the path to annotations. (str)  
+  - skip_num        	Number of frame to skip between each two used frames (int) (0 implies no skip) (str)
+  - use_video_once      Use whole video just once or use until last frame (bool) (default: false)  
+  - output_name         Name of generated csv file (str) (for default we have specific conventions for each dataset)
+  - save_total_frames   This value must be 'true' for random_crop_dataset and flase for other datasets (bool) (default: false)
   
 ```  
 Example:  
 ```bash
-python3 -m api.preprocess dataset=<dataset_name> official_annotation_path=<path_to_dataset> skip_num=<skip_number> obs_frames_num=<number_of_observed_frames> pred_frames_num=<number_of_predicted_frames> keypoint_dim=<number_of_keypoints> data_type=<data_type> interactive=<interactive_true_or_false>
+python -m api.preprocess \
+    dataset=stanford3.6m \
+    official_annotation_path=$DATASET_PATH \
+    data_type=train \
+    keypoint_dim=3 \
+    interactive=false \
+    output_name=new_full \
+    save_total_frames=true \
+    obs_frames_num=10 \
+    pred_frames_num=25
 ```
   
 ## Training
@@ -176,29 +186,51 @@ usage: python -m api.train      [data] [model] [optimizer] [scheduler]
 				[snapshot_interval] [load_path] [save_dir] 
 
 mandatory arguments:
-  data			Name of the dataloader yaml file, default is main dataloader (str)
-  model			Name of the model yaml file (str)
-  optimizer		Name of the optimizer yaml file, default is adam (str)
-  scheduler		Name of the scheduler yaml file, default is reduce_lr_on_plateau (str)
-  train_dataset         Name of train dataset Ex: 'posetrack' or '3dpw' (str)   
+  data                  Name of the dataloader yaml file, default is main dataloader (str)
+  model                 Name of the model yaml file (str)
+  optimizer             Name of the optimizer yaml file, default is adam (str)
+  scheduler             Name of the scheduler yaml file, default is reduce_lr_on_plateau (str)
+  train_dataset         Path of the train dataset (str)   
   keypoint_dim          Dimension of the data Ex: 2 for 2D and 3 for 3D (int)  
-  epochs 	      	Number of training epochs (int)
-						   
+  epochs                Number of training epochs (int)
+
 optional arguments:
-  valid_dataset       Name of validation dataset Ex: 'posetrack' or '3dpw' (str)    
-  use_mask 		Consider visibility mask (bool)
-  use_dct 		Consider using dct (bool)
-  normalize		Normalize the data or not (bool)
-  is_noisy		Whether data is noisy or not (bool)
-  snapshot_interval 	Save snapshot every N epochs (int)
-  load_path  		Path to load a model (str) 
-  start_epoch	  	Start epoch (int)
-  device		Choose either 'cpu' or 'gpu' (str)
+  - valid_dataset       Path of validation dataset (str)    
+  - use_mask            Consider visibility mask (bool)
+  - use_dct             Consider using dct (bool)
+  - normalize           Normalize the data or not (bool)
+  - snapshot_interval 	Save snapshot every N epochs (int)
+  - load_path           Path to load a model (str) 
+  - start_epoch	  	    Start epoch (int)
+  - device              Choose either 'cpu' or 'cuda' (str)
+  - obs_frames_num      Number of observed frames for random_crop dataset (int) (default: 10)
+  - pred_frames_num     Number of future frames for random_crop dataset (int) (default:25)
+  - model_pose_format   Used data format for random_crop dataset (str) (defautl: total -> for more information see the Data section)
+  - metric_pose_format  Used data format for metrics if random_crop dataset is used. If no value is specified it'll use the model_pose_format's value
+  - experiment_name:    Experiment name for MLFlow (str) (default: "defautl experiment")
+  - mlflow_tracking_uri:  Path for mlruns folder for MLFlow (str) (default: saves mlruns in the current folder)
+
 ```  
 
 Example:
 ```bash  
-python -m api.train model=<model_name> keypoint_dim=3 train_dataset=<path_to_dataset> valid_dataset=<path_to_dataset> epochs=250 data.shuffle=True device=gpu snapshot_interval=10 hydra.run.dir=<path_to_output>
+python -m api.train model=history_repeats_itself \
+          keypoint_dim=3 \
+          train_dataset=$DATASET_TRAIN_PATH valid_dataset=$DATASET_TEST_PATH \
+          epochs=10 \
+          data.shuffle=True device=cuda snapshot_interval=1 \
+          hydra.run.dir=$OUTPUT_PATH \
+          data.is_random_crop=True \
+          data.batch_size=256 \
+          data.num_workers=10 \
+          data.seq_rate=2 \
+          obs_frames_num=50 \
+          pred_frames_num=25 \
+          model_pose_format=xyz \
+          metric_pose_format=xyz \
+          optimizer=adam \
+          optimizer.lr=0.007 \
+          experiment_name=his_encoder
 ```  
 ```bash  
 python -m api.train model=<model_name> keypoint_dim=3 train_dataset=<path_to_dataset> valid_dataset=<path_to_dataset> epochs=250 data.batch_size=32 optimizer.lr=0.01 scheduler.factor=0.8
