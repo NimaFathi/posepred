@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 import mlflow
 import mlflow.pytorch
 from path_definition import *
+from os.path import join
 
 class Trainer:
     def __init__(self, args, train_dataloader, valid_dataloader, model, loss_module, optimizer, optimizer_args,
@@ -30,8 +31,8 @@ class Trainer:
         self.valid_reporter = valid_reporter
         self.tensor_board = SummaryWriter(args.save_dir)
         self.use_validation = False if valid_dataloader is None else True
-
-        mlflow.set_tracking_uri(os.path.join(ROOT_DIR, 'mlruns'))
+        
+        mlflow.set_tracking_uri(join(args.mlflow_tracking_uri, 'mlruns') if args.mlflow_tracking_uri else join(ROOT_DIR, 'mlruns'))
         mlflow.set_experiment(args.experiment_name if args.experiment_name else args.model.type)
            
         self.run = mlflow.start_run()
