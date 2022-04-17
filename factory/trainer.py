@@ -54,7 +54,7 @@ class Trainer:
         del params['type']
 
         mlflow.log_params(params)
-        mlflow.end_run()
+        
 
     def train(self):
         logger.info("Training started.")
@@ -84,6 +84,7 @@ class Trainer:
                                     self.valid_reporter.history, self.use_validation)
             # if self.use_validation and
         self.tensor_board.close()
+        mlflow.end_run()
         
         logger.info("-" * 100)
         logger.info('Training is completed in %.2f seconds.' % (time.time() - time0))
@@ -159,7 +160,7 @@ class Trainer:
 
             self.train_reporter.update(report_attrs, batch_size)
 
-        self.train_reporter.epoch_finished(self.tensor_board)
+        self.train_reporter.epoch_finished(self.tensor_board, mlflow)
         self.train_reporter.print_values(logger, self.model.args.use_mask)
 
     def __validate(self):
@@ -219,5 +220,5 @@ class Trainer:
             self.best_state_dict = True
             self.best_loss = epoch_loss
 
-        self.valid_reporter.epoch_finished(self.tensor_board)
+        self.valid_reporter.epoch_finished(self.tensor_board, mlflow)
         self.valid_reporter.print_values(logger, self.model.args.use_mask)
