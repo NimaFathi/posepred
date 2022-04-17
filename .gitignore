@@ -256,3 +256,6 @@ jobs
 **/*.sh
 **/.ipynb_checkpoints/
 viz.ipynb
+
+# Mlflow
+mlruns/
