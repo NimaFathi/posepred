@@ -105,14 +105,36 @@ To fulfill mentioned purpose You should run preprocessing api called `preprocess
 
 Example:  
 ```bash  
-python -m api.preprocess dataset=somof_3dpw official_annotation_path=<path_to_dataset> data_type=train keypoint_dim=3 skip_num=1 obs_frames_num=16 pred_frames_num=14 interactive=false
+python -m api.preprocess \
+    dataset=stanford3.6m \
+    official_annotation_path=$DATASET_PATH \
+    data_type=train \
+    keypoint_dim=3 \
+    interactive=false \
+    output_name=new_full \
+    save_total_frames=true \
+    obs_frames_num=10 \
+    pred_frames_num=25
 ```  
 See [here](https://github.com/vita-epfl/posepred/blob/master/ARGS_README.md#preprocessing) for more details about preprocessing arguments.
   
 ## Training
 Train models from scratch:
 ```bash  
-python -m api.train model=<model_name> keypoint_dim=3 train_dataset=<path_to_dataset> valid_dataset=<path_to_dataset> epochs=250 data.shuffle=True device=gpu snapshot_interval=10 hydra.run.dir=<path_to_output>
+python -m api.train model=history_repeats_itself \
+          keypoint_dim=3 \
+          train_dataset=$DATASET_TRAIN_PATH \
+          valid_dataset=$DATASET_TEST_PATH \
+          epochs=10 \
+          data.shuffle=True \
+          device=cuda \
+          snapshot_interval=1 \
+          hydra.run.dir=$OUTPUT_PATH \
+          data.batch_size=256 \
+          data.num_workers=10 \
+          obs_frames_num=50 \
+          pred_frames_num=25 \
+          experiment_name=his_encoder
 ```  
 
 Provide **validation_dataset** to adjust learning-rate and report metrics on validation-dataset as well.
