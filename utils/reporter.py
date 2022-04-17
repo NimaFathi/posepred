@@ -27,8 +27,10 @@ class Reporter:
         for attr in attrs:
             self.attrs[attr] = AverageMeter()
         self.history = {}
+        self.min_attrs = {}
         for attr in attrs:
             self.history[attr] = []
+            self.min_attrs[attr] = float('inf')
         self.history['time'] = []
 
     def update(self, attrs, batch_size, dynamic=False, counts=None):
@@ -44,14 +46,21 @@ class Reporter:
             else:
                 self.attrs.get(key).update(value, batch_size)
 
-    def epoch_finished(self, tb=None):
+    def epoch_finished(self, tb=None, mf=None):
         self.history.get('time').append(time.time() - self.start_time)
         for key, avg_meter in self.attrs.items():
             value = avg_meter.get_average()
             value = value.detach().cpu().numpy() if torch.is_tensor(value) else value
             self.history.get(key).append(float(value))
+
+            if self.min_attrs[key] > value:
+                self.min_attrs[key] = value
+
             if tb is not None:
                 tb.add_scalar(self.state + '_' + key, float(value), len(self.history.get(key)))
+            if mf is not None:
+                mf.log_metric(self.state + '_' + key, float(value), len(self.history.get(key)))
+                mf.log_metric(self.state + '_best_' + key, float(self.min_attrs.get(key)), len(self.history.get(key)))
         self.reset_avr_meters()
 
     def reset_avr_meters(self):

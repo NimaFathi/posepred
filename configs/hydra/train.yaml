@@ -18,6 +18,8 @@ use_dct: false
 normalize: false
 load_path:
 save_dir:
+experiment_name:
+mlflow_tracking_uri:
 
 # added
 obs_frames_num: ???
