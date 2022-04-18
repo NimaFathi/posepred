@@ -135,7 +135,7 @@ class RandomCropDataset(Dataset):
         self.is_h36_testing = is_h36_testing
         print(dataset_path, is_testing, is_h36_testing)
 
-        self.interpolate = RandomInterpolate(0.9, 0.5)
+        self.interpolate = RandomInterpolate(0.9)
 
     def __len__(self):
         return len(self.indexes)
@@ -143,8 +143,10 @@ class RandomCropDataset(Dataset):
     def __getitem__(self, index):
 
         random_reverse = np.random.choice([False, True])
+        random_interpolate = np.random.choice([False, True])
         if self.is_testing or self.is_h36_testing:
             random_reverse = False
+            random_interpolate = False
 
         data_index, seq_index = self.indexes[index]
         seq = self.data[data_index]
@@ -164,7 +166,9 @@ class RandomCropDataset(Dataset):
             if random_reverse:
                 temp_seq = torch.flip(temp_seq, [0])
             temp_seq = temp_seq[::self.frame_rate]
-            temp_seq = self.interpolate(temp_seq)
+            if random_interpolate and k in ['metric_pose', 'pose']:
+                temp_seq = self.interpolate(temp_seq)
+
             outputs["observed_" + k] = temp_seq[:self.len_observed]
             outputs["future_" + k] = temp_seq[self.len_observed:]
 
