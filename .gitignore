@@ -253,6 +253,7 @@ results
 tmp/
 jobs
 **/slurm*
+**/*.out
 **/*.sh
 **/.ipynb_checkpoints/
 
