@@ -216,9 +216,11 @@ Example:
 ```bash  
 python -m api.train model=history_repeats_itself \
           keypoint_dim=3 \
-          train_dataset=$DATASET_TRAIN_PATH valid_dataset=$DATASET_TEST_PATH \
+          train_dataset=$DATASET_TRAIN_PATH \
+          valid_dataset=$DATASET_TEST_PATH \
           epochs=10 \
-          data.shuffle=True device=cuda snapshot_interval=1 \
+          data.shuffle=True device=cuda \
+          snapshot_interval=1 \
           hydra.run.dir=$OUTPUT_PATH \
           data.is_random_crop=True \
           data.batch_size=256 \
