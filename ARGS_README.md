@@ -41,6 +41,8 @@ Mandatory arguments:
 keypoint_dim:               Number of dim data should have Ex: 2 for 2D and 3 for 3D (int)  
 is_interactive:             Use interactions between persons (bool) (default: False)
 is_noisy:                   Use noisy data_loader `data_loader/noisy_solitary_dataset.py` (bool) (default: False) 
+is_random_crop:             Use random_crop (dynamic) data_loader (bool) (default: False)
+is_solitary:                Use Solitary data_loader (bool) (default: False) 
 noise_rate:                 A float number to indicate percentage of uniform noisy values or 'mask' to use mask values as noise (float or str) (default: mask)
 use_mask:                   Set True To use mask in dataloader and model (bool)
 use_quaternion:             Set True To use quaternion representation (based on model) (bool) (default: False)
@@ -56,6 +58,8 @@ optional arguments:
 overfit:                    Set True to create a dataloader with small size for testing overfitting (bool)
 noise_keypoint:             Index of specific keypoint you want to make noisy. (int)
 metadata_path:              path to metadata, obligatory when normalize=True
+seq_rate:                   The gap between start of two adjacent sequences (1 means no gap) (int) (default: 1) (only used for random_crop data_loader) 
+frame_rate:                 The gap between two frames (1 means no gap) (int) (default: 2) (only used for random_crop data_loader) 
 ```
 #### model
 Folder Location: 'configs/hydra/model'
@@ -137,31 +141,41 @@ You can change preprocessor via commandline like below:
 ```  
 usage: python -m api.preprocess  	[official_annotation_path] [dataset] [data_type]                          	
 	                                [obs_frames_num] [pred_frames_num] [keypoint_dim]
-				        [use_video_once] [skip_num] [interactive]  
+				                    [use_video_once] [skip_num] [interactive]  
 	                             	[annotate_openpifpaf] [annotate] [image_dir]
-	                             	[output_name]
+	                             	[output_name] [save_total_frames]
   
 mandatory arguments:  
-  official_annotation_path        Name of using dataset Ex: 'posetrack' or '3dpw' (str)  
-  dataset             Name of Dataset []  
-  data_type          Type of data to use Ex: 'train', 'validation' or 'test' (str)  
-  obs_frames_num      Number of frames to observe (int)  
-  pred_frames_num     Number of frames to predict (int)    
-  keypoint_dim        Number of dim data should have Ex: 2 for 2D and 3 for 3D (int)  
+  - official_annotation_path  Name of using dataset Ex: 'posetrack' or '3dpw' (str)  
+  - dataset             Name of Dataset []  
+  - data_type           Type of data to use Ex: 'train', 'validation' or 'test' (str)  
+  - obs_frames_num      Number of frames to observe (int)  
+  - pred_frames_num     Number of frames to predict (int)    
+  - keypoint_dim        Number of dim data should have Ex: 2 for 2D and 3 for 3D (int) 
     
 optional arguments:  
-  interactive         Use interactions between persons (bool)
-  annotate		    (only for JAAD and PIE) Implies that to use dataset_path as annotation path or a path to images. in this context, we generate annotations using openpifpaf then create static files afterward. (bool)
-  image_dir           (only for JAAd and PIE) define this parameter if annotate = True and it implies the directory for images to creat annotation based on. (str)
-  annotation_path     (only for JAAD and PIE) define this parameter if annotate = False and it indicates the path to annotations. (str)  
-  skip_num        	Number of frame to skip between each two used frames (int) (0 implies no skip) (str)
-  use_video_once      Use whole video just once or use until last frame (bool) (default: false)  
-  output_name         Name of generated csv file (str) (for default we have specific conventions for each dataset)
+  - interactive         Use interactions between persons (bool)
+  - annotate		    (only for JAAD and PIE) Implies that to use dataset_path as annotation path or a path to images. in this context, we generate annotations using openpifpaf then create static files afterward. (bool)
+  - image_dir           (only for JAAd and PIE) define this parameter if annotate = True and it implies the directory for images to creat annotation based on. (str)
+  - annotation_path     (only for JAAD and PIE) define this parameter if annotate = False and it indicates the path to annotations. (str)  
+  - skip_num        	Number of frame to skip between each two used frames (int) (0 implies no skip) (str)
+  - use_video_once      Use whole video just once or use until last frame (bool) (default: false)  
+  - output_name         Name of generated csv file (str) (for default we have specific conventions for each dataset)
+  - save_total_frames   This value must be 'true' for random_crop_dataset and flase for other datasets (bool) (default: false)
   
 ```  
 Example:  
 ```bash
-python3 -m api.preprocess dataset=<dataset_name> official_annotation_path=<path_to_dataset> skip_num=<skip_number> obs_frames_num=<number_of_observed_frames> pred_frames_num=<number_of_predicted_frames> keypoint_dim=<number_of_keypoints> data_type=<data_type> interactive=<interactive_true_or_false>
+python -m api.preprocess \
+    dataset=stanford3.6m \
+    official_annotation_path=$DATASET_PATH \
+    data_type=train \
+    keypoint_dim=3 \
+    interactive=false \
+    output_name=new_full \
+    save_total_frames=true \
+    obs_frames_num=10 \
+    pred_frames_num=25
 ```
   
 ## Training
@@ -170,38 +184,62 @@ Check training config file: "configs/hydra/train.yaml" for more details.
 You can change training args via command line like below:
 ```  
 usage: python -m api.train      [data] [model] [optimizer] [scheduler]
-				[train_dataset] [valid_dataset] [keypoint_dim] 
+				            [train_dataset] [valid_dataset] [keypoint_dim] 
                            	[epochs] [start_epoch] [device]
                            	[use_mask] [use_dct] [normalize] [is_noisy]
-				[snapshot_interval] [load_path] [save_dir] 
+				            [snapshot_interval] [load_path] [save_dir]
+                            [obs_frames_num] [pred_frames_num]
+                            [model_pose_format] [metric_pose_format]
+                            [experiment_name] [mlflow_tracking_uri]
 
 mandatory arguments:
-  data			Name of the dataloader yaml file, default is main dataloader (str)
-  model			Name of the model yaml file (str)
-  optimizer		Name of the optimizer yaml file, default is adam (str)
-  scheduler		Name of the scheduler yaml file, default is reduce_lr_on_plateau (str)
-  train_dataset         Name of train dataset Ex: 'posetrack' or '3dpw' (str)   
+  data                  Name of the dataloader yaml file, default is main dataloader (str)
+  model                 Name of the model yaml file (str)
+  optimizer             Name of the optimizer yaml file, default is adam (str)
+  scheduler             Name of the scheduler yaml file, default is reduce_lr_on_plateau (str)
+  train_dataset         Path of the train dataset (str)   
   keypoint_dim          Dimension of the data Ex: 2 for 2D and 3 for 3D (int)  
-  epochs 	      	Number of training epochs (int)
-						   
+  epochs                Number of training epochs (int)
+
 optional arguments:
-  valid_dataset       Name of validation dataset Ex: 'posetrack' or '3dpw' (str)    
-  use_mask 		Consider visibility mask (bool)
-  use_dct 		Consider using dct (bool)
-  normalize		Normalize the data or not (bool)
-  is_noisy		Whether data is noisy or not (bool)
-  snapshot_interval 	Save snapshot every N epochs (int)
-  load_path  		Path to load a model (str) 
-  start_epoch	  	Start epoch (int)
-  device		Choose either 'cpu' or 'gpu' (str)
+  - valid_dataset       Path of validation dataset (str)    
+  - use_mask            Consider visibility mask (bool)
+  - use_dct             Consider using dct (bool)
+  - normalize           Normalize the data or not (bool)
+  - snapshot_interval 	Save snapshot every N epochs (int)
+  - load_path           Path to load a model (str) 
+  - start_epoch	  	    Start epoch (int)
+  - device              Choose either 'cpu' or 'cuda' (str)
+  - obs_frames_num      Number of observed frames for random_crop dataset (int) (default: 10)
+  - pred_frames_num     Number of future frames for random_crop dataset (int) (default:25)
+  - model_pose_format   Used data format for random_crop dataset (str) (defautl: total -> for more information see the Data section)
+  - metric_pose_format  Used data format for metrics if random_crop dataset is used. If no value is specified it'll use the model_pose_format's value
+  - experiment_name:    Experiment name for MLFlow (str) (default: "defautl experiment")
+  - mlflow_tracking_uri:  Path for mlruns folder for MLFlow (str) (default: saves mlruns in the current folder)
+
 ```  
 
 Example:
 ```bash  
-python -m api.train model=<model_name> keypoint_dim=3 train_dataset=<path_to_dataset> valid_dataset=<path_to_dataset> epochs=250 data.shuffle=True device=gpu snapshot_interval=10 hydra.run.dir=<path_to_output>
-```  
-```bash  
-python -m api.train model=<model_name> keypoint_dim=3 train_dataset=<path_to_dataset> valid_dataset=<path_to_dataset> epochs=250 data.batch_size=32 optimizer.lr=0.01 scheduler.factor=0.8
+python -m api.train model=history_repeats_itself \
+          keypoint_dim=3 \
+          train_dataset=$DATASET_TRAIN_PATH \
+          valid_dataset=$DATASET_TEST_PATH \
+          epochs=10 \
+          data.shuffle=True device=cuda \
+          snapshot_interval=1 \
+          hydra.run.dir=$OUTPUT_PATH \
+          data.is_random_crop=True \
+          data.batch_size=256 \
+          data.num_workers=10 \
+          data.seq_rate=2 \
+          obs_frames_num=50 \
+          pred_frames_num=25 \
+          model_pose_format=xyz \
+          metric_pose_format=xyz \
+          optimizer=adam \
+          optimizer.lr=0.007 \
+          experiment_name=his_encoder
 ```  
 
 ## Evaluation
@@ -211,26 +249,61 @@ You can change evaluation args via command line like below:
 ``` 
 usage: python -m api.evaluate      [data] [model] [dataset] [keypoint_dim] 
                               	   [use_mask] [normalize] [is_noisy]
-                              	   [device] [rounds_num] [load_path]
+                              	   [device] [rounds_num] [load_path] 
+                                   [obs_frames_num] [pred_frames_num] 
+                                   [model_pose_format] [metric_pose_format]
 
 mandatory arguments:
-  data			Name of the dataloader yaml file, default is main dataloader (str)
-  model			Name of the model yaml file (str)
-  dataset    		Name of dataset Ex: 'posetrack' or '3dpw' (str)    
-  keypoint_dim          Number of dim data should have Ex: 2 for 2D and 3 for 3D (int)  
-  load_path  		Path to load a model (str)
+  data          Name of the dataloader yaml file, default is main dataloader (str)
+  model         Name of the model yaml file (str)
+  dataset       Name of dataset Ex: 'posetrack' or '3dpw' (str)    
+  keypoint_dim  Number of dim data should have Ex: 2 for 2D and 3 for 3D (int)  
+  load_path     Path to load a model (str)
 						   
 optional arguments:
-  use_mask 		Consider visibility mask (bool)
-  normalize		Normalize the data or not (bool)
-  is_noisy		Whether data is noisy or not (bool)
-  device		Choose either 'cpu' or 'gpu' (str)
+  - use_mask    Consider visibility mask (bool)
+  - normalize   Normalize the data or not (bool)
+  - is_noisy    Whether data is noisy or not (bool)
+  - device      Choose either 'cpu' or 'gpu' (str)
+  - obs_frames_num      Number of observed frames for random_crop dataset (int) (default: 10)
+  - pred_frames_num     Number of future frames for random_crop dataset (int) (default:25)
+  - model_pose_format   Used data format for random_crop dataset (str) (defautl: total -> for more information see the Data section)
+  - metric_pose_format  Used data format for metrics if random_crop dataset is used. If no value is specified it'll use the model_pose_format's value
 ```  
 
 Example:
 ```bash  
-python -m api.evaluate model=<model_name> dataset=<path_to_dataset> keypoint_dim=3 data.shuffle=True rounds_num=5 load_path=<path_to_model> device=gpu
+python -m api.evaluate model=msr_gcn \
+          keypoint_dim=3 \
+          dataset=$DATASET_TEST_PATH \
+          data.shuffle=True \
+          rounds_num=1 \
+          device=cuda \
+          hydra.run.dir=$OUTPUT_PATH \
+          data.is_random_crop=True \
+          data.batch_size=2048 \
+          obs_frames_num=10 \
+          pred_frames_num=25 \
+          model_pose_format=xyz \
+          metric_pose_format=xyz \
+          load_path=$MODEL_PATH
 ```  
+another example:
+```bash
+python -m api.evaluate model=zero_vel \
+          keypoint_dim=3 \
+          dataset=$DATASET_TEST_PATH \
+          data.shuffle=True \
+          rounds_num=1 \
+          device=cuda \
+          hydra.run.dir=$OUTPUT_PATH \
+          data.is_random_crop=True \
+          data.batch_size=2048 \
+          obs_frames_num=10 \
+          pred_frames_num=25 \
+          model_pose_format=xyz \
+          metric_pose_format=xyz 
+```
 
 ## Generating Outputs
 

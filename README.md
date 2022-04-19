@@ -91,6 +91,14 @@ hydra is A framework for elegantly configuring complex applications with hierarc
 
 To understand Hydra better read the official [documentation](https://hydra.cc/). It is not essential stage  to work with our library, but we encourage you to do.
 
+## MLFlow
+We use MLflow in this library for tracking the training process. The features provided by MLFlow help users track their training process, set up experiments with multiple runs and compare runs with each other. Its clean, organized and beatiful UI helps users to better understand and track what they are doing: (you can see more from MLFlow in [here](https://mlflow.org/))
+
+You can use MLFlow by running the command below in the folder containing `mlruns` folder.
+```bash
+mlflow ui
+```
+![img](https://www.mlflow.org/docs/latest/_images/tutorial-compare.png)
 ## Hydra
 In order to have a better structure and understanding of our arguments, we use Hydra to  dynamically create a hierarchical configuration by composition and override it through config files and the command line.
 If you have any issues and errors install hydra like below:
@@ -105,14 +113,36 @@ To fulfill mentioned purpose You should run preprocessing api called `preprocess
 
 Example:  
 ```bash  
-python -m api.preprocess dataset=somof_3dpw official_annotation_path=<path_to_dataset> data_type=train keypoint_dim=3 skip_num=1 obs_frames_num=16 pred_frames_num=14 interactive=false
+python -m api.preprocess \
+    dataset=stanford3.6m \
+    official_annotation_path=$DATASET_PATH \
+    data_type=train \
+    keypoint_dim=3 \
+    interactive=false \
+    output_name=new_full \
+    save_total_frames=true \
+    obs_frames_num=10 \
+    pred_frames_num=25
 ```  
 See [here](https://github.com/vita-epfl/posepred/blob/master/ARGS_README.md#preprocessing) for more details about preprocessing arguments.
   
 ## Training
 Train models from scratch:
 ```bash  
-python -m api.train model=<model_name> keypoint_dim=3 train_dataset=<path_to_dataset> valid_dataset=<path_to_dataset> epochs=250 data.shuffle=True device=gpu snapshot_interval=10 hydra.run.dir=<path_to_output>
+python -m api.train model=history_repeats_itself \
+          keypoint_dim=3 \
+          train_dataset=$DATASET_TRAIN_PATH \
+          valid_dataset=$DATASET_TEST_PATH \
+          epochs=10 \
+          data.shuffle=True \
+          device=cuda \
+          snapshot_interval=1 \
+          hydra.run.dir=$OUTPUT_PATH \
+          data.batch_size=256 \
+          data.num_workers=10 \
+          obs_frames_num=50 \
+          pred_frames_num=25 \
+          experiment_name=his_encoder
 ```  
 
 Provide **validation_dataset** to adjust learning-rate and report metrics on validation-dataset as well.
@@ -123,7 +153,19 @@ See [here](https://github.com/vita-epfl/posepred/blob/master/ARGS_README.md#trai
 ## Evaluation
 Evaluate pretrained model:
 ```bash  
-python -m api.evaluate model=<model_name> dataset=<path_to_dataset> keypoint_dim=3 is_noisy=True data.shuffle=True rounds_num=5 data.noise_rate=0.2 load_path=<path_to_model> device=cpu
+python -m api.evaluate model=zero_vel \
+          keypoint_dim=3 \
+          dataset=$DATASET_TEST_PATH \
+          data.shuffle=True \
+          rounds_num=1 \
+          device=cuda \
+          hydra.run.dir=$OUTPUT_PATH \
+          data.is_random_crop=True \
+          data.batch_size=2048 \
+          obs_frames_num=10 \
+          pred_frames_num=25 \
+          model_pose_format=xyz \
+          metric_pose_format=xyz 
 ```  
 See [here](https://github.com/vita-epfl/posepred/blob/master/ARGS_README.md#evaluation) for more details about evaluation arguments.
 

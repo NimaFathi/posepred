@@ -3,6 +3,7 @@ import time
 
 import torch
 import numpy as np
+import os
 from tqdm import tqdm
 
 from metrics import POSE_METRICS, MASK_METRICS
@@ -31,11 +32,8 @@ class Evaluator:
         for i in range(self.rounds_num):
             logger.info('round ' + str(i + 1) + '/' + str(self.rounds_num))
             self.__evaluate()
-            # for metric in self.args.pose_metrics:
-            #    logger.info(f'{metric}: ' + str(self.reporter.history[metric][-1]))
-            # logger.info(f'MSE: ' + str(self.reporter.history['MSE'][-1]))
         self.reporter.print_pretty_metrics(logger, self.model.args.use_mask, self.pose_metrics)
-        self.reporter.save_csv_metrics(self.model.args.use_mask, self.pose_metrics, None)
+        self.reporter.save_csv_metrics(self.model.args.use_mask, self.pose_metrics, os.path.join(self.args.csv_save_dir,"eval.csv"))
         logger.info("Evaluation has been completed.")
 
     def __evaluate(self):
