@@ -139,7 +139,7 @@ usage: python -m api.preprocess  	[official_annotation_path] [dataset] [data_typ
 	                                [obs_frames_num] [pred_frames_num] [keypoint_dim]
 				                    [use_video_once] [skip_num] [interactive]  
 	                             	[annotate_openpifpaf] [annotate] [image_dir]
-	                             	[output_name]
+	                             	[output_name] [save_total_frames]
   
 mandatory arguments:  
   - official_annotation_path  Name of using dataset Ex: 'posetrack' or '3dpw' (str)  
@@ -180,10 +180,13 @@ Check training config file: "configs/hydra/train.yaml" for more details.
 You can change training args via command line like below:
 ```  
 usage: python -m api.train      [data] [model] [optimizer] [scheduler]
-				[train_dataset] [valid_dataset] [keypoint_dim] 
+				            [train_dataset] [valid_dataset] [keypoint_dim] 
                            	[epochs] [start_epoch] [device]
                            	[use_mask] [use_dct] [normalize] [is_noisy]
-				[snapshot_interval] [load_path] [save_dir] 
+				            [snapshot_interval] [load_path] [save_dir]
+                            [obs_frames_num] [pred_frames_num]
+                            [model_pose_format] [metric_pose_format]
+                            [experiment_name] [mlflow_tracking_uri]
 
 mandatory arguments:
   data                  Name of the dataloader yaml file, default is main dataloader (str)
@@ -242,7 +245,9 @@ You can change evaluation args via command line like below:
 ``` 
 usage: python -m api.evaluate      [data] [model] [dataset] [keypoint_dim] 
                               	   [use_mask] [normalize] [is_noisy]
-                              	   [device] [rounds_num] [load_path]
+                              	   [device] [rounds_num] [load_path] 
+                                   [obs_frames_num] [pred_frames_num] 
+                                   [model_pose_format] [metric_pose_format]
 
 mandatory arguments:
   data          Name of the dataloader yaml file, default is main dataloader (str)
@@ -279,6 +284,22 @@ python -m api.evaluate model=msr_gcn \
           metric_pose_format=xyz \
           load_path=$MODEL_PATH
 ```  
+another example:
+```bash
+python -m api.evaluate model=zero_vel \
+          keypoint_dim=3 \
+          dataset=$DATASET_TEST_PATH \
+          data.shuffle=True \
+          rounds_num=1 \
+          device=cuda \
+          hydra.run.dir=$OUTPUT_PATH \
+          data.is_random_crop=True \
+          data.batch_size=2048 \
+          obs_frames_num=10 \
+          pred_frames_num=25 \
+          model_pose_format=xyz \
+          metric_pose_format=xyz 
+```
 
 ## Generating Outputs
 
