@@ -153,7 +153,19 @@ See [here](https://github.com/vita-epfl/posepred/blob/master/ARGS_README.md#trai
 ## Evaluation
 Evaluate pretrained model:
 ```bash  
-python -m api.evaluate model=<model_name> dataset=<path_to_dataset> keypoint_dim=3 is_noisy=True data.shuffle=True rounds_num=5 data.noise_rate=0.2 load_path=<path_to_model> device=cpu
+python -m api.evaluate model=zero_vel \
+          keypoint_dim=3 \
+          dataset=$DATASET_TEST_PATH \
+          data.shuffle=True \
+          rounds_num=1 \
+          device=cuda \
+          hydra.run.dir=$OUTPUT_PATH \
+          data.is_random_crop=True \
+          data.batch_size=2048 \
+          obs_frames_num=10 \
+          pred_frames_num=25 \
+          model_pose_format=xyz \
+          metric_pose_format=xyz 
 ```  
 See [here](https://github.com/vita-epfl/posepred/blob/master/ARGS_README.md#evaluation) for more details about evaluation arguments.
 
