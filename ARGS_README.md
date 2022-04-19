@@ -41,6 +41,8 @@ Mandatory arguments:
 keypoint_dim:               Number of dim data should have Ex: 2 for 2D and 3 for 3D (int)  
 is_interactive:             Use interactions between persons (bool) (default: False)
 is_noisy:                   Use noisy data_loader `data_loader/noisy_solitary_dataset.py` (bool) (default: False) 
+is_random_crop:             Use random_crop (dynamic) data_loader (bool) (default: False)
+is_solitary:                Use Solitary data_loader (bool) (default: False) 
 noise_rate:                 A float number to indicate percentage of uniform noisy values or 'mask' to use mask values as noise (float or str) (default: mask)
 use_mask:                   Set True To use mask in dataloader and model (bool)
 use_quaternion:             Set True To use quaternion representation (based on model) (bool) (default: False)
@@ -56,6 +58,8 @@ optional arguments:
 overfit:                    Set True to create a dataloader with small size for testing overfitting (bool)
 noise_keypoint:             Index of specific keypoint you want to make noisy. (int)
 metadata_path:              path to metadata, obligatory when normalize=True
+seq_rate:                   The gap between start of two adjacent sequences (1 means no gap) (int) (default: 1) (only used for random_crop data_loader) 
+frame_rate:                 The gap between two frames (1 means no gap) (int) (default: 2) (only used for random_crop data_loader) 
 ```
 #### model
 Folder Location: 'configs/hydra/model'
