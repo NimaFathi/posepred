@@ -123,10 +123,9 @@ class Reporter:
                 out_dict[metric] = [np.mean(self.history.get(f'{metric}_{action}'))]
             out_dict["action"] = action
             temp = [action]+ [a for a in to_print]
-            # out=out.append(temp)
             df_temp = pd.DataFrame(out_dict)
             out = pd.concat([out, df_temp], ignore_index=True, axis = 0)
-        # TODO: save csv file
+        out.to_csv(addr)
 
     @staticmethod
     def save_plots(use_mask, save_dir, train_history, validiation_history, use_validation):
