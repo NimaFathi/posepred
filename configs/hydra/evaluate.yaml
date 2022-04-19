@@ -9,6 +9,7 @@ keypoint_dim: ???
 normalize: false
 use_mask: false
 load_path:
+csv_save_dir:
 rounds_num: 1
 device: cuda
 
