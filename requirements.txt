@@ -17,3 +17,5 @@ hydra-core
 cdflib
 astropy
 seaborn
+mlflow
+tqdm

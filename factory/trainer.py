@@ -52,7 +52,8 @@ class Trainer:
             'scheduler': args.scheduler.type,
             **dict(args.scheduler),
             'obs_frames_num': args.obs_frames_num,
-            'pred_frames_num': args.pred_frames_num
+            'pred_frames_num': args.pred_frames_num,
+            'tag': args.experiment_tag
         }
         del params['type']
 
