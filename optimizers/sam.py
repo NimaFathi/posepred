@@ -68,7 +68,8 @@ def sam(params, args):
         optimizer = SAM(
                 params, 
                 base_optimizer, 
-                lr=args.base_optimizer.lr
+                lr=args.base_optimizer.lr,
+                weight_decay=args.base_optimizer.weight_decay
                 )
         return optimizer
     else:
