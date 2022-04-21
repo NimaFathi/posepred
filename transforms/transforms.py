@@ -7,6 +7,7 @@ import torch
 class RandomInterpolate(nn.Module):
     def __init__(self, scale_factor, mode='cubic_spline', scale_mode='constant'):
         super(RandomInterpolate, self).__init__()
+        assert scale_mode in ['constant', 'random']
         assert scale_factor < 1
         self.scale_factor = scale_factor
         self.mode = mode
