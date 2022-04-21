@@ -135,7 +135,7 @@ class RandomCropDataset(Dataset):
         self.is_h36_testing = is_h36_testing
         print(dataset_path, is_testing, is_h36_testing)
 
-        self.interpolate = RandomInterpolate(0.9, scale_mode='random')
+        self.interpolate = RandomInterpolate(0.9, scale_mode='constant')
 
     def __len__(self): 
         return len(self.indexes)
