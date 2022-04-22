@@ -2,7 +2,6 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-
 class HisRepItselfLoss(nn.Module):
 
     def __init__(self, args):
@@ -12,6 +11,8 @@ class HisRepItselfLoss(nn.Module):
         self.output_n = args.output_n
         self.seq_in = args.kernel_size
         self.device = args.device
+        self.mode = args.un_mode
+        assert args.un_mode in ['default', 'ATJ', 'TJ', 'AJ', 'AT', 'A', 'T', 'J']
         self.dim = 3
         self.dim_used = np.array([6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 21, 22, 23, 24, 25,
                                   26, 27, 28, 29, 30, 31, 32, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45,
@@ -25,20 +26,69 @@ class HisRepItselfLoss(nn.Module):
         self.joint_equal = np.array([13, 19, 22, 13, 27, 30])
         self.index_to_equal = np.concatenate((self.joint_equal * 3, self.joint_equal * 3 + 1, self.joint_equal * 3 + 2))
         self.itera = 1
+        self.action_dict = {
+                "walking": 0, 
+                "eating": 1, 
+                "smoking": 2, 
+                "discussion": 3, 
+                "directions": 4,
+                "greeting": 5, 
+                "phoning": 6, 
+                "posing": 7, 
+                "purchases": 8, 
+                "sitting": 9,
+                "sittingdown": 10, 
+                "takingphoto": 11, 
+                "waiting": 12, 
+                "walkingdog": 13,
+                "walkingtogether": 14
+        }
+
         # self.idx = np.expand_dims(np.arange(self.seq_in + self.out_n), axis=1) + (
         #         self.out_n - self.seq_in + np.expand_dims(np.arange(self.itera), axis=0))
 
+    def un_loss(self, pred, gt, params, actions=None, mode='ATJ'):
+        # pred, gt:  B, T, J, D
+        # params: A, T, J ---- 16, 25, 22
+        assert mode in ['ATJ', 'TJ', 'AJ', 'AT', 'A', 'T', 'J']
+        B, T, J, D = pred.shape
+
+        losses = torch.norm(pred - gt, dim=3) # B, T, J
+        if mode == 'ATJ':
+            s = params[actions] # B, T, J
+        elif mode == 'TJ':
+            s = params[0].repeat(B, 1, 1) # B, T, J
+
+        loss = torch.mean(1 / torch.exp(s) * losses + s)
+        return loss
+
+
     def forward(self, model_outputs, input_data):
-        seq1 = torch.cat((input_data['observed_pose'], input_data['future_pose']), dim=1)
-        p3d_h36 = seq1.reshape(seq1.shape[0], seq1.shape[1], -1)
+        seq1 = torch.cat((input_data['observed_pose'], input_data['future_pose']), dim=1) # B, T, J*D
+        p3d_h36 = seq1.reshape(seq1.shape[0], seq1.shape[1], -1) 
         batch_size, seq_n, joints = p3d_h36.shape
         p3d_h36 = p3d_h36.float().to(self.device)  # todo
         p3d_sup = p3d_h36.clone()[:, :, self.dim_used][:, -self.output_n - self.seq_in:].reshape(
             [-1, self.seq_in + self.output_n, len(self.dim_used) // 3, 3])
         p3d_out_all = model_outputs['pred_pose']
-        loss_p3d = torch.mean(torch.norm(p3d_out_all[:, :, 0] - p3d_sup, dim=3))
+        # print('params', model_outputs['un_params'].shape)
+        # print('p3d_out_all', p3d_out_all.shape)
+        # print('p3d_sup', p3d_sup.shape)
+        # print('p3d_h36', p3d_h36.shape)
+        # print('mode', self.mode)
+        # print('observed_loss', (p3d_out_all[:, :10, 0] - p3d_sup[:, :10]).sum())
+        if self.mode == 'default':
+            loss_p3d = torch.mean(torch.norm(p3d_out_all[:, :, 0] - p3d_sup, dim=3))
+        else:
+            if 'A' in self.mode:
+                actions = torch.tensor([self.action_dict[a] for a in input_data['action']]).to(self.device)
+            else:
+                actions = None
+
+            loss_p3d = self.un_loss(pred=p3d_out_all[:, :, 0], gt=p3d_sup, params=model_outputs['un_params'], actions=actions, mode=self.mode)
 
         p3d_out = model_outputs['pred_metric_pose']
+        # print('p3d_out', p3d_out.shape)
         # print('loss mp', p3d_h36[:, -self.output_n:].shape, p3d_out.shape, joints//3)
         mpjpe_p3d_h36 = torch.mean(
             torch.norm(p3d_h36[:, -self.output_n:].reshape(
