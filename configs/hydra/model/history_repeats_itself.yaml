@@ -11,8 +11,10 @@ output_n: ${pred_frames_num}
 num_stage: 12
 dct_n: 20
 itera: 1
+un_mode: 'default'
 loss:
   type: his_rep_itself
   output_n: ${pred_frames_num}
   kernel_size: 10
   device: ${device}
+  un_mode: 
