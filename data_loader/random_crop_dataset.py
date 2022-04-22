@@ -116,10 +116,14 @@ class RandomCropDataset(Dataset):
         if is_h36_testing:
             indexes = []
             for i in range(0, len(data), 2):
-                idxo1, idxo2 = find_indices_256(data[i]['pose'].shape[0], data[i + 1]['pose'].shape[0],
+
+                len1 = (data[i]['pose'].shape[0] + frame_rate - 1) // frame_rate
+                len2 = (data[i + 1]['pose'].shape[0] + frame_rate - 1) // frame_rate
+
+                idxo1, idxo2 = find_indices_256(len1, len2,
                                                 len_observed + len_future, len_observed)
-                indexes = indexes + [(i, j) for j in idxo1[:, 0]]
-                indexes = indexes + [(i + 1, j) for j in idxo2[:, 0]]
+                indexes = indexes + [(i, j * frame_rate) for j in idxo1[:, 0]]
+                indexes = indexes + [(i + 1, j * frame_rate) for j in idxo2[:, 0]]
 
         self.obs_frames_num = self.len_observed
         self.future_frames_num = self.len_future
