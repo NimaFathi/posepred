@@ -13,21 +13,13 @@ class HistoryRepeatsItself(nn.Module):
     def __init__(self, args):
         super(HistoryRepeatsItself, self).__init__()
         self.args = args
+        print(args)
         self.device = args.device
         self.net_pred = AttModel(in_features=args.in_features, kernel_size=args.kernel_size, d_model=args.d_model,
                                  num_stage=args.num_stage, dct_n=args.dct_n, device=self.device)
-        # if is_train == 0:
-        #     net_pred.train()
-        # else:
-        #     net_pred.eval()
+
         l_p3d = 0
-        # if is_train <= 1:
-        #     m_p3d_h36 = 0
-        # else:
-        #     titles = np.array(range(opt.output_n)) + 1
-        #     m_p3d_h36 = np.zeros([opt.output_n])
-        # n = 0
-        # todo
+
         self.in_n = args.input_n
         self.out_n = args.output_n
 
@@ -43,28 +35,9 @@ class HistoryRepeatsItself(nn.Module):
             (self.joint_to_ignore * 3, self.joint_to_ignore * 3 + 1, self.joint_to_ignore * 3 + 2))
         self.joint_equal = np.array([13, 19, 22, 13, 27, 30])
         self.index_to_equal = np.concatenate((self.joint_equal * 3, self.joint_equal * 3 + 1, self.joint_equal * 3 + 2))
-        self.itera = 1
+        self.itera = args.itera
         self.idx = np.expand_dims(np.arange(self.seq_in + self.out_n), axis=1) + (
                 self.out_n - self.seq_in + np.expand_dims(np.arange(self.itera), axis=0))
-
-    # @staticmethod
-    # def exp2xyz(inputs):
-    #     is_cuda_type = False
-    #     if inputs.is_cuda:
-    #       is_cuda_type = True
-    #     # print(inputs.shape)
-    #     b,n, d = inputs.shape
-    #     the_sequence = np.array(inputs.cpu())
-    #     the_sequence = np.reshape(the_sequence, (-1, the_sequence.shape[-1]))
-    #     the_sequence = torch.from_numpy(the_sequence).float().cpu() #todo
-    #     # remove global rotation and translation
-    #     the_sequence[:, 0:6] = 0
-    #     p3d = data_utils.expmap2xyz_torch(the_sequence)
-    #     p3d = np.reshape(p3d,(b, n, -1))
-    #     if is_cuda_type:
-    #       p3d = p3d.cuda()
-    #     # print(p3d.shape)
-    #     return p3d
 
     def forward(self, inputs):
         seq = torch.cat((inputs['observed_pose'], inputs['future_pose']), dim=1)
@@ -77,18 +50,47 @@ class HistoryRepeatsItself(nn.Module):
         p3d_sup = p3d_h36.clone()[:, :, self.dim_used][:, -self.out_n - self.seq_in:].reshape(
             [-1, self.seq_in + self.out_n, len(self.dim_used) // 3, 3])
         p3d_src = p3d_h36.clone()[:, :, self.dim_used]
-        p3d_out_all = self.net_pred(p3d_src, input_n=self.in_n, output_n=self.out_n, itera=self.itera)
-        p3d_out = p3d_h36.clone()[:, self.in_n:self.in_n + self.out_n]
-        # print(self.dim_used, self.seq_in, p3d_out_all.shape, p3d_out.shape)
-        p3d_out[:, :, self.dim_used] = p3d_out_all[:, self.seq_in:, 0]
-        p3d_out[:, :, self.index_to_ignore] = p3d_out[:, :, self.index_to_equal]
-        p3d_out = p3d_out.reshape([-1, self.out_n, 96])
+        if self.itera == 1:
+            p3d_out_all = self.net_pred(p3d_src, input_n=self.in_n, output_n=self.out_n, itera=self.itera)
+            p3d_out = p3d_h36.clone()[:, self.in_n:self.in_n + self.out_n]
+            # print(self.dim_used, self.seq_in, p3d_out_all.shape, p3d_out.shape)
+            p3d_out[:, :, self.dim_used] = p3d_out_all[:, self.seq_in: self.seq_in + self.out_n, 0]
+            p3d_out[:, :, self.index_to_ignore] = p3d_out[:, :, self.index_to_equal]
+            p3d_out = p3d_out.reshape([-1, self.out_n, 96])
 
-        # p3d_h36 = p3d_h36.reshape([-1, self.in_n + self.out_n, 32, 3])
+            # p3d_h36 = p3d_h36.reshape([-1, self.in_n + self.out_n, 32, 3])
 
-        p3d_out_all = p3d_out_all.reshape(
-            [batch_size, self.seq_in + self.out_n, self.itera, len(self.dim_used) // 3, 3])
+            p3d_out_all = p3d_out_all.reshape(
+                [batch_size, self.seq_in + self.out_n, self.itera, len(self.dim_used) // 3, 3])
+        else:
+            if self.training:
+                iterr = 1
+                out_ = 10
+                # print('train', batch_size)
+            else:
+                iterr = self.itera
+                out_ = self.out_n
+                # print('eval', batch_size)
+            p3d_out_all = self.net_pred(p3d_src, input_n=self.in_n, output_n=10, itera=iterr)
+            # print(p3d_out_all.shape, 88)
+            p3d_1 = p3d_out_all[:, :self.seq_in, 0].clone()
+            p3d_out_all = p3d_out_all[:, self.seq_in:].transpose(1, 2).reshape([batch_size, 10 * iterr, -1])[:, :out_]
+            zero_ = torch.zeros_like(p3d_out_all)
+            if self.training:
+                # print(9, p3d_out_all.shape)
+                p3d_out_all = torch.cat((p3d_out_all, zero_, zero_), dim=1)[:, :self.out_n]
+                # print(11, p3d_out_all.shape)
+            p3d_out = p3d_h36.clone()[:, self.in_n:self.in_n + self.out_n]
+            p3d_out[:, :, self.dim_used] = p3d_out_all
+            p3d_out[:, :, self.index_to_ignore] = p3d_out[:, :, self.index_to_equal]
+            p3d_out = p3d_out.reshape([-1, self.out_n, 96])
 
+            p3d_h36 = p3d_h36[:, :self.in_n + out_].reshape([-1, self.in_n + out_, 32, 3])
+
+            # print(11, p3d_out_all.shape, p3d_1.shape)
+            p3d_out_all = torch.cat((p3d_1, p3d_out_all), dim=1)
+            p3d_out_all = p3d_out_all.reshape(
+                [batch_size, self.seq_in + self.out_n, len(self.dim_used) // 3, 3])
         return {'pred_pose': p3d_out_all, 'pred_metric_pose': p3d_out}
 
 
@@ -99,9 +101,7 @@ class AttModel(nn.Module):
 
         self.kernel_size = kernel_size
         self.d_model = d_model
-        # self.seq_in = seq_in
         self.dct_n = dct_n
-        # ks = int((kernel_size + 1) / 2)
         self.device = device
         assert kernel_size == 10
 
@@ -151,9 +151,6 @@ class AttModel(nn.Module):
               np.expand_dims(np.arange(vn), axis=1)
         src_value_tmp = src_tmp[:, idx].clone().reshape(
             [bs * vn, vl, -1])
-        # print('ss', src_value_tmp.shape, dct_m[:dct_n].unsqueeze(dim=0).shape)
-        # print('dd', bs, vn, dct_n)
-        # print('m', torch.matmul(dct_m[:dct_n].unsqueeze(dim=0).cpu(), src_value_tmp.cpu()).shape)
         src_value_tmp = torch.matmul(dct_m[:dct_n].unsqueeze(dim=0), src_value_tmp).reshape(
             [bs, vn, dct_n, -1]).transpose(2, 3).reshape(
             [bs, vn, -1])  # [32,40,66*11]
