@@ -52,13 +52,24 @@ class HisRepItselfLoss(nn.Module):
         # params: A, T, J ---- 16, 25, 22
         assert mode in ['ATJ', 'TJ', 'AJ', 'AT', 'A', 'T', 'J']
         B, T, J, D = pred.shape
+        A, T, J = params.shape
 
         losses = torch.norm(pred - gt, dim=3) # B, T, J
         if mode == 'ATJ':
             s = params[actions] # B, T, J
+        elif mode == 'AT':
+            s = params[actions][:, :, 0].unsqueeze(-1) # B, T, 1
+        elif mode == 'AJ':
+            s = params[actions][:, 0, :].unsqueeze(1) # B, 1, J
         elif mode == 'TJ':
-            s = params[0].repeat(B, 1, 1) # B, T, J
-
+            s = params[0].unsqueeze(0) # 1, T, J #.repeat(B, 1, 1) # B, T, J
+        elif mode == 'A':
+            s = params[:, 0, 0].reshape(A, 1, 1)
+        elif mode == 'T':
+            s = params[0, :, 0].reshape(1, T, 1)
+        elif mode == 'J':
+            s = params[0, 0, :].reshape(1, 1, J)
+        
         loss = torch.mean(1 / torch.exp(s) * losses + s)
         return loss
 
