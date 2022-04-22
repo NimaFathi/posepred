@@ -30,6 +30,10 @@ class HistoryRepeatsItself(nn.Module):
         # todo
         self.in_n = args.input_n
         self.out_n = args.output_n
+        self.un_params = torch.nn.Parameter(torch.empty(15, self.out_n + self.args.kernel_size ,self.args.in_features//3))
+        torch.nn.init.xavier_uniform_(self.un_params)
+        # print('un_loss_shape', self.un_params.shape)
+        self.args.loss.un_mode = self.args.un_mode
 
         self.dim_used = np.array([6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 21, 22, 23, 24, 25,
                                   26, 27, 28, 29, 30, 31, 32, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45,
@@ -89,7 +93,7 @@ class HistoryRepeatsItself(nn.Module):
         p3d_out_all = p3d_out_all.reshape(
             [batch_size, self.seq_in + self.out_n, self.itera, len(self.dim_used) // 3, 3])
 
-        return {'pred_pose': p3d_out_all, 'pred_metric_pose': p3d_out}
+        return {'pred_pose': p3d_out_all, 'pred_metric_pose': p3d_out, 'un_params': self.un_params}
 
 
 class AttModel(nn.Module):
