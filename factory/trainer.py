@@ -53,7 +53,7 @@ class Trainer:
             **dict(args.scheduler),
             'obs_frames_num': args.obs_frames_num,
             'pred_frames_num': args.pred_frames_num,
-            'tag': args.experiment_tag
+            'tag': args.experiment_tag,
             **dict(args.data),
             'save_dir': args.save_dir
         }
