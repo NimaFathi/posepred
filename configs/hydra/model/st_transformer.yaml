@@ -17,4 +17,13 @@ model_featureemb: 16
 device: &device ${device}
 
 loss:
-  type: st_transformer_loss
+  type: task_dependent_uncertainty_loss
+  squared: False
+  action_aware: False
+  joint_aware: False
+  time_aware: False
+  device: ${device}
+  # type: st_transformer_loss
+
+# loss:
+#   type: st_transformer_loss

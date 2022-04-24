@@ -173,6 +173,14 @@ class Trainer:
 
     def __validate(self):
         self.model.eval()
+        
+        if self.model.args.loss.action_aware:
+            print(self.model.sigma.weight)
+            print(torch.mean(self.model.sigma.weight), torch.std(self.model.sigma.weight))
+        else:
+            print(self.model.sigma)
+            print(torch.mean(self.model.sigma), torch.std(self.model.sigma))
+
         self.valid_reporter.start_time = time.time()
         pose_key = None
         epoch_loss = 0.0

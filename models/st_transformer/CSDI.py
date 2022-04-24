@@ -203,6 +203,15 @@ class CSDI_H36M(CSDI_base):
         self.Lo = args.obs_frames_num
         self.Lp = args.pred_frames_num
 
+        TDUL_T = self.Lp if args.loss.time_aware else 1
+        TDUL_J = 28 if args.loss.joint_aware else 1
+
+        if args.loss.action_aware:
+            self.sigma = nn.Embedding(15, TDUL_T * TDUL_J)
+            self.sigma.weight = nn.Parameter(torch.ones(15, TDUL_T * TDUL_J, requires_grad=True) * 3.5)
+        else:
+            self.sigma = nn.Parameter(torch.ones(TDUL_T, TDUL_J, requires_grad=True) * 3.5)
+
         self.preprocess = Preprocess(args).to(args.device)
         self.postprocess = Postprocess(args).to(args.device)
 
@@ -212,8 +221,6 @@ class CSDI_H36M(CSDI_base):
         for p in self.postprocess.parameters():
             p.requires_grad = False
 
-        # self.input_normalizer = nn.BatchNorm1d(args.keypoint_dim * args.n_major_joints)
-        # self.output_normalizer = nn.BatchNorm1d(args.keypoint_dim * args.n_major_joints)
 
     def preprocess_data(self, batch):
         observed_data = batch["observed_pose"].to(self.device)
@@ -223,7 +230,6 @@ class CSDI_H36M(CSDI_base):
         Lp = self.args.pred_frames_num
 
         observed_data = observed_data.permute(0, 2, 1)  # B, K, L
-        # observed_data = self.input_normalizer(observed_data)
 
         observed_data = torch.cat([
             observed_data, torch.zeros([B, K, Lp]).to(self.device)
@@ -241,11 +247,8 @@ class CSDI_H36M(CSDI_base):
 
     def postprocess_data(self, batch, predicted):
         predicted = predicted[:, :, self.Lo:]
-        # predicted = self.output_normalizer(predicted)
         predicted = predicted.permute(0, 2, 1)
         return {
             'pred_pose': self.postprocess(batch['observed_pose'], predicted),  # B, T, 96
+            'sigma': self.sigma
         }
-        # return {
-        #     'pred_pose': predicted
-        # }
