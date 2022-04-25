@@ -283,22 +283,38 @@ def spherical_to_xyz(self, inputs):
 
     return torch.cat([x, z, y], dim=-1)
 
-def sig5(p, x:torch.Tensor):
-    # p: 5 J -> if we don't want to consider the joints we must pass a "p" with size (5, 1)
-    # x with any 
-    # output: J x.shape
-    print(p.shape)
-    assert p.shape[0] == 5
-    J = p.shape[1]
-    s = x.shape
-    x = x.flatten()
-    p1 = p[0,:].unsqueeze(1)
-    p2 = p[1,:].unsqueeze(1)
-    p3 = p[2,:].unsqueeze(1)
-    p4 = p[3,:].unsqueeze(1)
-    p5 = p[4,:].unsqueeze(1)
-    c = 2*p3*p5/torch.abs(p3+p5)
-    f = 1/(1+torch.exp(-c*(p4-x)))
-    g = torch.exp(p3*(p4-x))
-    h = torch.exp(p5*(p4-x))
-    return (p1+(p2/(1+f*g+(1-f)*h))).reshape(J,*s)
+def sig5(p:torch.Tensor, x:torch.Tensor):
+    """
+    Arguments:
+        p -- sig5 parameters. shape: ..., 5
+        x -- input of sig5 function. shape: ... 
+    Return:
+        output -- output of sig5 function. 
+    """
+    assert p.shape[-1] == 5
+    if len(p.shape) == 1: p = p.reshape(1, -1)
+    p_shape = p.shape 
+    x_shape = x.shape 
+
+    p = p.reshape(-1, 5) # 20, 5
+    x = x.reshape(1, -1) # 1, 23
+    
+    p1 = p[:, 0].unsqueeze(1) # 20, 1
+    p2 = p[:, 1].unsqueeze(1)
+    p3 = p[:, 2].unsqueeze(1)
+    p4 = p[:, 3].unsqueeze(1)
+    p5 = p[:, 4].unsqueeze(1)
+
+    c = 2*p3*p5/torch.abs(p3+p5) # 20, 1
+    f = 1/(1+torch.exp(-c*(p4-x))) # 20, 23
+    g = torch.exp(p3*(p4-x)) # 20, 23
+    h = torch.exp(p5*(p4-x)) # 20, 23
+    output = (p1+(p2/(1+f*g+(1-f)*h))) # 20, 23
+    output = output.reshape(*p_shape[:-1], *x_shape)
+    return output
+
+
+if __name__ == '__main__':
+  p = torch.rand(3, 4, 5)
+  x = torch.rand(3, 6, 3, 5)
+  print(sig5(p, x).shape)
