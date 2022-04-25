@@ -74,7 +74,7 @@ class HisRepItselfLoss(nn.Module):
             # here params is (5, J)
             s = sig5(params[:,0].unsqueeze(1), torch.arange(T)).unsqueeze(2) # (1, T, 1)
         elif mode == 'SIG5-TJ':
-            s = sig5(params[:,:].unsqueeze(1), torch.arange(T)).permute(1, 0).unsqueeze(0) # (1, T, J)
+            s = sig5(params[:,:], torch.arange(T)).permute(1, 0).unsqueeze(0) # (1, T, J)
         
         loss = torch.mean(1 / torch.exp(s) * losses + s)
         return loss
