@@ -13,7 +13,7 @@ class HisRepItselfLoss(nn.Module):
         self.seq_in = args.kernel_size
         self.device = args.device
         self.mode = args.un_mode
-        assert args.un_mode in ['default', 'ATJ', 'TJ', 'AJ', 'AT', 'A', 'T', 'J']
+        assert args.un_mode in ['default', 'ATJ', 'TJ', 'AJ', 'AT', 'A', 'T', 'J', 'sig5-T', 'sig5-TJ', 'sigstar-T', 'sigstar-TJ']
         self.dim = 3
         self.dim_used = np.array([6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 21, 22, 23, 24, 25,
                                   26, 27, 28, 29, 30, 31, 32, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45,
@@ -51,7 +51,7 @@ class HisRepItselfLoss(nn.Module):
     def un_loss(self, pred, gt, params, actions=None, mode='ATJ'):
         # pred, gt:  B, T, J, D
         # params: A, T, J ---- 16, 25, 22
-        assert mode in ['ATJ', 'TJ', 'AJ', 'AT', 'A', 'T', 'J']
+        assert mode in ['ATJ', 'TJ', 'AJ', 'AT', 'A', 'T', 'J', 'sig5-T', 'sig5-TJ', 'sigstar-T', 'sigstar-TJ']
         B, T, J, D = pred.shape
         # A, T, J = params.shape
 
@@ -89,18 +89,20 @@ class HisRepItselfLoss(nn.Module):
             s = s.permute(1, 0).unsqueeze(0) # 1, T, 1   
 
         elif mode == 'sig5s-TJ':
-            s = sig5(params**2, frames_num) # 1, T
-            s = s.permute(1, 0).unsqueeze(0) # 1, T, 1   
+            s = sig5(params**2, frames_num) # J, T
+            s = s.permute(1, 0).unsqueeze(0) # 1, T, J
             
         elif mode == 'sigstar-T':
             params = params[0, :].unsqueeze(0) # 1, 2
             params = torch.cat([params, torch.ones(1, 1).to(self.device)], dim=-1) # 1, 3
-            s = sigstar(params, frames_num)
+            s = sigstar(params, frames_num) # 1, T
+            s = s.permute(1, 0).unsqueeze(0)
 
         elif mode == 'sigstar-TJ':
             # params : J, 2
-            params = torch.cat([params, torch.ones(J, 1).to(self.device)], dim=-1)
-            s = sigstar(params, frames_num)
+            params = torch.cat([params, torch.ones(J, 1).to(self.device)], dim=-1) # J, 3
+            s = sigstar(params, frames_num) # J, T
+            s = s.permute(1, 0).unsqueeze(0)
         
         loss = torch.mean(1 / torch.exp(s) * losses + s)
         return loss

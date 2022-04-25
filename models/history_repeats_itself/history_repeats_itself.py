@@ -30,10 +30,10 @@ class HistoryRepeatsItself(nn.Module):
         # todo
         self.in_n = args.input_n
         self.out_n = args.output_n
-        if 'sig5' in args.mode:
-            un_params = torch.nn.Parameter(torch.zeros(self.args.in_features//3), 5)
-        elif 'sigstar' in args.mode:
-            un_params = torch.nn.Parameter(torch.zeros(self.args.in_features//3), 2)
+        if 'sig5' in args.un_mode:
+            un_params = torch.nn.Parameter(torch.zeros(self.args.in_features//3, 5))
+        elif 'sigstar' in args.un_mode:
+            un_params = torch.nn.Parameter(torch.zeros(self.args.in_features//3, 2))
         else:
             un_params = torch.nn.Parameter(torch.zeros(15, self.out_n + self.args.kernel_size ,self.args.in_features//3))
 
