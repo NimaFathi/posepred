@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 import torch.nn as nn
-from utils.others import sig5
+from utils.others import sig5, sigstar
 
 class HisRepItselfLoss(nn.Module):
 
@@ -53,8 +53,10 @@ class HisRepItselfLoss(nn.Module):
         # params: A, T, J ---- 16, 25, 22
         assert mode in ['ATJ', 'TJ', 'AJ', 'AT', 'A', 'T', 'J']
         B, T, J, D = pred.shape
-        A, T, J = params.shape
+        # A, T, J = params.shape
 
+        frames_num = torch.arange(T).to(self.device)
+        
         losses = torch.norm(pred - gt, dim=3) # B, T, J
         if mode == 'ATJ':
             s = params[actions] # B, T, J
@@ -70,15 +72,35 @@ class HisRepItselfLoss(nn.Module):
             s = params[0, :, 0].reshape(1, T, 1)
         elif mode == 'J':
             s = params[0, 0, :].reshape(1, 1, J)
-        elif mode == 'SIG5-T':
+            
+        elif mode == 'sig5-T':
             # params: J, 5
             # torch.arange(T): T,
-            s = sig5(params[0, :], torch.arange(T)) # 1, T
-            s = s.permute(1, 0).unsqueeze(0) # 1, T, 1
-        elif mode == 'SIG5-TJ':
+            s = sig5(params[0, :], frames_num) # 1, T
+            s = s.permute(1, 0).unsqueeze(0) # 1, T, 1      
+
+        elif mode == 'sig5-TJ':
             # params: J, 5
-            s = sig5(params, torch.arange(T)) # J, T
+            s = sig5(params, frames_num) # J, T
             s = s.permute(1, 0).unsqueeze(0) # 1, T, J
+
+        elif mode == 'sig5s-T':
+            s = sig5(params[0, :]**2, frames_num) # 1, T
+            s = s.permute(1, 0).unsqueeze(0) # 1, T, 1   
+
+        elif mode == 'sig5s-TJ':
+            s = sig5(params**2, frames_num) # 1, T
+            s = s.permute(1, 0).unsqueeze(0) # 1, T, 1   
+            
+        elif mode == 'sigstar-T':
+            params = params[0, :].unsqueeze(0) # 1, 2
+            params = torch.cat([params, torch.ones(1, 1).to(self.device)], dim=-1) # 1, 3
+            s = sigstar(params, frames_num)
+
+        elif mode == 'sigstar-TJ':
+            # params : J, 2
+            params = torch.cat([params, torch.ones(J, 1).to(self.device)], dim=-1)
+            s = sigstar(params, frames_num)
         
         loss = torch.mean(1 / torch.exp(s) * losses + s)
         return loss
@@ -101,16 +123,13 @@ class HisRepItselfLoss(nn.Module):
         if self.mode == 'default':
             loss_p3d = torch.mean(torch.norm(p3d_out_all[:, :, 0] - p3d_sup, dim=3))
         else:
-            if 'SIG5' in self.mode:
-                params = model_outputs['sig5_params']
-                actions = None
-            elif 'A' in self.mode:
-                params = model_outputs['un_params']
+
+            if 'A' in self.mode:
                 actions = torch.tensor([self.action_dict[a] for a in input_data['action']]).to(self.device)
             else:
-                params = model_outputs['un_params']
                 actions = None
 
+            params = model_outputs['un_params']
             loss_p3d = self.un_loss(pred=p3d_out_all[:, :, 0], gt=p3d_sup, params=params, actions=actions, mode=self.mode)
 
         p3d_out = model_outputs['pred_metric_pose']
