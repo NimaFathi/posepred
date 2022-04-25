@@ -1,6 +1,7 @@
 import numpy as np
 import torch
 import torch.nn as nn
+from utils.others import sig5
 
 class HisRepItselfLoss(nn.Module):
 
@@ -64,11 +65,16 @@ class HisRepItselfLoss(nn.Module):
         elif mode == 'TJ':
             s = params[0].unsqueeze(0) # 1, T, J #.repeat(B, 1, 1) # B, T, J
         elif mode == 'A':
-            s = params[:, 0, 0].reshape(A, 1, 1)
+            s = params[:, 0, 0].reshape(B, 1, 1)
         elif mode == 'T':
             s = params[0, :, 0].reshape(1, T, 1)
         elif mode == 'J':
             s = params[0, 0, :].reshape(1, 1, J)
+        elif mode == 'SIG5-T':
+            # here params is (5, J)
+            s = sig5(params[:,0].unsqueeze(1), torch.arange(T)).unsqueeze(2) # (1, T, 1)
+        elif mode == 'SIG5-TJ':
+            s = sig5(params[:,:].unsqueeze(1), torch.arange(T)).permute(1, 0).unsqueeze(0) # (1, T, J)
         
         loss = torch.mean(1 / torch.exp(s) * losses + s)
         return loss
@@ -91,7 +97,9 @@ class HisRepItselfLoss(nn.Module):
         if self.mode == 'default':
             loss_p3d = torch.mean(torch.norm(p3d_out_all[:, :, 0] - p3d_sup, dim=3))
         else:
-            if 'A' in self.mode:
+            if 'SIG5' in self.mode:
+                pass
+            elif 'A' in self.mode:
                 actions = torch.tensor([self.action_dict[a] for a in input_data['action']]).to(self.device)
             else:
                 actions = None
