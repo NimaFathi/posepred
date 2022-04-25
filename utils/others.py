@@ -282,3 +282,23 @@ def spherical_to_xyz(self, inputs):
     x, y, z = x.unsqueeze(-1), y.unsqueeze(-1), z.unsqueeze(-1)
 
     return torch.cat([x, z, y], dim=-1)
+
+def sig5(p, x:torch.Tensor):
+    # p: 5 J -> if we don't want to consider the joints we must pass a "p" with size (5, 1)
+    # x with any 
+    # output: J x.shape
+    print(p.shape)
+    assert p.shape[0] == 5
+    J = p.shape[1]
+    s = x.shape
+    x = x.flatten()
+    p1 = p[0,:].unsqueeze(1)
+    p2 = p[1,:].unsqueeze(1)
+    p3 = p[2,:].unsqueeze(1)
+    p4 = p[3,:].unsqueeze(1)
+    p5 = p[4,:].unsqueeze(1)
+    c = 2*p3*p5/torch.abs(p3+p5)
+    f = 1/(1+torch.exp(-c*(p4-x)))
+    g = torch.exp(p3*(p4-x))
+    h = torch.exp(p5*(p4-x))
+    return (p1+(p2/(1+f*g+(1-f)*h))).reshape(J,*s)
