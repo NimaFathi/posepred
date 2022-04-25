@@ -30,8 +30,14 @@ class HistoryRepeatsItself(nn.Module):
         # todo
         self.in_n = args.input_n
         self.out_n = args.output_n
-        self.un_params = torch.nn.Parameter(torch.zeros(15, self.out_n + self.args.kernel_size ,self.args.in_features//3))
-        self.sig5_params = torch.nn.Parameter(torch.zeros(self.args.in_features//3), 5)
+        if 'sig5' in args.mode:
+            un_params = torch.nn.Parameter(torch.zeros(self.args.in_features//3), 5)
+        elif 'sigstar' in args.mode:
+            un_params = torch.nn.Parameter(torch.zeros(self.args.in_features//3), 2)
+        else:
+            un_params = torch.nn.Parameter(torch.zeros(15, self.out_n + self.args.kernel_size ,self.args.in_features//3))
+
+        self.un_params = un_params
         torch.nn.init.xavier_uniform_(self.un_params)
         # print('un_loss_shape', self.un_params.shape)
         self.args.loss.un_mode = self.args.un_mode
@@ -94,7 +100,7 @@ class HistoryRepeatsItself(nn.Module):
         p3d_out_all = p3d_out_all.reshape(
             [batch_size, self.seq_in + self.out_n, self.itera, len(self.dim_used) // 3, 3])
 
-        return {'pred_pose': p3d_out_all, 'pred_metric_pose': p3d_out, 'un_params': self.un_params, 'sig5_params':self.sig5_params}
+        return {'pred_pose': p3d_out_all, 'pred_metric_pose': p3d_out, 'un_params': self.un_params}
 
 
 class AttModel(nn.Module):
