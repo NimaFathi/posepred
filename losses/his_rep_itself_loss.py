@@ -65,16 +65,20 @@ class HisRepItselfLoss(nn.Module):
         elif mode == 'TJ':
             s = params[0].unsqueeze(0) # 1, T, J #.repeat(B, 1, 1) # B, T, J
         elif mode == 'A':
-            s = params[:, 0, 0].reshape(B, 1, 1)
+            s = params[actions][:, 0, 0].reshape(B, 1, 1)
         elif mode == 'T':
             s = params[0, :, 0].reshape(1, T, 1)
         elif mode == 'J':
             s = params[0, 0, :].reshape(1, 1, J)
         elif mode == 'SIG5-T':
-            # here params is (5, J)
-            s = sig5(params[:,0].unsqueeze(1), torch.arange(T)).unsqueeze(2) # (1, T, 1)
+            # params: J, 5
+            # torch.arange(T): T,
+            s = sig5(params[0, :], torch.arange(T)) # 1, T
+            s = s.permute(1, 0).unsqueeze(0) # 1, T, 1
         elif mode == 'SIG5-TJ':
-            s = sig5(params[:,:], torch.arange(T)).permute(1, 0).unsqueeze(0) # (1, T, J)
+            # params: J, 5
+            s = sig5(params, torch.arange(T)) # J, T
+            s = s.permute(1, 0).unsqueeze(0) # 1, T, J
         
         loss = torch.mean(1 / torch.exp(s) * losses + s)
         return loss
@@ -98,13 +102,16 @@ class HisRepItselfLoss(nn.Module):
             loss_p3d = torch.mean(torch.norm(p3d_out_all[:, :, 0] - p3d_sup, dim=3))
         else:
             if 'SIG5' in self.mode:
-                pass
+                params = model_outputs['sig5_params']
+                actions = None
             elif 'A' in self.mode:
+                params = model_outputs['un_params']
                 actions = torch.tensor([self.action_dict[a] for a in input_data['action']]).to(self.device)
             else:
+                params = model_outputs['un_params']
                 actions = None
 
-            loss_p3d = self.un_loss(pred=p3d_out_all[:, :, 0], gt=p3d_sup, params=model_outputs['un_params'], actions=actions, mode=self.mode)
+            loss_p3d = self.un_loss(pred=p3d_out_all[:, :, 0], gt=p3d_sup, params=params, actions=actions, mode=self.mode)
 
         p3d_out = model_outputs['pred_metric_pose']
         # print('p3d_out', p3d_out.shape)
