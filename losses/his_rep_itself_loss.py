@@ -13,7 +13,7 @@ class HisRepItselfLoss(nn.Module):
         self.seq_in = args.kernel_size
         self.device = args.device
         self.mode = args.un_mode
-        assert args.un_mode in ['default', 'ATJ', 'TJ', 'AJ', 'AT', 'A', 'T', 'J', 'sig5-T', 'sig5-TJ', 'sigstar-T', 'sigstar-TJ']
+        assert args.un_mode in ['default', 'ATJ', 'TJ', 'AJ', 'AT', 'A', 'T', 'J', 'sig5-T', 'sig5-TJ', 'sig5s-T', 'sig5s-TJ', 'sigstar-T', 'sigstar-TJ']
         self.dim = 3
         self.dim_used = np.array([6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 21, 22, 23, 24, 25,
                                   26, 27, 28, 29, 30, 31, 32, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45,
@@ -51,7 +51,6 @@ class HisRepItselfLoss(nn.Module):
     def un_loss(self, pred, gt, params, actions=None, mode='ATJ'):
         # pred, gt:  B, T, J, D
         # params: A, T, J ---- 16, 25, 22
-        assert mode in ['ATJ', 'TJ', 'AJ', 'AT', 'A', 'T', 'J', 'sig5-T', 'sig5-TJ', 'sigstar-T', 'sigstar-TJ']
         B, T, J, D = pred.shape
         # A, T, J = params.shape
 
@@ -71,8 +70,7 @@ class HisRepItselfLoss(nn.Module):
         elif mode == 'T':
             s = params[0, :, 0].reshape(1, T, 1)
         elif mode == 'J':
-            s = params[0, 0, :].reshape(1, 1, J)
-            
+            s = params[0, 0, :].reshape(1, 1, J)        
         elif mode == 'sig5-T':
             # params: J, 5
             # torch.arange(T): T,
