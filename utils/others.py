@@ -314,7 +314,32 @@ def sig5(p:torch.Tensor, x:torch.Tensor):
     return output
 
 
+def sigstar(p:torch.Tensor, x:torch.Tensor):
+    """
+    Arguments:
+        p -- sig* parameters. shape: ..., 3
+        x -- input of sig* function. shape: ... 
+    Return:
+        output -- output of sig* function. 
+    """
+    assert p.shape[-1] == 3
+    if len(p.shape) == 1: p = p.reshape(1, -1)
+    p_shape = p.shape 
+    x_shape = x.shape 
+
+    p = p.reshape(-1, 3) # 20, 3
+    x = x.reshape(1, -1) # 1, 23
+    
+    x0 = p[:, 0].unsqueeze(1) # 20, 1
+    k = p[:, 1].unsqueeze(1)
+    L = p[:, 2].unsqueeze(1)
+
+    output = L / (1 + torch.exp(-k * (x - x0))) # 20, 23
+    output = output.reshape(*p_shape[:-1], *x_shape) # 
+    return output
+
+
 if __name__ == '__main__':
-  p = torch.rand(3, 4, 5)
-  x = torch.rand(3, 6, 3, 5)
-  print(sig5(p, x).shape)
+  p = torch.rand(3, 4, 3)
+  x = torch.rand(2, 6, 3, 5)
+  print(sigstar(p, x).shape)
