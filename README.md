@@ -91,6 +91,14 @@ hydra is A framework for elegantly configuring complex applications with hierarc
 
 To understand Hydra better read the official [documentation](https://hydra.cc/). It is not essential stage  to work with our library, but we encourage you to do.
 
+## Hydra
+In order to have a better structure and understanding of our arguments, we use Hydra to  dynamically create a hierarchical configuration by composition and override it through config files and the command line.
+If you have any issues and errors install hydra like below:
+```bash
+pip install hydra-core --upgrade
+```
+for more information about Hydra and modules please visit [here](https://github.com/vita-epfl/posepred/blob/master/ARGS_README.md#Hydra)
+
 ## MLFlow
 We use MLflow in this library for tracking the training process. The features provided by MLFlow help users track their training process, set up experiments with multiple runs and compare runs with each other. Its clean, organized and beatiful UI helps users to better understand and track what they are doing: (you can see more from MLFlow in [here](https://mlflow.org/))
 
@@ -99,13 +107,6 @@ You can use MLFlow by running the command below in the folder containing `mlruns
 mlflow ui
 ```
 ![img](https://www.mlflow.org/docs/latest/_images/tutorial-compare.png)
-## Hydra
-In order to have a better structure and understanding of our arguments, we use Hydra to  dynamically create a hierarchical configuration by composition and override it through config files and the command line.
-If you have any issues and errors install hydra like below:
-```bash
-pip install hydra-core --upgrade
-```
-for more information about Hydra and modules please visit [here](https://github.com/vita-epfl/posepred/blob/master/ARGS_README.md#Hydra)
 
 ## Preprocessing
 We need to create clean static file to enhance dataloader and speed-up other parts.  
