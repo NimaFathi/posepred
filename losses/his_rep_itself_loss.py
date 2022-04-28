@@ -13,7 +13,14 @@ class HisRepItselfLoss(nn.Module):
         self.seq_in = args.kernel_size
         self.device = args.device
         self.mode = args.un_mode
-        assert args.un_mode in ['default', 'ATJ', 'TJ', 'AJ', 'AT', 'A', 'T', 'J', 'sig5-T', 'sig5-TJ', 'sig5s-T', 'sig5s-TJ', 'sigstar-T', 'sigstar-TJ']
+        assert args.un_mode in \
+            ['default', 'ATJ', 'TJ', 'AJ', 'AT', 'A', 'T', 'J', 
+            'sig5-T', 'sig5-TJ', 
+            'sig5s-T', 'sig5s-TJ', 
+            'sigstar-T', 'sigstar-TJ', 
+            'sig5r-TJ',
+            'sig5shifted-T']
+            
         self.dim = 3
         self.dim_used = np.array([6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 21, 22, 23, 24, 25,
                                   26, 27, 28, 29, 30, 31, 32, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45,
@@ -88,6 +95,14 @@ class HisRepItselfLoss(nn.Module):
 
         elif mode == 'sig5s-TJ':
             s = sig5(params**2, frames_num) # J, T
+            s = s.permute(1, 0).unsqueeze(0) # 1, T, J
+
+        elif mode == 'sig5shifted-T':
+            s = sig5(params + 1.5, frames_num) # J, T
+            s = s.permute(1, 0).unsqueeze(0) # 1, T, J
+
+        elif mode == 'sig5r-TJ':
+            s = sig5(torch.relu(params) + 0.1, frames_num) # J, T
             s = s.permute(1, 0).unsqueeze(0) # 1, T, J
             
         elif mode == 'sigstar-T':
