@@ -38,8 +38,8 @@ class HistoryRepeatsItself(nn.Module):
             un_params = torch.nn.Parameter(torch.zeros(15, self.out_n + self.args.kernel_size ,self.args.in_features//3))
 
         self.un_params = un_params
-        torch.nn.init.xavier_uniform_(self.un_params)
-        # print('un_loss_shape', self.un_params.shape)
+        # torch.nn.init.xavier_uniform_(self.un_params)
+        torch.nn.init.normal_(self.un_params, mean=1.5, std=0.2)
         self.args.loss.un_mode = self.args.un_mode
 
         self.dim_used = np.array([6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 21, 22, 23, 24, 25,
