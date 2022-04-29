@@ -1,0 +1,21 @@
+defaults:
+  - _self_
+  - common
+
+type: double_st_transformer
+
+n_major_joints: 22
+diff_layers: 3
+diff_channels: 64
+diff_nheads: 8
+
+model_is_unconditional: 0
+model_timeemb: 128
+model_featureemb: 16
+
+backbone_path: '/home/helium/Desktop/VITA/posepred/outputs/5.pt'
+
+device: &device ${device}
+
+loss:
+  type: st_transformer_loss
