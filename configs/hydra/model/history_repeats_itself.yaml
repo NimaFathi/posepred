@@ -14,7 +14,9 @@ itera: 1
 un_mode: 'default'
 loss:
   type: his_rep_itself
+  input_n: ${obs_frames_num}
   output_n: ${pred_frames_num}
   kernel_size: 10
   device: ${device}
   un_mode: 
+  itera:
