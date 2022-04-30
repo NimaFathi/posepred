@@ -344,6 +344,5 @@ class GCN(nn.Module):
 # python -m api.train model=hisroty_repeats_itself keypoint_dim=3 train_dataset=C:\Users\samen\Desktop\term7\b\git_pose\preprocessed_data\human36m\train_50_10_1_human3.6m.jsonl valid_dataset=C:\Users\samen\Desktop\term7\b\git_pose\preprocessed_data\human36m\validation_50_10_1_human3.6m.jsonl epochs=10 data.shuffle=True device=cpu snapshot_interval=10 hydra.run.dir=./
 
 # python -m api.train model=history_repeats_itself keypoint_dim=3 train_dataset=C:\Users\samen\Desktop\term7\b\git_pose\preprocessed_data\human36m\train_50_10_1_human3.6m.jsonl valid_dataset=C:\Users\samen\Desktop\term7\b\git_pose\preprocessed_data\human36m\validation_50_10_1_human3.6m.jsonl epochs=1 data.shuffle=True device=cpu snapshot_interval=10 hydra.run.dir=.\outputs\59
-
-
+#111
 # '''
