@@ -10,6 +10,7 @@ class HisRepItselfLoss(nn.Module):
 
         self.args = args
         self.output_n = args.output_n
+        self.input_n = args.input_n
         self.seq_in = args.kernel_size
         self.device = args.device
         self.dim = 3
@@ -24,7 +25,7 @@ class HisRepItselfLoss(nn.Module):
             (self.joint_to_ignore * 3, self.joint_to_ignore * 3 + 1, self.joint_to_ignore * 3 + 2))
         self.joint_equal = np.array([13, 19, 22, 13, 27, 30])
         self.index_to_equal = np.concatenate((self.joint_equal * 3, self.joint_equal * 3 + 1, self.joint_equal * 3 + 2))
-        self.itera = 1
+        self.itera = args.itera
         # self.idx = np.expand_dims(np.arange(self.seq_in + self.out_n), axis=1) + (
         #         self.out_n - self.seq_in + np.expand_dims(np.arange(self.itera), axis=0))
 
@@ -36,18 +37,25 @@ class HisRepItselfLoss(nn.Module):
         p3d_sup = p3d_h36.clone()[:, :, self.dim_used][:, -self.output_n - self.seq_in:].reshape(
             [-1, self.seq_in + self.output_n, len(self.dim_used) // 3, 3])
         p3d_out_all = model_outputs['pred_pose']
-        loss_p3d = torch.mean(torch.norm(p3d_out_all[:, :, 0] - p3d_sup, dim=3))
+        # print(self.itera, p3d_out_all.shape, p3d_sup.shape)
+        # print('loss', p3d_out_all[:, :self.seq_in+10].shape, p3d_sup[:, :self.seq_in+10].shape)
+        if self.itera == 1:
+            loss_p3d = torch.mean(torch.norm(p3d_out_all[:, :, 0] - p3d_sup, dim=3))
+        else:
+            loss_p3d = torch.mean(torch.norm(p3d_out_all[:, :self.seq_in+10] - p3d_sup[:, :self.seq_in+10], dim=3))
 
         p3d_out = model_outputs['pred_metric_pose']
+        # print(15, p3d_out.shape, p3d_h36.shape)
         # print('loss mp', p3d_h36[:, -self.output_n:].shape, p3d_out.shape, joints//3)
+
         mpjpe_p3d_h36 = torch.mean(
             torch.norm(p3d_h36[:, -self.output_n:].reshape(
                 [-1, self.output_n, (joints // 3), 3]
             ) - p3d_out.reshape(
-                p3d_out.shape[0], p3d_out.shape[1], p3d_out.shape[2] // 3, 3), dim=3
+                p3d_out.shape[0], p3d_out.shape[1], joints // 3, 3), dim=3
             )
         )
-
+        # print(17, mpjpe_p3d_h36)
         outputs = {'loss': loss_p3d, 'mpjpe': mpjpe_p3d_h36}
         # print(outputs)
         if 'pred_mask' in model_outputs.keys():
