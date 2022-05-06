@@ -39,8 +39,8 @@ class HistoryRepeatsItself(nn.Module):
         self.un_params = un_params
         # torch.nn.init.xavier_uniform_(self.un_params)
         if args.init_mode == "descending":
-            torch.nn.init.constant_(self.un_params[:, 0], -0.1)
-            torch.nn.init.constant_(self.un_params[:, 0], 3.8)
+            torch.nn.init.constant_(self.un_params[:, 0], -0.2)
+            torch.nn.init.constant_(self.un_params[:, 0], 3.7)
             torch.nn.init.constant_(self.un_params[:, 0], -0.2)
             torch.nn.init.constant_(self.un_params[:, 0], 10)
             torch.nn.init.constant_(self.un_params[:, 0], -0.1)
