@@ -16,6 +16,7 @@ class HistoryRepeatsItself(nn.Module):
         args.loss.un_mode = args.un_mode
 
         self.args = args
+        self.init_mode = args.init_mode
         print(args)
         self.device = args.device
         self.net_pred = AttModel(in_features=args.in_features, kernel_size=args.kernel_size, d_model=args.d_model,
