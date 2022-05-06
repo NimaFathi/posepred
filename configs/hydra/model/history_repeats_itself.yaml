@@ -12,6 +12,8 @@ num_stage: 12
 dct_n: 20
 itera: 1
 un_mode: 'default'
+init_mode: 'default'
+
 loss:
   type: his_rep_itself
   input_n: ${obs_frames_num}
