@@ -12,7 +12,7 @@ from models.history_repeats_itself.utils import data_utils, util
 class HistoryRepeatsItself(nn.Module):
     def __init__(self, args):
         super(HistoryRepeatsItself, self).__init__()
-        args.loss.itera = args.itera
+        # args.loss.itera = args.itera
         args.loss.un_mode = args.un_mode
 
         self.args = args
@@ -26,15 +26,22 @@ class HistoryRepeatsItself(nn.Module):
         self.in_n = args.input_n
         self.out_n = args.output_n
         if 'sig5' in args.un_mode:
-            un_params = torch.nn.Parameter(torch.zeros(self.args.in_features//3, 5))
+            un_params = torch.nn.Parameter(torch.zeros(args.in_features//3, 5))
         elif 'sigstar' in args.un_mode:
-            un_params = torch.nn.Parameter(torch.zeros(self.args.in_features//3, 2))
+            un_params = torch.nn.Parameter(torch.zeros(args.in_features//3, 2))
         else:
-            un_params = torch.nn.Parameter(torch.zeros(15, self.out_n + self.args.kernel_size ,self.args.in_features//3))
+            if args.itera == 1:
+                un_params = torch.nn.Parameter(torch.zeros(15, self.out_n + args.kernel_size ,args.in_features//3))
+            else:
+                un_params = torch.nn.Parameter(torch.zeros(15, 10 + args.kernel_size ,args.in_features//3))
+
 
         self.un_params = un_params
         # torch.nn.init.xavier_uniform_(self.un_params)
         torch.nn.init.normal_(self.un_params, mean=1.5, std=0.2)
+        # torch.nn.init.constant_(self.un_params[:, 0], 3.5)
+        # torch.nn.init.constant_(self.un_params[:, 2], 1)
+        print(self.un_params)
 
         self.dim_used = np.array([6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 21, 22, 23, 24, 25,
                                   26, 27, 28, 29, 30, 31, 32, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45,
@@ -48,7 +55,7 @@ class HistoryRepeatsItself(nn.Module):
             (self.joint_to_ignore * 3, self.joint_to_ignore * 3 + 1, self.joint_to_ignore * 3 + 2))
         self.joint_equal = np.array([13, 19, 22, 13, 27, 30])
         self.index_to_equal = np.concatenate((self.joint_equal * 3, self.joint_equal * 3 + 1, self.joint_equal * 3 + 2))
-        self.itera = args.itera
+        self.itera = 1#args.itera
         self.idx = np.expand_dims(np.arange(self.seq_in + self.out_n), axis=1) + (
                 self.out_n - self.seq_in + np.expand_dims(np.arange(self.itera), axis=0))
 

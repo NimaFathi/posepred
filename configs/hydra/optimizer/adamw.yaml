@@ -1,4 +1,4 @@
-type: adam
+type: adamw
 lr: 0.0001
 betas:
   - 0.9
