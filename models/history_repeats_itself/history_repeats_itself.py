@@ -12,7 +12,7 @@ from models.history_repeats_itself.utils import data_utils, util
 class HistoryRepeatsItself(nn.Module):
     def __init__(self, args):
         super(HistoryRepeatsItself, self).__init__()
-        # args.loss.itera = args.itera
+        args.loss.itera = args.itera
         args.loss.un_mode = args.un_mode
 
         self.args = args
@@ -63,7 +63,7 @@ class HistoryRepeatsItself(nn.Module):
             (self.joint_to_ignore * 3, self.joint_to_ignore * 3 + 1, self.joint_to_ignore * 3 + 2))
         self.joint_equal = np.array([13, 19, 22, 13, 27, 30])
         self.index_to_equal = np.concatenate((self.joint_equal * 3, self.joint_equal * 3 + 1, self.joint_equal * 3 + 2))
-        self.itera = 1#args.itera
+        self.itera = args.itera
         self.idx = np.expand_dims(np.arange(self.seq_in + self.out_n), axis=1) + (
                 self.out_n - self.seq_in + np.expand_dims(np.arange(self.itera), axis=0))
 

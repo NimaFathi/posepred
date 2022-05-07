@@ -10,7 +10,7 @@ class HisRepItselfLoss(nn.Module):
 
         self.args = args
         self.output_n = args.output_n
-        # self.input_n = args.input_n
+        self.input_n = args.input_n
         self.seq_in = args.kernel_size
         self.device = args.device
         self.mode = args.un_mode
@@ -34,7 +34,7 @@ class HisRepItselfLoss(nn.Module):
             (self.joint_to_ignore * 3, self.joint_to_ignore * 3 + 1, self.joint_to_ignore * 3 + 2))
         self.joint_equal = np.array([13, 19, 22, 13, 27, 30])
         self.index_to_equal = np.concatenate((self.joint_equal * 3, self.joint_equal * 3 + 1, self.joint_equal * 3 + 2))
-        self.itera = 1 #args.itera
+        self.itera = args.itera
         self.action_dict = {
                 "walking": 0, 
                 "eating": 1, 
