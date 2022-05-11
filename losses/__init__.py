@@ -20,6 +20,7 @@ from .potr_loss import POTRLoss
 from models.tcn.constant_bone_loss import CBLoss
 from models.st_transformer.st_transformer_loss import STTransformerLoss
 from models.st_transformer.task_dependent_uncertainty_loss import TDUncertaintyLoss
+from models.st_transformer.model_predicted_TDU_loss import model_predicted_TDUncertaintyLoss
 
 LOSSES = {'mse_vel': MSEVel,
           'mse_pose': MSEPose,
@@ -42,5 +43,6 @@ LOSSES = {'mse_vel': MSEVel,
           'spherical_tcn': TCNLoss,
           'constant_bone_tcn': CBLoss,
           'st_transformer_loss': STTransformerLoss,
-          'task_dependent_uncertainty_loss': TDUncertaintyLoss
+          'task_dependent_uncertainty_loss': TDUncertaintyLoss,
+          'model_predicted_TDU_loss': model_predicted_TDUncertaintyLoss
           }

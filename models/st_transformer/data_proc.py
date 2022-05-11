@@ -66,8 +66,9 @@ class Postprocess(nn.Module):
 
         print(mean.shape, std.shape)
 
-    def forward(self, observed_pose, pred_pose):
-        pred_pose = (pred_pose * self.std) + self.mean
+    def forward(self, observed_pose, pred_pose, normal=True):
+        if normal:
+            pred_pose = (pred_pose * self.std) + self.mean
 
         x = torch.zeros([pred_pose.shape[0], pred_pose.shape[1], 96]).to(self.args.device)
         x[:, :, dim_used] = pred_pose

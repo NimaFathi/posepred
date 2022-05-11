@@ -181,10 +181,10 @@ class Trainer:
         #     print(self.model.sigma)
         #     print(torch.mean(self.model.sigma), torch.std(self.model.sigma))
 
-        # print(self.model.calc_sigma())
-        # print(torch.mean(self.model.calc_sigma()), torch.std(self.model.calc_sigma()))
+        print(self.model.calc_sigma())
+        print(torch.mean(self.model.calc_sigma()), torch.std(self.model.calc_sigma()))
 
-        print(torch.mean(self.model.backbone.sigma.weight, dim=0))
+        # print(torch.mean(self.model.backbone.sigma.weight, dim=0))
 
 
         self.valid_reporter.start_time = time.time()

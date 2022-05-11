@@ -2,7 +2,7 @@ defaults:
   - _self_
   - common
 
-type: st_transformer
+type: st_transformer_u
 
 n_major_joints: 22
 diff_layers: 3
@@ -17,12 +17,5 @@ model_featureemb: 16
 device: &device ${device}
 
 loss:
-  type: task_dependent_uncertainty_loss
-  squared: False
-  action_aware: False
-  joint_aware: False
-  time_aware: False
   device: ${device}
-
-# loss:
-#   type: st_transformer_loss
+  type: model_predicted_TDU_loss
