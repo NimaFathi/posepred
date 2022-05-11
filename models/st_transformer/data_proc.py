@@ -53,8 +53,11 @@ class Preprocess(nn.Module):
 
         print(mean.shape, std.shape)
 
-    def forward(self, observed_pose):
-        return (observed_pose[:, :, dim_used] - self.mean) / self.std
+    def forward(self, observed_pose, normal=True):
+        observed_pose = observed_pose[:, :, dim_used]
+        if normal:
+            observed_pose = (observed_pose - self.mean) / self.std
+        return observed_pose
 
 
 class Postprocess(nn.Module):

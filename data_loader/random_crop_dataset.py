@@ -115,7 +115,6 @@ class RandomCropDataset(Dataset):
         if is_h36_testing:
             indexes = []
             for i in range(0, len(data), 2):
-
                 len1 = (data[i]['pose'].shape[0] + frame_rate - 1) // frame_rate
                 len2 = (data[i + 1]['pose'].shape[0] + frame_rate - 1) // frame_rate
 
@@ -142,6 +141,8 @@ class RandomCropDataset(Dataset):
         return len(self.indexes)
 
     def __getitem__(self, index):
+
+        return self.get_reconstruction_item(index)
 
         random_reverse = np.random.choice([False, True])
         if self.is_testing or self.is_h36_testing:
@@ -173,3 +174,78 @@ class RandomCropDataset(Dataset):
                 outputs[k] = seq[k]
 
         return outputs
+
+    def get_reconstruction_item(self, index):
+        random_reverse = np.random.choice([False, True])
+        mask = self.get_mask()
+
+        if self.is_testing or self.is_h36_testing:
+            random_reverse = False
+            mask[:, :] = 0
+            mask[:self.len_observed, :] = 1
+
+        data_index, seq_index = self.indexes[index]
+        seq = self.data[data_index]
+        outputs = {'reconstruction_mask': mask.float()}
+
+        output_keys = ['metric_pose', 'pose']
+
+        for k in output_keys:
+            temp_seq = seq[k][seq_index:seq_index + self.total_len]
+            if random_reverse:
+                temp_seq = torch.flip(temp_seq, [0])
+            temp_seq = temp_seq[::self.frame_rate]
+            outputs["future_" + k] = temp_seq
+            outputs["observed_" + k] = temp_seq
+
+        for k in self.extra_keys_to_keep:
+            if k in seq:
+                outputs[k] = seq[k]
+
+        return outputs
+
+    def get_mask(self):
+
+        ratio = 100 // 40
+        T = self.total_len // self.frame_rate
+        J = self.keypoints_num
+        C = self.keypoint_dim
+        JC = J * C
+
+        mask = torch.zeros(T, JC)
+
+        mode = np.random.choice(range(6))
+
+        if mode == 0:  # random structural : leg, hand, ...
+            part = []
+            part.append(np.array([2, 3, 4, 5]))
+            part.append(np.array([7, 8, 9, 10]))
+            part.append(np.array([12, 13, 14, 15]))
+            part.append(np.array([17, 18, 19, 21, 22]))
+            part.append(np.array([25, 26, 27, 29, 30]))
+            part = part[np.random.choice(range(5))]
+            part = np.concatenate((part * 3, part * 3 + 1, part * 3 + 2))
+            mask[:, part] = 1
+        if mode == 1:  # random structural : joints
+            part = np.arange(J)
+            np.random.shuffle(part)
+            part = part[:part.shape[0] // ratio]
+            part = np.concatenate((part * 3, part * 3 + 1, part * 3 + 2))
+            mask[:, part] = 1
+        if mode == 2:  # random frames
+            part = np.arange(T)
+            np.random.shuffle(part)
+            part = part[:part.shape[0] // ratio]
+            mask[part, :] = 1
+        if mode == 3:  # random segment
+            max_len = 3 * T // 4
+            l = np.random.choice(range(1, max_len + 1))
+            start = np.random.choice(range(T - max_len + 1))
+            mask[start:start + l, :] = 1
+        if mode == 4:  # random numbers
+            mask = torch.tensor(np.random.choice([0.0, 1.0], p=((ratio - 1) / ratio, 1 / ratio), size=mask.shape))
+        if mode == 5:  # random X, Y, Z
+            part = np.random.choice(range(3))
+            mask[:, 3 * np.arange(J) + part] = 1
+
+        return 1 - mask

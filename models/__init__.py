@@ -18,6 +18,7 @@ from .tcn.constant_bone_tcn import ConstantBoneTcn
 from .st_transformer.CSDI import CSDI_H36M
 from .st_transformer.DoubleCSDI import double_CSDI_H36M
 from .st_transformer.CSDI_U import U_CSDI_H36M
+from .st_transformer.CSDI import CSDI_Reconstruction_H36M
 
 MODELS = {'zero_vel': ZeroVel,
           'nearest_neighbor': NearestNeighbor,
@@ -38,5 +39,6 @@ MODELS = {'zero_vel': ZeroVel,
           'constant_bone_tcn': ConstantBoneTcn,
           'st_transformer': CSDI_H36M,
           'double_st_transformer': double_CSDI_H36M,
-          'st_transformer_u': U_CSDI_H36M
+          'st_transformer_u': U_CSDI_H36M,
+          'st_transformer_reconstruction': CSDI_Reconstruction_H36M
           }
