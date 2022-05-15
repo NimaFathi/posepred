@@ -14,6 +14,7 @@ class HistoryRepeatsItself(nn.Module):
         super(HistoryRepeatsItself, self).__init__()
         args.loss.itera = args.itera
         args.loss.un_mode = args.un_mode
+        args.loss.disp_reg = args.disp_reg
 
         self.args = args
         self.init_mode = args.init_mode
@@ -39,16 +40,21 @@ class HistoryRepeatsItself(nn.Module):
 
         self.un_params = un_params
         # torch.nn.init.xavier_uniform_(self.un_params)
-        if args.init_mode == "descending":
+        if self.init_mode == "descending":
             torch.nn.init.constant_(self.un_params[:, 0], -0.2)
             torch.nn.init.constant_(self.un_params[:, 0], 3.7)
             torch.nn.init.constant_(self.un_params[:, 0], -0.2)
             torch.nn.init.constant_(self.un_params[:, 0], 10)
             torch.nn.init.constant_(self.un_params[:, 0], -0.1)
+        elif self.init_mode == "increasing":
+            torch.nn.init.constant_(self.un_params[:, 0], 0)
+            torch.nn.init.constant_(self.un_params[:, 0], 3)
+            torch.nn.init.constant_(self.un_params[:, 0], 0.2)
+            torch.nn.init.constant_(self.un_params[:, 0], 10.7)
+            torch.nn.init.constant_(self.un_params[:, 0], 0.1)
         else:
             torch.nn.init.normal_(self.un_params, mean=1.5, std=0.2)
-        # torch.nn.init.constant_(self.un_params[:, 0], 3.5)
-        # torch.nn.init.constant_(self.un_params[:, 2], 1)
+
         print(self.un_params)
 
         self.dim_used = np.array([6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 21, 22, 23, 24, 25,

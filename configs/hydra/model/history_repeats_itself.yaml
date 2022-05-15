@@ -13,6 +13,7 @@ dct_n: 20
 itera: 1
 un_mode: 'default'
 init_mode: 'default'
+disp_reg: false
 
 loss:
   type: his_rep_itself
@@ -22,3 +23,4 @@ loss:
   device: ${device}
   un_mode: 
   itera:
+  disp_reg:
