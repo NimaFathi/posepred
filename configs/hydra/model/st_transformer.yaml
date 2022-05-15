@@ -13,6 +13,7 @@ model_is_unconditional: 0
 model_timeemb: 128
 model_featureemb: 16
 
+init_path: /home/helium/Desktop/VITA/posepred/outputs/reconstruct/reconstruction_rate1_obs50_pred25_epoch15.pt
 
 device: &device ${device}
 

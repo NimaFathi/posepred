@@ -142,7 +142,7 @@ class RandomCropDataset(Dataset):
 
     def __getitem__(self, index):
 
-        return self.get_reconstruction_item(index)
+        # return self.get_reconstruction_item(index)
 
         random_reverse = np.random.choice([False, True])
         if self.is_testing or self.is_h36_testing:
