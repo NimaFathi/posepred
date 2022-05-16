@@ -16,13 +16,16 @@ class HisRepItselfLoss(nn.Module):
         self.device = args.device
         self.mode = args.un_mode
         assert args.un_mode in \
-            ['default', 'ATJ', 'TJ', 'AJ', 'AT', 'A', 'T', 'J', 
-            'sig5-T', 'sig5-TJ', 
-            'sig5s-T', 'sig5s-TJ', 
-            'sigstar-T', 'sigstar-TJ', 
-            'sig5r-TJ',
-            'sig5shifted-T',
-            'input_rel']
+            [
+                'default', 'ATJ', 'TJ', 'AJ', 'AT', 'A', 'T', 'J', 
+                'sig5-T', 'sig5-TJ', 
+                'sig5s-T', 'sig5s-TJ', 
+                'sigstar-T', 'sigstar-TJ', 
+                'sig5r-TJ',
+                'sig5shifted-T',
+                'input_rel',
+                'sig5-TJPrior'
+            ]
             
         self.dim = 3
         self.dim_used = np.array([6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 21, 22, 23, 24, 25,
@@ -69,6 +72,7 @@ class HisRepItselfLoss(nn.Module):
 
         losses = torch.norm(pred - gt, dim=3) # B, T, J
         frames_num = torch.arange(T).to(self.device)
+        joints_num = torch.tensor([1, 4, 5, 6, 1, 4, 5, 6, 0, 1, 2, 3, 1, 7, 8, 9, 10, 1, 7, 8, 9, 10]).to(self.device)
         if mode == 'ATJ':
             s = params[actions] # B, T, J
         elif mode == 'AT':
@@ -121,6 +125,17 @@ class HisRepItselfLoss(nn.Module):
             params = torch.cat([params, torch.ones(J, 1).to(self.device)], dim=-1) # J, 3
             s = sigstar(params, frames_num) # J, T
             s = s.permute(1, 0).unsqueeze(0)
+        elif mode == 'sig5-TJPrior':
+            st = sig5(params[0, :], frames_num) # 1, T
+            st = st.reshape(1, T, 1)
+
+            sj = sig5(params[1, :], joints_num) # 1, J
+            sj = sj.reshape(1, 1, J)
+
+            s = st * sj # 1, T, J
+
+
+
         
         
         loss = 1 / torch.exp(s) * losses + s
