@@ -61,7 +61,7 @@ class HisRepItselfLoss(nn.Module):
         # self.idx = np.expand_dims(np.arange(self.seq_in + self.out_n), axis=1) + (
         #         self.out_n - self.seq_in + np.expand_dims(np.arange(self.itera), axis=0))
 
-    def un_loss(self, pred, gt, params, actions=None, mode='ATJ', obs_disp=1):
+    def un_loss(self, pred, gt, params, actions=None, mode='ATJ', pred_disp=1):
         # pred, gt:  B, T, J, D
         # params: A, T, J ---- 16, 25, 22
         B, T, J, D = pred.shape
@@ -134,15 +134,12 @@ class HisRepItselfLoss(nn.Module):
 
             s = st * sj # 1, T, J
 
-
-
-        
         
         loss = 1 / torch.exp(s) * losses + s
 
         if self.args.disp_reg:
-            obs_disp = obs_disp.reshape(B, 1, 1)
-            loss = loss + 1/obs_disp * s
+            pred_disp = pred_disp.reshape(B, 1, 1)
+            loss = loss + 1/pred_disp * s
 
         loss = torch.mean(loss)
 
@@ -163,14 +160,15 @@ class HisRepItselfLoss(nn.Module):
         # print('p3d_h36', p3d_h36.shape)
         # print('mode', self.mode)
         # print('observed_loss', (p3d_out_all[:, :10, 0] - p3d_sup[:, :10]).sum())
-        obs_disp = None
+        pred_disp = None
         if self.args.disp_reg:
-            obs_pose = input_data['observed_pose'][:, :, self.dim_used]
+            # obs_pose = input_data['observed_pose'][:, :, self.dim_used]
+            pred_pose = p3d_out_all[:, :, 0]
             # print(obs_pose.shape)
-            obs_pose = obs_pose.reshape(obs_pose.shape[0], obs_pose.shape[1], len(self.dim_used) // 3, 3)
-            obs_disp = torch.norm((obs_pose[:, 1:] - obs_pose[:, :-1]), dim=-1)[:, -5:] # B, 5, J
-            obs_disp = obs_disp.mean(dim=1).mean(dim=1)
-            obs_disp.requires_grad = False
+            # obs_pose = obs_pose.reshape(obs_pose.shape[0], obs_pose.shape[1], len(self.dim_used) // 3, 3)
+            pred_disp = torch.norm((pred_pose[:, 1:] - pred_pose[:, :-1]), dim=-1) # B, T-1, J
+            pred_disp = pred_disp.mean(dim=1).mean(dim=1)
+            # pred_disp.requires_grad = False
 
         if self.mode == 'default':
             if self.itera == 1:
@@ -183,7 +181,7 @@ class HisRepItselfLoss(nn.Module):
         elif self.mode == 'input_rel':
             assert self.itera == 1
             params = model_outputs['pred_un_params'][:, :, 0]
-            loss_p3d = self.un_loss(pred=p3d_out_all[:, :, 0], gt=p3d_sup, params=params, actions=None, mode=self.mode, obs_disp=obs_disp)
+            loss_p3d = self.un_loss(pred=p3d_out_all[:, :, 0], gt=p3d_sup, params=params, actions=None, mode=self.mode, pred_disp=pred_disp)
         else:
             if 'A' in self.mode:
                 actions = torch.tensor([self.action_dict[a] for a in input_data['action']]).to(self.device)
@@ -192,9 +190,9 @@ class HisRepItselfLoss(nn.Module):
 
             params = model_outputs['un_params']
             if self.itera == 1:
-                loss_p3d = self.un_loss(pred=p3d_out_all[:, :, 0], gt=p3d_sup, params=params, actions=actions, mode=self.mode, obs_disp=obs_disp)
+                loss_p3d = self.un_loss(pred=p3d_out_all[:, :, 0], gt=p3d_sup, params=params, actions=actions, mode=self.mode, pred_disp=pred_disp)
             else:
-                loss_p3d = self.un_loss(pred=p3d_out_all[:, :self.seq_in+10], gt=p3d_sup[:, :self.seq_in+10], params=params, actions=actions, mode=self.mode, obs_disp=obs_disp)
+                loss_p3d = self.un_loss(pred=p3d_out_all[:, :self.seq_in+10], gt=p3d_sup[:, :self.seq_in+10], params=params, actions=actions, mode=self.mode, pred_disp=pred_disp)
 
 
         p3d_out = model_outputs['pred_metric_pose']
