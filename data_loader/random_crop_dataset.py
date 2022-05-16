@@ -131,7 +131,7 @@ class RandomCropDataset(Dataset):
                     for i in range(0, len_seq - total_len + 1, seq_rate):
                         gt = data[-1]["pose"][i:i+len_observed]
                         dis = torch.mean(torch.norm((gt[1:] - gt[:-1]).reshape(gt.shape[0]-1, gt.shape[1]//3,3), dim=2))
-                        if dis.item() > displacement_threshold:
+                        if dis.item() >= displacement_threshold:
                             temp_list.append((len(data) - 1, i))
                     indexes = indexes + temp_list
 
