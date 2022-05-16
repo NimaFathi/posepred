@@ -14,7 +14,7 @@ metric_pose_format: ${metric_pose_format}
 
 pose_formats: []
 
-displacement_mode: no-action
+displacement_mode: noop
 displacement_threshold: 13
 
 is_h36_testing: false
