@@ -59,7 +59,9 @@ class RandomCropDataset(Dataset):
                  frame_rate,
                  len_observed,
                  len_future,
-                 is_h36_testing):
+                 is_h36_testing,
+                 displacement_threshold,
+                 displacement_mode):
 
         self.normalize = normalize
         total_len = (len_observed + len_future) * frame_rate
@@ -110,8 +112,28 @@ class RandomCropDataset(Dataset):
 
                 data.append(seq_tensor)
                 len_seq = seq_tensor['pose'].shape[0]
-                indexes = indexes + [(len(data) - 1, i)
-                                     for i in range(0, len_seq - total_len + 1, seq_rate)]
+                if displacement_mode == "noop":
+                    indexes = indexes + [(len(data) - 1, i)
+                                        for i in range(0, len_seq - total_len + 1, seq_rate)]
+                elif displacement_mode == "less":
+                    print("I'm hereeeeeeee")
+                    temp_list = []
+                    for i in range(0, len_seq - total_len + 1, seq_rate):
+                        gt = data[-1]["pose"][i:i+len_observed]
+                        dis = torch.mean(torch.norm((gt[1:] - gt[:-1]).reshape(gt.shape[0]-1, gt.shape[1]//3,3), dim=2))
+                        if dis.item() < displacement_threshold:
+                            temp_list.append((len(data) - 1, i))
+                    indexes = indexes + temp_list
+                elif displacement_mode == "greater":
+                    print("I'm hereeeeeeee")
+
+                    temp_list = []
+                    for i in range(0, len_seq - total_len + 1, seq_rate):
+                        gt = data[-1]["pose"][i:i+len_observed]
+                        dis = torch.mean(torch.norm((gt[1:] - gt[:-1]).reshape(gt.shape[0]-1, gt.shape[1]//3,3), dim=2))
+                        if dis.item() > displacement_threshold:
+                            temp_list.append((len(data) - 1, i))
+                    indexes = indexes + temp_list
 
         if is_h36_testing:
             indexes = []
@@ -138,6 +160,7 @@ class RandomCropDataset(Dataset):
         self.is_visualizing = is_visualizing
         self.is_h36_testing = is_h36_testing
         print(dataset_path, is_testing, is_h36_testing)
+        print(f"################ {len(self.indexes)} ##############")
 
         self.interpolate = RandomInterpolate(0.9, scale_mode='constant')
 
