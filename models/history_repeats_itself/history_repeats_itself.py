@@ -28,8 +28,8 @@ class HistoryRepeatsItself(nn.Module):
         self.in_n = args.input_n
         self.out_n = args.output_n
         if args.un_mode == 'sig5-TJPrior':
-            un_params = torch.nn.Parameter(torch.zeros((args.in_features//3 + args.output_n, 5)))
-        if 'sig5' in args.un_mode:
+            un_params = torch.nn.Parameter(torch.zeros((args.in_features//3 + args.output_n + args.kernel_size, 5)))
+        elif 'sig5' in args.un_mode:
             un_params = torch.nn.Parameter(torch.zeros(args.in_features//3, 5))
         elif 'sigstar' in args.un_mode:
             un_params = torch.nn.Parameter(torch.zeros(args.in_features//3, 2))
