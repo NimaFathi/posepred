@@ -264,4 +264,8 @@ viz.ipynb
 
 # Mlflow
 mlruns/
+
+# Visualization and Notebooks
 sample_viz/
+notebooks/
+
