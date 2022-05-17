@@ -126,13 +126,13 @@ class HisRepItselfLoss(nn.Module):
             s = sigstar(params, frames_num) # J, T
             s = s.permute(1, 0).unsqueeze(0)
         elif mode == 'sig5-TJPrior':
-            st = sig5(params[0, :], frames_num) # 1, T
-            st = st.reshape(1, T, 1)
+            st = sig5(params[self.args.output_n:], frames_num) # J, T
+            st = st.permute(1, 0).unsqueeze(0)
 
-            sj = sig5(params[1, :], joints_num) # 1, J
-            sj = sj.reshape(1, 1, J)
+            sj = sig5(params[:self.args.output_n], joints_num) # T, J
+            sj = sj.unsqueeze(0)
 
-            s = st * sj # 1, T, J
+            s = st + sj # 1, T, J
 
         
         loss = 1 / torch.exp(s) * losses + s

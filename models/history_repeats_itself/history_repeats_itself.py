@@ -27,6 +27,8 @@ class HistoryRepeatsItself(nn.Module):
 
         self.in_n = args.input_n
         self.out_n = args.output_n
+        if args.un_mode == 'sig5-TJPrior':
+            un_params = torch.nn.Parameter(torch.zeros((args.in_features//3 + args.output_n, 5)))
         if 'sig5' in args.un_mode:
             un_params = torch.nn.Parameter(torch.zeros(args.in_features//3, 5))
         elif 'sigstar' in args.un_mode:
@@ -52,8 +54,10 @@ class HistoryRepeatsItself(nn.Module):
             torch.nn.init.constant_(self.un_params[:, 2], 0.2)
             torch.nn.init.constant_(self.un_params[:, 3], 10.7)
             torch.nn.init.constant_(self.un_params[:, 4], 0.1)
-        else:
+        elif self.init_mode == "default":
             torch.nn.init.normal_(self.un_params, mean=1.5, std=0.2)
+        else:
+            raise Exception("The defined init mode is not supported.")
 
         print(self.un_params)
 
