@@ -47,8 +47,8 @@ class HisRepItselfLoss(nn.Module):
             (0, 1), (1, 2), (2, 3),
             (4, 5), (5, 6), (6, 7)
         ]
-        self.S = np.array([c[0] for c in connect])
-        self.E = np.array([c[1] for c in connect])
+        self.S = np.array([c[0] for c in self.connect])
+        self.E = np.array([c[1] for c in self.connect])
 
         self.sample_rate = 2
         # joints at same loc
@@ -162,7 +162,7 @@ class HisRepItselfLoss(nn.Module):
             st = sig5(params, frames_num) # J, T
             st = st.permute(1, 0).unsqueeze(0) # 1, T, J
 
-            s = torch.zeros((1, T, J))
+            s = torch.zeros((1, T, J)).to(self.device)
             s[:, :, [0, 4, 8]] = st[:, :, [0, 4, 8]]
             s[:, :, self.E] = st[:, :, self.E]
             for c in self.connect:
