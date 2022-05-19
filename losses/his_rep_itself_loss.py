@@ -72,7 +72,9 @@ class HisRepItselfLoss(nn.Module):
 
         losses = torch.norm(pred - gt, dim=3) # B, T, J
         frames_num = torch.arange(T).to(self.device)
-        joints_num = torch.tensor([1, 4, 5, 6, 1, 4, 5, 6, 0, 1, 2, 3, 1, 7, 8, 9, 10, 1, 7, 8, 9, 10]).to(self.device)
+        # v1 : [1, 4, 5, 6, 1, 4, 5, 6, 0, 1, 2, 3, 1, 7, 8, 9, 10, 1, 7, 8, 9, 10]
+        # v2: [0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 4, 0, 1, 2, 3, 4]
+        joints_num = torch.tensor([0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 4, 0, 1, 2, 3, 4]).to(self.device)
         if mode == 'ATJ':
             s = params[actions] # B, T, J
         elif mode == 'AT':
@@ -126,11 +128,16 @@ class HisRepItselfLoss(nn.Module):
             s = sigstar(params, frames_num) # J, T
             s = s.permute(1, 0).unsqueeze(0)
         elif mode == 'sig5-TJPrior':
-            st = sig5(params[T:], frames_num) # J, T
-            st = st.permute(1, 0).unsqueeze(0)
+            # st = sig5(params[T:], frames_num) # J, T
+            # st = st.permute(1, 0).unsqueeze(0)
 
-            sj = sig5(params[:T], joints_num) # T, J
-            sj = sj.unsqueeze(0)
+            # sj = sig5(params[:T], joints_num) # T, J
+            # sj = sj.unsqueeze(0)
+            st = sig5(params[0], frames_num) # 1, T
+            st = st.unsqueeze(-1) # 1, T, 1
+
+            sj = sig5(params[1], joints_num) # 1, J
+            sj = sj.unsqueeze(1) # 1, 1, J
 
             s = st + sj # 1, T, J
 
@@ -162,11 +169,11 @@ class HisRepItselfLoss(nn.Module):
         # print('observed_loss', (p3d_out_all[:, :10, 0] - p3d_sup[:, :10]).sum())
         pred_disp = None
         if self.args.disp_reg:
-            # obs_pose = input_data['observed_pose'][:, :, self.dim_used]
-            pred_pose = p3d_out_all[:, :, 0]
-            # print(obs_pose.shape)
-            # obs_pose = obs_pose.reshape(obs_pose.shape[0], obs_pose.shape[1], len(self.dim_used) // 3, 3)
-            pred_disp = torch.norm((pred_pose[:, 1:] - pred_pose[:, :-1]), dim=-1) # B, T-1, J
+            # pred_pose = p3d_out_all[:, :, 0]
+            obs_pose = input_data['observed_pose'][:, :, self.dim_used]
+            obs_pose = obs_pose.reshape(obs_pose.shape[0], obs_pose.shape[1], len(self.dim_used) // 3, 3)
+            pred_disp = torch.norm((obs_pose[:, -10:] - obs_pose[:, -11:-1]), dim=-1) # B, T-1, J
+            # pred_disp = torch.norm((pred_pose[:, 1:] - pred_pose[:, :-1]), dim=-1) # B, T-1, J
             pred_disp = pred_disp.mean(dim=1).mean(dim=1)
             # pred_disp.requires_grad = False
 
