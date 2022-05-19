@@ -25,7 +25,7 @@ class HisRepItselfLoss(nn.Module):
                 'sig5shifted-T',
                 'input_rel',
                 'sig5-TJPrior',
-                'sig5-TJPriorSum'
+                'TJPriorSum'
             ]
             
         self.dim = 3
@@ -158,7 +158,7 @@ class HisRepItselfLoss(nn.Module):
             sj = sj.unsqueeze(1) # 1, 1, J
 
             s = st + sj # 1, T, J
-        elif mode == 'sig5-TJPriorSum':
+        elif mode == 'TJPriorSum':
             st = sig5(params, frames_num) # J, T
             st = st.permute(1, 0).unsqueeze(0) # 1, T, J
 
