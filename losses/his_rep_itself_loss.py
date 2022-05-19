@@ -24,7 +24,8 @@ class HisRepItselfLoss(nn.Module):
                 'sig5r-TJ',
                 'sig5shifted-T',
                 'input_rel',
-                'sig5-TJPrior'
+                'sig5-TJPrior',
+                'sig5-TJPriorSum'
             ]
             
         self.dim = 3
@@ -32,6 +33,23 @@ class HisRepItselfLoss(nn.Module):
                                   26, 27, 28, 29, 30, 31, 32, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45,
                                   46, 47, 51, 52, 53, 54, 55, 56, 57, 58, 59, 63, 64, 65, 66, 67, 68,
                                   75, 76, 77, 78, 79, 80, 81, 82, 83, 87, 88, 89, 90, 91, 92])
+        # self.connect = [
+        #     (11, 12), (12, 13), (13, 14), (14, 15),
+        #     (13, 25), (25, 26), (26, 27), (27, 29), (29, 30),
+        #     (13, 17), (17, 18), (18, 19), (19, 21), (21, 22),
+        #     (1, 2), (2, 3), (3, 4), (4, 5),
+        #     (6, 7), (7, 8), (8, 9), (9, 10)
+        # ]
+        self.connect = [
+            (8, 9), (9, 10), (10, 11),
+            (9, 17), (17, 18), (18, 19), (19, 20), (20, 21),
+            (9, 12), (12, 13), (13, 14), (14, 15), (15, 16),
+            (0, 1), (1, 2), (2, 3),
+            (4, 5), (5, 6), (6, 7)
+        ]
+        self.S = np.array([c[0] for c in connect])
+        self.E = np.array([c[1] for c in connect])
+
         self.sample_rate = 2
         # joints at same loc
         self.joint_to_ignore = np.array([16, 20, 23, 24, 28, 31])
@@ -140,6 +158,17 @@ class HisRepItselfLoss(nn.Module):
             sj = sj.unsqueeze(1) # 1, 1, J
 
             s = st + sj # 1, T, J
+        elif mode == 'sig5-TJPriorSum':
+            st = sig5(params, frames_num) # J, T
+            st = st.permute(1, 0).unsqueeze(0) # 1, T, J
+
+            s = torch.zeros((1, T, J))
+            s[:, :, [0, 4, 8]] = st[:, :, [0, 4, 8]]
+            s[:, :, self.E] = st[:, :, self.E]
+            for c in self.connect:
+                s[:, :, c[1]] = s[:, :, c[0]] + s[:, :, c[1]]
+        else:
+            raise Exception('The defined uncertainry mode is not supported.')
 
         
         loss = 1 / torch.exp(s) * losses + s
