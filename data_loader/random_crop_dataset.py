@@ -109,8 +109,10 @@ class RandomCropDataset(Dataset):
 
                 data.append(seq_tensor)
                 len_seq = seq_tensor['pose'].shape[0]
+                bias = 1 if is_h36_testing else frame_rate
                 indexes = indexes + [(len(data) - 1, i)
-                                     for i in range(0, len_seq - total_len + 1, seq_rate)]
+                                     for i in range(0, len_seq - total_len + bias, seq_rate)]
+                print(len_seq)
 
         if is_h36_testing:
             indexes = []
@@ -144,7 +146,7 @@ class RandomCropDataset(Dataset):
 
         # return self.get_reconstruction_item(index)
 
-        random_reverse = np.random.choice([False, True])
+        random_reverse = False # np.random.choice([False, True])
         if self.is_testing or self.is_h36_testing:
             random_reverse = False
 
@@ -176,13 +178,13 @@ class RandomCropDataset(Dataset):
         return outputs
 
     def get_reconstruction_item(self, index):
-        random_reverse = np.random.choice([False, True])
+        # random_reverse = np.random.choice([False, True])
         mask = self.get_mask()
 
-        if self.is_testing or self.is_h36_testing:
-            random_reverse = False
-            mask[:, :] = 0
-            mask[:self.len_observed, :] = 1
+        # if self.is_testing or self.is_h36_testing:
+        #     random_reverse = False
+        #     mask[:, :] = 0
+        #     mask[:self.len_observed, :] = 1
 
         data_index, seq_index = self.indexes[index]
         seq = self.data[data_index]
@@ -192,8 +194,8 @@ class RandomCropDataset(Dataset):
 
         for k in output_keys:
             temp_seq = seq[k][seq_index:seq_index + self.total_len]
-            if random_reverse:
-                temp_seq = torch.flip(temp_seq, [0])
+            # if random_reverse:
+            #     temp_seq = torch.flip(temp_seq, [0])
             temp_seq = temp_seq[::self.frame_rate]
             outputs["future_" + k] = temp_seq
             outputs["observed_" + k] = temp_seq
@@ -206,17 +208,15 @@ class RandomCropDataset(Dataset):
 
     def get_mask(self):
 
-        ratio = 100 // 40
+        ratio = 100 // 20
         T = self.total_len // self.frame_rate
         J = self.keypoints_num
         C = self.keypoint_dim
         JC = J * C
 
-        mask = torch.zeros(T, JC)
-
-        mode = np.random.choice(range(6))
-
-        if mode == 0:  # random structural : leg, hand, ...
+        
+        def structural():
+            mask = torch.zeros(T, JC)
             part = []
             part.append(np.array([2, 3, 4, 5]))
             part.append(np.array([7, 8, 9, 10]))
@@ -226,26 +226,53 @@ class RandomCropDataset(Dataset):
             part = part[np.random.choice(range(5))]
             part = np.concatenate((part * 3, part * 3 + 1, part * 3 + 2))
             mask[:, part] = 1
-        if mode == 1:  # random structural : joints
+            return mask
+
+        def joint_in_all_frames():
+            mask = torch.zeros(T, JC)
             part = np.arange(J)
             np.random.shuffle(part)
             part = part[:part.shape[0] // ratio]
             part = np.concatenate((part * 3, part * 3 + 1, part * 3 + 2))
             mask[:, part] = 1
-        if mode == 2:  # random frames
+            return mask
+
+        def frames():
+            mask = torch.zeros(T, JC)
             part = np.arange(T)
             np.random.shuffle(part)
             part = part[:part.shape[0] // ratio]
             mask[part, :] = 1
-        if mode == 3:  # random segment
+            return mask
+        
+        def segment_of_frames():
+            mask = torch.zeros(T, JC)
             max_len = 3 * T // 4
             l = np.random.choice(range(1, max_len + 1))
             start = np.random.choice(range(T - max_len + 1))
             mask[start:start + l, :] = 1
-        if mode == 4:  # random numbers
-            mask = torch.tensor(np.random.choice([0.0, 1.0], p=((ratio - 1) / ratio, 1 / ratio), size=mask.shape))
-        if mode == 5:  # random X, Y, Z
+            return mask      
+
+        def no_order():
+            return torch.tensor(np.random.choice([0.0, 1.0], p=((ratio - 1) / ratio, 1 / ratio), size=mask.shape))
+
+        def XYZ():
+            mask = torch.zeros(T, JC)
             part = np.random.choice(range(3))
             mask[:, 3 * np.arange(J) + part] = 1
+            return mask
 
-        return 1 - mask
+        def joints():
+            mask = torch.zeros(T * JC)
+            part = np.arange(T * J)
+            np.random.shuffle(part)
+            part = part[:part.shape[0] // ratio]
+            part = np.concatenate((part * 3, part * 3 + 1, part * 3 + 2))
+            mask[part] = 1
+            return mask.reshape(T, JC)
+
+        func = np.random.choice([
+            frames,
+        ])
+
+        return 1 - func()
