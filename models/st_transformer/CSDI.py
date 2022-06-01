@@ -254,58 +254,58 @@ class CSDI_Reconstruction_H36M(CSDI_base):
 
     
     
-class CSDI_H36M(CSDI_Reconstruction_H36M):
-    def __init__(self, args):
-        super(CSDI_H36M, self).__init__(args)
+# class CSDI_H36M(CSDI_Reconstruction_H36M):
+#     def __init__(self, args):
+#         super(CSDI_H36M, self).__init__(args)
         
-        snapshot_path = args.init_path
-        snapshot = torch.load(snapshot_path, map_location=args.device)
-        super(CSDI_H36M, self).load_state_dict(snapshot['model_state_dict'])
-        print("Initialization of the model from {}".format(args.init_path))
+#         snapshot_path = args.init_path
+#         snapshot = torch.load(snapshot_path, map_location=args.device)
+#         super(CSDI_H36M, self).load_state_dict(snapshot['model_state_dict'])
+#         print("Initialization of the model from {}".format(args.init_path))
         
-        self.Lo = args.obs_frames_num
-        self.Lp = args.pred_frames_num
+#         self.Lo = args.obs_frames_num
+#         self.Lp = args.pred_frames_num
 
-        TDUL_T = self.Lp if args.loss.time_aware else 1
-        TDUL_J = 28 if args.loss.joint_aware else 1
+#         TDUL_T = self.Lp if args.loss.time_aware else 1
+#         TDUL_J = 28 if args.loss.joint_aware else 1
 
-        if args.loss.action_aware:
-            self.sigma = nn.Embedding(15, TDUL_T * TDUL_J)
-            self.sigma.weight = nn.Parameter(torch.ones(15, TDUL_T * TDUL_J, requires_grad=True) * 3.5)
-        else:
-            self.sigma = nn.Parameter(torch.ones(TDUL_T, TDUL_J, requires_grad=True) * 3.5)
+#         if args.loss.action_aware:
+#             self.sigma = nn.Embedding(15, TDUL_T * TDUL_J)
+#             self.sigma.weight = nn.Parameter(torch.ones(15, TDUL_T * TDUL_J, requires_grad=True) * 3.5)
+#         else:
+#             self.sigma = nn.Parameter(torch.ones(TDUL_T, TDUL_J, requires_grad=True) * 3.5)
 
 
-    def preprocess_data(self, batch):
-        observed_data = batch["observed_pose"].to(self.device)
-        observed_data = self.preprocess(observed_data)
+#     def preprocess_data(self, batch):
+#         observed_data = batch["observed_pose"].to(self.device)
+#         observed_data = self.preprocess(observed_data)
 
-        B, L, K = observed_data.shape
-        Lp = self.args.pred_frames_num
+#         B, L, K = observed_data.shape
+#         Lp = self.args.pred_frames_num
 
-        observed_data = observed_data.permute(0, 2, 1)  # B, K, L
+#         observed_data = observed_data.permute(0, 2, 1)  # B, K, L
 
-        observed_data = torch.cat([
-            observed_data, torch.zeros([B, K, Lp]).to(self.device)
-        ], dim=-1)
+#         observed_data = torch.cat([
+#             observed_data, torch.zeros([B, K, Lp]).to(self.device)
+#         ], dim=-1)
 
-        observed_tp = torch.arange(self.Lo + self.Lp).unsqueeze(0).expand(B, -1).to(self.device)
-        cond_mask = torch.zeros_like(observed_data).to(self.device)
-        cond_mask[:, :, :L] = 1
+#         observed_tp = torch.arange(self.Lo + self.Lp).unsqueeze(0).expand(B, -1).to(self.device)
+#         cond_mask = torch.zeros_like(observed_data).to(self.device)
+#         cond_mask[:, :, :L] = 1
 
-        return (
-            observed_data,
-            observed_tp,
-            cond_mask
-        )
+#         return (
+#             observed_data,
+#             observed_tp,
+#             cond_mask
+#         )
 
-    def postprocess_data(self, batch, predicted):
-        predicted = predicted[:, :, self.Lo:]
-        predicted = predicted.permute(0, 2, 1)
-        return {
-            'pred_pose': self.postprocess(batch['observed_pose'], predicted),  # B, T, 96
-            'sigma': self.sigma
-        }
+#     def postprocess_data(self, batch, predicted):
+#         predicted = predicted[:, :, self.Lo:]
+#         predicted = predicted.permute(0, 2, 1)
+#         return {
+#             'pred_pose': self.postprocess(batch['observed_pose'], predicted),  # B, T, 96
+#             'sigma': self.sigma
+#         }
 
 
 ########################################################################################################################
@@ -373,86 +373,93 @@ class CSDI_H36M(CSDI_Reconstruction_H36M):
 ############################### sig5 ###################################################################################
 ########################################################################################################################
 
-# class CSDI_H36M(CSDI_base):
-#     def __init__(self, args):
-#         super(CSDI_H36M, self).__init__(args)
-#         self.Lo = args.obs_frames_num
-#         self.Lp = args.pred_frames_num
+class CSDI_H36M(CSDI_base):
+    def __init__(self, args):
+        super(CSDI_H36M, self).__init__(args)
+        self.Lo = args.obs_frames_num
+        self.Lp = args.pred_frames_num
 
-#         assert args.loss.time_aware and not args.loss.action_aware, 'in this implementation, only time are supported!'
+        assert args.loss.time_aware and not args.loss.action_aware, 'in this implementation, only time are supported!'
 
-#         TDUL_J = 28 if args.loss.joint_aware else 1
+        TDUL_J = 28 if args.loss.joint_aware else 1
 
-#         # # flat
-#         # self.p1 = nn.Parameter(torch.ones(1, TDUL_J, requires_grad=True) * 3.5)
-#         # self.p2 = nn.Parameter(torch.ones(1, TDUL_J, requires_grad=True) * 0.0)
-#         # self.p3 = nn.Parameter(torch.ones(1, TDUL_J, requires_grad=True) * 1.0)
-#         # self.p4 = nn.Parameter(torch.ones(1, TDUL_J, requires_grad=True) * 0.0)
-#         # self.p5 = nn.Parameter(torch.ones(1, TDUL_J, requires_grad=True) * 0.0)
+        # # flat
+        self.p1 = nn.Parameter(torch.ones(1, TDUL_J, requires_grad=True) * 3.5)
+        self.p2 = nn.Parameter(torch.ones(1, TDUL_J, requires_grad=True) * 0.0)
+        self.p3 = nn.Parameter(torch.ones(1, TDUL_J, requires_grad=True) * 1.0)
+        self.p4 = nn.Parameter(torch.ones(1, TDUL_J, requires_grad=True) * 0.0)
+        self.p5 = nn.Parameter(torch.ones(1, TDUL_J, requires_grad=True) * 0.0)
 
-#         # highly increasing
-#         # self.p1 = nn.Parameter(torch.ones(1, TDUL_J, requires_grad=True) * -2.2)
-#         # self.p2 = nn.Parameter(torch.ones(1, TDUL_J, requires_grad=True) * 10.0)
-#         # self.p3 = nn.Parameter(torch.ones(1, TDUL_J, requires_grad=True) * 0.2)
-#         # self.p4 = nn.Parameter(torch.ones(1, TDUL_J, requires_grad=True) * 4.5)
-#         # self.p5 = nn.Parameter(torch.ones(1, TDUL_J, requires_grad=True) * 0.1)
+        # highly increasing
+        # self.p1 = nn.Parameter(torch.ones(1, TDUL_J, requires_grad=True) * -2.2)
+        # self.p2 = nn.Parameter(torch.ones(1, TDUL_J, requires_grad=True) * 10.0)
+        # self.p3 = nn.Parameter(torch.ones(1, TDUL_J, requires_grad=True) * 0.2)
+        # self.p4 = nn.Parameter(torch.ones(1, TDUL_J, requires_grad=True) * 4.5)
+        # self.p5 = nn.Parameter(torch.ones(1, TDUL_J, requires_grad=True) * 0.1)
 
-#         # decreasing
-#         self.p1 = nn.Parameter(torch.ones(1, TDUL_J, requires_grad=True) * 2.0)
-#         self.p2 = nn.Parameter(torch.ones(1, TDUL_J, requires_grad=True) * 3.7)
-#         self.p3 = nn.Parameter(torch.ones(1, TDUL_J, requires_grad=True) * -0.2)
-#         self.p4 = nn.Parameter(torch.ones(1, TDUL_J, requires_grad=True) * 10.0)
-#         self.p5 = nn.Parameter(torch.ones(1, TDUL_J, requires_grad=True) * -0.1)
+        # decreasing
+        # self.p1 = nn.Parameter(torch.ones(1, TDUL_J, requires_grad=True) * 2.0)
+        # self.p2 = nn.Parameter(torch.ones(1, TDUL_J, requires_grad=True) * 3.7)
+        # self.p3 = nn.Parameter(torch.ones(1, TDUL_J, requires_grad=True) * -0.2)
+        # self.p4 = nn.Parameter(torch.ones(1, TDUL_J, requires_grad=True) * 10.0)
+        # self.p5 = nn.Parameter(torch.ones(1, TDUL_J, requires_grad=True) * -0.1)
 
-#         self.preprocess = Preprocess(args).to(args.device)
-#         self.postprocess = Postprocess(args).to(args.device)
+        # best values
+        # self.p1 = nn.Parameter(torch.ones(1, TDUL_J, requires_grad=True) * 1.7999)
+        # self.p2 = nn.Parameter(torch.ones(1, TDUL_J, requires_grad=True) * 2.8991)
+        # self.p3 = nn.Parameter(torch.ones(1, TDUL_J, requires_grad=True) * 1.2601)
+        # self.p4 = nn.Parameter(torch.ones(1, TDUL_J, requires_grad=True) * 2.8239)
+        # self.p5 = nn.Parameter(torch.ones(1, TDUL_J, requires_grad=True) * -0.1613)
 
-#         for p in self.preprocess.parameters():
-#             p.requires_grad = False
+        self.preprocess = Preprocess(args).to(args.device)
+        self.postprocess = Postprocess(args).to(args.device)
 
-#         for p in self.postprocess.parameters():
-#             p.requires_grad = False
+        for p in self.preprocess.parameters():
+            p.requires_grad = False
 
-#     def preprocess_data(self, batch):
-#         observed_data = batch["observed_pose"].to(self.device)
-#         observed_data = self.preprocess(observed_data)
+        for p in self.postprocess.parameters():
+            p.requires_grad = False
 
-#         B, L, K = observed_data.shape
-#         Lp = self.args.pred_frames_num
+    def preprocess_data(self, batch):
+        observed_data = batch["observed_pose"].to(self.device)
+        observed_data = self.preprocess(observed_data)
 
-#         observed_data = observed_data.permute(0, 2, 1)  # B, K, L
+        B, L, K = observed_data.shape
+        Lp = self.args.pred_frames_num
 
-#         observed_data = torch.cat([
-#             observed_data, torch.zeros([B, K, Lp]).to(self.device)
-#         ], dim=-1)
+        observed_data = observed_data.permute(0, 2, 1)  # B, K, L
 
-#         observed_tp = torch.arange(self.Lo + self.Lp).unsqueeze(0).expand(B, -1).to(self.device)
-#         cond_mask = torch.zeros_like(observed_data).to(self.device)
-#         cond_mask[:, :, :L] = 1
+        observed_data = torch.cat([
+            observed_data, torch.zeros([B, K, Lp]).to(self.device)
+        ], dim=-1)
 
-#         return (
-#             observed_data,
-#             observed_tp,
-#             cond_mask
-#         )
+        observed_tp = torch.arange(self.Lo + self.Lp).unsqueeze(0).expand(B, -1).to(self.device)
+        cond_mask = torch.zeros_like(observed_data).to(self.device)
+        cond_mask[:, :, :L] = 1
 
-#     def calc_sigma(self):
-#         x = torch.arange(self.Lp).to(self.args.device).unsqueeze(1) # T, 1
-#         c = 2 * self.p3 * self.p5 / torch.abs(self.p3 + self.p5)
-#         f = 1 / (1 + torch.exp(-c * (self.p4 - x)))
-#         g = torch.exp(self.p3 * (self.p4 - x))
-#         h = torch.exp(self.p5 * (self.p4 - x))
-#         sigma = self.p1 + (self.p2 / (1 + f * g + (1 - f) * h))
-#         return sigma
+        return (
+            observed_data,
+            observed_tp,
+            cond_mask
+        )
 
-#     def postprocess_data(self, batch, predicted):
-#         predicted = predicted[:, :, self.Lo:]
-#         predicted = predicted.permute(0, 2, 1)
+    def calc_sigma(self):
+        x = torch.arange(self.Lp).to(self.args.device).unsqueeze(1) # T, 1
+        c = 2 * self.p3 * self.p5 / torch.abs(self.p3 + self.p5)
+        f = 1 / (1 + torch.exp(-c * (self.p4 - x)))
+        g = torch.exp(self.p3 * (self.p4 - x))
+        h = torch.exp(self.p5 * (self.p4 - x))
+        sigma = self.p1 + (self.p2 / (1 + f * g + (1 - f) * h))
+        return sigma
 
-#         return {
-#             'pred_pose': self.postprocess(batch['observed_pose'], predicted),  # B, T, 96
-#             'sigma': self.calc_sigma()
-#         }
+    def postprocess_data(self, batch, predicted):
+        predicted = predicted[:, :, self.Lo:]
+        predicted = predicted.permute(0, 2, 1)
+
+        return {
+            'pred_pose': self.postprocess(batch['observed_pose'], predicted),  # B, T, 96
+            'sigma': self.calc_sigma()
+        }
 
 ########################################################################################################################
 ############################### sig3 ###################################################################################

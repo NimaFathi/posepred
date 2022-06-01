@@ -34,6 +34,9 @@ std = np.array([[[65.4117, 166.9468, 160.5147, 109.2458, 295.7622, 210.9699, 122
                   160.7077, 143.9800, 235.9862, 196.2391, 147.1276, 232.4836, 188.2000,
                   189.1858, 308.0274, 235.1181]]])
 
+# mean = 0
+# std = 1000
+
 index_to_ignore = np.array([16, 20, 23, 24, 28, 31])
 index_to_ignore = joint_to_index(index_to_ignore)
 
@@ -51,7 +54,7 @@ class Preprocess(nn.Module):
         self.mean = torch.tensor(mean).to(args.device).float()
         self.std = torch.tensor(std).to(args.device).float()
 
-        print(mean.shape, std.shape)
+        # print(mean.shape, std.shape)
 
     def forward(self, observed_pose, normal=True):
         observed_pose = observed_pose[:, :, dim_used]
@@ -67,7 +70,7 @@ class Postprocess(nn.Module):
         self.mean = torch.tensor(mean).to(args.device).float()
         self.std = torch.tensor(std).to(args.device).float()
 
-        print(mean.shape, std.shape)
+        # print(mean.shape, std.shape)@Piasdfasdfgasdfasdfasdfasdf
 
     def forward(self, observed_pose, pred_pose, normal=True):
         if normal:

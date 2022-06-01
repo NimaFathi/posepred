@@ -263,3 +263,6 @@ jobs
 
 # Mlflow
 mlruns/
+
+#notebooks 
+notebooks/

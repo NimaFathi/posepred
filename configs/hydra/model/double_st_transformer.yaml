@@ -13,7 +13,7 @@ model_is_unconditional: 0
 model_timeemb: 128
 model_featureemb: 16
 
-backbone_path: '/home/helium/Desktop/VITA/posepred/outputs/5.pt'
+backbone_path: '/scratch/izar/smirmoha/mehrshad_files/posepred/outputs/TDUL_v3/new_mile_stone3_lr5e-3_rate1_6layers_obs50_pred25_batch32_SFalse_ATrue_JFalse_TTrue/snapshots/5.pt'
 
 device: &device ${device}
 
