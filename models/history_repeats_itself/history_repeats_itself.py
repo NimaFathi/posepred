@@ -14,7 +14,6 @@ class HistoryRepeatsItself(nn.Module):
         super(HistoryRepeatsItself, self).__init__()
         args.loss.itera = args.itera
         args.loss.un_mode = args.un_mode
-        args.loss.disp_reg = args.disp_reg
 
         self.args = args
         self.init_mode = args.init_mode

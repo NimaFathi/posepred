@@ -175,7 +175,7 @@ class HisRepItselfLoss(nn.Module):
 
         if self.args.disp_reg:
             pred_disp = pred_disp.reshape(B, 1, 1)
-            loss = loss + 1/pred_disp * s
+            loss = loss + self.args.disp_lambda * 1/pred_disp * s
 
         loss = torch.mean(loss)
 
@@ -201,7 +201,7 @@ class HisRepItselfLoss(nn.Module):
             # pred_pose = p3d_out_all[:, :, 0]
             obs_pose = input_data['observed_pose'][:, :, self.dim_used]
             obs_pose = obs_pose.reshape(obs_pose.shape[0], obs_pose.shape[1], len(self.dim_used) // 3, 3)
-            pred_disp = torch.norm((obs_pose[:, -10:] - obs_pose[:, -11:-1]), dim=-1) # B, T-1, J
+            pred_disp = torch.norm((obs_pose[:, 1:] - obs_pose[:, :-1]), dim=-1)[:, -self.args.disp_thresh:] # B, T-1, J
             # pred_disp = torch.norm((pred_pose[:, 1:] - pred_pose[:, :-1]), dim=-1) # B, T-1, J
             pred_disp = pred_disp.mean(dim=1).mean(dim=1)
             # pred_disp.requires_grad = False
