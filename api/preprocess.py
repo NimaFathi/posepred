@@ -13,6 +13,7 @@ from preprocessor.posetrack_preprocessor import PoseTrackPreprocessor
 from preprocessor.somof_3dpw_preprocessor import SoMoF3DPWPreprocessor
 from preprocessor.somof_posetrack_preprocessor import SoMoFPoseTrackPreprocessor
 from preprocessor.stanford_preprocessor import StanfordPreprocessor
+from preprocessor.amass_preprocessor import AmassPreprocessor
 from data_loader import DATASETS, DATA_TYPES
 
 logger = logging.getLogger(__name__)
@@ -71,7 +72,7 @@ def preprocess(cfg: DictConfig):
             dataset_path=cfg.official_annotation_path,
             obs_frame_num=cfg.obs_frames_num, custom_name=cfg.output_name, is_interactive=cfg.interactive,
             pred_frame_num=cfg.pred_frames_num, skip_frame_num=cfg.skip_num, use_video_once=cfg.use_video_once,
-            save_total_frames=cfg.save_total_frames
+            save_total_frames=cfg.save_total_frames, load_60Hz=cfg.load_60Hz
         )
     elif cfg.dataset == 'jaad':
         preprocessor = JAADPreprocessor(
@@ -91,6 +92,13 @@ def preprocess(cfg: DictConfig):
         )
     elif cfg.dataset == 'human3.6m':
         preprocessor = PreprocessorHuman36m(
+            dataset_path=cfg.official_annotation_path,
+            obs_frame_num=cfg.obs_frames_num, custom_name=cfg.output_name, is_interactive=cfg.interactive,
+            pred_frame_num=cfg.pred_frames_num, skip_frame_num=cfg.skip_num, use_video_once=cfg.use_video_once,
+            save_total_frames=cfg.save_total_frames
+        )
+    elif cfg.dataset == 'amass':
+        preprocessor = AmassPreprocessor(
             dataset_path=cfg.official_annotation_path,
             obs_frame_num=cfg.obs_frames_num, custom_name=cfg.output_name, is_interactive=cfg.interactive,
             pred_frame_num=cfg.pred_frames_num, skip_frame_num=cfg.skip_num, use_video_once=cfg.use_video_once,

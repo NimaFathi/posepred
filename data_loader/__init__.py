@@ -6,7 +6,7 @@ from .random_crop_dataset import RandomCropDataset
 from .solitary_dataset import SolitaryDataset
 
 DATASETS = ['somof_posetrack', 'posetrack', 'somof_3dpw',
-            '3dpw', 'jta', 'jaad', 'pie', 'human3.6m', 'stanford3.6m']
+            '3dpw', 'jta', 'jaad', 'pie', 'human3.6m', 'stanford3.6m', 'amass']
 DATA_TYPES = ['train', 'validation', 'test']
 VISUALIZING_TYPES = ['observed', 'future', 'predicted', 'completed']
 
