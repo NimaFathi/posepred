@@ -24,7 +24,7 @@ class diff_CSDI(nn.Module):
     def __init__(self, args, inputdim, side_dim):
         super().__init__()
         self.args = args
-        self.channels = args.diff_channels # config["channels"]
+        self.channels = args.diff_channels  # config["channels"]
 
         self.input_projection = Conv1d_with_init(inputdim, self.channels, 1)
         self.output_projection1 = Conv1d_with_init(self.channels, self.channels, 1)
@@ -34,11 +34,11 @@ class diff_CSDI(nn.Module):
         self.residual_layers = nn.ModuleList(
             [
                 ResidualBlock(
-                    side_dim=side_dim, # config["side_dim"],
+                    side_dim=side_dim,  # config["side_dim"],
                     channels=self.channels,
-                    nheads=args.diff_nheads # config["nheads"],
+                    nheads=args.diff_nheads  # config["nheads"],
                 )
-                for _ in range(args.diff_layers) #for _ in range(config["layers"])
+                for _ in range(args.diff_layers)  # for _ in range(config["layers"])
             ]
         )
 
@@ -159,7 +159,7 @@ class CSDI_base(nn.Module):
             torch.arange(self.target_dim).to(self.device)
         )  # (K,emb)
         feature_embed = feature_embed.unsqueeze(0).unsqueeze(0).expand(B, L, -1, -1)
-
+        
         side_info = torch.cat([time_embed, feature_embed], dim=-1)  # (B,L,K,*)
         side_info = side_info.permute(0, 3, 2, 1)  # (B,*,K,L)
 
@@ -196,10 +196,14 @@ class CSDI_base(nn.Module):
         predicted = self.diffmodel(total_input, side_info)  # (B,K,L)
         return self.postprocess_data(batch, predicted)
 
+########################################################################################################################
+############################### Reconstruct ############################################################################
+########################################################################################################################
 
-class CSDI_H36M(CSDI_base):
+
+class CSDI_Reconstruction_H36M(CSDI_base):
     def __init__(self, args):
-        super(CSDI_H36M, self).__init__(args)
+        super(CSDI_Reconstruction_H36M, self).__init__(args)
         self.Lo = args.obs_frames_num
         self.Lp = args.pred_frames_num
 
@@ -212,8 +216,209 @@ class CSDI_H36M(CSDI_base):
         for p in self.postprocess.parameters():
             p.requires_grad = False
 
-        # self.input_normalizer = nn.BatchNorm1d(args.keypoint_dim * args.n_major_joints)
-        # self.output_normalizer = nn.BatchNorm1d(args.keypoint_dim * args.n_major_joints)
+    def preprocess_data(self, batch):
+        observed_data = batch["observed_pose"].to(self.device)
+        observed_data = self.preprocess(observed_data)
+
+        B, L, K = observed_data.shape
+        Lp = self.args.pred_frames_num
+
+        observed_data = observed_data.permute(0, 2, 1)  # B, K, L
+        observed_tp = torch.arange(self.Lo + self.Lp).unsqueeze(0).expand(B, -1).to(self.device)
+
+        if 'reconstruction_mask' in batch:
+            cond_mask = batch["reconstruction_mask"].to(self.device)
+            cond_mask = self.preprocess(cond_mask, False)
+            cond_mask = cond_mask.permute(0, 2, 1)
+        else:
+            observed_data = torch.cat([
+                observed_data, torch.zeros([B, K, Lp]).to(self.device)
+            ], dim=-1)
+
+            cond_mask = torch.zeros_like(observed_data).to(self.device)
+            cond_mask[:, :, :L] = 1
+
+        return (
+            observed_data,
+            observed_tp,
+            cond_mask
+        )
+
+    def postprocess_data(self, batch, predicted):
+        if 'reconstruction_mask' not in batch:
+            predicted = predicted[:, :, self.Lo:]
+        predicted = predicted.permute(0, 2, 1)
+        return {
+            'pred_pose': self.postprocess(batch['observed_pose'], predicted),  # B, T, 96
+        }
+
+    
+    
+# class CSDI_H36M(CSDI_Reconstruction_H36M):
+#     def __init__(self, args):
+#         super(CSDI_H36M, self).__init__(args)
+        
+#         snapshot_path = args.init_path
+#         snapshot = torch.load(snapshot_path, map_location=args.device)
+#         super(CSDI_H36M, self).load_state_dict(snapshot['model_state_dict'])
+#         print("Initialization of the model from {}".format(args.init_path))
+        
+#         self.Lo = args.obs_frames_num
+#         self.Lp = args.pred_frames_num
+
+#         TDUL_T = self.Lp if args.loss.time_aware else 1
+#         TDUL_J = 28 if args.loss.joint_aware else 1
+
+#         if args.loss.action_aware:
+#             self.sigma = nn.Embedding(15, TDUL_T * TDUL_J)
+#             self.sigma.weight = nn.Parameter(torch.ones(15, TDUL_T * TDUL_J, requires_grad=True) * 3.5)
+#         else:
+#             self.sigma = nn.Parameter(torch.ones(TDUL_T, TDUL_J, requires_grad=True) * 3.5)
+
+
+#     def preprocess_data(self, batch):
+#         observed_data = batch["observed_pose"].to(self.device)
+#         observed_data = self.preprocess(observed_data)
+
+#         B, L, K = observed_data.shape
+#         Lp = self.args.pred_frames_num
+
+#         observed_data = observed_data.permute(0, 2, 1)  # B, K, L
+
+#         observed_data = torch.cat([
+#             observed_data, torch.zeros([B, K, Lp]).to(self.device)
+#         ], dim=-1)
+
+#         observed_tp = torch.arange(self.Lo + self.Lp).unsqueeze(0).expand(B, -1).to(self.device)
+#         cond_mask = torch.zeros_like(observed_data).to(self.device)
+#         cond_mask[:, :, :L] = 1
+
+#         return (
+#             observed_data,
+#             observed_tp,
+#             cond_mask
+#         )
+
+#     def postprocess_data(self, batch, predicted):
+#         predicted = predicted[:, :, self.Lo:]
+#         predicted = predicted.permute(0, 2, 1)
+#         return {
+#             'pred_pose': self.postprocess(batch['observed_pose'], predicted),  # B, T, 96
+#             'sigma': self.sigma
+#         }
+
+
+########################################################################################################################
+############################### Norm ###################################################################################
+########################################################################################################################
+
+# class CSDI_H36M(CSDI_base):
+#     def __init__(self, args):
+#         super(CSDI_H36M, self).__init__(args)
+#         self.Lo = args.obs_frames_num
+#         self.Lp = args.pred_frames_num
+
+#         TDUL_T = self.Lp if args.loss.time_aware else 1
+#         TDUL_J = 28 if args.loss.joint_aware else 1
+
+#         if args.loss.action_aware:
+#             self.sigma = nn.Embedding(15, TDUL_T * TDUL_J)
+#             self.sigma.weight = nn.Parameter(torch.ones(15, TDUL_T * TDUL_J, requires_grad=True) * 3.5)
+#         else:
+#             self.sigma = nn.Parameter(torch.ones(TDUL_T, TDUL_J, requires_grad=True) * 3.5)
+
+#         self.preprocess = Preprocess(args).to(args.device)
+#         self.postprocess = Postprocess(args).to(args.device)
+
+#         for p in self.preprocess.parameters():
+#             p.requires_grad = False
+
+#         for p in self.postprocess.parameters():
+#             p.requires_grad = False
+
+
+#     def preprocess_data(self, batch):
+#         observed_data = batch["observed_pose"].to(self.device)
+#         observed_data = self.preprocess(observed_data)
+
+#         B, L, K = observed_data.shape
+#         Lp = self.args.pred_frames_num
+
+#         observed_data = observed_data.permute(0, 2, 1)  # B, K, L
+
+#         observed_data = torch.cat([
+#             observed_data, torch.zeros([B, K, Lp]).to(self.device)
+#         ], dim=-1)
+
+#         observed_tp = torch.arange(self.Lo + self.Lp).unsqueeze(0).expand(B, -1).to(self.device)
+#         cond_mask = torch.zeros_like(observed_data).to(self.device)
+#         cond_mask[:, :, :L] = 1
+
+#         return (
+#             observed_data,
+#             observed_tp,
+#             cond_mask
+#         )
+
+#     def postprocess_data(self, batch, predicted):
+#         predicted = predicted[:, :, self.Lo:]
+#         predicted = predicted.permute(0, 2, 1)
+#         return {
+#             'pred_pose': self.postprocess(batch['observed_pose'], predicted),  # B, T, 96
+#             'sigma': self.sigma
+#         }
+
+
+########################################################################################################################
+############################### sig5 ###################################################################################
+########################################################################################################################
+
+class CSDI_H36M(CSDI_base):
+    def __init__(self, args):
+        super(CSDI_H36M, self).__init__(args)
+        self.Lo = args.obs_frames_num
+        self.Lp = args.pred_frames_num
+
+        assert args.loss.time_aware and not args.loss.action_aware, 'in this implementation, only time are supported!'
+
+        TDUL_J = 28 if args.loss.joint_aware else 1
+
+        # # flat
+        self.p1 = nn.Parameter(torch.ones(1, TDUL_J, requires_grad=True) * 3.5)
+        self.p2 = nn.Parameter(torch.ones(1, TDUL_J, requires_grad=True) * 0.0)
+        self.p3 = nn.Parameter(torch.ones(1, TDUL_J, requires_grad=True) * 1.0)
+        self.p4 = nn.Parameter(torch.ones(1, TDUL_J, requires_grad=True) * 0.0)
+        self.p5 = nn.Parameter(torch.ones(1, TDUL_J, requires_grad=True) * 0.0)
+
+        # highly increasing
+        # self.p1 = nn.Parameter(torch.ones(1, TDUL_J, requires_grad=True) * -2.2)
+        # self.p2 = nn.Parameter(torch.ones(1, TDUL_J, requires_grad=True) * 10.0)
+        # self.p3 = nn.Parameter(torch.ones(1, TDUL_J, requires_grad=True) * 0.2)
+        # self.p4 = nn.Parameter(torch.ones(1, TDUL_J, requires_grad=True) * 4.5)
+        # self.p5 = nn.Parameter(torch.ones(1, TDUL_J, requires_grad=True) * 0.1)
+
+        # decreasing
+        # self.p1 = nn.Parameter(torch.ones(1, TDUL_J, requires_grad=True) * 2.0)
+        # self.p2 = nn.Parameter(torch.ones(1, TDUL_J, requires_grad=True) * 3.7)
+        # self.p3 = nn.Parameter(torch.ones(1, TDUL_J, requires_grad=True) * -0.2)
+        # self.p4 = nn.Parameter(torch.ones(1, TDUL_J, requires_grad=True) * 10.0)
+        # self.p5 = nn.Parameter(torch.ones(1, TDUL_J, requires_grad=True) * -0.1)
+
+        # best values
+        # self.p1 = nn.Parameter(torch.ones(1, TDUL_J, requires_grad=True) * 1.7999)
+        # self.p2 = nn.Parameter(torch.ones(1, TDUL_J, requires_grad=True) * 2.8991)
+        # self.p3 = nn.Parameter(torch.ones(1, TDUL_J, requires_grad=True) * 1.2601)
+        # self.p4 = nn.Parameter(torch.ones(1, TDUL_J, requires_grad=True) * 2.8239)
+        # self.p5 = nn.Parameter(torch.ones(1, TDUL_J, requires_grad=True) * -0.1613)
+
+        self.preprocess = Preprocess(args).to(args.device)
+        self.postprocess = Postprocess(args).to(args.device)
+
+        for p in self.preprocess.parameters():
+            p.requires_grad = False
+
+        for p in self.postprocess.parameters():
+            p.requires_grad = False
 
     def preprocess_data(self, batch):
         observed_data = batch["observed_pose"].to(self.device)
@@ -223,7 +428,6 @@ class CSDI_H36M(CSDI_base):
         Lp = self.args.pred_frames_num
 
         observed_data = observed_data.permute(0, 2, 1)  # B, K, L
-        # observed_data = self.input_normalizer(observed_data)
 
         observed_data = torch.cat([
             observed_data, torch.zeros([B, K, Lp]).to(self.device)
@@ -239,13 +443,82 @@ class CSDI_H36M(CSDI_base):
             cond_mask
         )
 
+    def calc_sigma(self):
+        x = torch.arange(self.Lp).to(self.args.device).unsqueeze(1) # T, 1
+        c = 2 * self.p3 * self.p5 / torch.abs(self.p3 + self.p5)
+        f = 1 / (1 + torch.exp(-c * (self.p4 - x)))
+        g = torch.exp(self.p3 * (self.p4 - x))
+        h = torch.exp(self.p5 * (self.p4 - x))
+        sigma = self.p1 + (self.p2 / (1 + f * g + (1 - f) * h))
+        return sigma
+
     def postprocess_data(self, batch, predicted):
         predicted = predicted[:, :, self.Lo:]
-        # predicted = self.output_normalizer(predicted)
         predicted = predicted.permute(0, 2, 1)
+
         return {
             'pred_pose': self.postprocess(batch['observed_pose'], predicted),  # B, T, 96
+            'sigma': self.calc_sigma()
         }
-        # return {
-        #     'pred_pose': predicted
-        # }
+
+########################################################################################################################
+############################### sig3 ###################################################################################
+########################################################################################################################
+
+# class CSDI_H36M(CSDI_base):
+#     def __init__(self, args):
+#         super(CSDI_H36M, self).__init__(args)
+#         self.Lo = args.obs_frames_num
+#         self.Lp = args.pred_frames_num
+
+#         assert args.loss.time_aware and not args.loss.joint_aware and not args.loss.action_aware, 'in this implementation, only time are supported!'
+
+#         self.p1 = nn.Parameter(torch.ones(1, requires_grad=True) * 3.5)
+#         self.p2 = nn.Parameter(torch.ones(1, requires_grad=True) * 1.0)
+#         self.p3 = nn.Parameter(torch.ones(1, requires_grad=True) * 0.0)
+
+#         self.preprocess = Preprocess(args).to(args.device)
+#         self.postprocess = Postprocess(args).to(args.device)
+
+#         for p in self.preprocess.parameters():
+#             p.requires_grad = False
+
+#         for p in self.postprocess.parameters():
+#             p.requires_grad = False
+
+#     def preprocess_data(self, batch):
+#         observed_data = batch["observed_pose"].to(self.device)
+#         observed_data = self.preprocess(observed_data)
+
+#         B, L, K = observed_data.shape
+#         Lp = self.args.pred_frames_num
+
+#         observed_data = observed_data.permute(0, 2, 1)  # B, K, L
+
+#         observed_data = torch.cat([
+#             observed_data, torch.zeros([B, K, Lp]).to(self.device)
+#         ], dim=-1)
+
+#         observed_tp = torch.arange(self.Lo + self.Lp).unsqueeze(0).expand(B, -1).to(self.device)
+#         cond_mask = torch.zeros_like(observed_data).to(self.device)
+#         cond_mask[:, :, :L] = 1
+
+#         return (
+#             observed_data,
+#             observed_tp,
+#             cond_mask
+#         )
+
+#     def calc_sigma(self):
+#         x = torch.arange(self.Lp).to(self.args.device)
+#         sigma = self.p1 / (1 + torch.exp(self.p2 * (self.p3 - x)))
+#         return sigma.unsqueeze(1)
+
+#     def postprocess_data(self, batch, predicted):
+#         predicted = predicted[:, :, self.Lo:]
+#         predicted = predicted.permute(0, 2, 1)
+
+#         return {
+#             'pred_pose': self.postprocess(batch['observed_pose'], predicted),  # B, T, 96
+#             'sigma': self.calc_sigma()
+#         }

@@ -267,5 +267,6 @@ mlruns/
 
 # Visualization and Notebooks
 sample_viz/
-notebooks/
 
+#notebooks 
+notebooks/

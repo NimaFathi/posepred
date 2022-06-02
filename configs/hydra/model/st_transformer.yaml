@@ -13,8 +13,17 @@ model_is_unconditional: 0
 model_timeemb: 128
 model_featureemb: 16
 
+init_path: /scratch/izar/smirmoha/mehrshad_files/posepred/outputs/Reconstruction/rate1_obs50_pred25/snapshots/15.pt
 
 device: &device ${device}
 
 loss:
-  type: st_transformer_loss
+  type: task_dependent_uncertainty_loss
+  squared: False
+  action_aware: False
+  joint_aware: False
+  time_aware: True
+  device: ${device}
+
+# loss:
+#   type: st_transformer_loss

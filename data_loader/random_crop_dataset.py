@@ -6,42 +6,12 @@ import jsonlines
 import numpy as np
 import torch
 from torch.utils.data import Dataset
+from utils.others import find_indices_256
 
 from path_definition import PREPROCESSED_DATA_DIR
 from transforms.transforms import RandomInterpolate
 import random
 logger = logging.getLogger(__name__)
-
-
-def find_indices_256(frame_num1, frame_num2, seq_len, input_n=10):
-    """
-    Adapted from https://github.com/una-dinosauria/human-motion-prediction/blob/master/src/seq2seq_model.py#L478
-    which originaly from
-    In order to find the same action indices as in SRNN.
-    https://github.com/asheshjain399/RNNexp/blob/master/structural_rnn/CRFProblems/H3.6m/processdata.py#L325
-    """
-
-    # Used a fixed dummy seed, following
-    # https://github.com/asheshjain399/RNNexp/blob/srnn/structural_rnn/forecastTrajectories.py#L29
-    SEED = 1234567890
-    rng = np.random.RandomState(SEED)
-
-    T1 = frame_num1 - 150
-    T2 = frame_num2 - 150  # seq_len
-    idxo1 = None
-    idxo2 = None
-    for _ in np.arange(0, 128):
-        idx_ran1 = rng.randint(16, T1)
-        idx_ran2 = rng.randint(16, T2)
-        idxs1 = np.arange(idx_ran1 + 50 - input_n, idx_ran1 + 50 - input_n + seq_len)
-        idxs2 = np.arange(idx_ran2 + 50 - input_n, idx_ran2 + 50 - input_n + seq_len)
-        if idxo1 is None:
-            idxo1 = idxs1
-            idxo2 = idxs2
-        else:
-            idxo1 = np.vstack((idxo1, idxs1))
-            idxo2 = np.vstack((idxo2, idxs2))
-    return idxo1, idxo2
 
 
 class RandomCropDataset(Dataset):
@@ -95,6 +65,8 @@ class RandomCropDataset(Dataset):
             for seq in reader:
 
                 seq_tensor = {}
+                fps = 1
+
                 for k, v in seq.items():
                     if k == "{}_pose".format(model_pose_format):
                         seq_tensor["pose"] = torch.tensor(v, dtype=torch.float32)
@@ -106,9 +78,15 @@ class RandomCropDataset(Dataset):
                         seq_tensor[k[6:]] = v
                     if k in self.extra_keys_to_keep:
                         seq_tensor[k] = v
+                    if k == "fps":
+                        fps = (frame_rate * v) // 50
 
                 assert "pose" in seq_tensor, "model pose format not found in the sequence"
                 assert "metric_pose" in seq_tensor, "metric pose format not found in the sequence"
+
+                if fps > 1:
+                    seq_tensor["pose"] = seq_tensor["pose"][::fps]
+                    seq_tensor["metric_pose"] = seq_tensor["metric_pose"][::fps]
 
                 data.append(seq_tensor)
                 len_seq = seq_tensor['pose'].shape[0]
@@ -116,7 +94,6 @@ class RandomCropDataset(Dataset):
                     indexes = indexes + [(len(data) - 1, i)
                                         for i in range(0, len_seq - total_len + 1, seq_rate)]
                 elif displacement_mode == "less":
-                    print("I'm hereeeeeeee")
                     temp_list = []
                     for i in range(0, len_seq - total_len + 1, seq_rate):
                         gt = data[-1]["pose"][i:i+len_observed]
@@ -125,8 +102,6 @@ class RandomCropDataset(Dataset):
                             temp_list.append((len(data) - 1, i))
                     indexes = indexes + temp_list
                 elif displacement_mode == "greater":
-                    print("I'm hereeeeeeee")
-
                     temp_list = []
                     for i in range(0, len_seq - total_len + 1, seq_rate):
                         gt = data[-1]["pose"][i:i+len_observed]
@@ -135,10 +110,14 @@ class RandomCropDataset(Dataset):
                             temp_list.append((len(data) - 1, i))
                     indexes = indexes + temp_list
 
+                    
+                bias = 1 if is_h36_testing else frame_rate
+                indexes = indexes + [(len(data) - 1, i)
+                                     for i in range(0, len_seq - total_len + bias, seq_rate)]
+
         if is_h36_testing:
             indexes = []
             for i in range(0, len(data), 2):
-
                 len1 = (data[i]['pose'].shape[0] + frame_rate - 1) // frame_rate
                 len2 = (data[i + 1]['pose'].shape[0] + frame_rate - 1) // frame_rate
 
@@ -169,8 +148,9 @@ class RandomCropDataset(Dataset):
 
     def __getitem__(self, index):
 
-        random_reverse = np.random.choice([False, True])
-        random_interpolate = np.random.choice([False, True])
+        random_reverse = False #np.random.choice([False, True])
+        random_interpolate = False #np.random.choice([False, True])
+        
         if self.is_testing or self.is_h36_testing:
             random_reverse = False
             random_interpolate = False
@@ -180,7 +160,7 @@ class RandomCropDataset(Dataset):
         outputs = {}
 
         output_keys = ['metric_pose', 'pose']
-        if self.use_mask:
+        if self.use_mask and 'mask' in seq.keys():
             output_keys.append('mask')
         if self.is_visualizing:
             if 'image_path' in seq.keys():
@@ -204,3 +184,103 @@ class RandomCropDataset(Dataset):
                 outputs[k] = seq[k]
 
         return outputs
+
+    def get_reconstruction_item(self, index):
+        # random_reverse = np.random.choice([False, True])
+        mask = self.get_mask()
+
+        # if self.is_testing or self.is_h36_testing:
+        #     random_reverse = False
+        #     mask[:, :] = 0
+        #     mask[:self.len_observed, :] = 1
+
+        data_index, seq_index = self.indexes[index]
+        seq = self.data[data_index]
+        outputs = {'reconstruction_mask': mask.float()}
+
+        output_keys = ['metric_pose', 'pose']
+
+        for k in output_keys:
+            temp_seq = seq[k][seq_index:seq_index + self.total_len]
+            # if random_reverse:
+            #     temp_seq = torch.flip(temp_seq, [0])
+            temp_seq = temp_seq[::self.frame_rate]
+            outputs["future_" + k] = temp_seq
+            outputs["observed_" + k] = temp_seq
+
+        for k in self.extra_keys_to_keep:
+            if k in seq:
+                outputs[k] = seq[k]
+
+        return outputs
+
+    def get_mask(self):
+
+        ratio = 100 // 20
+        T = self.total_len // self.frame_rate
+        J = self.keypoints_num
+        C = self.keypoint_dim
+        JC = J * C
+
+        
+        def structural():
+            mask = torch.zeros(T, JC)
+            part = []
+            part.append(np.array([2, 3, 4, 5]))
+            part.append(np.array([7, 8, 9, 10]))
+            part.append(np.array([12, 13, 14, 15]))
+            part.append(np.array([17, 18, 19, 21, 22]))
+            part.append(np.array([25, 26, 27, 29, 30]))
+            part = part[np.random.choice(range(5))]
+            part = np.concatenate((part * 3, part * 3 + 1, part * 3 + 2))
+            mask[:, part] = 1
+            return mask
+
+        def joint_in_all_frames():
+            mask = torch.zeros(T, JC)
+            part = np.arange(J)
+            np.random.shuffle(part)
+            part = part[:part.shape[0] // ratio]
+            part = np.concatenate((part * 3, part * 3 + 1, part * 3 + 2))
+            mask[:, part] = 1
+            return mask
+
+        def frames():
+            mask = torch.zeros(T, JC)
+            part = np.arange(T)
+            np.random.shuffle(part)
+            part = part[:part.shape[0] // ratio]
+            mask[part, :] = 1
+            return mask
+        
+        def segment_of_frames():
+            mask = torch.zeros(T, JC)
+            max_len = 3 * T // 4
+            l = np.random.choice(range(1, max_len + 1))
+            start = np.random.choice(range(T - max_len + 1))
+            mask[start:start + l, :] = 1
+            return mask      
+
+        def no_order():
+            return torch.tensor(np.random.choice([0.0, 1.0], p=((ratio - 1) / ratio, 1 / ratio), size=mask.shape))
+
+        def XYZ():
+            mask = torch.zeros(T, JC)
+            part = np.random.choice(range(3))
+            mask[:, 3 * np.arange(J) + part] = 1
+            return mask
+
+        def joints():
+            mask = torch.zeros(T * JC)
+            part = np.arange(T * J)
+            np.random.shuffle(part)
+            part = part[:part.shape[0] // ratio]
+            part = np.concatenate((part * 3, part * 3 + 1, part * 3 + 2))
+            mask[part] = 1
+            return mask.reshape(T, JC)
+
+        func = np.random.choice([
+            frames,
+        ])
+
+        return 1 - func()

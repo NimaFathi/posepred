@@ -17,3 +17,5 @@ skip_num: 0
 interactive: false
 save_total_frames: false
 
+# This is used just for 3DPW
+load_60Hz: True

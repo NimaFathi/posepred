@@ -339,6 +339,182 @@ def sigstar(p:torch.Tensor, x:torch.Tensor):
     return output
 
 
+p3d0_base = torch.tensor([[[ 0.0000e+00,  0.0000e+00,  0.0000e+00],
+         [ 7.2556e-02, -9.0371e-02, -4.9508e-03],
+         [-7.0992e-02, -8.9911e-02, -4.2638e-03],
+         [-2.9258e-03,  1.0815e-01, -2.7961e-02],
+         [ 1.1066e-01, -4.7893e-01, -7.1666e-03],
+         [-1.1376e-01, -4.8391e-01, -1.1530e-02],
+         [ 3.5846e-03,  2.4726e-01, -2.5113e-02],
+         [ 9.8395e-02, -8.8787e-01, -5.0576e-02],
+         [-9.9592e-02, -8.9208e-01, -5.4003e-02],
+         [ 5.3301e-03,  3.0330e-01, -1.3979e-04],
+         [ 1.3125e-01, -9.4635e-01,  7.0107e-02],
+         [-1.2920e-01, -9.4181e-01,  7.1206e-02],
+         [ 2.4758e-03,  5.2506e-01, -3.7885e-02],
+         [ 8.6329e-02,  4.2873e-01, -3.4415e-02],
+         [-7.7794e-02,  4.2385e-01, -4.0395e-02],
+         [ 8.1987e-03,  5.9696e-01,  1.8670e-02],
+         [ 1.7923e-01,  4.6251e-01, -4.3923e-02],
+         [-1.7389e-01,  4.5846e-01, -5.0048e-02],
+         [ 4.4708e-01,  4.4718e-01, -7.2309e-02],
+         [-4.3256e-01,  4.4320e-01, -7.3162e-02],
+         [ 7.0520e-01,  4.5867e-01, -7.2730e-02],
+         [-6.9369e-01,  4.5237e-01, -7.7453e-02]]])
+
+def DPWconvertTo3D(pose_seq):
+    res = []
+    for pose in pose_seq:
+        assert len(pose.shape) == 2 and pose.shape[1] == 72
+        
+        pose = torch.from_numpy(pose).float()
+        pose = pose.view(-1, 72//3, 3)
+        pose = pose[:, :-2]
+        pose[:, 0] = 0
+        res.append(ang2joint(pose).reshape(-1, 22 * 3).detach().numpy())
+    return np.array(res)
+
+def AMASSconvertTo3D(pose):
+    assert len(pose.shape) == 2 and pose.shape[1] == 156
+    pose = torch.from_numpy(pose).float()
+    pose = pose.view(-1, 156//3, 3)
+    pose[:, 0] = 0
+    return ang2joint(pose).reshape(-1, 22 * 3).detach().numpy()
+
+def ang2joint(pose,
+              parent={0: -1, 1: 0, 2: 0, 3: 0, 4: 1, 5: 2, 6: 3, 7: 4, 8: 5, 9: 6, 10: 7, 11: 8, 12: 9, 13: 9, 14: 9,
+                      15: 12, 16: 13, 17: 14, 18: 16, 19: 17, 20: 18, 21: 19, 22: 20, 23: 21}):
+    """
+    :param p3d0:[batch_size, joint_num, 3]
+    :param pose:[batch_size, joint_num, 3]
+    :param parent:
+    :return:
+    """
+
+    assert len(pose.shape) == 3 and pose.shape[2] == 3
+    batch_num = pose.shape[0]
+    p3d0 = p3d0_base.repeat([batch_num, 1, 1])
+
+    jnum = 22
+
+    J = p3d0
+    R_cube_big = rodrigues(pose.contiguous().view(-1, 1, 3)).reshape(batch_num, -1, 3, 3)
+    results = []
+    results.append(
+        with_zeros(torch.cat((R_cube_big[:, 0], torch.reshape(J[:, 0, :], (-1, 3, 1))), dim=2))
+    )
+
+    for i in range(1, jnum):
+        results.append(
+            torch.matmul(
+                results[parent[i]],
+                with_zeros(
+                    torch.cat(
+                        (R_cube_big[:, i], torch.reshape(J[:, i, :] - J[:, parent[i], :], (-1, 3, 1))),
+                        dim=2
+                    )
+                )
+            )
+        )
+
+    stacked = torch.stack(results, dim=1)
+    J_transformed = stacked[:, :, :3, 3]
+    return J_transformed
+
+
+def rodrigues(r):
+    """
+    Rodrigues' rotation formula that turns axis-angle tensor into rotation
+    matrix in a batch-ed manner.
+    Parameter:
+    ----------
+    r: Axis-angle rotation tensor of shape [batch_size * angle_num, 1, 3].
+    Return:
+    -------
+    Rotation matrix of shape [batch_size * angle_num, 3, 3].
+    """
+    eps = r.clone().normal_(std=1e-8)
+    theta = torch.norm(r + eps, dim=(1, 2), keepdim=True)
+    # theta = torch.norm(r, dim=(1, 2), keepdim=True)  # dim cannot be tuple
+    theta_dim = theta.shape[0]
+    r_hat = r / theta
+    cos = torch.cos(theta)
+    z_stick = torch.zeros(theta_dim, dtype=torch.float).to(r.device)
+    m = torch.stack(
+        (z_stick, -r_hat[:, 0, 2], r_hat[:, 0, 1], r_hat[:, 0, 2], z_stick,
+         -r_hat[:, 0, 0], -r_hat[:, 0, 1], r_hat[:, 0, 0], z_stick), dim=1)
+    m = torch.reshape(m, (-1, 3, 3))
+    i_cube = (torch.eye(3, dtype=torch.float).unsqueeze(dim=0) \
+              + torch.zeros((theta_dim, 3, 3), dtype=torch.float)).to(r.device)
+    A = r_hat.permute(0, 2, 1)
+    dot = torch.matmul(A, r_hat)
+    R = cos * i_cube + (1 - cos) * dot + torch.sin(theta) * m
+    return R
+
+
+def with_zeros(x):
+    """
+    Append a [0, 0, 0, 1] tensor to a [3, 4] tensor.
+    Parameter:
+    ---------
+    x: Tensor to be appended.
+    Return:
+    ------
+    Tensor after appending of shape [4,4]
+    """
+    ones = torch.tensor(
+        [[[0.0, 0.0, 0.0, 1.0]]], dtype=torch.float
+    ).expand(x.shape[0], -1, -1).to(x.device)
+    ret = torch.cat((x, ones), dim=1)
+    return ret
+
+
+def pack(x):
+    """
+    Append zero tensors of shape [4, 3] to a batch of [4, 1] shape tensor.
+    Parameter:
+    ----------
+    x: A tensor of shape [batch_size, 4, 1]
+    Return:
+    ------
+    A tensor of shape [batch_size, 4, 4] after appending.
+    """
+    zeros43 = torch.zeros(
+        (x.shape[0], x.shape[1], 4, 3), dtype=torch.float).to(x.device)
+    ret = torch.cat((zeros43, x), dim=3)
+    return ret
+
+def find_indices_256(frame_num1, frame_num2, seq_len, input_n=10):
+    """
+    Adapted from https://github.com/una-dinosauria/human-motion-prediction/blob/master/src/seq2seq_model.py#L478
+    which originaly from
+    In order to find the same action indices as in SRNN.
+    https://github.com/asheshjain399/RNNexp/blob/master/structural_rnn/CRFProblems/H3.6m/processdata.py#L325
+    """
+
+    # Used a fixed dummy seed, following
+    # https://github.com/asheshjain399/RNNexp/blob/srnn/structural_rnn/forecastTrajectories.py#L29
+    SEED = 1234567890
+    rng = np.random.RandomState(SEED)
+
+    T1 = frame_num1 - 150
+    T2 = frame_num2 - 150  # seq_len
+    idxo1 = None
+    idxo2 = None
+    for _ in np.arange(0, 128):
+        idx_ran1 = rng.randint(16, T1)
+        idx_ran2 = rng.randint(16, T2)
+        idxs1 = np.arange(idx_ran1 + 50 - input_n, idx_ran1 + 50 - input_n + seq_len)
+        idxs2 = np.arange(idx_ran2 + 50 - input_n, idx_ran2 + 50 - input_n + seq_len)
+        if idxo1 is None:
+            idxo1 = idxs1
+            idxo2 = idxs2
+        else:
+            idxo1 = np.vstack((idxo1, idxs1))
+            idxo2 = np.vstack((idxo2, idxs2))
+    return idxo1, idxo2
+
+
 if __name__ == '__main__':
   p = torch.rand(3, 4, 3)
   x = torch.rand(2, 6, 3, 5)
