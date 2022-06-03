@@ -305,26 +305,26 @@ p3d0_base = torch.tensor([[[ 0.0000e+00,  0.0000e+00,  0.0000e+00],
          [ 4.4708e-01,  4.4718e-01, -7.2309e-02],
          [-4.3256e-01,  4.4320e-01, -7.3162e-02],
          [ 7.0520e-01,  4.5867e-01, -7.2730e-02],
-         [-6.9369e-01,  4.5237e-01, -7.7453e-02]]])
+         [-6.9369e-01,  4.5237e-01, -7.7453e-02]]]).cuda()
 
 def DPWconvertTo3D(pose_seq):
     res = []
     for pose in pose_seq:
         assert len(pose.shape) == 2 and pose.shape[1] == 72
         
-        pose = torch.from_numpy(pose).float()
+        pose = torch.from_numpy(pose).float().cuda()
         pose = pose.view(-1, 72//3, 3)
         pose = pose[:, :-2]
         pose[:, 0] = 0
-        res.append(ang2joint(pose).reshape(-1, 22 * 3).detach().numpy())
+        res.append(ang2joint(pose).reshape(-1, 22 * 3).cpu().detach().numpy())
     return np.array(res)
 
 def AMASSconvertTo3D(pose):
     assert len(pose.shape) == 2 and pose.shape[1] == 156
-    pose = torch.from_numpy(pose).float()
+    pose = torch.from_numpy(pose).float().cuda()
     pose = pose.view(-1, 156//3, 3)
     pose[:, 0] = 0
-    return ang2joint(pose).reshape(-1, 22 * 3).detach().numpy()
+    return ang2joint(pose).reshape(-1, 22 * 3).cpu().detach().numpy()
 
 def ang2joint(pose,
               parent={0: -1, 1: 0, 2: 0, 3: 0, 4: 1, 5: 2, 6: 3, 7: 4, 8: 5, 9: 6, 10: 7, 11: 8, 12: 9, 13: 9, 14: 9,
