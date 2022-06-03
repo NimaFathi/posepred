@@ -7,6 +7,7 @@ import numpy as np
 import torch
 from torch.utils.data import Dataset
 from utils.others import find_indices_256
+from tqdm.notebook import tqdm
 
 from path_definition import PREPROCESSED_DATA_DIR
 from transforms.transforms import RandomInterpolate
@@ -62,7 +63,7 @@ class RandomCropDataset(Dataset):
         self.extra_keys_to_keep = ['video_section', 'action', 'cam_intrinsic']
 
         with jsonlines.open(dataset_path) as reader:
-            for seq in reader:
+            for seq in tqdm(reader):
 
                 seq_tensor = {}
                 fps = 1
@@ -79,7 +80,7 @@ class RandomCropDataset(Dataset):
                     if k in self.extra_keys_to_keep:
                         seq_tensor[k] = v
                     if k == "fps":
-                        fps = (frame_rate * v) // 50
+                        fps = v // 25
 
                 assert "pose" in seq_tensor, "model pose format not found in the sequence"
                 assert "metric_pose" in seq_tensor, "metric pose format not found in the sequence"
@@ -113,7 +114,7 @@ class RandomCropDataset(Dataset):
                     
                 bias = 1 if is_h36_testing else frame_rate
                 indexes = indexes + [(len(data) - 1, i)
-                                     for i in range(0, len_seq - total_len + bias, seq_rate)]
+                                    for i in range(0, len_seq - total_len + bias, seq_rate)]
 
         if is_h36_testing:
             indexes = []
@@ -147,10 +148,11 @@ class RandomCropDataset(Dataset):
         return len(self.indexes)
 
     def __getitem__(self, index):
-
-        random_reverse = False #np.random.choice([False, True])
-        random_interpolate = False #np.random.choice([False, True])
         
+        # return self.get_reconstruction_item(index)
+
+        random_reverse = np.random.choice([False, True])
+        random_interpolate = np.random.choice([False, True])
         if self.is_testing or self.is_h36_testing:
             random_reverse = False
             random_interpolate = False
