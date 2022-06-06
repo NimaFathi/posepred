@@ -45,6 +45,9 @@ class AmassPreprocessor(Processor):
     def normal(self, data_type='train'):
         logger.info('start creating AMASS normal static data ... ')
         total_frame_num = self.obs_frame_num + self.pred_frame_num
+        
+        const_joints = np.arange(4 * 3)
+        var_joints = np.arange(4 * 3, 22 * 3)
 
         if self.save_total_frames:
             if self.custom_name:
@@ -84,6 +87,7 @@ class AmassPreprocessor(Processor):
                         continue
 
                     pose_data = AMASSconvertTo3D(pose_data) # shape = [num frames , 66]
+                    pose_data = pose_data * 1000 # convert from m to mm
                     section_range = pose_data.shape[0] // (
                             total_frame_num * (self.skip_frame_num + 1)) if self.use_video_once is False else 1 
 
@@ -98,25 +102,35 @@ class AmassPreprocessor(Processor):
                     for i in range(section_range):
                         video_data = {
                             'obs_pose': list(),
+                            'obs_const_pose': list(),
                             'future_pose': list(),
+                            'future_const_pose': list(),
                             'fps': int(pose_all['mocap_framerate'].item())
                         }
 
                         for j in range(0, total_frame_num * (self.skip_frame_num + 1), self.skip_frame_num + 1):
                             if j <= (self.skip_frame_num + 1) * self.obs_frame_num:
                                 video_data['obs_pose'].append(
-                                    pose_data[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist()
+                                    pose_data[i * total_frame_num * (self.skip_frame_num + 1) + j][var_joints].tolist()
+                                )
+                                video_data['obs_const_pose'].append(
+                                    pose_data[i * total_frame_num * (self.skip_frame_num + 1) + j][const_joints].tolist()
                                 )
                             else:
                                 video_data['future_pose'].append(
-                                    pose_data[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist()
+                                    pose_data[i * total_frame_num * (self.skip_frame_num + 1) + j][var_joints].tolist()
+                                )
+                                video_data['future_const_pose'].append(
+                                    pose_data[i * total_frame_num * (self.skip_frame_num + 1) + j][const_joints].tolist()
                                 )
                         
                         if data_type == 'train':
                             self.update_meta_data(self.meta_data, list(video_data['obs_pose']), 3)
                         data.append([
                             '%s-%d' % ("{}-{}-{}".format(raw_dataset_name, raw_sub, raw_act), i),
-                            video_data['obs_pose'], video_data['future_pose'], video_data['fps']
+                            video_data['obs_pose'], video_data['obs_const_pose'],
+                            video_data['future_pose'], video_data['future_const_pose'],
+                            video_data['fps']
                         ])
                           
                     with jsonlines.open(os.path.join(self.output_dir, output_file_name), 'a') as writer:
@@ -125,14 +139,17 @@ class AmassPreprocessor(Processor):
                                 writer.write({
                                     'video_section': data_row[0],
                                     'observed_pose': data_row[1],
-                                    'future_pose': data_row[2],
-                                    'fps': data_row[3]
+                                    'future_pose': data_row[3],
+                                    'observed_const_pose': data_row[2],
+                                    'future_const_pose': data_row[4],
+                                    'fps': data_row[5]
                                 })
                             else:
                                 writer.write({
                                     'video_section': data_row[0],
                                     'xyz_pose': data_row[1],
-                                    'fps': data_row[3]
+                                    'xyz_const_pose': data_row[2],
+                                    'fps': data_row[5]
                                 })
 
         self.save_meta_data(self.meta_data, self.output_dir, True, data_type)
