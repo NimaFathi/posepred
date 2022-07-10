@@ -311,21 +311,22 @@ class CSDI_Reconstruction_H36M(CSDI_base):
 ########################################################################################################################
 ############################### Norm ###################################################################################
 ########################################################################################################################
-
+ 
 # class CSDI_H36M(CSDI_base):
 #     def __init__(self, args):
 #         super(CSDI_H36M, self).__init__(args)
 #         self.Lo = args.obs_frames_num
 #         self.Lp = args.pred_frames_num
 
-#         TDUL_T = self.Lp if args.loss.time_aware else 1
-#         TDUL_J = 28 if args.loss.joint_aware else 1
+#         # TDUL_T = self.Lp if args.loss.time_aware else 1
+#         # # TDUL_J = 28 if args.loss.joint_aware else 1
+#         # TDUL_J = 18 if args.loss.joint_aware else 1
 
-#         if args.loss.action_aware:
-#             self.sigma = nn.Embedding(15, TDUL_T * TDUL_J)
-#             self.sigma.weight = nn.Parameter(torch.ones(15, TDUL_T * TDUL_J, requires_grad=True) * 3.5)
-#         else:
-#             self.sigma = nn.Parameter(torch.ones(TDUL_T, TDUL_J, requires_grad=True) * 3.5)
+#         # if args.loss.action_aware:
+#         #     self.sigma = nn.Embedding(15, TDUL_T * TDUL_J)
+#         #     self.sigma.weight = nn.Parameter(torch.ones(15, TDUL_T * TDUL_J, requires_grad=True) * 3.5)
+#         # else:
+#         #     self.sigma = nn.Parameter(torch.ones(TDUL_T, TDUL_J, requires_grad=True) * 3.5)
 
 #         self.preprocess = Preprocess(args).to(args.device)
 #         self.postprocess = Postprocess(args).to(args.device)
@@ -365,9 +366,8 @@ class CSDI_Reconstruction_H36M(CSDI_base):
 #         predicted = predicted.permute(0, 2, 1)
 #         return {
 #             'pred_pose': self.postprocess(batch['observed_pose'], predicted),  # B, T, 96
-#             'sigma': self.sigma
+#             # 'sigma': self.sigma
 #         }
-
 
 ########################################################################################################################
 ############################### sig5 ###################################################################################
@@ -382,9 +382,10 @@ class CSDI_H36M(CSDI_base):
         assert args.loss.time_aware and not args.loss.action_aware, 'in this implementation, only time are supported!'
 
         TDUL_J = 28 if args.loss.joint_aware else 1
+        # TDUL_J = 18 if args.loss.joint_aware else 1
 
         # # flat
-        self.p1 = nn.Parameter(torch.ones(1, TDUL_J, requires_grad=True) * 3.5)
+        self.p1 = nn.Parameter(torch.ones(1, TDUL_J, requires_grad=True) * 3.5) # 3 for AMASS, 3.5 for Human3.6m
         self.p2 = nn.Parameter(torch.ones(1, TDUL_J, requires_grad=True) * 0.0)
         self.p3 = nn.Parameter(torch.ones(1, TDUL_J, requires_grad=True) * 1.0)
         self.p4 = nn.Parameter(torch.ones(1, TDUL_J, requires_grad=True) * 0.0)

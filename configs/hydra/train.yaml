@@ -3,7 +3,7 @@ defaults:
   - data: main
   - model: ???
   - optimizer: adam
-  - scheduler: reduce_lr_on_plateau
+  - scheduler: multi_step_lr #reduce_lr_on_plateau
   - metrics
 
 train_dataset: ???
