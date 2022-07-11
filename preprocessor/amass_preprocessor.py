@@ -105,11 +105,11 @@ class AmassPreprocessor(Processor):
                         for j in range(0, total_frame_num * (self.skip_frame_num + 1), self.skip_frame_num + 1):
                             if j <= (self.skip_frame_num + 1) * self.obs_frame_num:
                                 video_data['obs_pose'].append(
-                                    pose_data[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist()
+                                    (pose_data[i * total_frame_num * (self.skip_frame_num + 1) + j,12:]*1000).tolist()
                                 )
                             else:
                                 video_data['future_pose'].append(
-                                    pose_data[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist()
+                                    (pose_data[i * total_frame_num * (self.skip_frame_num + 1) + j,12:]*1000).tolist()
                                 )
                         
                         if data_type == 'train':
