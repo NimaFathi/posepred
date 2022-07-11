@@ -11,10 +11,9 @@ from utils.reporter import Reporter
 from utils.save_load import save_snapshot
 torch.autograd.set_detect_anomaly(True)
 logger = logging.getLogger(__name__)
-import os
 import mlflow
 import mlflow.pytorch
-import gc
+from path_definition import *
 from os.path import join
 
 class Trainer:
@@ -41,7 +40,6 @@ class Trainer:
         config_path = os.path.join(os.getcwd(), '.hydra', 'config.yaml')
         mlflow.log_artifact(config_path)
 
-        #model_params = {k: v for k, v in dict(args.model) if k in args.log_model_params}
         params = {
             'model': args.model.type,
             **dict(args.model),
@@ -169,7 +167,6 @@ class Trainer:
 
             self.train_reporter.update(report_attrs, batch_size)
 
-        # self.train_reporter.epoch_finished(self.tensor_board)
         self.train_reporter.epoch_finished(self.tensor_board, mlflow)
         self.train_reporter.print_values(logger, self.model.args.use_mask)
 
@@ -244,6 +241,5 @@ class Trainer:
             self.best_model = True
             self.best_loss = epoch_loss
 
-        # self.valid_reporter.epoch_finished(self.tensor_board)
         self.valid_reporter.epoch_finished(self.tensor_board, mlflow)
         self.valid_reporter.print_values(logger, self.model.args.use_mask)

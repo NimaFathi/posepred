@@ -162,13 +162,11 @@ class HistoryRepeatsItself(nn.Module):
             if self.training:
                 # print(9, p3d_out_all.shape)
                 p3d_out_all = torch.cat((p3d_out_all, zero_, zero_), dim=1)[:, :self.out_n]
-                # print(3, p3d_out_all.shape)
                 # print(11, p3d_out_all.shape)
             p3d_out = p3d_h36.clone()[:, self.in_n:self.in_n + self.out_n]
             p3d_out[:, :, self.dim_used] = p3d_out_all
             p3d_out[:, :, self.index_to_ignore] = p3d_out[:, :, self.index_to_equal]
             p3d_out = p3d_out.reshape([-1, self.out_n, 96])
-            # print(4, p3d_out.shape)
 
             p3d_h36 = p3d_h36[:, :self.in_n + out_].reshape([-1, self.in_n + out_, 32, 3])
 

@@ -34,7 +34,7 @@ def visualize(cfg: DictConfig):
 
     index = random.randint(0, dataloader.dataset.__len__() - 1) if cfg.index is None else cfg.index
     data = dataloader.dataset.__getitem__(index)
-    for key in ['observed_pose', 'future_pose', 'observed_mask', 'future_mask', 'observed_noise']:
+    for key in ['observed_pose', 'observed_metric_pose', 'future_pose', 'future_metric_pose', 'observed_mask', 'future_mask', 'observed_noise']:
         if key in data.keys():
             data[key] = data[key].unsqueeze(0)
 
@@ -56,6 +56,8 @@ def visualize(cfg: DictConfig):
     with torch.no_grad():
         outputs = model(dict_to_device(data, cfg.device))
         assert 'pred_pose' in outputs.keys(), 'outputs of model should include pred_pose'
+        if 'pred_metric_pose' in outputs:
+            data['pred_metric_pose'] = outputs['pred_metric_pose']
         data['pred_pose'] = outputs['pred_pose']
         if cfg.data.use_mask:
             assert 'pred_mask' in outputs.keys(), 'outputs of model should include pred_mask'
@@ -96,7 +98,11 @@ def visualize(cfg: DictConfig):
 
     if 'future' in showing:
         names.append('future')
-        pose = data['future_pose'].squeeze(0) if cfg.data.is_interactive else data['future_pose']
+        tag = 'future_metric_pose'
+        if tag not in data:
+            tag = 'future_pose'
+
+        pose = data[tag].squeeze(0) if cfg.data.is_interactive else data[tag]
         poses.append(pose.permute(1, 0, 2))
         if 'future_mask' in data.keys():
             mask = data['future_mask'].squeeze(0) if cfg.data.is_interactive else data['future_mask']
@@ -110,7 +116,12 @@ def visualize(cfg: DictConfig):
 
     if 'predicted' in showing:
         names.append('predicted')
-        pose = data['pred_pose'].squeeze(0) if cfg.data.is_interactive else data['pred_pose']
+
+        tag = 'pred_metric_pose'
+        if tag not in data:
+            tag = 'pred_pose'
+
+        pose = data[tag].squeeze(0) if cfg.data.is_interactive else data[tag]
         poses.append(pose.permute(1, 0, 2))
         if 'pred_mask' in data.keys():
             mask = data['pred_mask'].squeeze(0) if cfg.data.is_interactive else data['pred_mask']
@@ -132,14 +143,14 @@ def visualize(cfg: DictConfig):
         if m is not None and m.is_cuda:
             masks[i] = m.detach().cpu()
 
-    if cfg.is_noisy:
+    if cfg.data.is_noisy:
         observed_noise = data['observed_noise'].squeeze(0) if cfg.data.is_interactive else data['observed_noise']
         observed_noise = observed_noise.detach().cpu() if observed_noise.is_cuda else observed_noise
         observed_noise = observed_noise.squeeze(0)
     else:
         observed_noise = None
 
-    visualizer = Visualizer(dataset_name=cfg.dataset_type, parent_dir=os.getcwd(), images_dir=cfg.images_dir)
+    visualizer = Visualizer(dataset_name=cfg.dataset_type, parent_dir=cfg.save_dir, images_dir=cfg.images_dir)
     gif_name = '_'.join((cfg.model.type, cfg.dataset.split("/")[-1], str(index)))
     if cfg.data.keypoint_dim == 2:
         visualizer.visualizer_2D(names, poses, masks, images_path, observed_noise, gif_name)
