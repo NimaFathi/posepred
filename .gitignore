@@ -256,6 +256,7 @@ jobs
 **/*.out
 **/*.sh
 **/.ipynb_checkpoints/
+*.pt
 
 # Images
 *.jpg
@@ -267,6 +268,11 @@ mlruns/
 
 # Visualization and Notebooks
 sample_viz/
-
+sample_viz_unc/
+csv_outputs/
+*.gif
 #notebooks 
 notebooks/
+Untitled.ipynb
+Squ
+get_hri_results.ipynb
