@@ -17,7 +17,7 @@ offset = torch.tensor([0.00000000e+00, 1.32948591e+02, 4.42894612e+02, 4.5420644
                    2.57077681e+02, 1.51034226e+02, 2.78882773e+02, 2.51733451e+02,
                    0.00000000e+00, 9.99996270e+01, 1.00000188e+02, 0.00000000e+00,
                    2.57077681e+02, 1.51031437e+02, 2.78892924e+02, 2.51728680e+02,
-                   0.00000000e+00, 9.99998880e+01, 1.37499922e+02, 0.00000000e+00]).view(1, 1, 32, 1).to('cuda')
+                   0.00000000e+00, 9.99998880e+01, 1.37499922e+02, 0.00000000e+00]).view(1, 1, 32, 1)
 
 dim_used = np.array([2, 3, 4, 5, 7, 8, 9, 10, 12, 13, 14, 15, 17, 18, 19, 21, 22,
                      25, 26, 27, 29, 30])
@@ -62,7 +62,7 @@ class Postprocess(nn.Module):
 
         pred_pose = pred_pose / torch.unsqueeze(torch.norm(pred_pose, dim=-1), -1) * offset[:, :, dim_used]
 
-        x = torch.zeros([B, T, 32, 3]).to('cuda')
+        x = torch.zeros([B, T, 32, 3])
         x[:, :, index_to_copy] = observed_pose.view(B, -1, 32, 3)[:, -1:, index_to_copy]
         x[:, :, dim_used] = pred_pose
 
