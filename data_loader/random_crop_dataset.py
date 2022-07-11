@@ -79,7 +79,7 @@ class RandomCropDataset(Dataset):
                     if k in self.extra_keys_to_keep:
                         seq_tensor[k] = v
                     if k == "fps":
-                        fps = (frame_rate * v) // 50
+                        fps = v//25
 
                 assert "pose" in seq_tensor, "model pose format not found in the sequence"
                 assert "metric_pose" in seq_tensor, "metric pose format not found in the sequence"
@@ -90,26 +90,6 @@ class RandomCropDataset(Dataset):
 
                 data.append(seq_tensor)
                 len_seq = seq_tensor['pose'].shape[0]
-                if displacement_mode == "noop":
-                    indexes = indexes + [(len(data) - 1, i)
-                                        for i in range(0, len_seq - total_len + 1, seq_rate)]
-                elif displacement_mode == "less":
-                    temp_list = []
-                    for i in range(0, len_seq - total_len + 1, seq_rate):
-                        gt = data[-1]["pose"][i:i+len_observed]
-                        dis = torch.mean(torch.norm((gt[1:] - gt[:-1]).reshape(gt.shape[0]-1, gt.shape[1]//3,3), dim=2))
-                        if dis.item() < displacement_threshold:
-                            temp_list.append((len(data) - 1, i))
-                    indexes = indexes + temp_list
-                elif displacement_mode == "greater":
-                    temp_list = []
-                    for i in range(0, len_seq - total_len + 1, seq_rate):
-                        gt = data[-1]["pose"][i:i+len_observed]
-                        dis = torch.mean(torch.norm((gt[1:] - gt[:-1]).reshape(gt.shape[0]-1, gt.shape[1]//3,3), dim=2))
-                        if dis.item() >= displacement_threshold:
-                            temp_list.append((len(data) - 1, i))
-                    indexes = indexes + temp_list
-
                     
                 bias = 1 if is_h36_testing else frame_rate
                 indexes = indexes + [(len(data) - 1, i)
@@ -148,8 +128,8 @@ class RandomCropDataset(Dataset):
 
     def __getitem__(self, index):
 
-        random_reverse = False #np.random.choice([False, True])
-        random_interpolate = False #np.random.choice([False, True])
+        random_reverse = np.random.choice([False, True])
+        random_interpolate = np.random.choice([False, True])
         
         if self.is_testing or self.is_h36_testing:
             random_reverse = False
@@ -170,8 +150,8 @@ class RandomCropDataset(Dataset):
 
         for k in output_keys:
             temp_seq = seq[k][seq_index:seq_index + self.total_len]
-            # if random_reverse:
-            #     temp_seq = torch.flip(temp_seq, [0])
+            if random_reverse:
+                temp_seq = torch.flip(temp_seq, [0])
             temp_seq = temp_seq[::self.frame_rate]
             if random_interpolate and k in ['metric_pose', 'pose']:
                 temp_seq = self.interpolate(temp_seq)
