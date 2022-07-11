@@ -6,6 +6,7 @@ from .mix_and_match_loss import MixAndMatchLoss
 from .elbo import ELBO
 from .derpof_loss import DeRPoFLoss
 from .his_rep_itself_loss import HisRepItselfLoss
+from .his_rep_itself_amass_loss import HisRepItselfLoss as HRIAmassLoss
 from .comp_pred_vel import CompPredVel
 from .comp_pred import CompPred
 from .trans_cvae import TRANS_CVAE
@@ -30,6 +31,7 @@ LOSSES = {'mse_vel': MSEVel,
           'elbo': ELBO,
           'derpof': DeRPoFLoss,
           'his_rep_itself': HisRepItselfLoss,
+          'his_rep_itself_amass': HRIAmassLoss,
           'comp_pred_vel': CompPredVel,
           'comp_pred': CompPred,
           'trans_cvae': TRANS_CVAE,

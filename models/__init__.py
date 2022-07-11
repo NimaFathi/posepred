@@ -4,6 +4,7 @@ from .pv_lstm import PVLSTM
 from .disentangled import Disentangled
 from .derpof import DeRPoF
 from  models.history_repeats_itself.history_repeats_itself import HistoryRepeatsItself
+from  models.history_repeats_itself.history_repeats_itself_amass import HistoryRepeatsItself as HRI_AMASS
 from .mix_and_match import MixAndMatch
 from .comp_pred_vel import CompPredVel
 from .trans_cvae import TRANS_CVAE
@@ -26,6 +27,7 @@ MODELS = {'zero_vel': ZeroVel,
           'disentangled': Disentangled,
           'derpof': DeRPoF,
           'history_repeats_itself': HistoryRepeatsItself,
+          'history_repeats_itself_amass': HRI_AMASS,
           'mix_and_match': MixAndMatch,
           'comp_pred_vel': CompPredVel,
           'trans_cvae': TRANS_CVAE,
