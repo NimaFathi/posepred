@@ -43,6 +43,9 @@ class Preprocessor3DPW(Processor):
     def normal(self, data_type='train'):
         logger.info('start creating 3DPW normal static data ... ')
         total_frame_num = self.obs_frame_num + self.pred_frame_num
+        
+        const_joints = np.arange(4 * 3)
+        var_joints = np.arange(4 * 3, 22 * 3)
 
         if self.save_total_frames:
             if self.custom_name:
@@ -75,7 +78,7 @@ class Preprocessor3DPW(Processor):
                 cam_extrinsic = pickle_obj['cam_poses'][:, :3]
                 cam_intrinsic = pickle_obj['cam_intrinsics'].tolist()
 
-            pose_data = DPWconvertTo3D(pose_data)
+            pose_data = DPWconvertTo3D(pose_data) * 1000
             section_range = pose_data.shape[1] // (
                     total_frame_num * (self.skip_frame_num + 1)) if self.use_video_once is False else 1 
 
@@ -139,8 +142,14 @@ class Preprocessor3DPW(Processor):
                                 video_data['obs_cam_ext'], video_data['future_cam_ext'], cam_intrinsic
                             ] if not self.load_60Hz else [
                                 '%s-%d' % (video_name, i),
-                                video_data['obs_pose'][p_id], video_data['future_pose'][p_id]
+                                np.array(video_data['obs_pose'][p_id])[:, var_joints].tolist(),
+                                np.array(video_data['obs_pose'][p_id])[:, const_joints].tolist()
                             ])
+                            if not self.save_total_frames and self.load_60Hz:
+                                data[-1].extend([
+                                    np.array(video_data['future_pose'][p_id])[:, var_joints].tolist(),
+                                    np.array(video_data['future_pose'][p_id])[:, const_joints].tolist()
+                                ])
                     else:
                         data.append([
                             '%s-%d' % (video_name, i),
@@ -148,9 +157,9 @@ class Preprocessor3DPW(Processor):
                             video_data['obs_frames'][0], video_data['future_frames'][0],
                             video_data['obs_cam_ext'], video_data['future_cam_ext'], cam_intrinsic
                         ] if not self.load_60Hz else [
-                                 '%s-%d' % (video_name, i),
+                            '%s-%d' % (video_name, i),
                             list(video_data['obs_pose'].values()), list(video_data['future_pose'].values()),
-                            ])
+                        ])
             with jsonlines.open(os.path.join(self.output_dir, output_file_name), 'a') as writer:
                 for data_row in data:
                     if not self.save_total_frames:
@@ -169,7 +178,9 @@ class Preprocessor3DPW(Processor):
                              writer.write({
                                 'video_section': data_row[0],
                                 'observed_pose': data_row[1],
-                                'future_pose': data_row[2]
+                                'future_pose': data_row[3],
+                                'observed_const_pose': data_row[2],
+                                'future_const_pose': data_row[4],
                             })
                     else:
                         if not self.load_60Hz:
@@ -183,7 +194,8 @@ class Preprocessor3DPW(Processor):
                         else:
                              writer.write({
                                 'video_section': data_row[0],
-                                'total_pose': data_row[1],
+                                'xyz_pose': data_row[1],
+                                'xyz_const_pose': data_row[2],
                             })
 
         self.save_meta_data(self.meta_data, self.output_dir, True, data_type)

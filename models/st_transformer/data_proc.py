@@ -70,7 +70,7 @@ class Postprocess(nn.Module):
         self.mean = torch.tensor(mean).to(args.device).float()
         self.std = torch.tensor(std).to(args.device).float()
 
-        # print(mean.shape, std.shape)@Piasdfasdfgasdfasdfasdfasdf
+        # print(mean.shape, std.shape)
 
     def forward(self, observed_pose, pred_pose, normal=True):
         if normal:
@@ -82,6 +82,7 @@ class Postprocess(nn.Module):
         x[:, :, index_to_ignore] = x[:, :, index_to_equal]
         return x
 
+############################################################################################################################
 # import numpy as np
 # import torch
 # from torch import nn
@@ -161,3 +162,60 @@ class Postprocess(nn.Module):
 #         return x.reshape(B, T, 96)
 #
 # # if __name__ == '__main__':
+
+############################################################################################################################
+
+# import numpy as np
+# import torch
+# from torch import nn
+
+
+# mean = np.array([[[ 144.42061,   -471.00433,     42.905945,  -144.2189,    -471.00433,
+#    55.37049,      5.0257893,  235.50217,      6.188506,   131.57523,
+#  -916.6374,     -73.56259,   -129.137,     -914.8206,     -67.33688,
+#     5.8155527,  278.29196,     43.45168,    189.25381,   -942.00867,
+#    31.58287,   -185.46811,   -942.00867,     38.146023,     1.6395822,
+#   504.07196,     65.04476,     90.96787,    467.06006,     46.06653,
+#   -79.57573,    464.56763,     35.583405,     5.7321978,  544.3716,
+#   132.00195,    189.30196,    464.18073,     46.495617,  -181.78586,
+#   461.8248,      38.285446,   242.19247,    208.86894,     10.837954,
+#  -243.21066,    220.56078,     20.73184,    256.45264,     66.64482,
+#   116.55112,   -262.37643,     88.037315,   129.05185  ]]])
+# std = np.array([[[ 48.352272,  68.6015,   119.17078,   47.49278,   69.03037,  120.7153,
+#    9.933628,  16.11266,   32.15347,   81.19508,  148.52235,  160.55476,
+#   78.806435, 148.95927,  161.60782,   15.046006,  26.999517,  41.232426,
+#   90.12439,  126.81438,  174.0965,    87.97808,  128.31987,  173.8965,
+#   38.010742,  43.834454,  91.36834,   28.467258,  66.382034,  72.003075,
+#   26.970959,  66.33471,   69.758385,  48.895977,  62.34938,  100.590385,
+#   33.747925,  76.94056,   85.15882,   32.314583,  77.06175,   83.645386,
+#   80.88272,  109.25045,  123.5628,    79.029915, 115.18032,  127.966995,
+#  158.545,    217.86617,  164.67949,  156.79645,  235.94897,  175.8384  ]]])
+
+# # mean = 0
+# # std = 1000
+
+
+# class Preprocess(nn.Module):
+#     def __init__(self, args):
+#         super(Preprocess, self).__init__()
+#         self.args = args
+#         self.mean = torch.tensor(mean).to(args.device).float()
+#         self.std = torch.tensor(std).to(args.device).float()
+
+#     def forward(self, observed_pose, normal=True):
+#         if normal:
+#             observed_pose = (observed_pose - self.mean) / self.std
+#         return observed_pose
+
+
+# class Postprocess(nn.Module):
+#     def __init__(self, args):
+#         super(Postprocess, self).__init__()
+#         self.args = args
+#         self.mean = torch.tensor(mean).to(args.device).float()
+#         self.std = torch.tensor(std).to(args.device).float()
+
+#     def forward(self, observed_pose, pred_pose, normal=True):
+#         if normal:
+#             pred_pose = (pred_pose * self.std) + self.mean
+#         return pred_pose
