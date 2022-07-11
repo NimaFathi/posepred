@@ -313,6 +313,26 @@ def sig5(p:torch.Tensor, x:torch.Tensor):
     output = output.reshape(*p_shape[:-1], *x_shape)
     return output
 
+def polyx(p:torch.Tensor, input:torch.Tensor, x:int):
+    """
+    Arguments:
+        p -- polyx parameters. shape: ..., 10
+        input -- input of polyx function. shape: ... 
+        x -- degree of polynomial function.  
+    Return:
+        output -- output of polyx function. 
+    """
+    assert p.shape[-1] == x+1
+    if len(p.shape) == 1: p = p.reshape(1, -1)
+    p_shape = p.shape # ..., x+1
+    input_shape = input.shape # ...
+
+    input = input.reshape(1, -1) # ..., 1
+    
+    powers = torch.arange(x+1).reshape(-1,1).to(input.device) # x+1, 1
+    p = p.unsqueeze(-1) # ..., x+1, 1
+    print(input.shape, powers.shape, p.shape)
+    return (p*(input**powers)).sum(dim=-2).reshape(*p_shape[:-1], *input_shape)
 
 def sigstar(p:torch.Tensor, x:torch.Tensor):
     """
@@ -516,6 +536,12 @@ def find_indices_256(frame_num1, frame_num2, seq_len, input_n=10):
 
 
 if __name__ == '__main__':
-  p = torch.rand(3, 4, 3)
-  x = torch.rand(2, 6, 3, 5)
-  print(sigstar(p, x).shape)
+    # p = torch.tensor([[1, 1, 1], [1, 2, 3]]) # 2, 3
+    # input = torch.tensor([[2, 5, 7], [1, 2, 3]]) # 2, 3
+    p = torch.randn(22, 8)
+    input = torch.arange(0, 35)
+    x = 7
+    print(polyx(p, input, x).shape)
+    # p = torch.rand(3, 4, 3)
+    # x = torch.rand(2, 6, 3, 5)
+    # print(sigstar(p, x).shape)

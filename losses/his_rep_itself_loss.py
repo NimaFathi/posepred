@@ -1,7 +1,8 @@
 import numpy as np
 import torch
 import torch.nn as nn
-from utils.others import sig5, sigstar
+from utils.others import sig5, sigstar, polyx
+import re
 
 class HisRepItselfLoss(nn.Module):
 
@@ -25,8 +26,9 @@ class HisRepItselfLoss(nn.Module):
                 'sig5shifted-T',
                 'input_rel',
                 'sig5-TJPrior',
-                'sig5-TJPriorSum'
-            ]
+                'sig5-TJPriorSum',
+                'estimate-mean',
+            ] or bool(re.findall(r'^poly-TJ*-\d+$', args.un_mode))
             
         self.dim = 3
         self.dim_used = np.array([6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 21, 22, 23, 24, 25,
@@ -106,13 +108,25 @@ class HisRepItselfLoss(nn.Module):
         elif mode == 'T':
             s = params[0, :, 0].reshape(1, T, 1)
         elif mode == 'J':
-            s = params[0, 0, :].reshape(1, 1, J)        
+            s = params[0, 0, :].reshape(1, 1, J)  
+        elif 'poly-TJ-' in mode:
+            p = params
+            x = p.shape[-1] - 1
+            s = polyx(p, torch.arange(0.5, 0.85, 0.01).to(self.device), x) # J, T
+            # print(s)
+            s = s.permute(1, 0).unsqueeze(0) # 1, T, J
+            # print('here2', s.shape)
+        elif 'poly-T-' in mode:
+            p = params[0,:]
+            x = torch.tensor(p.shape[-1] - 1).to(self.device)
+            s = polyx(p, torch.arange(0.5, 0.85, 0.01).to(self.device), x) # 1, T
+            s = s.permute(1, 0).unsqueeze(0) # 1, T, 1
+            # print('here1', s.shape)
         elif mode == 'sig5-T':
             # params: J, 5
             # torch.arange(T): T,
             s = sig5(params[0, :], frames_num) # 1, T
             s = s.permute(1, 0).unsqueeze(0) # 1, T, 1      
-
         elif mode == 'sig5-TJ':
             # params: J, 5
             s = sig5(params, frames_num) # J, T
@@ -167,6 +181,9 @@ class HisRepItselfLoss(nn.Module):
             s[:, :, self.E] = st[:, :, self.E]
             for c in self.connect:
                 s[:, :, c[1]] = s[:, :, c[0]] + s[:, :, c[1]]
+        elif mode == 'estimate-mean':
+            s = torch.mean(losses,dim=0).unsqueeze(0)
+            s = torch.log(s).detach()
         else:
             raise Exception('The defined uncertainry mode is not supported.')
 
@@ -201,7 +218,7 @@ class HisRepItselfLoss(nn.Module):
             # pred_pose = p3d_out_all[:, :, 0]
             obs_pose = input_data['observed_pose'][:, :, self.dim_used]
             obs_pose = obs_pose.reshape(obs_pose.shape[0], obs_pose.shape[1], len(self.dim_used) // 3, 3)
-            pred_disp = torch.norm((obs_pose[:, 1:] - obs_pose[:, :-1]), dim=-1)[:, -self.args.disp_thresh:] # B, T-1, J
+            pred_disp = torch.linalg.norm((obs_pose[:, 1:] - obs_pose[:, :-1]), dim=-1, ord=1)[:, -self.args.disp_thresh:] # B, T-1, J
             # pred_disp = torch.norm((pred_pose[:, 1:] - pred_pose[:, :-1]), dim=-1) # B, T-1, J
             pred_disp = pred_disp.mean(dim=1).mean(dim=1)
             # pred_disp.requires_grad = False
