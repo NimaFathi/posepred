@@ -177,9 +177,6 @@ class Trainer:
         self.model.eval()
         self.loss_module.eval()
 
-        # print(self.loss_module.calc_sigma(None).permute(0, 2, 1))
-
-
         self.valid_reporter.start_time = time.time()
         pose_key = None
         epoch_loss = 0.0
@@ -209,8 +206,6 @@ class Trainer:
                     pred_metric_pose = model_outputs['pred_pose']
                     if 'pred_metric_pose' in model_outputs:
                         pred_metric_pose = model_outputs['pred_metric_pose']
-
-                    # TODO: write write a warning =D
 
                     future_metric_pose = data['future_pose']
                     if 'future_metric_pose' in data:

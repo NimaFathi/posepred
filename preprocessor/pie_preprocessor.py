@@ -143,8 +143,7 @@ class PIEPreprocessor(Processor):
             pred_y = np.array(list(raw_data_pred[ped_id].values()))
             pred_interp = interp1d(pred_x, pred_y, axis=0, fill_value="extrapolate")
             pred_poses.append(pred_interp(pred_frame_range).tolist())
-        print('here')
-        print(output_file_name)
+
         with jsonlines.open(os.path.join(self.output_dir, output_file_name), 'a') as writer:
             if len(obs_poses) > 0:
                 if self.is_interactive:
@@ -267,7 +266,6 @@ class PIEPreprocessor(Processor):
     def __create_annotations(self):
         logger.info("Create annotations using openpifpaf for JAAD in posepred")
         if os.path.exists(os.path.join(PREPROCESSED_DATA_DIR, 'openpifpaf', 'PIE')):
-            print('inja')
             return os.path.join(PREPROCESSED_DATA_DIR, 'openpifpaf', 'PIE')
         for subdir, dirs, files in os.walk(self.image_dir):
             annotation_dir = PREPROCESSED_DATA_DIR + 'openpifpaf/PIE' + subdir.split(self.image_dir)[1]
