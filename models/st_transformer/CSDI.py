@@ -24,7 +24,7 @@ class diff_CSDI(nn.Module):
     def __init__(self, args, inputdim, side_dim):
         super().__init__()
         self.args = args
-        self.channels = args.diff_channels  # config["channels"]
+        self.channels = args.diff_channels
 
         self.input_projection = Conv1d_with_init(inputdim, self.channels, 1)
         self.output_projection1 = Conv1d_with_init(self.channels, self.channels, 1)
@@ -34,11 +34,11 @@ class diff_CSDI(nn.Module):
         self.residual_layers = nn.ModuleList(
             [
                 ResidualBlock(
-                    side_dim=side_dim,  # config["side_dim"],
+                    side_dim=side_dim,
                     channels=self.channels,
-                    nheads=args.diff_nheads  # config["nheads"],
+                    nheads=args.diff_nheads
                 )
-                for _ in range(args.diff_layers)  # for _ in range(config["layers"])
+                for _ in range(args.diff_layers)
             ]
         )
 
@@ -57,9 +57,9 @@ class diff_CSDI(nn.Module):
 
         x = torch.sum(torch.stack(skip), dim=0) / math.sqrt(len(self.residual_layers))
         x = x.reshape(B, self.channels, K * L)
-        x = self.output_projection1(x)  # (B,channel,K*L)
+        x = self.output_projection1(x)
         x = F.relu(x)
-        x = self.output_projection2(x)  # (B,1,K*L)
+        x = self.output_projection2(x)
         x = x.reshape(B, K, L)
         return x
 
@@ -99,16 +99,16 @@ class ResidualBlock(nn.Module):
 
         y = x
         y = self.forward_time(y, base_shape)
-        y = self.forward_feature(y, base_shape)  # (B,channel,K*L)
-        y = self.mid_projection(y)  # (B,2*channel,K*L)
+        y = self.forward_feature(y, base_shape)
+        y = self.mid_projection(y)
 
         _, cond_dim, _, _ = cond_info.shape
         cond_info = cond_info.reshape(B, cond_dim, K * L)
-        cond_info = self.cond_projection(cond_info)  # (B,2*channel,K*L)
+        cond_info = self.cond_projection(cond_info)
         y = y + cond_info
 
         gate, filter = torch.chunk(y, 2, dim=1)
-        y = torch.sigmoid(gate) * torch.tanh(filter)  # (B,channel,K*L)
+        y = torch.sigmoid(gate) * torch.tanh(filter)
         y = self.output_projection(y)
 
         residual, skip = torch.chunk(y, 2, dim=1)
@@ -119,7 +119,6 @@ class ResidualBlock(nn.Module):
 
 
 class CSDI_base(nn.Module):
-    # def __init__(self, target_dim, config, device):
     def __init__(self, args):
         super().__init__()
         self.args = args
@@ -132,7 +131,7 @@ class CSDI_base(nn.Module):
 
         self.emb_total_dim = self.emb_time_dim + self.emb_feature_dim
         if self.is_unconditional == False:
-            self.emb_total_dim += 1  # for conditional mask
+            self.emb_total_dim += 1
         self.embed_layer = nn.Embedding(
             num_embeddings=self.target_dim, embedding_dim=self.emb_feature_dim
         )
@@ -196,10 +195,6 @@ class CSDI_base(nn.Module):
         predicted = self.diffmodel(total_input, side_info)  # (B,K,L)
         return self.postprocess_data(batch, predicted)
 
-########################################################################################################################
-################################## ST-Trans ############################################################################
-########################################################################################################################
-
 
 class CSDI_H36M(CSDI_base):
     def __init__(self, args):
@@ -253,60 +248,3 @@ class CSDI_H36M(CSDI_base):
         return {
             'pred_pose': self.postprocess(batch['observed_pose'], predicted),  # B, T, JC
         }
-
-########################################################################################################################
-############################### Reconstruct ############################################################################
-########################################################################################################################
-
-
-class CSDI_Reconstruction_H36M(CSDI_base):
-    def __init__(self, args):
-        super(CSDI_Reconstruction_H36M, self).__init__(args)
-        self.Lo = args.obs_frames_num
-        self.Lp = args.pred_frames_num
-
-        self.preprocess = Preprocess(args).to(args.device)
-        self.postprocess = Postprocess(args).to(args.device)
-
-        for p in self.preprocess.parameters():
-            p.requires_grad = False
-
-        for p in self.postprocess.parameters():
-            p.requires_grad = False
-
-    def preprocess_data(self, batch):
-        observed_data = batch["observed_pose"].to(self.device)
-        observed_data = self.preprocess(observed_data)
-
-        B, L, K = observed_data.shape
-        Lp = self.args.pred_frames_num
-
-        observed_data = observed_data.permute(0, 2, 1)  # B, K, L
-        observed_tp = torch.arange(self.Lo + self.Lp).unsqueeze(0).expand(B, -1).to(self.device)
-
-        if 'reconstruction_mask' in batch:
-            cond_mask = batch["reconstruction_mask"].to(self.device)
-            cond_mask = self.preprocess(cond_mask, False)
-            cond_mask = cond_mask.permute(0, 2, 1)
-        else:
-            observed_data = torch.cat([
-                observed_data, torch.zeros([B, K, Lp]).to(self.device)
-            ], dim=-1)
-
-            cond_mask = torch.zeros_like(observed_data).to(self.device)
-            cond_mask[:, :, :L] = 1
-
-        return (
-            observed_data,
-            observed_tp,
-            cond_mask
-        )
-
-    def postprocess_data(self, batch, predicted):
-        if 'reconstruction_mask' not in batch:
-            predicted = predicted[:, :, self.Lo:]
-        predicted = predicted.permute(0, 2, 1)
-        return {
-            'pred_pose': self.postprocess(batch['observed_pose'], predicted),  # B, T, 96
-        }
-

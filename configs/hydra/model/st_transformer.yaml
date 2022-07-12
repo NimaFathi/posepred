@@ -4,7 +4,7 @@ defaults:
 
 type: st_transformer
 
-n_major_joints: 22
+n_major_joints: 18 # 22
 diff_layers: 3
 diff_channels: 64
 diff_nheads: 8
@@ -14,18 +14,18 @@ model_timeemb: 128
 model_featureemb: 16
 
 # can be human3.6m , AMASS, 3DPW, none
-pre_post_process: human3.6m
+pre_post_process: AMASS # human3.6m
 
 device: &device ${device}
 
 loss:
   device: ${device}
   type: hua_loss
-  tasks: TAJ
+  tasks: TJ
   nT: 25
-  nJ: 32
-  time_prior: sig*
+  nJ: 18 # 32
+  time_prior: sig5
   action_list: ["walking", "eating", "smoking", "discussion", "directions", "greeting", "phoning", "posing", "purchases", "sitting", "sittingdown", "takingphoto", "waiting", "walkingdog", "walkingtogether"]
   clipMinS: -1
   clipMaxS:
-  init_mean: 3.5
+  init_mean: 3 # 3.5
