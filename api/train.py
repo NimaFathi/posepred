@@ -1,5 +1,6 @@
 import logging
 import os
+from itertools import chain
 
 import hydra
 from omegaconf import DictConfig
@@ -44,7 +45,7 @@ def train(cfg: DictConfig):
 
         model = MODELS[cfg.model.type](cfg.model)
         loss_module = LOSSES[cfg.model.loss.type](cfg.model.loss)
-        optimizer = OPTIMIZERS[cfg.optimizer.type](model.parameters(), cfg.optimizer)
+        optimizer = OPTIMIZERS[cfg.optimizer.type](chain(model.parameters(), loss_module.parameters()), cfg.optimizer)
         train_reporter = Reporter(state='train')
         valid_reporter = Reporter(state='valid')
         cfg.save_dir = os.getcwd()

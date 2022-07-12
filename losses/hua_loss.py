@@ -17,6 +17,7 @@ class HUALoss(nn.Module):
         @param action_list : list(str) : name of different actions as a list of str. used in case of A present in tasks.
         @param time_prior: str : what time prior to use, must be one of sig5, sig*, none
         @param clipMinS, clipMaxS: float : these values are used to slip s. MinS is needed if there are tasks in the input with errors near zero. one can set them to None, resulting in no cliping.
+        @param device : str : device to run torch on
         '''
 
         self.args = args
@@ -49,9 +50,6 @@ class HUALoss(nn.Module):
         else:
             raise Exception("{} is not a supported prior for time axis, options are: [sig5, sig*, none].".format(args.time_prior))
         # fix tasks for action
-        # ["walking", "eating", "smoking", "discussion", "directions", "greeting", "phoning", "posing",
-        #                       "purchases", "sitting", "sittingdown", "takingphoto", "waiting", "walkingdog",
-        #                       "walkingtogether"]
         if 'A' in args.tasks:
             self.action_list = args.action_list
             self.nA = len(self.action_list)
