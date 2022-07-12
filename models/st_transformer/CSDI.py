@@ -4,7 +4,7 @@ import torch
 import torch.nn.functional as F
 from torch import nn
 
-from models.st_transformer.data_proc import Preprocess, Postprocess
+from models.st_transformer.data_proc import Preprocess, Postprocess, Human36m_Postprocess, Human36m_Preprocess, AMASS_3DPW_Postprocess, AMASS_3DPW_Preprocess
 
 
 def get_torch_trans(heads=8, layers=1, channels=64):
@@ -207,8 +207,15 @@ class CSDI_H36M(CSDI_base):
         self.Lo = args.obs_frames_num
         self.Lp = args.pred_frames_num
 
-        self.preprocess = Preprocess(args).to(args.device)
-        self.postprocess = Postprocess(args).to(args.device)
+        if args.pre_post_process == 'human3.6m':
+            self.preprocess = Human36m_Preprocess(args).to(args.device)
+            self.postprocess = Human36m_Postprocess(args).to(args.device)
+        elif args.pre_post_process == 'AMASS' or args.pre_post_process == '3DPW':
+            self.preprocess = AMASS_3DPW_Preprocess(args).to(args.device)
+            self.postprocess = AMASS_3DPW_Postprocess(args).to(args.device)
+        else:
+            self.preprocess = Preprocess(args).to(args.device)
+            self.postprocess = Postprocess(args).to(args.device)
 
         for p in self.preprocess.parameters():
             p.requires_grad = False
@@ -302,59 +309,4 @@ class CSDI_Reconstruction_H36M(CSDI_base):
         return {
             'pred_pose': self.postprocess(batch['observed_pose'], predicted),  # B, T, 96
         }
-
-    
-    
-# class CSDI_H36M(CSDI_Reconstruction_H36M):
-#     def __init__(self, args):
-#         super(CSDI_H36M, self).__init__(args)
-        
-#         snapshot_path = args.init_path
-#         snapshot = torch.load(snapshot_path, map_location=args.device)
-#         super(CSDI_H36M, self).load_state_dict(snapshot['model_state_dict'])
-#         print("Initialization of the model from {}".format(args.init_path))
-        
-#         self.Lo = args.obs_frames_num
-#         self.Lp = args.pred_frames_num
-
-#         TDUL_T = self.Lp if args.loss.time_aware else 1
-#         TDUL_J = 28 if args.loss.joint_aware else 1
-
-#         if args.loss.action_aware:
-#             self.sigma = nn.Embedding(15, TDUL_T * TDUL_J)
-#             self.sigma.weight = nn.Parameter(torch.ones(15, TDUL_T * TDUL_J, requires_grad=True) * 3.5)
-#         else:
-#             self.sigma = nn.Parameter(torch.ones(TDUL_T, TDUL_J, requires_grad=True) * 3.5)
-
-
-#     def preprocess_data(self, batch):
-#         observed_data = batch["observed_pose"].to(self.device)
-#         observed_data = self.preprocess(observed_data)
-
-#         B, L, K = observed_data.shape
-#         Lp = self.args.pred_frames_num
-
-#         observed_data = observed_data.permute(0, 2, 1)  # B, K, L
-
-#         observed_data = torch.cat([
-#             observed_data, torch.zeros([B, K, Lp]).to(self.device)
-#         ], dim=-1)
-
-#         observed_tp = torch.arange(self.Lo + self.Lp).unsqueeze(0).expand(B, -1).to(self.device)
-#         cond_mask = torch.zeros_like(observed_data).to(self.device)
-#         cond_mask[:, :, :L] = 1
-
-#         return (
-#             observed_data,
-#             observed_tp,
-#             cond_mask
-#         )
-
-#     def postprocess_data(self, batch, predicted):
-#         predicted = predicted[:, :, self.Lo:]
-#         predicted = predicted.permute(0, 2, 1)
-#         return {
-#             'pred_pose': self.postprocess(batch['observed_pose'], predicted),  # B, T, 96
-#             'sigma': self.sigma
-#         }
 

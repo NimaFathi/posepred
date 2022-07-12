@@ -13,6 +13,9 @@ model_is_unconditional: 0
 model_timeemb: 128
 model_featureemb: 16
 
+# can be human3.6m , AMASS, 3DPW, none
+pre_post_process: human3.6m
+
 device: &device ${device}
 
 loss:
