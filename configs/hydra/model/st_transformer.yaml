@@ -13,17 +13,15 @@ model_is_unconditional: 0
 model_timeemb: 128
 model_featureemb: 16
 
-# init_path: /scratch/izar/smirmoha/mehrshad_files/posepred/outputs/Reconstruction/rate1_obs50_pred25/snapshots/15.pt
-
 device: &device ${device}
 
-# loss:
-#   type: task_dependent_uncertainty_loss
-#   squared: False
-#   action_aware: False
-#   joint_aware: True
-#   time_aware: True
-#   device: ${device}
-
 loss:
-  type: st_transformer_loss
+  device: ${device}
+  type: hua_loss
+  tasks: ATJ
+  nT: 25
+  nJ: 32
+  time_prior: sig5
+  action_list: ["walking", "eating", "smoking", "discussion", "directions", "greeting", "phoning", "posing", "purchases", "sitting", "sittingdown", "takingphoto", "waiting", "walkingdog", "walkingtogether"]
+  clipMinS: -10
+  clipMaxS:
