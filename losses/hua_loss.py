@@ -22,7 +22,7 @@ class HUALoss(nn.Module):
 
         self.args = args
         init_mean = self.args.init_mean
-        self.s = torch.ones(1, 1, 1, requires_grad = True) * init_mean
+        self.s = torch.ones(1, 1, 1, requires_grad = True).to(self.args.device) * init_mean
         # Fix tasks for joints
         if 'J' in args.tasks:
             self.nJ = args.nJ
@@ -56,10 +56,10 @@ class HUALoss(nn.Module):
             self.action_map = {self.action_list[i]: i for i in range(self.nA)}
             self.s = self.s.repeat(self.nA, 1, 1)
             self.sigma = nn.Embedding(self.nA, self.nT * self.nJ)
-            self.sigma.weight = self.s
+            self.sigma.weight = nn.Parameter(self.s.view(-1, self.nT * self.nJ))
         else:
             self.nA = None
-            self.sigma = self.s
+            self.sigma = nn.Parameter(self.s)
 
     def calc_sigma(self, y_true):
         local_sigma = self.sigma
@@ -79,7 +79,7 @@ class HUALoss(nn.Module):
                 local_sigma = local_sigma[:, 1 - 1, :] + (local_sigma[:, 2 - 1, :] / (1 + f * g + (1 - f) * h))
             elif self.args.time_prior == 'sig*':
                 x = torch.arange(self.args.nT).to(self.args.device).unsqueeze(1).unsqueeze(0) # 1, T, 1
-                local_sigma = local_sigma[:, 1 - 1, :] / (1 + torch.exp(local_sigma[:, 2 - 1, :] * (local_sigma[:, 3 - 1, :] - x)))
+                local_sigma = local_sigma[:, 0:1, :] / (1 + torch.exp(local_sigma[:, 1:2, :] * (local_sigma[:, 2:3, :] - x)))
         
         local_sigma = torch.clamp(local_sigma, min=self.args.clipMinS, max=self.args.clipMaxS)
         return local_sigma
@@ -88,8 +88,8 @@ class HUALoss(nn.Module):
     def forward(self, y_pred, y_true):
       
         sigma = self.calc_sigma(y_true)
-        y_pred = self.proc(y_pred['pred_pose']) # B,T,JC
-        y_true = self.proc(y_true['future_pose']) # B,T,JC
+        y_pred = y_pred['pred_pose'] # B,T,JC
+        y_true = y_true['future_pose'] # B,T,JC
 
 
         B,T,JC = y_pred.shape

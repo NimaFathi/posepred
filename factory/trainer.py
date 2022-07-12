@@ -1,6 +1,7 @@
 import logging
 import time
 import torch
+import gc
 from torch.utils.tensorboard import SummaryWriter
 import numpy as np
 from tqdm import tqdm
@@ -102,6 +103,8 @@ class Trainer:
             data = dict_to_device(data, self.args.device)
             # predict & calculate loss
             self.model.zero_grad()
+            self.loss_module.zero_grad()
+
             model_outputs = self.model(data)
             loss_outputs = self.loss_module(model_outputs, data)
 
@@ -172,18 +175,9 @@ class Trainer:
 
     def __validate(self):
         self.model.eval()
-        
-        # if self.model.args.loss.action_aware:
-        #     print(self.model.sigma.weight)
-        #     print(torch.mean(self.model.sigma.weight), torch.std(self.model.sigma.weight))
-        # else:
-        #     print(self.model.sigma)
-        #     print(torch.mean(self.model.sigma), torch.std(self.model.sigma))
+        self.loss_module.eval()
 
-        # print(self.model.calc_sigma())
-        # print(torch.mean(self.model.calc_sigma()), torch.std(self.model.calc_sigma()))
-
-        # print(torch.mean(self.model.backbone.sigma.weight, dim=0))
+        # print(self.loss_module.calc_sigma(None).permute(0, 2, 1))
 
 
         self.valid_reporter.start_time = time.time()

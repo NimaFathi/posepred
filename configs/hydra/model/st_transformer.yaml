@@ -4,7 +4,7 @@ defaults:
 
 type: st_transformer
 
-n_major_joints: 18
+n_major_joints: 22
 diff_layers: 3
 diff_channels: 64
 diff_nheads: 8
@@ -18,10 +18,11 @@ device: &device ${device}
 loss:
   device: ${device}
   type: hua_loss
-  tasks: ATJ
+  tasks: TAJ
   nT: 25
   nJ: 32
-  time_prior: sig5
+  time_prior: sig*
   action_list: ["walking", "eating", "smoking", "discussion", "directions", "greeting", "phoning", "posing", "purchases", "sitting", "sittingdown", "takingphoto", "waiting", "walkingdog", "walkingtogether"]
-  clipMinS: -10
+  clipMinS: -1
   clipMaxS:
+  init_mean: 3.5

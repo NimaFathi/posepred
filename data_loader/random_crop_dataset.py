@@ -129,7 +129,7 @@ class RandomCropDataset(Dataset):
 
     def __getitem__(self, index):
         random_reverse = np.random.choice([False, True])
-        random_interpolate = np.random.choice([False, True])
+        random_interpolate = False # np.random.choice([False, True])
         if self.is_testing or self.is_h36_testing:
             random_reverse = False
             random_interpolate = False
