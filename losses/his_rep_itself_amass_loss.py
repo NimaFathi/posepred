@@ -170,7 +170,7 @@ class HisRepItselfLoss(nn.Module):
         seq1 = torch.cat((input_data['observed_pose'], input_data['future_pose']), dim=1) # B, T, J*D
         p3d_h36 = seq1.reshape(seq1.shape[0], seq1.shape[1], -1) 
         batch_size, seq_n, joints = p3d_h36.shape
-        p3d_h36 = p3d_h36.float().to(self.device) # todo
+        p3d_h36 = p3d_h36.float().to(self.device)
         p3d_sup = p3d_h36.clone()[:, -self.output_n - self.seq_in:].reshape(
             [-1, self.seq_in + self.output_n, len(self.dim_used) // 3, 3])
         
