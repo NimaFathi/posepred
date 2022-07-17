@@ -1,8 +1,8 @@
 import numpy as np
 import torch
 import torch.nn as nn
-from utils.others import sig5, sigstar
-
+from utils.others import sig5, sigstar, polyx
+import re
 class HisRepItselfLoss(nn.Module):
 
     def __init__(self, args):
@@ -25,8 +25,9 @@ class HisRepItselfLoss(nn.Module):
                 'sig5shifted-T',
                 'input_rel',
                 'sig5-TJPrior',
-                'sig5-TJPriorSum'
-            ]
+                'sig5-TJPriorSum',
+                'estimate-mean',
+            ] or bool(re.findall(r'^poly-TJ*-\d+$', args.un_mode))
             
         self.dim = 3
         self.dim_used = np.arange(12, 66)
@@ -83,7 +84,17 @@ class HisRepItselfLoss(nn.Module):
         elif mode == 'T':
             s = params[0, :, 0].reshape(1, T, 1)
         elif mode == 'J':
-            s = params[0, 0, :].reshape(1, 1, J)        
+            s = params[0, 0, :].reshape(1, 1, J)   
+        elif 'poly-TJ-' in mode:
+            p = params
+            x = p.shape[-1] - 1
+            s = polyx(p, torch.arange(0.5, 0.85, 0.01).to(self.device), x) # J, T
+            s = s.permute(1, 0).unsqueeze(0) # 1, T, J
+        elif 'poly-T-' in mode:
+            p = params[0,:]
+            x = torch.tensor(p.shape[-1] - 1).to(self.device)
+            s = polyx(p, torch.arange(0.5, 0.85, 0.01).to(self.device), x) # 1, T
+            s = s.permute(1, 0).unsqueeze(0) # 1, T, 1     
         elif mode == 'sig5-T':
             s = sig5(params[0, :], frames_num) # 1, T
             s = s.permute(1, 0).unsqueeze(0) # 1, T, 1      
@@ -137,6 +148,9 @@ class HisRepItselfLoss(nn.Module):
             s[:, :, self.E] = st[:, :, self.E]
             for c in self.connect:
                 s[:, :, c[1]] = s[:, :, c[0]] + s[:, :, c[1]]
+        elif mode == 'estimate-mean':
+            s = torch.mean(losses,dim=0).unsqueeze(0)
+            s = torch.log(s).detach()
         else:
             raise Exception('The defined uncertainry mode is not supported.')
 
