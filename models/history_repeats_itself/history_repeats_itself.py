@@ -44,7 +44,6 @@ class HistoryRepeatsItself(nn.Module):
             else:
                 un_params = torch.nn.Parameter(torch.zeros(15, 10 + args.kernel_size ,args.in_features//3))
 
-        print(args.un_mode)
         self.un_params = un_params
         if self.init_mode == "descending":
             torch.nn.init.constant_(self.un_params[:, 0], -0.2)
@@ -59,6 +58,13 @@ class HistoryRepeatsItself(nn.Module):
             torch.nn.init.constant_(self.un_params[:, 2], 0.2)
             torch.nn.init.constant_(self.un_params[:, 3], 10.7)
             torch.nn.init.constant_(self.un_params[:, 4], 0.1)
+            
+        elif self.init_mode == "constant-one":
+            torch.nn.init.constant_(self.un_params[:, 0], 1)
+            torch.nn.init.constant_(self.un_params[:, 1], 0) # this is not a bug :)
+            torch.nn.init.constant_(self.un_params[:, 2], 1)
+            torch.nn.init.constant_(self.un_params[:, 3], 1)
+            torch.nn.init.constant_(self.un_params[:, 4], 1)
 
         elif self.init_mode == "increasing1":
             torch.nn.init.constant_(self.un_params[:, 0], 0)

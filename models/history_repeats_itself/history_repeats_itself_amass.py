@@ -3,6 +3,7 @@ from torch import nn
 from torch.nn.parameter import Parameter
 import numpy as np
 import math
+import re
 
 from models.history_repeats_itself.utils import data_utils, util
 
@@ -30,6 +31,13 @@ class HistoryRepeatsItself(nn.Module):
             un_params = torch.nn.Parameter(torch.zeros(args.in_features//3, 5))
         elif 'sigstar' in args.un_mode:
             un_params = torch.nn.Parameter(torch.zeros(args.in_features//3, 2))
+        elif 'poly' in args.un_mode:
+            try:
+                params_count = int(re.findall("\d+", args.un_mode)[0]) + 2
+                self.params_count = params_count
+            except:
+                assert False, "you must have a number after 'poly'"
+            un_params = torch.nn.Parameter(torch.zeros(args.in_features//3, params_count))
         else:
             if args.itera == 1:
                 un_params = torch.nn.Parameter(torch.zeros(15, self.out_n + args.kernel_size ,args.in_features//3))
@@ -56,8 +64,42 @@ class HistoryRepeatsItself(nn.Module):
             torch.nn.init.constant_(self.un_params[:, 2], 1)
             torch.nn.init.constant_(self.un_params[:, 3], 1)
             torch.nn.init.constant_(self.un_params[:, 4], 1)
-        elif self.init_mode == "default":
-            torch.nn.init.normal_(self.un_params, mean=1.5, std=0.2)
+        elif self.init_mode == "increasing1":
+            torch.nn.init.constant_(self.un_params[:, 0], 0)
+            torch.nn.init.constant_(self.un_params[:, 1], 7.8)
+            torch.nn.init.constant_(self.un_params[:, 2], 0.5)
+            torch.nn.init.constant_(self.un_params[:, 3], 17.8)
+            torch.nn.init.constant_(self.un_params[:, 4], 0.2)
+
+        elif self.init_mode == "increasing2":
+            torch.nn.init.constant_(self.un_params[:, 0], 2.1)
+            torch.nn.init.constant_(self.un_params[:, 1], 2.6)
+            torch.nn.init.constant_(self.un_params[:, 2], 0.5)
+            torch.nn.init.constant_(self.un_params[:, 3], 17.8)
+            torch.nn.init.constant_(self.un_params[:, 4], 0.2)
+
+        elif self.init_mode == "increasing3":
+            torch.nn.init.constant_(self.un_params[:, 0], 2.1)
+            torch.nn.init.constant_(self.un_params[:, 1], 6)
+            torch.nn.init.constant_(self.un_params[:, 2], 0.5)
+            torch.nn.init.constant_(self.un_params[:, 3], 17.8)
+            torch.nn.init.constant_(self.un_params[:, 4], 0.2)
+
+        elif self.init_mode == "increasing4":
+            torch.nn.init.constant_(self.un_params[:, 0], 0.6)
+            torch.nn.init.constant_(self.un_params[:, 1], 4.7)
+            torch.nn.init.constant_(self.un_params[:, 2], 0.1)
+            torch.nn.init.constant_(self.un_params[:, 3], 20)
+            torch.nn.init.constant_(self.un_params[:, 4], 0.2)
+        elif self.init_mode == 'poly_decreasing':
+            coeff = 1
+            for i in range(self.params_count):
+                torch.nn.init.constant_(self.un_params[:, i], coeff)
+                coeff /= 10
+
+        elif bool(re.findall(r'^default_[-+]?(?:\d*\.\d+|\d+)_[-+]?(?:\d*\.\d+|\d+)$', self.init_mode)):
+            mean, std = [float(n) for n in re.findall('[-+]?(?:\d*\.\d+|\d+)', self.init_mode)]
+            torch.nn.init.normal_(self.un_params, mean=mean, std=std)
         else:
             raise Exception("The defined init mode is not supported.")
 
