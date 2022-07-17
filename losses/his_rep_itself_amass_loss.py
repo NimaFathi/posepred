@@ -59,22 +59,16 @@ class HisRepItselfLoss(nn.Module):
                 "walkingtogether": 14
         }
         
-        # self.idx = np.expand_dims(np.arange(self.seq_in + self.out_n), axis=1) + (
-        #         self.out_n - self.seq_in + np.expand_dims(np.arange(self.itera), axis=0))
-
     def un_loss(self, pred, gt, params, actions=None, mode='ATJ', pred_disp=1):
         # pred, gt:  B, T, J, D
         # params: A, T, J ---- 16, 25, 22
         B, T, J, D = pred.shape
-        # A, T, J = params.shape
         
         if mode == 'input_rel':
             return torch.mean(torch.norm((pred - gt)*params, dim=-1))
 
         losses = torch.norm(pred - gt, dim=3) # B, T, J
         frames_num = torch.arange(T).to(self.device)
-        # v1 : [1, 4, 5, 6, 1, 4, 5, 6, 0, 1, 2, 3, 1, 7, 8, 9, 10, 1, 7, 8, 9, 10]
-        # v2: [0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 4, 0, 1, 2, 3, 4]
         joints_num = torch.tensor([0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 4, 0, 1, 2, 3, 4]).to(self.device)
         if mode == 'ATJ':
             s = params[actions] # B, T, J
@@ -83,7 +77,7 @@ class HisRepItselfLoss(nn.Module):
         elif mode == 'AJ':
             s = params[actions][:, 0, :].unsqueeze(1) # B, 1, J
         elif mode == 'TJ':
-            s = params[0].unsqueeze(0) # 1, T, J #.repeat(B, 1, 1) # B, T, J
+            s = params[0].unsqueeze(0) # 1, T, J
         elif mode == 'A':
             s = params[actions][:, 0, 0].reshape(B, 1, 1)
         elif mode == 'T':
@@ -91,8 +85,6 @@ class HisRepItselfLoss(nn.Module):
         elif mode == 'J':
             s = params[0, 0, :].reshape(1, 1, J)        
         elif mode == 'sig5-T':
-            # params: J, 5
-            # torch.arange(T): T,
             s = sig5(params[0, :], frames_num) # 1, T
             s = s.permute(1, 0).unsqueeze(0) # 1, T, 1      
 
@@ -129,11 +121,6 @@ class HisRepItselfLoss(nn.Module):
             s = sigstar(params, frames_num) # J, T
             s = s.permute(1, 0).unsqueeze(0)
         elif mode == 'sig5-TJPrior':
-            # st = sig5(params[T:], frames_num) # J, T
-            # st = st.permute(1, 0).unsqueeze(0)
-
-            # sj = sig5(params[:T], joints_num) # T, J
-            # sj = sj.unsqueeze(0)
             st = sig5(params[0], frames_num) # 1, T
             st = st.unsqueeze(-1) # 1, T, 1
 
@@ -179,20 +166,15 @@ class HisRepItselfLoss(nn.Module):
 
         pred_disp = None
         if self.args.disp_reg:
-            # pred_pose = p3d_out_all[:, :, 0]
             obs_pose = input_data['observed_pose'][:, :]
             obs_pose = obs_pose.reshape(obs_pose.shape[0], obs_pose.shape[1], len(self.dim_used) // 3, 3)
-            pred_disp = torch.norm((obs_pose[:, 1:] - obs_pose[:, :-1]), dim=-1)[:, -self.args.disp_thresh:] # B, T-1, J
-            # pred_disp = torch.norm((pred_pose[:, 1:] - pred_pose[:, :-1]), dim=-1) # B, T-1, J
+            pred_disp = torch.norm((obs_pose[:, 1:] - obs_pose[:, :-1]), dim=-1)[:, -self.args.disp_thresh:]
             pred_disp = pred_disp.mean(dim=1).mean(dim=1)
-            # pred_disp.requires_grad = False
 
         if self.mode == 'default':
             if self.itera == 1:
-                # print(p3d_out_all.shape)
                 loss_p3d = torch.mean(torch.norm(p3d_out_all - p3d_sup, dim=3))
             else:
-                # print(7, p3d_out_all.shape)
                 loss_p3d = torch.mean(torch.norm(p3d_out_all[:, :self.seq_in+10] - p3d_sup[:, :self.seq_in+10], dim=3))
 
         elif self.mode == 'input_rel':
@@ -213,8 +195,6 @@ class HisRepItselfLoss(nn.Module):
 
 
         p3d_out = model_outputs['pred_metric_pose']
-        # print('p3d_out', p3d_out.shape)
-        # print('loss mp', p3d_h36[:, -self.output_n:].shape, p3d_out.shape, joints//3)
 
         mpjpe_p3d_h36 = torch.mean(
             torch.norm(p3d_h36[:, -self.output_n:].reshape(
@@ -224,9 +204,8 @@ class HisRepItselfLoss(nn.Module):
             )
         )
 
-        # print(17, mpjpe_p3d_h36)
         outputs = {'loss': loss_p3d, 'mpjpe': mpjpe_p3d_h36}
-        # print(outputs)
+
         if 'pred_mask' in model_outputs.keys():
             mask_loss = self.bce(model_outputs['pred_mask'], input_data['future_mask'])
             outputs['mask_loss'] = mask_loss

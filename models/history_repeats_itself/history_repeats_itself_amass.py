@@ -4,8 +4,6 @@ from torch.nn.parameter import Parameter
 import numpy as np
 import math
 
-# from models.history_repeats_itself.utils import get_dct_matrix
-
 from models.history_repeats_itself.utils import data_utils, util
 
 
@@ -40,7 +38,6 @@ class HistoryRepeatsItself(nn.Module):
 
 
         self.un_params = un_params
-        # torch.nn.init.xavier_uniform_(self.un_params)
         if self.init_mode == "descending":
             torch.nn.init.constant_(self.un_params[:, 0], -0.2)
             torch.nn.init.constant_(self.un_params[:, 1], 3.7)
@@ -77,8 +74,6 @@ class HistoryRepeatsItself(nn.Module):
         p3d_h36 = seq.reshape(seq.shape[0], seq.shape[1], -1)
 
         batch_size, seq_n, _ = p3d_h36.shape
-
-        # print(p3d_h36.shape)
         p3d_h36 = p3d_h36.float()
 
         p3d_src = p3d_h36.clone()
@@ -132,17 +127,16 @@ class AttModel(nn.Module):
         :param itera:
         :return:
         """
-        # print('src', src.shape)
         dct_n = self.dct_n
-        src = src[:, :input_n]  # [bs,in_n,dim]
+        src = src[:, :input_n]
         src_tmp = src.clone()
         bs = src.shape[0]
         src_key_tmp = src_tmp.transpose(1, 2)[:, :, :(input_n - output_n)].clone()
         src_query_tmp = src_tmp.transpose(1, 2)[:, :, -self.kernel_size:].clone()
 
         dct_m, idct_m = util.get_dct_matrix(self.kernel_size + output_n)
-        dct_m = torch.from_numpy(dct_m).float().to(self.device)  # todo
-        idct_m = torch.from_numpy(idct_m).float().to(self.device)  # todo
+        dct_m = torch.from_numpy(dct_m).float().to(self.device) 
+        idct_m = torch.from_numpy(idct_m).float().to(self.device)
 
         vn = input_n - self.kernel_size - output_n + 1
         vl = self.kernel_size + output_n
@@ -152,7 +146,7 @@ class AttModel(nn.Module):
             [bs * vn, vl, -1])
         src_value_tmp = torch.matmul(dct_m[:dct_n].unsqueeze(dim=0), src_value_tmp).reshape(
             [bs, vn, dct_n, -1]).transpose(2, 3).reshape(
-            [bs, vn, -1])  # [32,40,66*11]
+            [bs, vn, -1])
 
         idx = list(range(-self.kernel_size, 0, 1)) + [-1] * output_n
         outputs = []
@@ -173,7 +167,6 @@ class AttModel(nn.Module):
                                    dct_out_tmp[:, :, :dct_n].transpose(1, 2))
             outputs.append(out_gcn.unsqueeze(2))
             if itera > 1:
-                # update key-value query
                 out_tmp = out_gcn.clone()[:, 0 - output_n:]
                 src_tmp = torch.cat([src_tmp, out_tmp], dim=1)
 
@@ -196,7 +189,6 @@ class AttModel(nn.Module):
                 src_query_tmp = src_tmp[:, -self.kernel_size:].transpose(1, 2)
 
         outputs = torch.cat(outputs, dim=2)
-        # print('out', outputs.shape)
         return outputs
 
 
@@ -317,17 +309,3 @@ class GCN(nn.Module):
         y = y + x
 
         return y
-
-# '''
-# C:\Users\samen\Desktop\term7\b\git_pose\datasets
-# python -m api.preprocess dataset=human3.6m official_annotation_path=C:\Users\samen\Desktop\term7\b\git_pose\datasets\Poses\ data_type=validation keypoint_dim=3 skip_num=1 obs_frames_num=50 pred_frames_num=10 interactive=false
-#
-# '''
-# python -m api.train model=history_repeats_itself keypoint_dim=3 train_dataset=C:\Users\samen\Desktop\term7\b\git_pose\preprocessed_data\human36m\train_50_10_1_human3.6m.jsonl valid_dataset=C:\Users\samen\Desktop\term7\b\git_pose\preprocessed_data\human36m\validation_50_10_1_human3.6m.jsonl epochs=10 data.shuffle=True device=cpu snapshot_interval=10 hydra.run.dir=.\outputs\21
-#
-# '''
-# python -m api.train model=hisroty_repeats_itself keypoint_dim=3 train_dataset=C:\Users\samen\Desktop\term7\b\git_pose\preprocessed_data\human36m\train_50_10_1_human3.6m.jsonl valid_dataset=C:\Users\samen\Desktop\term7\b\git_pose\preprocessed_data\human36m\validation_50_10_1_human3.6m.jsonl epochs=10 data.shuffle=True device=cpu snapshot_interval=10 hydra.run.dir=./
-
-# python -m api.train model=history_repeats_itself keypoint_dim=3 train_dataset=C:\Users\samen\Desktop\term7\b\git_pose\preprocessed_data\human36m\train_50_10_1_human3.6m.jsonl valid_dataset=C:\Users\samen\Desktop\term7\b\git_pose\preprocessed_data\human36m\validation_50_10_1_human3.6m.jsonl epochs=1 data.shuffle=True device=cpu snapshot_interval=10 hydra.run.dir=.\outputs\59
-#111
-# '''
