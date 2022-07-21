@@ -93,6 +93,20 @@ Folder Location: 'configs/hydra/optimizer'
 ```
 type                        type=adam for adam optimizer (str)
 lr                          learning rate (float) (default=0.001)
+weight_decay                weight decay coefficient (default: 1e-5)
+```
+`adamw.yaml`
+```
+type                        type=adamw for adamw optimizer (str)
+lr                          learning rate (float) (default=0.001)
+betas                       coefficients used for computing running averages of gradient and its square (default: (0.9, 0.999))
+weight_decay                weight decay coefficient (default: 1e-5)
+```
+`sam.yaml`
+```
+type                        type=adam for Sharpness Aware Minimization (str)
+lr                          learning rate (float) (default=0.001)
+weight_decay                weight decay coefficient (default: 1e-5)
 ```
 `sgd.yaml`
 ```
@@ -100,6 +114,7 @@ type                        type=sgd for stochastic gradient descent (str)
 lr                          learning rate (float) (default=0.001)
 momentum                    momentum factor in sgd optimizer (float) (default=0)
 dampening                   dampening for momentum in sgd optimizer (float) (default=0)
+weight_decay                weight decay coefficient (default: 1e-5)
 nesterov                    enables Nesterov momentum (bool) (default=False)
 ```
 
