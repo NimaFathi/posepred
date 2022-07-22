@@ -44,8 +44,14 @@ is_noisy:                   Use noisy data_loader `data_loader/noisy_solitary_da
 is_random_crop:             Use random_crop (dynamic) data_loader (bool) (default: False)
 is_solitary:                Use Solitary data_loader (bool) (default: False) 
 noise_rate:                 A float number to indicate percentage of uniform noisy values or 'mask' to use mask values as noise (float or str) (default: mask)
+persons_num:                Number of people (int)
 use_mask:                   Set True To use mask in dataloader and model (bool)
 use_quaternion:             Set True To use quaternion representation (based on model) (bool) (default: False)
+model_pose_format:          (str)
+metric_pose_format:         (str)
+displacement_mode:          (str)
+displacement_threshold:     (int)
+is_h36_testing:             Set True to configure the dataloader for testing huamn3.6m (bool)
 is_testing:                 Set True to configure the dataloader for testing (bool) (default: False)
 is_visualizing:             Set True to configure dataloader for visualizing (bool) (default: False)
 batch_size:                 Indicates size of batch size (int) (default: 256)
@@ -53,6 +59,10 @@ shuffle:                    Indicates shuffling the data in dataloader (bool) (d
 pin_memory:                 Using pin memory or not in dataloader (bool) (default: False)  
 num_workers:                Number of workers (int)
 normalize:                  Set True to normalize the data in dataloader (bool)
+seq_rate:                   (int)
+frame_rate:                 (int)
+len_observed:               (int)
+len_future:                 (int)
 
 optional arguments: 
 overfit:                    Set True to create a dataloader with small size for testing overfitting (bool)
@@ -68,7 +78,8 @@ Folder Location: 'configs/hydra/model'
 ```
 Mandatory arguments:
 keypoint_dim:               Number of dim data should have Ex: 2 for 2D and 3 for 3D (int)  
-pred_frames_num:	    Number of frames to predict, obligatory when ground-truth is not available (int)
+pred_frames_num:	        Number of frames to predict, obligatory when ground-truth is not available (int)
+obs_frames_num:	            (int)
 use_mask:                   Set True To use mask in dataloader and model (bool)
 use_dct:                    Set True to use discrete cosine transform (bool)
 normalize:                  Set True to normalize the data in dataloader (bool)
@@ -104,7 +115,7 @@ weight_decay                weight decay coefficient (default: 1e-5)
 ```
 `sam.yaml`
 ```
-type                        type=adam for Sharpness Aware Minimization (str)
+type                        type=sam for sharpness aware minimization (str)
 lr                          learning rate (float) (default=0.001)
 weight_decay                weight decay coefficient (default: 1e-5)
 ```
@@ -121,6 +132,12 @@ nesterov                    enables Nesterov momentum (bool) (default=False)
 #### scheduler
 Folder Location: 'configs/hydra/scheduler'
 
+`multi_step_lr.yaml`
+```
+type                        type=multi_step_lr to use this technique
+step_size                   List of epoch indices. Must be increasing.
+gamma                       Multiplicative factor of learning rate decay. (float) (default=0.4)
+```
 `reduce_lr_on_plateau.yaml`
 ```
 type                        type=reduce_lr_on_plateau to use this technique (str)
@@ -160,7 +177,7 @@ usage: python -m api.preprocess  	[official_annotation_path] [dataset] [data_typ
 	                             	[annotate_openpifpaf] [annotate] [image_dir]
 	                             	[output_name] [save_total_frames]
   
-mandatory arguments:  
+mandatory arguments:
   - official_annotation_path  Name of using dataset Ex: 'posetrack' or '3dpw' (str)  
   - dataset             Name of Dataset []  
   - data_type           Type of data to use Ex: 'train', 'validation' or 'test' (str)  
