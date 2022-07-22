@@ -25,17 +25,17 @@ def generate_output(cfg: DictConfig):
     if cfg.load_path is not None:
         model, _, _, _, _, _, _ = load_snapshot(cfg.load_path)
     else:
-        cfg.model.keypoint_dim = cfg.data.keypoint_dim
-        cfg.model.pred_frames_num = cfg.pred_frames_num
         cfg.model.keypoints_num = dataloader.dataset.keypoints_num
         cfg.model.use_mask = cfg.data.use_mask
         model = MODELS[cfg.model.type](cfg.model)
         if cfg.model.type == 'nearest_neighbor':
-            model.train_dataloader = get_dataloader(cfg.model.train_dataset, cfg.data)
+            model.train_dataloader = get_dataloader(
+                cfg.model.train_dataset, cfg.data)
     cfg.save_dir = os.getcwd()
     setup_testing_dir(cfg.save_dir)
 
-    output_enerator = Output_Generator(model, dataloader, cfg.save_dir, cfg.device)
+    output_enerator = Output_Generator(
+        model, dataloader, cfg.save_dir, cfg.device)
     output_enerator.generate()
 
 

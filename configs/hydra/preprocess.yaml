@@ -1,18 +1,16 @@
 defaults:
+  - shared
   - _self_
 
 official_annotation_path:
 dataset: ???
 data_type: ???
 output_name:
-obs_frames_num: ???
-pred_frames_num: ???
 use_video_once: false
 annotate_openpifpaf: false
 annotate: false
 image_dir:
 joints_annotation_path:
-keypoint_dim: ???
 skip_num: 0
 interactive: false
 save_total_frames: false
