@@ -214,6 +214,8 @@ If we have camera extrinsic and intrinsic parameters and image paths, we would c
 Example:  
 ```bash  
 python -m api.visualize model=<model_name> dataset=<path_to_dataset> dataset_type=jta keypoint_dim=3 is_noisy=true data.noise_rate=0.0 device=cpu load_path=<path_to_model> index=25 showing=observed-future
+
+python -m api.visualize model=<model_name> dataset=<path_to_dataset> dataset_type=stanford3.6m keypoint_dim=3 data.is_random_crop=True data.model_pose_format=xyz data.metric_pose_format=xyz data.len_observed=50 data.len_future=25 device=cuda load_path=<path_to_checkpoint> index=50 showing=observed-future-predicted save_dir=<path_to_save_results>
 ```  
   
 Sample outputs:  
