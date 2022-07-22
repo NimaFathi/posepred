@@ -1,0 +1,5 @@
+obs_frames_num: ???
+pred_frames_num: ???
+model_pose_format: ???
+metric_pose_format:
+keypoint_dim: ???

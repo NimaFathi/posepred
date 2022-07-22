@@ -1,11 +1,10 @@
 defaults:
+  - shared
   - data: main
   - model:
   - _self_
 
 dataset: ???
-pred_frames_num: ???
-keypoint_dim: ???
 use_mask: false
 normalize: false
 device: cuda

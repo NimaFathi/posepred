@@ -36,21 +36,20 @@ def train(cfg: DictConfig):
         cfg.optimizer = optimizer_args
         cfg.save_dir = cfg.load_path[:cfg.load_path.rindex('snapshots/')]
     else:
-        # TODO remove this
-        cfg.model.pred_frames_num = train_dataloader.dataset.future_frames_num
-        cfg.model.obs_frames_num = train_dataloader.dataset.obs_frames_num
         cfg.model.keypoints_num = train_dataloader.dataset.keypoints_num
         cfg.model.mean_pose = train_dataloader.dataset.mean_pose
         cfg.model.std_pose = train_dataloader.dataset.std_pose
 
         model = MODELS[cfg.model.type](cfg.model)
         loss_module = LOSSES[cfg.model.loss.type](cfg.model.loss)
-        optimizer = OPTIMIZERS[cfg.optimizer.type](chain(model.parameters(), loss_module.parameters()), cfg.optimizer)
+        optimizer = OPTIMIZERS[cfg.optimizer.type](
+            chain(model.parameters(), loss_module.parameters()), cfg.optimizer)
         train_reporter = Reporter(state='train')
         valid_reporter = Reporter(state='valid')
         cfg.save_dir = os.getcwd()
         setup_training_dir(cfg.save_dir)
-        save_snapshot(model, loss_module, optimizer, cfg.optimizer, 0, train_reporter, valid_reporter, cfg.save_dir)
+        save_snapshot(model, loss_module, optimizer, cfg.optimizer,
+                      0, train_reporter, valid_reporter, cfg.save_dir)
 
     scheduler = SCHEDULERS[cfg.scheduler.type](optimizer, cfg.scheduler)
     trainer = Trainer(cfg, train_dataloader, valid_dataloader, model, loss_module, optimizer, cfg.optimizer, scheduler,

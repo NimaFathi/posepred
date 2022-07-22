@@ -1,19 +1,14 @@
 defaults:
   - _self_
+  - shared
   - data: main
   - model:
   - metrics
 
 dataset: ???
-keypoint_dim: ???
 normalize: false
 use_mask: false
 load_path:
 csv_save_dir:
 rounds_num: 1
 device: cuda
-
-obs_frames_num: ???
-pred_frames_num: ???
-model_pose_format: ???
-metric_pose_format:
