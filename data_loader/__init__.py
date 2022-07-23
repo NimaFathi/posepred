@@ -27,8 +27,7 @@ def get_dataloader(dataset_path, args):
         dataset = RandomCropDataset(
             dataset_path, args.keypoint_dim, args.is_testing, args.use_mask, args.is_visualizing,
             args.model_pose_format, args.metric_pose_format, args.normalize, args.metadata_path,
-            args.seq_rate, args.frame_rate, args.len_observed, args.len_future, args.is_h36_testing,
-            args.displacement_threshold, args.displacement_mode
+            args.seq_rate, args.frame_rate, args.len_observed, args.len_future, args.is_h36_testing
         )
     elif args.is_solitary:
         dataset = SolitaryDataset(dataset_path, args.keypoint_dim, args.is_testing, args.use_mask,
