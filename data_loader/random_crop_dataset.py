@@ -10,7 +10,6 @@ from utils.others import find_indices_256
 from tqdm.notebook import tqdm
 
 from path_definition import PREPROCESSED_DATA_DIR
-from transforms.transforms import RandomInterpolate
 import random
 logger = logging.getLogger(__name__)
 
@@ -116,18 +115,13 @@ class RandomCropDataset(Dataset):
         self.use_mask = use_mask
         self.is_visualizing = is_visualizing
         self.is_h36_testing = is_h36_testing
-
-        self.interpolate = RandomInterpolate(0.9, scale_mode='constant')
-
     def __len__(self): 
         return len(self.indexes)
 
     def __getitem__(self, index):
         random_reverse = np.random.choice([False, True])
-        random_interpolate = False # np.random.choice([False, True])
         if self.is_testing or self.is_h36_testing:
             random_reverse = False
-            random_interpolate = False
 
         data_index, seq_index = self.indexes[index]
         seq = self.data[data_index]
@@ -147,8 +141,6 @@ class RandomCropDataset(Dataset):
             if random_reverse:
                 temp_seq = torch.flip(temp_seq, [0])
             temp_seq = temp_seq[::self.frame_rate]
-            if random_interpolate and k in ['metric_pose', 'pose']:
-                temp_seq = self.interpolate(temp_seq)
 
             outputs["observed_" + k] = temp_seq[:self.len_observed]
             outputs["future_" + k] = temp_seq[self.len_observed:]
