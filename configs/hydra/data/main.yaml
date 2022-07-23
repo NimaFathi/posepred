@@ -25,6 +25,6 @@ overfit:
 normalize: ${normalize}
 metadata_path:
 seq_rate: 1
-frame_rate: 1
+frame_rate: 2
 len_observed: ${obs_frames_num}
 len_future: ${pred_frames_num}

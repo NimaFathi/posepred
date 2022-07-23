@@ -96,7 +96,9 @@ class HistoryRepeatsItself(nn.Module):
             for i in range(self.params_count):
                 torch.nn.init.constant_(self.un_params[:, i], coeff)
                 coeff /= 10
-
+        elif self.init_mode == "default":
+            mean, std = 0, 1
+            torch.nn.init.normal_(self.un_params, mean=mean, std=std)
         elif bool(re.findall(r'^default_[-+]?(?:\d*\.\d+|\d+)_[-+]?(?:\d*\.\d+|\d+)$', self.init_mode)):
             mean, std = [float(n) for n in re.findall('[-+]?(?:\d*\.\d+|\d+)', self.init_mode)]
             torch.nn.init.normal_(self.un_params, mean=mean, std=std)

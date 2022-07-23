@@ -29,7 +29,7 @@ class Evaluator:
     def evaluate(self):
         logger.info('Evaluation started.')
         self.model.eval()
-        self.loss_module.eval()
+        # self.loss_module.eval()
         for i in range(self.rounds_num):
             logger.info('round ' + str(i + 1) + '/' + str(self.rounds_num))
             self.__evaluate()

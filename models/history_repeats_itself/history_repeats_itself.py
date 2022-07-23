@@ -102,6 +102,10 @@ class HistoryRepeatsItself(nn.Module):
         elif bool(re.findall(r'^default_[-+]?(?:\d*\.\d+|\d+)_[-+]?(?:\d*\.\d+|\d+)$', self.init_mode)):
             mean, std = [float(n) for n in re.findall('[-+]?(?:\d*\.\d+|\d+)', self.init_mode)]
             torch.nn.init.normal_(self.un_params, mean=mean, std=std)
+
+        elif self.init_mode == "default":
+            mean, std = 0, 1
+            torch.nn.init.normal_(self.un_params, mean=mean, std=std)
         else:
             raise Exception("The defined init mode is not supported.")
 

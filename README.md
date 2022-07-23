@@ -133,7 +133,7 @@ Train models from scratch:
 python -m api.train model=history_repeats_itself \
           keypoint_dim=3 \
           train_dataset=$DATASET_TRAIN_PATH \
-          valid_dataset=$DATASET_TEST_PATH \
+          valid_dataset=$DATASET_VALIDATION_PATH \
           epochs=10 \
           data.shuffle=True \
           device=cuda \
@@ -141,9 +141,12 @@ python -m api.train model=history_repeats_itself \
           hydra.run.dir=$OUTPUT_PATH \
           data.batch_size=256 \
           data.num_workers=10 \
+          data.is_random_crop=True \
+          model_pose_format=xyz \
+          metric_pose_format=xyz \
           obs_frames_num=50 \
           pred_frames_num=25 \
-          experiment_name=his_encoder
+          experiment_name=hri_test
 ```  
 
 Provide **validation_dataset** to adjust learning-rate and report metrics on validation-dataset as well.
@@ -157,16 +160,18 @@ Evaluate pretrained model:
 python -m api.evaluate model=zero_vel \
           keypoint_dim=3 \
           dataset=$DATASET_TEST_PATH \
-          data.shuffle=True \
+          data.shuffle=true \
           rounds_num=1 \
           device=cuda \
           hydra.run.dir=$OUTPUT_PATH \
-          data.is_random_crop=True \
+          data.is_random_crop=true \
           data.batch_size=2048 \
           obs_frames_num=10 \
           pred_frames_num=25 \
           model_pose_format=xyz \
-          metric_pose_format=xyz 
+          metric_pose_format=xyz \
+          data.is_testing=true \
+          data.is_h36_testing=true
 ```  
 See [here](https://github.com/vita-epfl/posepred/blob/master/ARGS_README.md#evaluation) for more details about evaluation arguments.
 
