@@ -155,7 +155,7 @@ See [here](https://github.com/vita-epfl/posepred/blob/master/ARGS_README.md#trai
 
 
 ## Evaluation
-Evaluate pretrained model:
+Evaluate untrainable model:
 ```bash  
 python -m api.evaluate model=zero_vel \
           keypoint_dim=3 \
@@ -173,6 +173,26 @@ python -m api.evaluate model=zero_vel \
           data.is_testing=true \
           data.is_h36_testing=true
 ```  
+
+evaluate pretrained model:
+```bash
+python -m api.evaluate model=history_repeats_itself \
+          keypoint_dim=3 \
+          dataset=$DATASET_TEST_PATH \
+          data.shuffle=True \
+          rounds_num=5 \
+          device=cuda \
+          hydra.run.dir=$OUTPUT_PATH \
+          data.is_random_crop=True \
+          data.batch_size=2048 \
+          obs_frames_num=50 \
+          pred_frames_num=25 \
+          model_pose_format=xyz \
+          metric_pose_format=xyz \
+          load_path=$MODEL_OUTPUT_PATH \
+          data.is_testing=false \
+          data.is_h36_testing=true
+```
 See [here](https://github.com/vita-epfl/posepred/blob/master/ARGS_README.md#evaluation) for more details about evaluation arguments.
 
 
