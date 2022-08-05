@@ -198,8 +198,19 @@ See [here](https://github.com/vita-epfl/posepred/blob/master/ARGS_README.md#eval
 
 ## Generating Outputs
 Generate and save the predicted future poses:
-```bash  
-python -m api.generate_final_output dataset=<path_to_dataset> model=<model_name> keypoint_dim=2 load_path=<path_to_model> data.is_interactive=False device=cpu pred_frames_num=<int> 
+```bash
+python -m api.generate_final_output \
+          dataset=$DATASET_TEST_PATH \
+          model=history_repeats_itself \
+          keypoint_dim=3 \
+          data.is_random_crop=True \
+          obs_frames_num=50 \
+          pred_frames_num=25 \
+          model_pose_format=xyz \
+          metric_pose_format=xyz \
+          load_path=$MODEL_OUTPUT_PATH \
+          data.is_interactive=False \
+          device=cpu
 ```  
 See [here](https://github.com/vita-epfl/posepred/blob/master/ARGS_README.md#generating-outputs) for more details about prediction arguments.
   
