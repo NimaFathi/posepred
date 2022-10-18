@@ -1,6 +1,8 @@
 from torch.nn import Module
 import torch
 from models.pgbig.base_model import BaseModel as BaseBlock
+from models.pgbig.data_proc import Preprocess, Postprocess, Human36m_Postprocess, Human36m_Preprocess, AMASS_3DPW_Postprocess, AMASS_3DPW_Preprocess
+
 from models.pgbig import util
 
 """
@@ -134,4 +136,41 @@ class MultiStageModel(Module):
         output_4 = torch.matmul(idct_m[:, :dct_n], output_dct_4.permute(0, 2, 1))
 
         return output_4, output_3, output_2, output_1
+
+
+class PGBIG(Module):
+    def __init__(self, args):
+        super(Module, self).__init__(args)
+        self.in_n = args.obs_frames_num
+        self.out_n = args.pred_frames_num
+
+        if args.pre_post_process == 'human3.6m':
+            self.preprocess = Human36m_Preprocess(args).to(args.device)
+            self.postprocess = Human36m_Postprocess(args).to(args.device)
+        elif args.pre_post_process == 'AMASS' or args.pre_post_process == '3DPW':
+            self.preprocess = AMASS_3DPW_Preprocess(args).to(args.device)
+            self.postprocess = AMASS_3DPW_Postprocess(args).to(args.device)
+        else:
+            self.preprocess = Preprocess(args).to(args.device)
+            self.postprocess = Postprocess(args).to(args.device)
+
+        for p in self.preprocess.parameters():
+            p.requires_grad = False
+
+        for p in self.postprocess.parameters():
+            p.requires_grad = False
+        
+        self.net = MultiStageModel(args).to(args.device)
+
+
+    def forward(self, batch):
+        observed_data = batch["observed_pose"].to(self.device)
+        observed_data = self.preprocess(observed_data, normal=False)
+        p4, p3, p2, p1 = self.net(observed_data, input_n=self.in_n, output_n=self.out_n, itera=1)
+        
+        return {
+            'pred_pose': self.postprocess(batch['observed_pose'], p4, normal=False),
+            'p1': p1, 'p2': p2, 'p3': p3, 'p4': p4
+        }
+        
 
