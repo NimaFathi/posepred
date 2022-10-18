@@ -169,7 +169,7 @@ class PGBIG(Module):
         p4, p3, p2, p1 = self.net(observed_data, input_n=self.in_n, output_n=self.out_n, itera=1)
         
         return {
-            'pred_pose': self.postprocess(batch['observed_pose'], p4, normal=False),
+            'pred_pose': self.postprocess(batch['observed_pose'], p4[:, self.in_n:, :], normal=False),
             'p1': p1, 'p2': p2, 'p3': p3, 'p4': p4
         }
         
