@@ -1,0 +1,31 @@
+defaults:
+  - _self_
+  - common
+
+type: pgbig
+
+python main_h36m.py --data_dir [dataset path] --input_n 10 --output_n 25 --skip_rate 1 --batch_size 16 --test_batch_size 32 --in_features 66 --cuda_idx cuda:0 --lr_now 0.005 --epoch 50 --test_sample_num -1
+
+kernel_size: 10 # must be 10. Also obs_frames_num must be 10 to match the kernel size
+d_model: 16
+dct_n: 35 # usually obs_frames_num + pred_frames_num
+in_features: 66 # How many features are in a frame? Probably 3 * n_joints. 66 for Human3.6M
+num_stage: 12
+drop_out: 0.3
+
+# can be human3.6m , AMASS, 3DPW, none
+pre_post_process: human3.6m
+
+device: &device ${device}
+
+loss:
+  device: ${device}
+  type: hua_loss
+  tasks: TJ
+  nT: 25
+  nJ: 18 # 32
+  time_prior: sig5
+  action_list: ["walking", "eating", "smoking", "discussion", "directions", "greeting", "phoning", "posing", "purchases", "sitting", "sittingdown", "takingphoto", "waiting", "walkingdog", "walkingtogether"]
+  clipMinS: -1
+  clipMaxS:
+  init_mean: 3 # 3.5

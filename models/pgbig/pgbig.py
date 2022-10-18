@@ -28,8 +28,8 @@ class MultiStageModel(Module):
         self.encoder_layer_num = 1
         self.decoder_layer_num = 2
 
-        self.input_n = opt.input_n
-        self.output_n = opt.output_n
+        self.input_n = opt.obs_frames_num
+        self.output_n = opt.pred_frames_num
 
         self.gcn_encoder1 = BaseBlock.GCN_encoder(in_channal=3, out_channal=self.d_model,
                                                node_n=self.node_n,
@@ -91,8 +91,8 @@ class MultiStageModel(Module):
         input_gcn = src[:, idx].clone()
 
         dct_m, idct_m = util.get_dct_matrix(input_n + output_n)
-        dct_m = torch.from_numpy(dct_m).float().to(self.opt.cuda_idx)
-        idct_m = torch.from_numpy(idct_m).float().to(self.opt.cuda_idx)
+        dct_m = torch.from_numpy(dct_m).float().to(self.opt.device)
+        idct_m = torch.from_numpy(idct_m).float().to(self.opt.device)
 
         # [b,20,66] -> [b,66,20]
         input_gcn_dct = torch.matmul(dct_m[:dct_n], input_gcn).permute(0, 2, 1)
