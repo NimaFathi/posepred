@@ -25,7 +25,13 @@ class PGBIG_HUALoss(nn.Module):
         self.args = args
 
         if args.inner_type == "HUAL":
-            self.hual = HuaLoss(args).to(args.device)
+            if 'S' in args.tasks:
+                self.hual1 = HuaLoss(args).to(args.device)
+                self.hual2 = HuaLoss(args).to(args.device)
+                self.hual3 = HuaLoss(args).to(args.device)
+                self.hual4 = HuaLoss(args).to(args.device)
+            else:
+                self.hual = HuaLoss(args).to(args.device)
 
         if args.pre_post_process == 'human3.6m':
             self.preprocess = Human36m_Preprocess(args).to(args.device)
@@ -63,10 +69,16 @@ class PGBIG_HUALoss(nn.Module):
         #     list(net_pred.parameters()), max_norm=opt.max_norm)
 
         if self.args.inner_type == "HUAL":
-            loss_p3d_4 = self.hual({'pred_pose': p4}, {'future_pose': y_full})['loss']
-            loss_p3d_3 = self.hual({'pred_pose': p3}, {'future_pose': smooth1})['loss']
-            loss_p3d_2 = self.hual({'pred_pose': p2}, {'future_pose': smooth2})['loss']
-            loss_p3d_1 = self.hual({'pred_pose': p1}, {'future_pose': smooth3})['loss']
+            if 'S' in self.args.tasks:
+                loss_p3d_4 = self.hual4({'pred_pose': p4}, {'future_pose': y_full})['loss']
+                loss_p3d_3 = self.hual3({'pred_pose': p3}, {'future_pose': smooth1})['loss']
+                loss_p3d_2 = self.hual2({'pred_pose': p2}, {'future_pose': smooth2})['loss']
+                loss_p3d_1 = self.hual1({'pred_pose': p1}, {'future_pose': smooth3})['loss']
+            else:
+                loss_p3d_4 = self.hual({'pred_pose': p4}, {'future_pose': y_full})['loss']
+                loss_p3d_3 = self.hual({'pred_pose': p3}, {'future_pose': smooth1})['loss']
+                loss_p3d_2 = self.hual({'pred_pose': p2}, {'future_pose': smooth2})['loss']
+                loss_p3d_1 = self.hual({'pred_pose': p1}, {'future_pose': smooth3})['loss']
 
         else:
             p3d_sup_4 = y_full.view(B, T, J, C)
