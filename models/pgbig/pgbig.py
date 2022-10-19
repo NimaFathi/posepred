@@ -1,6 +1,6 @@
 from torch.nn import Module
 import torch
-from models.pgbig.base_model import BaseModel as BaseBlock
+from models.pgbig import base_model as BaseBlock
 from models.pgbig.data_proc import Preprocess, Postprocess, Human36m_Postprocess, Human36m_Preprocess, AMASS_3DPW_Postprocess, AMASS_3DPW_Preprocess
 
 from models.pgbig import util
@@ -140,7 +140,8 @@ class MultiStageModel(Module):
 
 class PGBIG(Module):
     def __init__(self, args):
-        super(Module, self).__init__(args)
+        super(PGBIG, self).__init__()
+        self.args = args
         self.in_n = args.obs_frames_num
         self.out_n = args.pred_frames_num
 
@@ -164,7 +165,7 @@ class PGBIG(Module):
 
 
     def forward(self, batch):
-        observed_data = batch["observed_pose"].to(self.device)
+        observed_data = batch["observed_pose"].to(self.args.device)
         observed_data = self.preprocess(observed_data, normal=False)
         p4, p3, p2, p1 = self.net(observed_data, input_n=self.in_n, output_n=self.out_n, itera=1)
         

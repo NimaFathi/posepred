@@ -2,7 +2,7 @@
 import numpy as np
 import torch
 import torch.nn as nn
-from losses.hua_loss import HuaLoss
+from losses.hua_loss import HUALoss
 from models.pgbig.data_proc import Preprocess, Human36m_Preprocess, AMASS_3DPW_Preprocess
 
 
@@ -26,12 +26,12 @@ class PGBIG_HUALoss(nn.Module):
 
         if args.inner_type == "HUAL":
             if 'S' in args.tasks:
-                self.hual1 = HuaLoss(args).to(args.device)
-                self.hual2 = HuaLoss(args).to(args.device)
-                self.hual3 = HuaLoss(args).to(args.device)
-                self.hual4 = HuaLoss(args).to(args.device)
+                self.hual1 = HUALoss(args).to(args.device)
+                self.hual2 = HUALoss(args).to(args.device)
+                self.hual3 = HUALoss(args).to(args.device)
+                self.hual4 = HUALoss(args).to(args.device)
             else:
-                self.hual = HuaLoss(args).to(args.device)
+                self.hual = HUALoss(args).to(args.device)
 
         if args.pre_post_process == 'human3.6m':
             self.preprocess = Human36m_Preprocess(args).to(args.device)
@@ -43,8 +43,6 @@ class PGBIG_HUALoss(nn.Module):
         for p in self.preprocess.parameters():
             p.requires_grad = False
 
-        for p in self.postprocess.parameters():
-            p.requires_grad = False
 
     def forward(self, y_pred, y_true):
         p1 = y_pred['p1']
