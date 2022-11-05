@@ -11,9 +11,10 @@ from models.history_repeats_itself.utils import data_utils, util
 class HistoryRepeatsItself(nn.Module):
     def __init__(self, args):
         super(HistoryRepeatsItself, self).__init__()
-        args.loss.itera = args.itera
+        # args.loss.itera = args.itera
         args.loss.un_mode = args.un_mode
-
+        self.un_mode = args.un_mode
+        
         self.args = args
         self.init_mode = args.init_mode
         print(args)
@@ -23,8 +24,8 @@ class HistoryRepeatsItself(nn.Module):
 
         l_p3d = 0
 
-        self.in_n = args.input_n
-        self.out_n = args.output_n
+        self.in_n = 50
+        self.out_n = 25
         if args.un_mode == 'sig5-TJPrior':
             un_params = torch.nn.Parameter(torch.zeros((args.in_features//3 + args.output_n + args.kernel_size, 5)))
         elif 'sig5' in args.un_mode:
@@ -38,11 +39,20 @@ class HistoryRepeatsItself(nn.Module):
             except:
                 assert False, "you must have a number after 'poly'"
             un_params = torch.nn.Parameter(torch.zeros(args.in_features//3, params_count))
+        elif args.un_mode == "per_input_linear":
+            un_params = torch.nn.Parameter(torch.zeros(args.in_features//3, 5))
+            self.per_input_model = torch.nn.Sequential(
+                torch.nn.Linear(50*66, 35*22),
+                torch.nn.BatchNorm1d(35*22),
+                torch.nn.Linear(35*22, 35*22),
+                torch.nn.BatchNorm1d(35*22),
+                torch.nn.Linear(35*22, 35*22),
+            )
         else:
             if args.itera == 1:
-                un_params = torch.nn.Parameter(torch.zeros(15, self.out_n + args.kernel_size ,args.in_features//3))
+                un_params = torch.nn.Parameter(torch.ones(15, self.out_n + args.kernel_size ,args.in_features//3))
             else:
-                un_params = torch.nn.Parameter(torch.zeros(15, 10 + args.kernel_size ,args.in_features//3))
+                un_params = torch.nn.Parameter(torch.ones(15, 10 + args.kernel_size ,args.in_features//3))
 
         self.un_params = un_params
         if self.init_mode == "descending":
@@ -106,6 +116,8 @@ class HistoryRepeatsItself(nn.Module):
         elif self.init_mode == "default":
             mean, std = 0, 1
             torch.nn.init.normal_(self.un_params, mean=mean, std=std)
+        elif self.init_mode == "ones":
+            torch.nn.init.constant_(self.un_params, 1)
         else:
             raise Exception("The defined init mode is not supported.")
 
@@ -129,6 +141,8 @@ class HistoryRepeatsItself(nn.Module):
     def forward(self, inputs):
         seq = torch.cat((inputs['observed_pose'], inputs['future_pose']), dim=1)
         p3d_h36 = seq.reshape(seq.shape[0], seq.shape[1], -1)
+        p3d_inp = p3d_h36.clone()[:, :, self.dim_used][:, :self.in_n].reshape(
+            [-1, self.in_n, len(self.dim_used) // 3, 3])
         batch_size, seq_n, _ = p3d_h36.shape
         p3d_h36 = p3d_h36.float() 
         p3d_sup = p3d_h36.clone()[:, :, self.dim_used][:, -self.out_n - self.seq_in:].reshape(
@@ -165,6 +179,11 @@ class HistoryRepeatsItself(nn.Module):
             p3d_out_all = torch.cat((p3d_1, p3d_out_all), dim=1)
             p3d_out_all = p3d_out_all.reshape(
                 [batch_size, self.seq_in + self.out_n, len(self.dim_used) // 3, 3])
+        if self.un_mode == "per_input_linear":
+            per_input_out = self.per_input_model(p3d_inp.reshape(batch_size, -1)).reshape(batch_size, 35, 22)
+            return {'pred_pose': p3d_out_all, 
+             'pred_metric_pose': p3d_out, 
+             'un_params': per_input_out}
         return {'pred_pose': p3d_out_all, 'pred_metric_pose': p3d_out, 'un_params': self.un_params}
 
 

@@ -9,9 +9,9 @@ class HisRepItselfLoss(nn.Module):
         super().__init__()
 
         self.args = args
-        self.output_n = args.output_n
-        self.input_n = args.input_n
-        self.itera = args.itera
+        self.output_n = 25
+        self.input_n = 50
+        self.itera = 1
         self.seq_in = args.kernel_size
         self.device = args.device
         self.mode = args.un_mode
@@ -24,8 +24,10 @@ class HisRepItselfLoss(nn.Module):
                 'sig5r-TJ',
                 'sig5shifted-T',
                 'input_rel',
+                'per_input_linear',
                 'sig5-TJPrior',
                 'sig5-TJPriorSum',
+                'TJPriorSum',
                 'estimate-mean',
             ] or bool(re.findall(r'^poly-TJ*-\d+$', args.un_mode))
             
@@ -77,7 +79,8 @@ class HisRepItselfLoss(nn.Module):
         
         if mode == 'input_rel':
             return torch.mean(torch.norm((pred - gt)*params, dim=-1))
-
+        
+        # print(pred.shape, gt.shape)
         losses = torch.norm(pred - gt, dim=3) # B, T, J
         frames_num = torch.arange(T).to(self.device)
 
@@ -159,14 +162,26 @@ class HisRepItselfLoss(nn.Module):
             s[:, :, self.E] = st[:, :, self.E]
             for c in self.connect:
                 s[:, :, c[1]] = s[:, :, c[0]] + s[:, :, c[1]]
+        elif mode == 'TJPriorSum':
+            st = params[0].unsqueeze(0) # 1, T, J
+
+            s = torch.zeros((1, T, J)).to(self.device)
+            s[:, :, [0, 4, 8]] = st[:, :, [0, 4, 8]]
+            s[:, :, self.E] = st[:, :, self.E]
+            for c in self.connect:
+                s[:, :, c[1]] = s[:, :, c[0]] + s[:, :, c[1]]
+        elif mode == 'per_input_linear':
+            s = params
         elif mode == 'estimate-mean':
             s = torch.mean(losses,dim=0).unsqueeze(0)
             s = torch.log(s).detach()
         else:
             raise Exception('The defined uncertainry mode is not supported.')
 
-        
-        loss = 1 / torch.exp(s) * losses + s
+        if mode in ["sig5-TJPriorSum", "TJPriorSum"]:
+            loss = 1/s*(losses+1) + torch.log(s)
+        else:
+            loss = 1 / torch.exp(s) * losses + s
 
         if self.args.disp_reg:
             pred_disp = pred_disp.reshape(B, 1, 1)

@@ -57,10 +57,9 @@ class RandomCropDataset(Dataset):
 
         indexes = []
         self.extra_keys_to_keep = ['video_section', 'action', 'cam_intrinsic']
-
         with jsonlines.open(dataset_path) as reader:
             for seq in tqdm(reader):
-
+                
                 seq_tensor = {}
                 fps = 1
 
