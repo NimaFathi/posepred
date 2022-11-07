@@ -47,6 +47,10 @@ class HUALoss(nn.Module):
         elif args.time_prior == 'none':
             self.nT = args.nT
             self.s = self.s.repeat(1, self.nT, 1)
+        elif 'poly' in args.time_prior:
+            self.nT = int(args.time_prior[4:]) + 1
+            self.s = self.s.repeat(1, self.nT, 1)
+            self.s[:, 1:, :] = 0
         else:
             raise Exception("{} is not a supported prior for time axis, options are: [sig5, sig*, none].".format(args.time_prior))
         # fix tasks for action
@@ -60,6 +64,8 @@ class HUALoss(nn.Module):
         else:
             self.nA = None
             self.sigma = nn.Parameter(self.s)
+
+        print("Number of uncertainty parameters: ", self.nJ * self.nT)
 
     def calc_sigma(self, y_true):
         local_sigma = self.sigma
@@ -80,6 +86,12 @@ class HUALoss(nn.Module):
             elif self.args.time_prior == 'sig*':
                 x = torch.arange(self.args.nT).to(self.args.device).unsqueeze(1).unsqueeze(0) # 1, T, 1
                 local_sigma = local_sigma[:, 0:1, :] / (1 + torch.exp(local_sigma[:, 1:2, :] * (local_sigma[:, 2:3, :] - x)))
+            elif 'poly' in self.args.time_prior:
+                x = torch.arange(self.args.nT).to(self.args.device).unsqueeze(1).unsqueeze(1).unsqueeze(0) / 10 # 1, T, 1, 1
+                po = torch.arange(self.nT).to(self.args.device).unsqueeze(1).unsqueeze(0).unsqueeze(0) # 1, 1, D, 1
+                x = x ** po # 1, T, D, 1
+                local_sigma = local_sigma.unsqueeze(1) # 1, 1, D, ?
+                local_sigma = (local_sigma * x).sum(dim=-2) # 1, T, ?
         
         local_sigma = torch.clamp(local_sigma, min=self.args.clipMinS, max=self.args.clipMaxS)
         return local_sigma
@@ -88,9 +100,15 @@ class HUALoss(nn.Module):
     def forward(self, y_pred, y_true):
       
         sigma = self.calc_sigma(y_true)
-        y_pred = y_pred['pred_pose'] # B,T,JC
-        y_true = y_true['future_pose'] # B,T,JC
 
+        preprocess = lambda x : x
+        if 'preprocess' in y_pred:
+            preprocess = y_pred['preprocess']
+
+        assert 'preprocess' not in y_pred
+
+        y_pred = preprocess(y_pred['pred_pose']) # B,T,JC
+        y_true = preprocess(y_true['future_pose']) # B,T,JC
 
         B,T,JC = y_pred.shape
         assert T == self.args.nT and JC % self.args.nJ == 0, "Either number or predicted frames (nT) is not right, or number of joints * dim of each joint is not dividable by nJ"
@@ -101,7 +119,9 @@ class HUALoss(nn.Module):
         y_true = y_true.view(B, T, J, C)
 
         l = torch.norm(y_pred - y_true, dim=-1) # B,T,J
-        l = torch.mean(torch.exp(-sigma) * l + sigma)
+        # l = l * l
+        # l = torch.mean(torch.exp(-sigma) * l + sigma)
+        l = torch.mean(l / sigma + torch.log(sigma))
 
         return {
           'loss' : l

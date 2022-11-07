@@ -33,8 +33,11 @@ class Evaluator:
         for i in range(self.rounds_num):
             logger.info('round ' + str(i + 1) + '/' + str(self.rounds_num))
             self.__evaluate()
-        self.reporter.print_pretty_metrics(logger, self.model.args.use_mask, self.pose_metrics)
-        self.reporter.save_csv_metrics(self.model.args.use_mask, self.pose_metrics, os.path.join(self.args.csv_save_dir,"eval.csv"))
+        
+        pose_metrics_name = [f'{metric_name}{tm}ms' for metric_name in self.pose_metrics for tm in [80, 160, 320, 400, 560, 720, 880, 1000]]
+
+        self.reporter.print_pretty_metrics(logger, self.model.args.use_mask, pose_metrics_name)
+        self.reporter.save_csv_metrics(self.model.args.use_mask, pose_metrics_name, os.path.join(self.args.csv_save_dir,"eval.csv"))
         logger.info("Evaluation has been completed.")
 
     def __evaluate(self):
@@ -75,18 +78,21 @@ class Evaluator:
                     if 'future_metric_pose' in data:
                         future_metric_pose = data['future_metric_pose']
 
-                    for action in actions:
-                        if action == "all":
-                            metric_value = metric_func(pred_metric_pose.to(self.device),
-                                                       future_metric_pose.to(self.device),
-                                                       self.model.args.keypoint_dim, pred_mask)
-                        else:
-                            indexes = np.where(np.asarray(data['action']) == action)[0]
-                            metric_value = metric_func(pred_metric_pose.to(self.device)[indexes],
-                                                       future_metric_pose.to(self.device)[indexes],
-                                                       self.model.args.keypoint_dim, pred_mask)
-                            dynamic_counts[f'{metric_name}_{action}']=len(indexes)
-                        report_attrs[f'{metric_name}_{action}'] = metric_value
+                    for tm in [80, 160, 320, 400, 560, 720, 880, 1000]:
+                        fm = 25 * tm // 1000
+
+                        for action in actions:
+                            if action == "all":
+                                metric_value = metric_func(pred_metric_pose.to(self.device)[:, :fm],
+                                                        future_metric_pose.to(self.device)[:, :fm],
+                                                        self.model.args.keypoint_dim, pred_mask)
+                            else:
+                                indexes = np.where(np.asarray(data['action']) == action)[0]
+                                metric_value = metric_func(pred_metric_pose.to(self.device)[indexes][:, :fm],
+                                                        future_metric_pose.to(self.device)[indexes][:, :fm],
+                                                        self.model.args.keypoint_dim, pred_mask)
+                                dynamic_counts[f'{metric_name}{tm}ms_{action}']=len(indexes)
+                            report_attrs[f'{metric_name}{tm}ms_{action}'] = metric_value
 
                 # calculate mask_metrics
                 if self.model.args.use_mask:

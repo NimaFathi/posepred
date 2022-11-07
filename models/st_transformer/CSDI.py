@@ -1,5 +1,7 @@
 import math
 
+from functools import partial
+
 import torch
 import torch.nn.functional as F
 from torch import nn
@@ -247,4 +249,5 @@ class CSDI_H36M(CSDI_base):
 
         return {
             'pred_pose': self.postprocess(batch['observed_pose'], predicted),  # B, T, JC
+            # 'preprocess': partial(self.preprocess, normal=False)
         }

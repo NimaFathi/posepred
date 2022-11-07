@@ -20,7 +20,7 @@ is_visualizing: false
 batch_size: 1
 shuffle: true
 pin_memory: false
-num_workers: 4
+num_workers: 2
 overfit:
 normalize: ${normalize}
 metadata_path:
