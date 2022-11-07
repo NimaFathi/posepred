@@ -18,6 +18,7 @@ from .msr_gcn_loss import MSRGCNLoss
 from models.sts_gcn.sts_gcn_loss import STSGCNLoss
 from .potr_loss import POTRLoss
 from .hua_loss import HUALoss
+from models.st_transformer.CSDI_PGBIG_loss import CSDI_PGBIG_HUALoss
 
 LOSSES = {'mse_vel': MSEVel,
           'mse_pose': MSEPose,
@@ -38,5 +39,6 @@ LOSSES = {'mse_vel': MSEVel,
           'msr_gcn':MSRGCNLoss,
           'potr': POTRLoss,
           'sts_gcn': STSGCNLoss,
-          'hua_loss': HUALoss
+          'hua_loss': HUALoss,
+          'st_transformer_pgbig_loss': CSDI_PGBIG_HUALoss,
           }
