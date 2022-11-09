@@ -57,7 +57,9 @@ class diff_CSDI(nn.Module):
             x, skip_connection = layer(x, cond_info)
             skip.append(skip_connection)
 
-        x = torch.sum(torch.stack(skip), dim=0) / math.sqrt(len(self.residual_layers))
+        if self.args.use_skip:
+            x = torch.sum(torch.stack(skip), dim=0) / math.sqrt(len(self.residual_layers))
+        
         x = x.reshape(B, self.channels, K * L)
         x = self.output_projection1(x)
         x = F.relu(x)

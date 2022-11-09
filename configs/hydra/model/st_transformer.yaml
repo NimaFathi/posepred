@@ -5,13 +5,16 @@ defaults:
 type: st_transformer
 
 n_major_joints: 22 # 18 # 22
-diff_layers: 6
+diff_layers: 3
 diff_channels: 64
 diff_nheads: 8
 
 model_is_unconditional: 0
 model_timeemb: 128
 model_featureemb: 16
+
+pred_residual: False
+use_skip: True
 
 # can be human3.6m , AMASS, 3DPW, none
 pre_post_process: human3.6m

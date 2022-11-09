@@ -58,6 +58,27 @@ class Human36m_values():
                         254.2903, 225.2465, 45.0912, 135.5994, 133.7429, 74.3784, 133.9870,
                         160.7077, 143.9800, 235.9862, 196.2391, 147.1276, 232.4836, 188.2000,
                         189.1858, 308.0274, 235.1181]]])
+        
+        self.mean_residual = np.array([[[-0.0673,  0.7901,  1.0508,  0.2893,  1.2705,  0.5845,  0.3189,  1.0499,
+                        0.3945,  0.2890,  0.9533,  0.3269, -0.0305,  0.7512,  0.9778, -0.4541,
+                        1.2175,  0.3652, -0.4771,  0.9253,  0.1369, -0.4898,  0.8138,  0.0647,
+                        -0.0186, -0.0296,  0.3793,  0.0323, -0.2477,  0.9557,  0.0477, -0.4891,
+                        1.0866,  0.0582, -0.4925,  1.3198,  0.0195, -0.2652,  0.9629, -0.4272,
+                        -0.6094,  0.9919, -2.0154, -0.5937,  1.0367, -2.0577, -0.4701,  0.4319,
+                        -2.5231, -0.5442,  1.3222,  0.0404, -0.2347,  0.9490,  0.4832, -0.3160,
+                        1.1238,  2.1069,  0.3725,  1.3365,  2.2318,  0.3987,  0.6290,  2.7835,
+                        0.8440,  1.6193]]])
+        
+        self.std_residual = np.array([[[ 47.0320,  44.5092,  85.2445,  90.4776,  69.9809, 175.2150,  93.5278,
+                        68.9318, 189.2070,  97.6287,  76.1265, 191.0345,  48.8227,  46.0484,
+                        83.6511, 100.4690,  71.5656, 177.0404, 101.3256,  67.9971, 189.8620,
+                        103.9791,  73.9366, 189.3162,  13.5653,   9.3195,  22.9772,  35.1528,
+                        23.2977,  48.0578,  50.4996,  34.4838,  53.8067,  55.3003,  35.4731,
+                        62.8444,  30.9624,  26.6056,  49.6722,  45.5363,  62.4847,  86.6698,
+                        90.2606, 112.2946, 116.3540,  96.6926, 117.4470, 112.6195, 115.0190,
+                        139.1852, 138.9897,  29.4015,  28.7366,  48.9060,  47.0785,  66.9210,
+                        88.2782,  93.7959, 126.4504, 114.1148,  98.3125, 124.7956, 109.8418,
+                        128.8416, 169.8943, 143.9089]]])
 
         index_to_ignore = np.array([16, 20, 23, 24, 28, 31])
         self.index_to_ignore = joint_to_index(index_to_ignore)
@@ -90,8 +111,12 @@ class Human36m_Postprocess(nn.Module):
     def __init__(self, args):
         super(Human36m_Postprocess, self).__init__()
         self.args = args
-        self.mean = torch.tensor(human36m.mean).to(args.device).float()
-        self.std = torch.tensor(human36m.std).to(args.device).float()
+        if self.args.pred_residual:
+            self.mean = torch.from_numpy(human36m.mean_residual).float().cuda()
+            self.std = torch.from_numpy(human36m.std_residual).float().cuda()
+        else:
+            self.mean = torch.tensor(human36m.mean).to(args.device).float()
+            self.std = torch.tensor(human36m.std).to(args.device).float()
 
     def forward(self, observed_pose, pred_pose, normal=True):
         if normal:
@@ -99,8 +124,11 @@ class Human36m_Postprocess(nn.Module):
 
         x = torch.zeros([pred_pose.shape[0], pred_pose.shape[1], 96]).to(self.args.device)
         x[:, :, human36m.dim_used] = pred_pose
-        x[:, :, human36m.index_to_copy] = observed_pose[:, -1:, human36m.index_to_copy]
         x[:, :, human36m.index_to_ignore] = x[:, :, human36m.index_to_equal]
+        if not self.args.pred_residual:
+            x[:, :, human36m.index_to_copy] = observed_pose[:, -1:, human36m.index_to_copy]
+        else:
+            x = x + observed_pose[:, -1:, :]
         return x
 
 class AMASS_3DPW_Preprocess(nn.Module):
