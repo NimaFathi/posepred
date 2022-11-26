@@ -1,9 +1,6 @@
 from torch.utils.data import DataLoader
 
-from .interactive_dataset import InteractiveDataset
-from .noisy_solitary_dataset import NoisySolitaryDataset
 from .random_crop_dataset import RandomCropDataset
-from .solitary_dataset import SolitaryDataset
 
 DATASETS = ['3dpw', 'stanford3.6m', 'amass']
 DATA_TYPES = ['train', 'validation', 'test']
