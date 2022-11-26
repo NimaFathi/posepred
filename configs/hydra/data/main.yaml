@@ -1,11 +1,4 @@
 keypoint_dim: ${keypoint_dim}
-is_interactive: false
-is_noisy: false
-is_random_crop: true
-is_solitary: false
-noise_rate: mask
-noise_keypoint:
-persons_num: 1
 use_mask: ${use_mask}
 use_quaternion: false
 
