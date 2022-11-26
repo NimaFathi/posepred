@@ -202,15 +202,15 @@ class CSDI_H36M(CSDI_base):
         self.Lo = args.obs_frames_num
         self.Lp = args.pred_frames_num
 
-        # if args.pre_post_process == 'human3.6m':
-        self.preprocess = Human36m_Preprocess(args).to(args.device)
-        self.postprocess = Human36m_Postprocess(args).to(args.device)
-        # elif args.pre_post_process == 'AMASS' or args.pre_post_process == '3DPW':
-        #     self.preprocess = AMASS_3DPW_Preprocess(args).to(args.device)
-        #     self.postprocess = AMASS_3DPW_Postprocess(args).to(args.device)
-        # else:
-        #     self.preprocess = Preprocess(args).to(args.device)
-        #     self.postprocess = Postprocess(args).to(args.device)
+        if args.pre_post_process == 'human3.6m':
+            self.preprocess = Human36m_Preprocess(args).to(args.device)
+            self.postprocess = Human36m_Postprocess(args).to(args.device)
+        elif args.pre_post_process == 'AMASS' or args.pre_post_process == '3DPW':
+            self.preprocess = AMASS_3DPW_Preprocess(args).to(args.device)
+            self.postprocess = AMASS_3DPW_Postprocess(args).to(args.device)
+        else:
+            self.preprocess = Preprocess(args).to(args.device)
+            self.postprocess = Postprocess(args).to(args.device)
 
         for p in self.preprocess.parameters():
             p.requires_grad = False

@@ -22,13 +22,12 @@ loss:
   device: ${device}
   pre_post_process: human3.6m # Should be excatly like the one in the model
   type: pgbig_loss
-  inner_type: HUAL # ORIGINAL # HUAL # if you want to use the HUAL loss, set this to HUAL. otherwise set it to something else and not None. In that case it will use the original loss function.
+  inner_type: ORIGINAL # HUAL # if you want to use the HUAL loss, set this to HUAL. otherwise set it to something else and not None. In that case it will use the original loss function.
   tasks: STJ # use S if you want each stage be a seperate task
   nT: 35 # must be obs_frames_num + pred_frames_num
   nJ: 22 # 18 for AMASS/3DPW, 22 for Human3.6M
-  time_prior: sig5 # none # sig5, sig*
+  time_prior: sig5
   action_list: ["walking", "eating", "smoking", "discussion", "directions", "greeting", "phoning", "posing", "purchases", "sitting", "sittingdown", "takingphoto", "waiting", "walkingdog", "walkingtogether"]
   clipMinS: -1
   clipMaxS:
   init_mean: 3.5 # 3.5 for Human3.6M, 3 for AMASS/3DPW
-  beta: 300

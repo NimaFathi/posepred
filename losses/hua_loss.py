@@ -101,7 +101,7 @@ class HUALoss(nn.Module):
         y_true = y_true.view(B, T, J, C)
 
         l = torch.norm(y_pred - y_true, dim=-1) # B,T,J
-        l = torch.mean((l + self.args.beta) / sigma + torch.log(sigma))
+        l = torch.mean(torch.exp(-sigma) * l + sigma)
 
         return {
           'loss' : l

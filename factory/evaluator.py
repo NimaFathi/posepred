@@ -50,7 +50,7 @@ class Evaluator:
             with torch.no_grad():
                 # predict & calculate loss
                 model_outputs = self.model(dict_to_device(data, self.device))
-                # loss_outputs = self.loss_module(model_outputs, dict_to_device(data, self.device))
+                loss_outputs = self.loss_module(model_outputs, dict_to_device(data, self.device))
                 assert 'pred_pose' in model_outputs.keys(), 'outputs of model should include pred_pose'
 
                 if self.model.args.use_mask:
@@ -60,7 +60,7 @@ class Evaluator:
                     pred_mask = None
 
                 # calculate pose_metrics
-                report_attrs = {} # loss_outputs
+                report_attrs = loss_outputs
                 dynamic_counts = {}
                 for metric_name in self.pose_metrics:
                     metric_func = POSE_METRICS[metric_name]
