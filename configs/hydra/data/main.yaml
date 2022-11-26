@@ -1,7 +1,7 @@
 keypoint_dim: ${keypoint_dim}
 is_interactive: false
 is_noisy: false
-is_random_crop: false
+is_random_crop: true
 is_solitary: false
 noise_rate: mask
 noise_keypoint:
@@ -17,7 +17,7 @@ pose_formats: []
 is_h36_testing: false
 is_testing: false
 is_visualizing: false
-batch_size: 1
+batch_size: 16
 shuffle: true
 pin_memory: false
 num_workers: 4

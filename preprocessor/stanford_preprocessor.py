@@ -32,7 +32,6 @@ class StanfordPreprocessor(Processor):
                                                    0, skip_frame_num, use_video_once, custom_name, save_total_frames)
         assert self.is_interactive is False, 'human3.6m is not interactive'
         self.output_dir = os.path.join(
-            PREPROCESSED_DATA_DIR, 'stanford36m_interactive') if self.is_interactive else os.path.join(
             PREPROCESSED_DATA_DIR, 'stanford36m'
         )
         if not os.path.exists(self.output_dir):
