@@ -118,14 +118,8 @@ class PUALoss(nn.Module):
       
         sigma = self.calc_sigma(y_true)
 
-        preprocess = lambda x : x
-        if 'preprocess' in y_pred:
-            preprocess = y_pred['preprocess']
-
-        assert 'preprocess' not in y_pred
-
-        y_pred = preprocess(y_pred['pred_pose']) # B,T,JC
-        y_true = preprocess(y_true['future_pose']) # B,T,JC
+        y_pred = y_pred['pred_pose'] # B,T,JC
+        y_true = y_true['future_pose'] # B,T,JC
 
         B,T,JC = y_pred.shape
         assert T == self.args.nT and JC % self.args.nJ == 0, "Either number or predicted frames (nT) is not right, or number of joints * dim of each joint is not dividable by nJ"
