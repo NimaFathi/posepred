@@ -44,6 +44,17 @@ class HUALoss(nn.Module):
             self.s[:, 0, :] = init_mean
             self.s[:, 1, :] = 1
             self.s[:, 2, :] = -10
+        elif args.time_prior == 'sig2':
+            self.nT = 2
+            self.s = self.s.repeat(1, 2, 1)
+            self.s[:, 0, :] = 1
+            self.s[:, 1, :] = -10
+        elif args.time_prior == 'log*':
+            self.nT = 3
+            self.s = self.s.repeat(1, 3, 1)
+            self.s[:, 0, :] = 1
+            self.s[:, 1, :] = 1
+            self.s[:, 2, :] = init_mean
         elif args.time_prior == 'none':
             self.nT = args.nT
             self.s = self.s.repeat(1, self.nT, 1)
@@ -86,6 +97,12 @@ class HUALoss(nn.Module):
             elif self.args.time_prior == 'sig*':
                 x = torch.arange(self.args.nT).to(self.args.device).unsqueeze(1).unsqueeze(0) # 1, T, 1
                 local_sigma = local_sigma[:, 0:1, :] / (1 + torch.exp(local_sigma[:, 1:2, :] * (local_sigma[:, 2:3, :] - x)))
+            elif self.args.time_prior == 'sig2':
+                x = torch.arange(self.args.nT).to(self.args.device).unsqueeze(1).unsqueeze(0) # 1, T, 1
+                local_sigma = self.args.init_mean / (1 + torch.exp(local_sigma[:, 0:1, :] * (local_sigma[:, 1:2, :] - x)))
+            elif self.args.time_prior == 'log*':
+                x = torch.arange(self.args.nT).to(self.args.device).unsqueeze(1).unsqueeze(0) # 1, T, 1
+                local_sigma = local_sigma[:, 0:1, :] / torch.log(x + torch.abs(local_sigma[:, 1:2, :]) + 1e-4) + local_sigma[:, 2:3, :]
             elif 'poly' in self.args.time_prior:
                 x = torch.arange(self.args.nT).to(self.args.device).unsqueeze(1).unsqueeze(1).unsqueeze(0) / 10 # 1, T, 1, 1
                 po = torch.arange(self.nT).to(self.args.device).unsqueeze(1).unsqueeze(0).unsqueeze(0) # 1, 1, D, 1
@@ -119,9 +136,7 @@ class HUALoss(nn.Module):
         y_true = y_true.view(B, T, J, C)
 
         l = torch.norm(y_pred - y_true, dim=-1) # B,T,J
-        # l = l * l
-        # l = torch.mean(torch.exp(-sigma) * l + sigma)
-        l = torch.mean(l / sigma + torch.log(sigma))
+        l = torch.mean(torch.exp(-sigma) * l + sigma)
 
         return {
           'loss' : l
