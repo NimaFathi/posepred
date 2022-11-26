@@ -7,10 +7,6 @@ dataset: ???
 data_type: ???
 output_name:
 use_video_once: false
-annotate_openpifpaf: false
-annotate: false
-image_dir:
-joints_annotation_path:
 skip_num: 0
 interactive: false
 save_total_frames: true
