@@ -20,7 +20,7 @@ device: &device ${device}
 
 loss:
   device: ${device}
-  type: hua_loss
+  type: pua_loss
   tasks: TJ
   nT: 25
   nJ: 18 # 32

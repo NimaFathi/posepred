@@ -2,7 +2,7 @@
 import numpy as np
 import torch
 import torch.nn as nn
-from losses.hua_loss import HUALoss
+from .pua_loss import PUALoss
 from models.pgbig.data_proc import Preprocess, Human36m_Preprocess, AMASS_3DPW_Preprocess
 
 
@@ -17,7 +17,7 @@ def smooth(src, sample_len, kernel_size):
     return smooth_data
 
 
-class PGBIG_HUALoss(nn.Module):
+class PGBIG_PUALoss(nn.Module):
 
     def __init__(self, args):
         super().__init__()
@@ -26,12 +26,12 @@ class PGBIG_HUALoss(nn.Module):
 
         if args.inner_type == "HUAL":
             if 'S' in args.tasks:
-                self.hual1 = HUALoss(args).to(args.device)
-                self.hual2 = HUALoss(args).to(args.device)
-                self.hual3 = HUALoss(args).to(args.device)
-                self.hual4 = HUALoss(args).to(args.device)
+                self.hual1 = PUALoss(args).to(args.device)
+                self.hual2 = PUALoss(args).to(args.device)
+                self.hual3 = PUALoss(args).to(args.device)
+                self.hual4 = PUALoss(args).to(args.device)
             else:
-                self.hual = HUALoss(args).to(args.device)
+                self.hual = PUALoss(args).to(args.device)
 
         if args.pre_post_process == 'human3.6m':
             self.preprocess = Human36m_Preprocess(args).to(args.device)
