@@ -15,6 +15,7 @@ from .sts_gcn.sts_gcn import STsGCN
 from .msr_gcn.msrgcn import MSRGCN
 from .potr.potr import POTR
 from .st_transformer.CSDI import CSDI_H36M
+from .pgbig.pgbig import PGBIG
 
 MODELS = {'zero_vel': ZeroVel,
           'nearest_neighbor': NearestNeighbor,
@@ -33,4 +34,5 @@ MODELS = {'zero_vel': ZeroVel,
           'sts_gcn': STsGCN,
           'msr_gcn': MSRGCN,
           'st_transformer': CSDI_H36M,
+          'pgbig': PGBIG
           }
