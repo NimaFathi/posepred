@@ -2,7 +2,7 @@
 import numpy as np
 import torch
 import torch.nn as nn
-from losses.pua_loss import PUALoss
+from .pua_loss import PUALoss
 from models.pgbig.data_proc import Preprocess, Human36m_Preprocess, AMASS_3DPW_Preprocess
 
 
