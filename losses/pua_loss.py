@@ -3,7 +3,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-class HUALoss(nn.Module):
+class PUALoss(nn.Module):
 
     def __init__(self, args):
         super().__init__()
@@ -44,9 +44,24 @@ class HUALoss(nn.Module):
             self.s[:, 0, :] = init_mean
             self.s[:, 1, :] = 1
             self.s[:, 2, :] = -10
+        elif args.time_prior == 'sig2':
+            self.nT = 2
+            self.s = self.s.repeat(1, 2, 1)
+            self.s[:, 0, :] = 1
+            self.s[:, 1, :] = -10
+        elif args.time_prior == 'log*':
+            self.nT = 3
+            self.s = self.s.repeat(1, 3, 1)
+            self.s[:, 0, :] = 1
+            self.s[:, 1, :] = 1
+            self.s[:, 2, :] = init_mean
         elif args.time_prior == 'none':
             self.nT = args.nT
             self.s = self.s.repeat(1, self.nT, 1)
+        elif 'poly' in args.time_prior:
+            self.nT = int(args.time_prior[4:]) + 1
+            self.s = self.s.repeat(1, self.nT, 1)
+            self.s[:, 1:, :] = 0
         else:
             raise Exception("{} is not a supported prior for time axis, options are: [sig5, sig*, none].".format(args.time_prior))
         # fix tasks for action
@@ -60,6 +75,8 @@ class HUALoss(nn.Module):
         else:
             self.nA = None
             self.sigma = nn.Parameter(self.s)
+
+        print("Number of uncertainty parameters: ", self.nJ * self.nT)
 
     def calc_sigma(self, y_true):
         local_sigma = self.sigma
@@ -80,6 +97,18 @@ class HUALoss(nn.Module):
             elif self.args.time_prior == 'sig*':
                 x = torch.arange(self.args.nT).to(self.args.device).unsqueeze(1).unsqueeze(0) # 1, T, 1
                 local_sigma = local_sigma[:, 0:1, :] / (1 + torch.exp(local_sigma[:, 1:2, :] * (local_sigma[:, 2:3, :] - x)))
+            elif self.args.time_prior == 'sig2':
+                x = torch.arange(self.args.nT).to(self.args.device).unsqueeze(1).unsqueeze(0) # 1, T, 1
+                local_sigma = self.args.init_mean / (1 + torch.exp(local_sigma[:, 0:1, :] * (local_sigma[:, 1:2, :] - x)))
+            elif self.args.time_prior == 'log*':
+                x = torch.arange(self.args.nT).to(self.args.device).unsqueeze(1).unsqueeze(0) # 1, T, 1
+                local_sigma = local_sigma[:, 0:1, :] / torch.log(x + torch.abs(local_sigma[:, 1:2, :]) + 1e-4) + local_sigma[:, 2:3, :]
+            elif 'poly' in self.args.time_prior:
+                x = torch.arange(self.args.nT).to(self.args.device).unsqueeze(1).unsqueeze(1).unsqueeze(0) / 10 # 1, T, 1, 1
+                po = torch.arange(self.nT).to(self.args.device).unsqueeze(1).unsqueeze(0).unsqueeze(0) # 1, 1, D, 1
+                x = x ** po # 1, T, D, 1
+                local_sigma = local_sigma.unsqueeze(1) # 1, 1, D, ?
+                local_sigma = (local_sigma * x).sum(dim=-2) # 1, T, ?
         
         local_sigma = torch.clamp(local_sigma, min=self.args.clipMinS, max=self.args.clipMaxS)
         return local_sigma
@@ -88,9 +117,15 @@ class HUALoss(nn.Module):
     def forward(self, y_pred, y_true):
       
         sigma = self.calc_sigma(y_true)
-        y_pred = y_pred['pred_pose'] # B,T,JC
-        y_true = y_true['future_pose'] # B,T,JC
 
+        preprocess = lambda x : x
+        if 'preprocess' in y_pred:
+            preprocess = y_pred['preprocess']
+
+        assert 'preprocess' not in y_pred
+
+        y_pred = preprocess(y_pred['pred_pose']) # B,T,JC
+        y_true = preprocess(y_true['future_pose']) # B,T,JC
 
         B,T,JC = y_pred.shape
         assert T == self.args.nT and JC % self.args.nJ == 0, "Either number or predicted frames (nT) is not right, or number of joints * dim of each joint is not dividable by nJ"
