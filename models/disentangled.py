@@ -12,12 +12,12 @@ class Disentangled(nn.Module):
         self.args = args
 
         # global
-        global_args = args
+        global_args = args.copy()
         global_args.keypoints_num = 1
         self.global_model = ZeroVel(global_args)
 
         # local
-        local_args = args
+        local_args = args.copy()
         local_args.keypoints_num = args.keypoints_num - global_args.keypoints_num
         self.local_model = PVLSTM(local_args)
 
