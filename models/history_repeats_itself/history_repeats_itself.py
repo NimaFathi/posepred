@@ -5,14 +5,23 @@ import numpy as np
 import math
 import re
 
-from models.history_repeats_itself.utils import data_utils, util
-
-
+def get_dct_matrix(N):
+    dct_m = np.eye(N)
+    for k in np.arange(N):
+        for i in np.arange(N):
+            w = np.sqrt(2 / N)
+            if k == 0:
+                w = np.sqrt(1 / N)
+            dct_m[k, i] = w * np.cos(np.pi * (i + 1 / 2) * k / N)
+    idct_m = np.linalg.inv(dct_m)
+    return dct_m, idct_m
 class HistoryRepeatsItself(nn.Module):
     def __init__(self, args):
         super(HistoryRepeatsItself, self).__init__()
         args.loss.itera = args.itera
         args.loss.un_mode = args.un_mode
+        self.modality = args.modality
+        args.loss.modality = self.modality
 
         self.args = args
         self.init_mode = args.init_mode
@@ -110,11 +119,15 @@ class HistoryRepeatsItself(nn.Module):
             raise Exception("The defined init mode is not supported.")
 
         print(self.un_params)
-
-        self.dim_used = np.array([6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 21, 22, 23, 24, 25,
-                                  26, 27, 28, 29, 30, 31, 32, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45,
-                                  46, 47, 51, 52, 53, 54, 55, 56, 57, 58, 59, 63, 64, 65, 66, 67, 68,
-                                  75, 76, 77, 78, 79, 80, 81, 82, 83, 87, 88, 89, 90, 91, 92])
+        if self.modality == "Human36":
+            self.dim_used = np.array([6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 21, 22, 23, 24, 25,
+                                    26, 27, 28, 29, 30, 31, 32, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45,
+                                    46, 47, 51, 52, 53, 54, 55, 56, 57, 58, 59, 63, 64, 65, 66, 67, 68,
+                                    75, 76, 77, 78, 79, 80, 81, 82, 83, 87, 88, 89, 90, 91, 92])
+        elif self.modality == "AMASS":
+            self.dim_used = self.dim_used = np.arange(12, 66)
+        else:
+            assert False, "The modality is not supported."
         self.seq_in = args.kernel_size
         self.sample_rate = 2
         self.joint_to_ignore = np.array([16, 20, 23, 24, 28, 31])
@@ -126,7 +139,7 @@ class HistoryRepeatsItself(nn.Module):
         self.idx = np.expand_dims(np.arange(self.seq_in + self.out_n), axis=1) + (
                 self.out_n - self.seq_in + np.expand_dims(np.arange(self.itera), axis=0))
 
-    def forward(self, inputs):
+    def forward_human(self, inputs):
         seq = torch.cat((inputs['observed_pose'], inputs['future_pose']), dim=1)
         p3d_h36 = seq.reshape(seq.shape[0], seq.shape[1], -1)
         batch_size, seq_n, _ = p3d_h36.shape
@@ -166,8 +179,33 @@ class HistoryRepeatsItself(nn.Module):
             p3d_out_all = p3d_out_all.reshape(
                 [batch_size, self.seq_in + self.out_n, len(self.dim_used) // 3, 3])
         return {'pred_pose': p3d_out_all, 'pred_metric_pose': p3d_out, 'un_params': self.un_params}
+    
+    def forward_amass(self,inputs):
+        seq = torch.cat((inputs['observed_pose'], inputs['future_pose']), dim=1)
+        
+        p3d_h36 = seq.reshape(seq.shape[0], seq.shape[1], -1)
 
+        batch_size, seq_n, _ = p3d_h36.shape
+        p3d_h36 = p3d_h36.float()
 
+        p3d_src = p3d_h36.clone()
+
+        if self.itera == 1:
+            p3d_out_all = self.net_pred(p3d_src, output_n=self.out_n, input_n=self.in_n, itera=self.itera)
+            p3d_out = p3d_out_all[:, self.seq_in:].reshape([batch_size, self.out_n, len(self.dim_used)])
+            p3d_out_all = p3d_out_all[:, :, 0].reshape([batch_size, self.seq_in + self.out_n, len(self.dim_used)//3, 3])
+            
+        else:
+            assert False, "itera > 1 is not available for amass dataset"
+        return {'pred_pose': p3d_out_all, 'pred_metric_pose': p3d_out, 'un_params': self.un_params}
+
+    def forward(self,inputs):
+        if self.modality == "Human36":
+            return self.forward_human(inputs)
+        elif self.modality == "AMASS":
+            return self.forward_amass(inputs)
+        else:
+            assert False, "Unknown modality"
 class AttModel(nn.Module):
 
     def __init__(self, in_features=48, kernel_size=5, d_model=512, num_stage=2, dct_n=10, device='cpu'):
@@ -214,7 +252,7 @@ class AttModel(nn.Module):
         src_key_tmp = src_tmp.transpose(1, 2)[:, :, :(input_n - output_n)].clone()
         src_query_tmp = src_tmp.transpose(1, 2)[:, :, -self.kernel_size:].clone()
 
-        dct_m, idct_m = util.get_dct_matrix(self.kernel_size + output_n)
+        dct_m, idct_m = get_dct_matrix(self.kernel_size + output_n)
         dct_m = torch.from_numpy(dct_m).float().to(self.device)
         idct_m = torch.from_numpy(idct_m).float().to(self.device) 
 

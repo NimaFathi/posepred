@@ -15,6 +15,8 @@ class HisRepItselfLoss(nn.Module):
         self.seq_in = args.kernel_size
         self.device = args.device
         self.mode = args.un_mode
+        self.modality = args.modality
+
         assert args.un_mode in \
             [
                 'default', 'ATJ', 'TJ', 'AJ', 'AT', 'A', 'T', 'J', 
@@ -30,10 +32,16 @@ class HisRepItselfLoss(nn.Module):
             ] or bool(re.findall(r'^poly-TJ*-\d+$', args.un_mode))
             
         self.dim = 3
-        self.dim_used = np.array([6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 21, 22, 23, 24, 25,
-                                  26, 27, 28, 29, 30, 31, 32, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45,
-                                  46, 47, 51, 52, 53, 54, 55, 56, 57, 58, 59, 63, 64, 65, 66, 67, 68,
-                                  75, 76, 77, 78, 79, 80, 81, 82, 83, 87, 88, 89, 90, 91, 92])
+        if self.modality == "Human36":
+            self.dim_used = np.array([6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 21, 22, 23, 24, 25,
+                                    26, 27, 28, 29, 30, 31, 32, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45,
+                                    46, 47, 51, 52, 53, 54, 55, 56, 57, 58, 59, 63, 64, 65, 66, 67, 68,
+                                    75, 76, 77, 78, 79, 80, 81, 82, 83, 87, 88, 89, 90, 91, 92])
+        elif self.modality == "AMASS":
+            self.dim_used = np.arange(12, 66)
+        else:
+            assert False, "Unknown modality"
+
         self.connect = [
             (8, 9), (9, 10), (10, 11),
             (9, 17), (17, 18), (18, 19), (19, 20), (20, 21),
@@ -168,41 +176,42 @@ class HisRepItselfLoss(nn.Module):
         
         loss = 1 / torch.exp(s) * losses + s
 
-        if self.args.disp_reg:
-            pred_disp = pred_disp.reshape(B, 1, 1)
-            loss = loss + self.args.disp_lambda * 1/pred_disp * s
-
         loss = torch.mean(loss)
 
         return loss
-
 
     def forward(self, model_outputs, input_data):
         seq1 = torch.cat((input_data['observed_pose'], input_data['future_pose']), dim=1) # B, T, J*D
         p3d_h36 = seq1.reshape(seq1.shape[0], seq1.shape[1], -1) 
         batch_size, seq_n, joints = p3d_h36.shape
         p3d_h36 = p3d_h36.float().to(self.device)
-        p3d_sup = p3d_h36.clone()[:, :, self.dim_used][:, -self.output_n - self.seq_in:].reshape(
-            [-1, self.seq_in + self.output_n, len(self.dim_used) // 3, 3])
+        if self.modality == "Human36":
+            p3d_sup = p3d_h36.clone()[:, :, self.dim_used][:, -self.output_n - self.seq_in:].reshape(
+                [-1, self.seq_in + self.output_n, len(self.dim_used) // 3, 3])
+        elif self.modality == "AMASS":
+            p3d_sup = p3d_h36.clone()[:, -self.output_n - self.seq_in:].reshape(
+                [-1, self.seq_in + self.output_n, len(self.dim_used) // 3, 3])
+        p3d_src = p3d_h36.clone()
         p3d_out_all = model_outputs['pred_pose']
 
         pred_disp = None
-        if self.args.disp_reg:
-            obs_pose = input_data['observed_pose'][:, :, self.dim_used]
-            obs_pose = obs_pose.reshape(obs_pose.shape[0], obs_pose.shape[1], len(self.dim_used) // 3, 3)
-            pred_disp = torch.linalg.norm((obs_pose[:, 1:] - obs_pose[:, :-1]), dim=-1, ord=1)[:, -self.args.disp_thresh:] # B, T-1, J
-            pred_disp = pred_disp.mean(dim=1).mean(dim=1)
 
         if self.mode == 'default':
             if self.itera == 1:
-                loss_p3d = torch.mean(torch.norm(p3d_out_all[:, :, 0] - p3d_sup, dim=3))
+                if self.modality == "Human36":
+                    loss_p3d = torch.mean(torch.norm(p3d_out_all[:, :, 0] - p3d_sup, dim=3))
+                elif self.modality == "AMASS":
+                    loss_p3d = torch.mean(torch.norm(p3d_out_all - p3d_sup, dim=3))
             else:
                 loss_p3d = torch.mean(torch.norm(p3d_out_all[:, :self.seq_in+10] - p3d_sup[:, :self.seq_in+10], dim=3))
 
         elif self.mode == 'input_rel':
             assert self.itera == 1
             params = model_outputs['pred_un_params'][:, :, 0]
-            loss_p3d = self.un_loss(pred=p3d_out_all[:, :, 0], gt=p3d_sup, params=params, actions=None, mode=self.mode, pred_disp=pred_disp)
+            if self.modality == "Human36":
+                loss_p3d = self.un_loss(pred=p3d_out_all[:, :, 0], gt=p3d_sup, params=params, actions=None, mode=self.mode, pred_disp=pred_disp)
+            elif self.modality == "AMASS":
+                loss_p3d = self.un_loss(pred=p3d_out_all, gt=p3d_sup, params=params, actions=actions, mode=self.mode, pred_disp=pred_disp)
         else:
             if 'A' in self.mode:
                 actions = torch.tensor([self.action_dict[a] for a in input_data['action']]).to(self.device)

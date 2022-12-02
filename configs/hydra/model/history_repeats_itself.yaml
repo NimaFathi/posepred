@@ -13,6 +13,7 @@ dct_n: 20
 itera: 1
 un_mode: 'default'
 init_mode: 'default'
+modality: 'Human36' # Can be either Human36 or AMASS
 
 loss:
   type: his_rep_itself
@@ -22,6 +23,4 @@ loss:
   kernel_size: 10
   device: ${device}
   un_mode: 
-  disp_reg: false
-  disp_thresh: 
-  disp_lambda: 
+  modality: 'Human36' # Can be either Human36 or AMASS
