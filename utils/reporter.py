@@ -41,6 +41,7 @@ class Reporter:
                 if key not in self.attrs.keys():
                     self.attrs[key] = AverageMeter()
                     self.history[key] = []
+                    self.min_attrs[key] = float('inf')
             if counts is not None and key in counts.keys():
                 self.attrs.get(key).update(value, counts[key])
             else:

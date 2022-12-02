@@ -20,24 +20,6 @@ def ADE(pred, target, dim, mask=None):
     ade = torch.mean(torch.sqrt(displacement))
     return ade
 
-# from models.tcn.data_proc_constant_bone import Postprocess
-# post = Postprocess()
-# def ADE(pred, target, dim, mask=None):
-#     """
-#     Average Displacement Error
-#     """
-#     pred = post(target, pred)
-#
-#
-#     keypoints_num = int(pred.shape[-1] / dim)
-#     pred = torch.reshape(pred, pred.shape[:-1] + (keypoints_num, dim))
-#     target = torch.reshape(target, target.shape[:-1] + (keypoints_num, dim))
-#     displacement = 0
-#     for d in range(dim):
-#         displacement += (pred[..., d] - target[..., d]) ** 2
-#     ade = torch.mean(torch.sqrt(displacement))
-#     return ade
-
 
 def FDE(pred, target, dim, mask=None):
     """
@@ -60,6 +42,8 @@ def local_ade(pred, target, dim, mask=None):
     local_pred_pose = pred_pose - pred_pose[:, :, 0:1, :].repeat(1, 1, keypoints, 1)
     target_pose = target.reshape(bs, frames, keypoints, dim)
     local_target_pose = target_pose - target_pose[:, :, 0:1, :].repeat(1, 1, keypoints, 1)
+    local_pred_pose = local_pred_pose.reshape(bs, frames, feat)
+    local_target_pose = local_target_pose.reshape(bs, frames, feat)
     return ADE(local_pred_pose, local_target_pose, dim)
 
 
@@ -70,6 +54,8 @@ def local_fde(pred, target, dim, mask=None):
     local_pred_pose = pred_pose - pred_pose[:, :, 0:1, :].repeat(1, 1, keypoints, 1)
     target_pose = target.reshape(bs, frames, keypoints, dim)
     local_target_pose = target_pose - target_pose[:, :, 0:1, :].repeat(1, 1, keypoints, 1)
+    local_pred_pose = local_pred_pose.reshape(bs, frames, feat)
+    local_target_pose = local_target_pose.reshape(bs, frames, feat)
     return FDE(local_pred_pose, local_target_pose, dim)
 
 

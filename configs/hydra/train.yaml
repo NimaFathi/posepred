@@ -12,7 +12,7 @@ valid_dataset:
 epochs: ???
 snapshot_interval: ${epochs}
 start_epoch: 0
-device: cpu
+device: cuda
 use_mask: false
 use_dct: false
 normalize: false

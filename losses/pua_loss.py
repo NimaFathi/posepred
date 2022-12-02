@@ -76,8 +76,6 @@ class PUALoss(nn.Module):
             self.nA = None
             self.sigma = nn.Parameter(self.s)
 
-        print("Number of uncertainty parameters: ", self.nJ * self.nT)
-
     def calc_sigma(self, y_true):
         local_sigma = self.sigma
         if self.nA is not None:

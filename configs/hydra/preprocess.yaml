@@ -2,7 +2,7 @@ defaults:
   - shared
   - _self_
 
-official_annotation_path:
+official_annotation_path: ???
 dataset: ???
 data_type: ???
 output_name:
@@ -13,7 +13,7 @@ image_dir:
 joints_annotation_path:
 skip_num: 0
 interactive: false
-save_total_frames: false
+save_total_frames: true
 
 # This is used just for 3DPW
 load_60Hz: True
