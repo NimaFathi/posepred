@@ -134,18 +134,21 @@ See [here](https://github.com/vita-epfl/posepred/blob/master/ARGS_README.md#prep
 ## Training
 Train models from scratch:
 ```bash  
-python -m api.train model=st_transformer \
-          train_dataset=$DATASET_TRAIN_PATH \
-          valid_dataset=$DATASET_VALIDATION_PATH \
-          epochs=10 \
-          snapshot_interval=2 \
-          obs_frames_num=10 \
-          pred_frames_num=25 \
-          experiment_name=stTrans \
-          data.seq_rate=5 \
-          model.pre_post_process=human3.6m \
-          model.n_major_joints=22
+python -m api.train model=pgbig \
+    train_dataset=$DATASET_TRAIN_PATH \
+    valid_dataset=$DATASET_VALIDATION_PATH \
+    epochs=4 \
+    snapshot_interval=2 \
+    obs_frames_num=10 \
+    pred_frames_num=25 \
+    experiment_name=pgbig \
+    data.seq_rate=200 \
+    model.pre_post_process=AMASS \
+    model.loss.nJ=18 \
+    model.in_features=54
 ```  
+
+**NOTE**: You can see more commands for training models [here](COMMANDS.md).
 
 Provide **validation_dataset** to adjust learning-rate and report metrics on validation-dataset as well.
 
