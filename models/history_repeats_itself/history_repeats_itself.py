@@ -125,7 +125,7 @@ class HistoryRepeatsItself(nn.Module):
                                     46, 47, 51, 52, 53, 54, 55, 56, 57, 58, 59, 63, 64, 65, 66, 67, 68,
                                     75, 76, 77, 78, 79, 80, 81, 82, 83, 87, 88, 89, 90, 91, 92])
         elif self.modality == "AMASS":
-            self.dim_used = self.dim_used = np.arange(12, 66)
+            pass
         else:
             assert False, "The modality is not supported."
         self.seq_in = args.kernel_size
@@ -182,7 +182,7 @@ class HistoryRepeatsItself(nn.Module):
     
     def forward_amass(self,inputs):
         seq = torch.cat((inputs['observed_pose'], inputs['future_pose']), dim=1)
-        
+        bs, seq_n, joints = seq.shape
         p3d_h36 = seq.reshape(seq.shape[0], seq.shape[1], -1)
 
         batch_size, seq_n, _ = p3d_h36.shape
@@ -192,8 +192,8 @@ class HistoryRepeatsItself(nn.Module):
 
         if self.itera == 1:
             p3d_out_all = self.net_pred(p3d_src, output_n=self.out_n, input_n=self.in_n, itera=self.itera)
-            p3d_out = p3d_out_all[:, self.seq_in:].reshape([batch_size, self.out_n, len(self.dim_used)])
-            p3d_out_all = p3d_out_all[:, :, 0].reshape([batch_size, self.seq_in + self.out_n, len(self.dim_used)//3, 3])
+            p3d_out = p3d_out_all[:, self.seq_in:].reshape([batch_size, self.out_n, joints])
+            p3d_out_all = p3d_out_all[:, :, 0].reshape([batch_size, self.seq_in + self.out_n, joints//3, 3])
             
         else:
             assert False, "itera > 1 is not available for amass dataset"

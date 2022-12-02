@@ -38,7 +38,7 @@ class HisRepItselfLoss(nn.Module):
                                     46, 47, 51, 52, 53, 54, 55, 56, 57, 58, 59, 63, 64, 65, 66, 67, 68,
                                     75, 76, 77, 78, 79, 80, 81, 82, 83, 87, 88, 89, 90, 91, 92])
         elif self.modality == "AMASS":
-            self.dim_used = np.arange(12, 66)
+            pass
         else:
             assert False, "Unknown modality"
 
@@ -187,10 +187,10 @@ class HisRepItselfLoss(nn.Module):
         p3d_h36 = p3d_h36.float().to(self.device)
         if self.modality == "Human36":
             p3d_sup = p3d_h36.clone()[:, :, self.dim_used][:, -self.output_n - self.seq_in:].reshape(
-                [-1, self.seq_in + self.output_n, len(self.dim_used) // 3, 3])
+                [-1, self.seq_in + self.output_n, len(self.dim_used)//3, 3])
         elif self.modality == "AMASS":
             p3d_sup = p3d_h36.clone()[:, -self.output_n - self.seq_in:].reshape(
-                [-1, self.seq_in + self.output_n, len(self.dim_used) // 3, 3])
+                [-1, self.seq_in + self.output_n, joints // 3, 3])
         p3d_src = p3d_h36.clone()
         p3d_out_all = model_outputs['pred_pose']
 
