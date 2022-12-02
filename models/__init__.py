@@ -13,7 +13,7 @@ from .keyplast import Keyplast
 from .sts_gcn.sts_gcn import STsGCN
 from .msr_gcn.msrgcn import MSRGCN
 from .potr.potr import POTR
-from .st_transformer.CSDI import CSDI_H36M
+from .st_transformer.ST_Transformer import ST_Transformer
 from .pgbig.pgbig import PGBIG
 
 MODELS = {'zero_vel': ZeroVel,
@@ -31,6 +31,6 @@ MODELS = {'zero_vel': ZeroVel,
           'potr': POTR,
           'sts_gcn': STsGCN,
           'msr_gcn': MSRGCN,
-          'st_transformer': CSDI_H36M,
+          'st_transformer': ST_Transformer,
           'pgbig': PGBIG
           }

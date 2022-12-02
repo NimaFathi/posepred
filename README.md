@@ -18,28 +18,39 @@ posepred
 ├── preprocessor
 |   ├── preprocessor.py                 -- base class for preprocessor module
 |   ├── dpw_preprocessor.py             -- preprocessing 3DPW dataset class
+|   ├── amass_preprocessor.py             -- preprocessing AMASS dataset class
+|   ├── stanford_preprocessor.py             -- preprocessing Human3.6m dataset with stanford preprocessing class
     └── ...                             -- other datasets preprocessor class
 ├── data_loader
 |   ├── solitary_dataset.py             -- handles dataloader for non-interactive data
 |   ├── noisy_solitary_dataset.py       -- handles dataloader for noisy non-interactive data
 |   └── interactive_dataset.py          -- handles dataloader for interactive data
+|   └── random_crop_dataset.py          -- handles dataloader for general sequential data
 ├── factory
 |   ├── trainer.py                      -- base code for training
 │   ├── evaluator.py                    -- base code for evaluation 
 |   └── output_generator.py             -- base code for testing
-├── models
-|   ├── pv_lstml.py                     
-│   ├── neareset_neighbor.py            
-|   ├── zero_vel.py                     
+├── models                    
+│   ├── history_repeats_itself/history_repeats_itself.py
+|   ├── st_transformer/ST_Transformer.py
+|   ├── pgbig/pgbig.py
+│   ├── msr_gcn/msrgcn.py
+|   ├── potr/potr.py
+│   ├── sts_gcn/sts_gcn.py
+|   ├── zero_vel.py
+|   ├── pv_lstm.py
+│   ├── disentangled.py
+|   ├── derpof.py
 |   ├── ...
 ├── losses
-|   ├── kl_divergence.py                     
-│   ├── mae_vel.py            
+|   ├── pua_loss.py
+│   ├── mpjpe.py           
 |   ├── ...
 ├── metrics
 |   ├── pose_metrics.py                     
 │   └── mask_metrics.py            
 ├── optimizers
+|   ├── sam.py
 |   ├── adam.py                     
 |   ├── sgd.py            
 |   ├── ...
@@ -54,7 +65,6 @@ posepred
 |   └── others.py                       -- other useful utils
 └── visualization
     ├── color_generator.py              -- code for generating miscellanoeus colors
-    ├── keypoints_connection.py         -- dictionary for creating joints connection graphs
     └── visualizer.py                   -- base code for visualization
 
 ```
@@ -117,36 +127,24 @@ Example:
 python -m api.preprocess \
     dataset=stanford3.6m \
     official_annotation_path=$DATASET_PATH \
-    data_type=train \
-    keypoint_dim=3 \
-    interactive=false \
-    output_name=new_full \
-    save_total_frames=true \
-    obs_frames_num=10 \
-    pred_frames_num=25
+    data_type=test
 ```  
 See [here](https://github.com/vita-epfl/posepred/blob/master/ARGS_README.md#preprocessing) for more details about preprocessing arguments.
   
 ## Training
 Train models from scratch:
 ```bash  
-python -m api.train model=history_repeats_itself \
-          keypoint_dim=3 \
+python -m api.train model=st_transformer \
           train_dataset=$DATASET_TRAIN_PATH \
           valid_dataset=$DATASET_VALIDATION_PATH \
           epochs=10 \
-          data.shuffle=True \
-          device=cuda \
-          snapshot_interval=1 \
-          hydra.run.dir=$OUTPUT_PATH \
-          data.batch_size=256 \
-          data.num_workers=10 \
-          data.is_random_crop=True \
-          model_pose_format=xyz \
-          metric_pose_format=xyz \
-          obs_frames_num=50 \
+          snapshot_interval=2 \
+          obs_frames_num=10 \
           pred_frames_num=25 \
-          experiment_name=hri_test
+          experiment_name=stTrans \
+          data.seq_rate=5 \
+          model.pre_post_process=human3.6m \
+          model.n_major_joints=22
 ```  
 
 Provide **validation_dataset** to adjust learning-rate and report metrics on validation-dataset as well.
@@ -158,39 +156,21 @@ See [here](https://github.com/vita-epfl/posepred/blob/master/ARGS_README.md#trai
 Evaluate untrainable model:
 ```bash  
 python -m api.evaluate model=zero_vel \
-          keypoint_dim=3 \
           dataset=$DATASET_TEST_PATH \
-          data.shuffle=true \
-          rounds_num=1 \
-          device=cuda \
-          hydra.run.dir=$OUTPUT_PATH \
-          data.is_random_crop=true \
-          data.batch_size=2048 \
           obs_frames_num=10 \
           pred_frames_num=25 \
-          model_pose_format=xyz \
-          metric_pose_format=xyz \
           data.is_testing=true \
           data.is_h36_testing=true
 ```  
 
 evaluate pretrained model:
 ```bash
-python -m api.evaluate model=history_repeats_itself \
-          keypoint_dim=3 \
+python -m api.evaluate model=st_transformer \
           dataset=$DATASET_TEST_PATH \
-          data.shuffle=True \
-          rounds_num=5 \
-          device=cuda \
-          hydra.run.dir=$OUTPUT_PATH \
-          data.is_random_crop=True \
-          data.batch_size=2048 \
-          obs_frames_num=50 \
+          load_path=$MODEL_CHECKPOINT \
+          obs_frames_num=10 \
           pred_frames_num=25 \
-          model_pose_format=xyz \
-          metric_pose_format=xyz \
-          load_path=$MODEL_OUTPUT_PATH \
-          data.is_testing=false \
+          data.is_testing=true \
           data.is_h36_testing=true
 ```
 See [here](https://github.com/vita-epfl/posepred/blob/master/ARGS_README.md#evaluation) for more details about evaluation arguments.
@@ -199,18 +179,13 @@ See [here](https://github.com/vita-epfl/posepred/blob/master/ARGS_README.md#eval
 ## Generating Outputs
 Generate and save the predicted future poses:
 ```bash
-python -m api.generate_final_output \
-          dataset=$DATASET_TEST_PATH \
-          model=history_repeats_itself \
-          keypoint_dim=3 \
-          data.is_random_crop=True \
-          obs_frames_num=50 \
-          pred_frames_num=25 \
-          model_pose_format=xyz \
-          metric_pose_format=xyz \
-          load_path=$MODEL_OUTPUT_PATH \
-          data.is_interactive=False \
-          device=cpu
+python -m api.generate_final_output model=st_transformer \
+          dataset=$DATASET_PATH \
+          load_path=$MODEL_CHECKPOINT \
+          obs_frames_num=5 \
+          pred_frames_num=10 \
+          data.is_h36_testing=true \
+          save_dir=$OUTPUT_PATH
 ```  
 See [here](https://github.com/vita-epfl/posepred/blob/master/ARGS_README.md#generating-outputs) for more details about prediction arguments.
   
@@ -226,12 +201,12 @@ Example:
 ```bash  
 python -m api.visualize model=<model_name> dataset=<path_to_dataset> dataset_type=jta keypoint_dim=2 is_noisy=true data.noise_rate=0.1 device=cpu load_path=<path_to_model> index=25 showing=observed-future
 ```  
-  
+<!--   
 Sample output:  
   
 <div align="center">  
     <img src="visualization/outputs/2D/2D_visualize.gif" width="600px" alt><br>  
-</div>  
+</div>   -->
   
 ### 3D Visualization  
   
@@ -241,13 +216,21 @@ If we have camera extrinsic and intrinsic parameters and image paths, we would c
   
 Example:  
 ```bash  
-python -m api.visualize model=<model_name> dataset=<path_to_dataset> dataset_type=stanford3.6m keypoint_dim=3 data.is_random_crop=True data.model_pose_format=xyz data.metric_pose_format=xyz data.len_observed=50 data.len_future=25 device=cuda load_path=<path_to_checkpoint> index=50 showing=observed-future-predicted save_dir=<path_to_save_results>
+python -m api.visualize model=st_transformer \
+            dataset=$DATASET_PATH \
+            dataset_type=stanford3.6m \
+            data.len_observed=5 \
+            data.len_future=10 \
+            load_path=$MODEL_CHECKPOINT \
+            index=50 \
+            showing=observed-future-predicted \
+            save_dir=$OUTPUT_PATH
 ```  
   
-Sample outputs:  
+<!-- Sample outputs:  
 <div align="center">  
    <!--  <img src="visualization/outputs/2D/3D_visualize_2D_overlay.gif" width="600px" alt><br>  -->
     <img src="visualization/outputs/3D/3D_visualize.gif" width="600px" alt>  
-</div>
+</div> -->
 
 see [here](https://github.com/vita-epfl/posepred/blob/master/ARGS_README.md#visualization) for more details about visualization arguments.

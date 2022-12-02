@@ -196,9 +196,9 @@ class CSDI_base(nn.Module):
         return self.postprocess_data(batch, predicted)
 
 
-class CSDI_H36M(CSDI_base):
+class ST_Transformer(CSDI_base):
     def __init__(self, args):
-        super(CSDI_H36M, self).__init__(args)
+        super(ST_Transformer, self).__init__(args)
         self.Lo = args.obs_frames_num
         self.Lp = args.pred_frames_num
 

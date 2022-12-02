@@ -4,7 +4,7 @@ defaults:
 
 type: st_transformer
 
-n_major_joints: &nJ 32 # 18 # 22
+n_major_joints: 22 # 18 # 22
 diff_layers: 3
 diff_channels: 64
 diff_nheads: 8
@@ -27,7 +27,7 @@ loss:
   type: pua_loss
   tasks: TJ
   nT: 10
-  nJ: *nJ # 32 # 32
+  nJ: 32 # 32
   time_prior: sig5
   action_list: ["walking", "eating", "smoking", "discussion", "directions", "greeting", "phoning", "posing", "purchases", "sitting", "sittingdown", "takingphoto", "waiting", "walkingdog", "walkingtogether"]
   clipMinS: -1

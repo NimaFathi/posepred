@@ -1,11 +1,12 @@
 defaults:
   - data: main
   - model: ???
+  - shared
   - _self_
 
 dataset: ???
 dataset_type: ???
-keypoint_dim: ???
+keypoint_dim: 3
 showing: future, predicted
 use_mask: false
 pred_frames_num:
