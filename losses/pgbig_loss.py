@@ -50,8 +50,8 @@ class PGBIG_PUALoss(nn.Module):
         p3 = y_pred['p3']
         p4 = y_pred['p4']
 
-        y_future = self.preprocess(y_true['future_pose'], normal=False)
-        y_obs = self.preprocess(y_true['observed_pose'], normal=False)
+        y_future = self.preprocess(y_true['future_pose'], normal=True)
+        y_obs = self.preprocess(y_true['observed_pose'], normal=True)
 
         y_full = torch.cat([y_obs, y_future], dim=1)
 

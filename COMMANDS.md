@@ -34,6 +34,23 @@ python -m api.train model=st_transformer \
     model.loss.nJ=18 \
     device=cpu
 ```
+## 3DPW
+```bash
+python -m api.train model=st_transformer \
+    train_dataset=$DATASET_TRAIN_PATH \
+    valid_dataset=$DATASET_VALIDATION_PATH \
+    epochs=4 \
+    snapshot_interval=2 \
+    obs_frames_num=5 \
+    pred_frames_num=10 \
+    model.loss.nT=10 \
+    experiment_name=stTrans \
+    data.seq_rate=5 \
+    model.pre_post_process=3DPW \
+    model.n_major_joints=18 \
+    model.loss.nJ=18 \
+    device=cpu
+```
 
 # History-Repeats-Itself
 ## Human3.6M
@@ -100,7 +117,38 @@ python -m api.train model=sts_gcn \
     model.loss.nJ=18
 ```
 
+## 3DPW
+```bash
+python -m api.train model=sts_gcn \
+    train_dataset=$DATASET_TRAIN_PATH \
+    valid_dataset=$DATASET_VALIDATION_PATH \
+    epochs=4 \
+    snapshot_interval=2 \
+    obs_frames_num=5 \
+    pred_frames_num=10 \
+    experiment_name=STS \
+    data.seq_rate=5 \
+    model.pre_post_process=3DPW \
+    model.n_major_joints=18 \
+    model.loss.nJ=18
+```
 # PGBIG
+## Human3.6M
+```bash
+python -m api.train model=pgbig \
+    train_dataset=$DATASET_TRAIN_PATH \
+    valid_dataset=$DATASET_VALIDATION_PATH \
+    epochs=4 \
+    snapshot_interval=2 \
+    obs_frames_num=10 \
+    pred_frames_num=25 \
+    experiment_name=pgbig \
+    data.seq_rate=5 \
+    model.pre_post_process=human3.6m \
+    model.in_features=66 \
+    model.loss.nJ=22 \
+    model.loss.pre_post_process=human3.6m
+```
 ## AMASS
 ```bash
 python -m api.train model=pgbig \
@@ -113,10 +161,26 @@ python -m api.train model=pgbig \
     experiment_name=pgbig \
     data.seq_rate=5 \
     model.pre_post_process=AMASS \
+    model.in_features=54 \
     model.loss.nJ=18 \
-    model.in_features=54
+    model.loss.pre_post_process=AMASS
 ```
-
+## 3DPW
+```bash
+python -m api.train model=pgbig \
+    train_dataset=$DATASET_TRAIN_PATH \
+    valid_dataset=$DATASET_VALIDATION_PATH \
+    epochs=4 \
+    snapshot_interval=2 \
+    obs_frames_num=10 \
+    pred_frames_num=25 \
+    experiment_name=pgbig \
+    data.seq_rate=5 \
+    model.pre_post_process=3DPW \
+    model.in_features=54 \
+    model.loss.nJ=18 \
+    model.loss.pre_post_process=3DPW
+```
 # POTR
 ```bash
 python -m api.train model=potr \

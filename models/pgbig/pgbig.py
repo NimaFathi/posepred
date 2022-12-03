@@ -166,11 +166,11 @@ class PGBIG(Module):
 
     def forward(self, batch):
         observed_data = batch["observed_pose"].to(self.args.device)
-        observed_data = self.preprocess(observed_data, normal=False)
+        observed_data = self.preprocess(observed_data, normal=True)
         p4, p3, p2, p1 = self.net(observed_data, input_n=self.in_n, output_n=self.out_n, itera=1)
         
         return {
-            'pred_pose': self.postprocess(batch['observed_pose'], p4[:, self.in_n:, :], normal=False),
+            'pred_pose': self.postprocess(batch['observed_pose'], p4[:, self.in_n:, :], normal=True),
             'p1': p1, 'p2': p2, 'p3': p3, 'p4': p4
         }
         
