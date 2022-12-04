@@ -47,8 +47,8 @@ noise_rate:                 A float number to indicate percentage of uniform noi
 persons_num:                Number of people (int)
 use_mask:                   Set True To use mask in dataloader and model (bool)
 use_quaternion:             Set True To use quaternion representation (based on model) (bool) (default: False)
-model_pose_format:          (str)
-metric_pose_format:         (str)
+model_pose_format:          Used data format for random_crop dataset (str)
+metric_pose_format:         Used data format for metrics if random_crop dataset is used. If no value is specified it'll use the model_pose_format's value (str)
 is_h36_testing:             Set True to configure the dataloader for testing huamn3.6m (bool)
 is_testing:                 Set True to configure the dataloader for testing (bool) (default: False)
 is_visualizing:             Set True to configure dataloader for visualizing (bool) (default: False)
@@ -57,10 +57,8 @@ shuffle:                    Indicates shuffling the data in dataloader (bool) (d
 pin_memory:                 Using pin memory or not in dataloader (bool) (default: False)  
 num_workers:                Number of workers (int)
 normalize:                  Set True to normalize the data in dataloader (bool)
-seq_rate:                   (int)
-frame_rate:                 (int)
-len_observed:               (int)
-len_future:                 (int)
+len_observed:               Number of frames to observe (int)
+len_future:                 Number of frames to predict(int)
 
 optional arguments: 
 overfit:                    Set True to create a dataloader with small size for testing overfitting (bool)
@@ -76,11 +74,14 @@ Folder Location: 'configs/hydra/model'
 ```
 Mandatory arguments:
 keypoint_dim:               Number of dim data should have Ex: 2 for 2D and 3 for 3D (int)  
-pred_frames_num:	        Number of frames to predict, obligatory when ground-truth is not available (int)
-obs_frames_num:	            (int)
+pred_frames_num:            Number of frames to predict, obligatory when ground-truth is not available (int)
+obs_frames_num:	            Number of frames to observe (int)
 use_mask:                   Set True To use mask in dataloader and model (bool)
 use_dct:                    Set True to use discrete cosine transform (bool)
 normalize:                  Set True to normalize the data in dataloader (bool)
+mean_pose:
+std_pose:
+device:                     Choose either 'cpu' or 'gpu' (str)
 ```
 
 `<model-name>.yaml`:
@@ -154,6 +155,14 @@ gamma                       Multiplicative factor of learning rate decay. (float
 last_epoch                  The index of last epoch (int) (default=-1)
 verbose                     If True, prints a message to stdout for each update (bool) (default=False)
 ```
+`no_step_lr.yaml`
+```
+type                        type=no_step_lr to use this technique
+step_size                   Period of learning rate decay (int) (default=50)
+gamma                       Multiplicative factor of learning rate decay. (float) (default=0.5)
+last_epoch                  The index of last epoch (int) (default=-1)
+verbose                     If True, prints a message to stdout for each update (bool) (default=False)
+```
 #### metrics
 File Location: 'configs/hydra/metrics.yaml'
 
@@ -185,10 +194,11 @@ mandatory arguments:
     
 optional arguments:  
   - interactive         Use interactions between persons (bool)
-  - annotate		    (only for JAAD and PIE) Implies that to use dataset_path as annotation path or a path to images. in this context, we generate annotations using openpifpaf then create static files afterward. (bool)
+  - annotate		(only for JAAD and PIE) Implies that to use dataset_path as annotation path or a path to images. in this context, we generate annotations using openpifpaf then create static files afterward. (bool)
   - image_dir           (only for JAAd and PIE) define this parameter if annotate = True and it implies the directory for images to creat annotation based on. (str)
   - annotation_path     (only for JAAD and PIE) define this parameter if annotate = False and it indicates the path to annotations. (str)  
   - skip_num        	Number of frame to skip between each two used frames (int) (0 implies no skip) (str)
+  - load_60Hz           This value is used only for 3DPW
   - use_video_once      Use whole video just once or use until last frame (bool) (default: false)  
   - output_name         Name of generated csv file (str) (for default we have specific conventions for each dataset)
   - save_total_frames   This value must be 'true' for random_crop_dataset and flase for other datasets (bool) (default: false)
@@ -238,8 +248,9 @@ optional arguments:
   - normalize           Normalize the data or not (bool)
   - snapshot_interval 	Save snapshot every N epochs (int)
   - load_path           Path to load a model (str) 
-  - start_epoch	  	    Start epoch (int)
+  - start_epoch	 	Start epoch (int)
   - device              Choose either 'cpu' or 'cuda' (str)
+  - save_dir            Path to save the model (str)
   - obs_frames_num      Number of observed frames for random_crop dataset (int) (default: 10)
   - pred_frames_num     Number of future frames for random_crop dataset (int) (default:25)
   - model_pose_format   Used data format for random_crop dataset (str) (defautl: total -> for more information see the Data section)
@@ -354,6 +365,7 @@ mandatory arguments:
 optional arguments:
   use_mask 		Consider visibility mask (bool)
   normalize		Normalize the data or not (bool)
+  save_dir              Path to save the model (str)
   is_noisy		Whether data is noisy or not (bool)
   device		Choose either 'cpu' or 'gpu' (str)
 ```  
@@ -381,19 +393,20 @@ mandatory arguments:
     dataset_type 	    Name of using dataset. (str) (['somof_posetrack', 'posetrack', 'somof_3dpw', '3dpw', 'jta', 'jaad', 'pie', 'human3.6m'])  
     model        	    Name of desired model. (str) (['zero_vel','nearest_neighbor', 'pv_lstm', 'disentangled', 'derpof', 'history_repeats_itself', 'mix_and_match', 'comp_pred_vel', 'comp_pred_pose','comp_pred_center', 'comp_pred_root','trans_cvae','pv_lstm_noisy', 'comp_pred_vel_concat', 'v_lstm_noisy', 'p_lstm_noisy', 'pv_lstm_pro', 'keyplast'])  
     images_dir 		    Path to existing images on your local computer (str)
-    showing             Indicates which images we want to show (dash(-) separated list) ([observed, future, predicted, completed])   
-    index             Index of a sequence in dataset to visualize. (int)
-    data.normalize      If data.normalize = True, we have to pass <data.metadata_path>. (bool)
-    data.metadata_path  Path to metadata of dataset. (str)
-    data.is_visualizing Essentially indicates if we are using visualizer, MUST be True for this part (bool) (default: True)
+    showing                 Indicates which images we want to show (dash(-) separated list) ([observed, future, predicted, completed])   
+    index                   Index of a sequence in dataset to visualize. (int)
+    normalize               Normalize the data or not (bool)
+    data.normalize          If data.normalize = True, we have to pass <data.metadata_path>. (bool)
+    data.metadata_path      Path to metadata of dataset. (str)
+    data.is_visualizing     Essentially indicates if we are using visualizer, MUST be True for this part (bool) (default: True)
     
     
 optional arguments:  
   load_path             Path to pretrained model. Mandatory if using a training-based model (str)  
   pred_frames_num 	Number of frames to predict. Mandatory if load_path is None. (int)
-  interactive         To consider interaction or not. (bool)  
-  use_mask            Use visibility mask if possible for dataloader. (bool)  
-  skip_num     	Number of frame to skip between each two used frames. (int)
+  interactive           To consider interaction or not. (bool)  
+  use_mask              Use visibility mask if possible for dataloader. (bool)  
+  skip_num     	        Number of frame to skip between each two used frames. (int)
 ```  
   
 ### 2D Visualization  
