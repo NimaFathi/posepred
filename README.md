@@ -96,10 +96,9 @@ Furthermore, you just have to install all the packages you need:
 ```bash  
 pip install -r requirements.txt  
 ```  
-Before moving forward you need to install Hydra and know its basic functions to run different modules and APIs.  
+Before moving forward, you need to install Hydra and know its basic functions to run different modules and APIs.  
 hydra is A framework for elegantly configuring complex applications with hierarchical structure.
-
-To understand Hydra better read the official [documentation](https://hydra.cc/). It is not essential stage  to work with our library, but we encourage you to do.
+For more information about Hydra, read their official page [documentation](https://hydra.cc/).
 
 ## Hydra
 In order to have a better structure and understanding of our arguments, we use Hydra to  dynamically create a hierarchical configuration by composition and override it through config files and the command line.
