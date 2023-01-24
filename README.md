@@ -1,11 +1,14 @@
 # Posepred  
-Pospred is an open-source toolbox for pose prediction/forecasting based on PyTorch.  
+Posepred is an open-source toolbox for pose prediction/forecasting a sequence of human pose given an observed sequence, implemented in PyTorch.
 
 <p float="left">
-  <img src="https://user-images.githubusercontent.com/33596552/138102745-f6b5c7a0-ee14-40ef-907f-b3ebb98ae08f.gif" alt="prediction" width="500">  
-  <img src="https://user-images.githubusercontent.com/33596552/138102754-5bef72df-ea48-4d17-a932-611293f0bc5a.gif" alt="observation" width="500">  
+  Input pose<br/><img src="https://user-images.githubusercontent.com/33596552/138102745-f6b5c7a0-ee14-40ef-907f-b3ebb98ae08f.gif" alt="observation" width="500">
+
+  Output pose and ground-truth<br/><img src="https://user-images.githubusercontent.com/33596552/138102754-5bef72df-ea48-4d17-a932-611293f0bc5a.gif" alt="prediction" width="500">  
 </p>
 
+# Overview 
+The main parts of the library are as follows:
 
 ```
 posepred
@@ -13,23 +16,8 @@ posepred
 |   ├── preprocess.py                   -- script to run the preprocessor module
 |   ├── train.py                        -- script to train the models, runs factory.trainer.py
 │   ├── evaluate.py                     -- script to evaluate the models, runs factory.evaluator.py
-|   ├── visualize.py                    -- script to run the visualization module
 |   └── generate_final_output.py        -- script to generate and save the outputs of the models, runs factory.output_generator.py
-├── preprocessor
-|   ├── preprocessor.py                 -- base class for preprocessor module
-|   ├── dpw_preprocessor.py             -- preprocessing 3DPW dataset class
-|   ├── amass_preprocessor.py             -- preprocessing AMASS dataset class
-|   ├── stanford_preprocessor.py             -- preprocessing Human3.6m dataset with stanford preprocessing class
-    └── ...                             -- other datasets preprocessor class
-├── data_loader
-|   ├── solitary_dataset.py             -- handles dataloader for non-interactive data
-|   ├── noisy_solitary_dataset.py       -- handles dataloader for noisy non-interactive data
-|   └── interactive_dataset.py          -- handles dataloader for interactive data
-|   └── random_crop_dataset.py          -- handles dataloader for general sequential data
-├── factory
-|   ├── trainer.py                      -- base code for training
-│   ├── evaluator.py                    -- base code for evaluation 
-|   └── output_generator.py             -- base code for testing
+|   ├── visualize.py                    -- script to run the visualization module
 ├── models                    
 │   ├── history_repeats_itself/history_repeats_itself.py
 |   ├── st_transformer/ST_Transformer.py
@@ -46,30 +34,12 @@ posepred
 |   ├── pua_loss.py
 │   ├── mpjpe.py           
 |   ├── ...
-├── metrics
-|   ├── pose_metrics.py                     
-│   └── mask_metrics.py            
-├── optimizers
-|   ├── sam.py
-|   ├── adam.py                     
-|   ├── sgd.py            
-|   ├── ...
-├── schedulers
-|   ├── reduce_lr_on_plateau.py
-|   ├── step_lr.py            
-|   ├── ...
-├── utils
-|   ├── average_meter                   -- updating average for metrics each epoch
-|   ├── reporter.py                     -- to calcualte and report losses and metrics
-|   ├── save_load.py                    -- base code for saving and loading models
-|   └── others.py                       -- other useful utils
-└── visualization
-    ├── color_generator.py              -- code for generating miscellanoeus colors
-    └── visualizer.py                   -- base code for visualization
-
 ```
+The library has 5 important API which 1) preprocess data 2) train the model 3) evaluate it quantitatively 4) generate their outputs and 5) visualize it. The details of how to use these API are described below. Two other important directories are models and losses. In these two directories, you can add any desired model and loss function and leverage all predefined functions of the library to train and test and compare in a fair manner.
 
-## Installation  
+Please check other directories (optimizers, mmetrics, schedulers, visualization, utils, etc.) for more abilites.
+
+# Getting Started  
 To get started as quickly as possible, follow the instructions in this section. This should allow you train a model from scratch, evaluate your pretrained models, and produce basic visualizations.  
   
 ### Dependencies  
@@ -117,9 +87,9 @@ mlflow ui
 ```
 ![img](https://www.mlflow.org/docs/latest/_images/tutorial-compare.png)
 
-## Preprocessing
-We need to create clean static file to enhance dataloader and speed-up other parts.  
-To fulfill mentioned purpose You should run preprocessing api called `preprocess.py` like below:  
+# Preprocessing
+We need to create clean static file to enhance dataloader and speed-up other parts.
+To fulfill mentioned purpose, put the data in DATASET_PATH and run preprocessing api called `preprocess.py` like below:  
 
 Example:  
 ```bash  
@@ -129,9 +99,10 @@ python -m api.preprocess \
     data_type=test
 ```  
 See [here](https://github.com/vita-epfl/posepred/blob/master/ARGS_README.md#preprocessing) for more details about preprocessing arguments.
+This process should be repeated for training, validation and test set. This is a one-time use api and later you just use the saved jsonl files.
   
-## Training
-Train models from scratch:
+# Training
+Given the preprocessed data, train models from scratch:
 ```bash  
 python -m api.train model=st_transformer \
     train_dataset=$DATASET_TRAIN_PATH \
@@ -155,7 +126,7 @@ Provide **validation_dataset** to adjust learning-rate and report metrics on val
 See [here](https://github.com/vita-epfl/posepred/blob/master/ARGS_README.md#training) for more details about training arguments.
 
 
-## Evaluation
+# Evaluation
 Evaluate untrainable model:
 ```bash  
 python -m api.evaluate model=zero_vel \
@@ -179,7 +150,7 @@ python -m api.evaluate model=st_transformer \
 See [here](https://github.com/vita-epfl/posepred/blob/master/ARGS_README.md#evaluation) for more details about evaluation arguments.
 
 
-## Generating Outputs
+# Generating Outputs
 Generate and save the predicted future poses:
 ```bash
 python -m api.generate_final_output model=st_transformer \
@@ -193,7 +164,7 @@ python -m api.generate_final_output model=st_transformer \
 See [here](https://github.com/vita-epfl/posepred/blob/master/ARGS_README.md#generating-outputs) for more details about prediction arguments.
   
   
-## Visualization  
+# Visualization  
 You can Visualize both 3D and 2D data with visualization module.  
 See here for more details about visualization arguments. <br>
 In order to generate .gif outputs you can run `visualize.py‍‍‍‍` like below:  
@@ -215,7 +186,7 @@ Sample output:
   
 If we have camera extrinsic and intrinsic parameters and image paths, we would create 2 gifs:  
 - 2D overlay on images  
-- 3D positions from the camera's POV  
+- 3D positions from the camera's point of view  
   
 Example:  
 ```bash  
