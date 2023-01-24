@@ -8,8 +8,8 @@ from torch import optim
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-from .lstm import LstmAutoEncoder
-from ...utils.train_utils import *
+from model.lstm.lstm import LstmAutoEncoder
+from utils.train_utils import *
 
 
 def lstm_train_epoch(lstm_model: LstmAutoEncoder, train_loader: DataLoader, loss_func, alpha, optimizer, dev='cuda'):

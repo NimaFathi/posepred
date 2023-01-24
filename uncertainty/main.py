@@ -4,18 +4,17 @@ from argparse import Namespace
 from torch.utils.data import Dataset
 from torch.utils.data.dataloader import DataLoader
 
-from . import model
-from .data.amass_3d import Amass
-from .data.dpw3 import Dpw3
-from .data.human_36 import Human36M
-from .model.dc.train_dc import train_dc_model, cluster
-from .model.lstm.lstm import LstmAutoEncoder, EncoderWrapper
-from .model.lstm.train_lstm import train_lstm_model
-from .utils.train_utils import save_model, save_model_results_dict
-from .utils.uncertainty import *
-from .utils.dataset_utils import TRAIN_K, VALID_K, TEST_K, INCLUDED_JOINTS_COUNT, SKIP_RATE, SCALE_RATIO, H36_ACTIONS, \
+from data.amass_3d import Amass
+from data.dpw3 import Dpw3
+from data.human_36 import Human36M
+from model.dc.train_dc import train_dc_model, cluster
+from model.lstm.lstm import LstmAutoEncoder, EncoderWrapper
+from model.lstm.train_lstm import train_lstm_model
+from utils.train_utils import save_model, save_model_results_dict
+from utils.uncertainty import *
+from utils.dataset_utils import TRAIN_K, VALID_K, TEST_K, INCLUDED_JOINTS_COUNT, SKIP_RATE, SCALE_RATIO, H36_ACTIONS, \
     DIM
-from .utils.prediction_util import get_prediction_model_dict, PRED_MODELS, PRED_MODELS_ARGS
+from utils.prediction_util import get_prediction_model_dict, PRED_MODELS, PRED_MODELS_ARGS
 
 
 def load_dataset(dataset_path: str, dataset_name: str, input_n: int, output_n: int, test: bool) -> dict:
@@ -42,7 +41,7 @@ def load_dataset(dataset_path: str, dataset_name: str, input_n: int, output_n: i
     return dataset
 
 
-def load_dc_model(dataset_name: str, output_path: str, n_clusters: int = 17):
+def load_dc_model(dataset_name: str, n_clusters: int, output_path: str):
     lstm_ae = LstmAutoEncoder(pose_dim=INCLUDED_JOINTS_COUNT[dataset_name]).to('cuda')
     dc_model = DCModel(lstm_ae, n_clusters=n_clusters).to('cuda')
     dc_model.load_state_dict(torch.load(output_path))
@@ -93,7 +92,7 @@ def evaluate_uncertainty_and_loss(dataset_args: Namespace, evaluation_args: Name
         model.to(dev)
         model_dict = get_prediction_model_dict(model, test_loader, input_n, output_n, dataset_name, dev)
         save_model_results_dict(model_dict, pred_model, dataset_name)
-    evaluation_dict = calculate_dict_uncertainty(dataset_name, model_dict, dc_model, b_size, dev)
+    evaluation_dict = calculate_dict_uncertainty_and_mpjpe(dataset_name, model_dict, dc_model, b_size, dev)
     return evaluation_dict
 
 
@@ -148,7 +147,7 @@ def main(main_args: Namespace, dataset_args: Namespace, model_args: Namespace, e
     if not os.path.exists(output_path):
         os.makedirs(output_path)
     if test:
-        dc_model = load_dc_model(dataset_name, evaluation_args.dc_model_path, model_args.n_clusters)
+        dc_model = load_dc_model(dataset_name, model_args.n_clusters, evaluation_args.dc_model_path)
     else:
         dc_model = init_dc_train(dataset_args, model_args, data_loader, train_ds, output_path, dev)
     dc_model.eval()

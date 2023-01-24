@@ -27,23 +27,53 @@ pip install -r requirements.txt
   ```
 * AMAAS
 
-### Training Arguments
+### Modes
 
-* `n_clusters`: Number of the clusters. (default: 17)
-* `dataset`: Name of the dataset so that the pipeline knows what sequence of joints should be omitted. (default: Human36m)
-* 'input_n': Number of the input sequence. (default: 10)
-* 'output_n': Number of the output sequence. (default: 25)
+The code can operate in three modes which is given by the argument `pipeline`
+* `main`: This pipeline is executed if the uncertainty for a prediction model is needed. Note that all `Human 3.6` actions are included.
+* `divided`: Equivalent pipeline for divided experiment. Excluding `smoking`, `phoning` and`takingphoto` from other actions then executing the main one.
+* `rejection`: Use this pipeline to calculate the rejection rate and self-uncertainty rate for a given model.
+
+### Arguments
+
+* `fake_labeling`: Determines whether fake samples are required.
+* `n_clusters`: Number of the clusters.
+* `fake_clusters`: If the code has been executed in `main` pipeline with fake sample generation, mentioning the clusters with mainly fake data is needed.
+* `model_path`: The path to a pose prediction model.
+* `model_dict_path`: The path to dictionary of a pose prediction model; containing ground truth and output tensors. Note that a dictionary is not suitable for the `rejection` pipeline.
 
 ### Train
 
+* Main
   ```batch
-  python runner.py --dataset $DATASET_NAME --dataset_path $DATASET_PATH --output_path $OUT_PATH
+  python --pipeline main
   ```
-  
+* Main (with fake samples)
+  ```batch
+  python --pipeline main --fake_labeling True --n_clusters 20
+  ```
+* Divided
+  ```batch
+  python --pipeline divided
+  ```
+
 ### Test
 
+* Main
   ```batch
-  python runner.py --test true --dataset $DATASET_NAME --dataset_path $DATASET_PATH --dc_model_path $DC_MODEL_PATH --model_path $PREDICTION_MODEL_PATH
+  python --pipeline main --dc_path /path/to/dc_model --ae_path /path/to/final_ae_model --model_dict_path ./prediction/dict/sts.pt
+  ```
+* Main (with fake samples)
+  ```batch
+  python --pipeline main --fake_labeling True --n_clusters 20 --model_dict_path ./prediction/dict/sts.pt
+  ```
+* Divided
+  ```batch
+  python --pipeline divided --dc_path /path/to/dc_model/ --ae-path /path/to/final_ae_model --model_dict ./prediction/model/sts_12_act.pt
+  ```
+* Rejection
+  ```batch
+  python --pipeline rejection --dc_path ./pretrained/dc_main.pt --ae_path ./pretrained/final_ae_main.pt
   ```
 
 ### Citing

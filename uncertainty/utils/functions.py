@@ -1,8 +1,8 @@
 import numpy as np
 import torch as torch
 
-from ..model.sts_gcn.utils import forward_kinematics
-from .dataset_utils import JOINTS_TO_IGNORE, JOINTS_EQUAL, JOINTS_TO_INCLUDE
+from model.sts_gcn.utils import forward_kinematics
+from utils.dataset_utils import JOINTS_TO_IGNORE, JOINTS_EQUAL, JOINTS_TO_INCLUDE
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 

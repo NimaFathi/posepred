@@ -1,6 +1,6 @@
 import torch.nn as nn
 import torch as torch
-from ..lstm.lstm import LstmAutoEncoder
+from model.lstm.lstm import LstmAutoEncoder
 
 
 class DCModel(nn.Module):

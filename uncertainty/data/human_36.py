@@ -3,11 +3,10 @@ from torch.utils.data import Dataset
 import random
 import os
 
-
-from ..utils import functions as data_utils
+import utils.functions as data_utils
 import numpy as np
 from math import *
-from ..utils.dataset_utils import *
+from utils.dataset_utils import *
 
 
 class Human36M(Dataset):

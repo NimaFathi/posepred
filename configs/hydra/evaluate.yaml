@@ -9,4 +9,4 @@ dataset: ???
 rounds_num: 1
 device: cuda
 eval_uncertainty: false
-oodu_load_path:
+uncertainty_load_path:
