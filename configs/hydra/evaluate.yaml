@@ -7,3 +7,6 @@ defaults:
 
 dataset: ???
 rounds_num: 1
+device: cuda
+eval_uncertainty: false
+uncertainty_load_path:
