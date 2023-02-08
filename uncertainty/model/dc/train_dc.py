@@ -8,9 +8,9 @@ from sklearn.cluster import KMeans
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-from model.dc.deep_clustering import DCModel
-from model.lstm.lstm import EncoderWrapper
-from utils.train_utils import *
+from .deep_clustering import DCModel
+from ..lstm.lstm import EncoderWrapper
+from ...utils.train_utils import *
 
 
 # TODO: Copyright after everything!
