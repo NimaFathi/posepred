@@ -18,7 +18,7 @@ def entropy_uncertainty(p):
     return torch.mean(out)
 
 
-def calculate_dict_uncertainty(dataset_name: str, model_dict: dict, dc_model: DCModel, batch_size: int, dev='cuda') -> list:
+def calculate_dict_uncertainty(dataset_name: str, model_dict: dict, dc_model: DCModel, batch_size: int, dev='cuda') -> dict:
     uncertainties = 0
     total_count = len(model_dict[OUT_K])
     num_batches = int(total_count / batch_size)
@@ -31,4 +31,4 @@ def calculate_dict_uncertainty(dataset_name: str, model_dict: dict, dc_model: DC
         with torch.no_grad():
             p, _ = dc_model(scale(out, SCALE_RATIO[dataset_name]))
             uncertainties += entropy_uncertainty(p) * (e_idx - s_idx)
-    return [uncertainties / total_count]
+    return {UNC_K: [uncertainties / total_count]}
