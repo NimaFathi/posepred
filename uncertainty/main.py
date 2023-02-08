@@ -93,7 +93,7 @@ def evaluate_uncertainty_and_loss(dataset_args: Namespace, evaluation_args: Name
         model.to(dev)
         model_dict = get_prediction_model_dict(model, test_loader, input_n, output_n, dataset_name, dev)
         save_model_results_dict(model_dict, pred_model, dataset_name)
-    evaluation_dict = calculate_dict_uncertainty_and_mpjpe(dataset_name, model_dict, dc_model, b_size, dev)
+    evaluation_dict = calculate_dict_uncertainty(dataset_name, model_dict, dc_model, b_size, dev)
     return evaluation_dict
 
 
