@@ -15,15 +15,13 @@ logger = logging.getLogger(__name__)
 
 
 class UncertaintyEvaluator:
-    # evaluator = Evaluator(cfg, eval_dataloader, model, loss_module, eval_reporter)
-    def __init__(self, args, dataloader, model, uncertainty_model, input_n, output_n, batch_size, dataset_name,
+    def __init__(self, args, dataloader, model, uncertainty_model, input_n, output_n, dataset_name,
                  reporter):
         self.args = args
         self.dataloader = dataloader
         self.model = model.to(args.device)
         self.uncertainty_model = uncertainty_model.to(args.device)
         self.input_n = input_n
-        self.batch_size = batch_size
         self.output_n = output_n
         self.dataset_name = dataset_name
         self.reporter = reporter
@@ -36,13 +34,10 @@ class UncertaintyEvaluator:
     def evaluate(self):
         logger.info('Uncertainty evaluation started.')
         self.model.eval()
-        # self.loss_module.eval()
-        # for i in range(self.rounds_num):
-        #     logger.info('round ' + str(i + 1) + '/' + str(self.rounds_num))
         self.__evaluate()
-        self.reporter.print_pretty_metrics(logger, self.model.args.use_mask, self.pose_metrics)
-        self.reporter.save_csv_metrics(self.model.args.use_mask, self.pose_metrics,
-                                       os.path.join(self.args.csv_save_dir, "eval.csv"))
+        # self.reporter.print_pretty_metrics(logger, self.model.args.use_mask, self.pose_metrics)
+        # self.reporter.save_csv_metrics(self.model.args.use_mask, self.pose_metrics,
+        #                                os.path.join(self.args.csv_save_dir, "eval.csv"))
         logger.info("Uncertainty evaluation has been completed.")
 
     def __evaluate(self):
@@ -50,6 +45,7 @@ class UncertaintyEvaluator:
         model_dict = get_prediction_model_dict(self.model, self.dataloader, self.input_n, self.output_n,
                                                self.dataset_name, self.device)
         uncertainty_dict = calculate_dict_uncertainty_and_mpjpe(self.dataset_name, model_dict, self.uncertainty_model,
-                                                                self.batch_size, self.device)
-        self.reporter.update(uncertainty_dict, self.batch_size, True, 0)
-        self.reporter.epoch_finished()
+                                                                self.device)
+        print(uncertainty_dict)
+        # self.reporter.update(uncertainty_dict, self.batch_size, True, 0)
+        # self.reporter.epoch_finished()

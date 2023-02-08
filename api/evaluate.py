@@ -44,8 +44,9 @@ def evaluate(cfg: DictConfig):
     evaluator.evaluate()
     if cfg.eval_uncertainty:
         uncertainty_model, _, _, _, _, _, _ = load_snapshot(cfg.uncertainty_load_path)
-        uncertainty_evaluator = UncertaintyEvaluator(cfg, dataloader, model, uncertainty_model, input_n, output_n,
-                                                     batch_size, dataset_name, loss_module, eval_reporter)
+        uncertainty_evaluator = UncertaintyEvaluator(cfg, dataloader, model, uncertainty_model,
+                                                     cfg.model.obs_frames_num, cfg.model.pred_frames_num,
+                                                     cfg.dataset, eval_reporter)
         uncertainty_evaluator.evaluate()
 
 
