@@ -3,9 +3,9 @@ import os
 import numpy as np
 from torch.utils.data import Dataset, DataLoader
 
-from data.ang2joint import *
-from utils.functions import scale
-from utils.dataset_utils import JOINTS_TO_INCLUDE, SKIP_RATE
+from .ang2joint import *
+from ..utils.functions import scale
+from ..utils.dataset_utils import JOINTS_TO_INCLUDE, SKIP_RATE
 
 '''
 adapted from

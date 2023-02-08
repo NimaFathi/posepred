@@ -4,17 +4,17 @@ from argparse import Namespace
 from torch.utils.data import Dataset
 from torch.utils.data.dataloader import DataLoader
 
-from data.amass_3d import Amass
-from data.dpw3 import Dpw3
-from data.human_36 import Human36M
-from model.dc.train_dc import train_dc_model, cluster
-from model.lstm.lstm import LstmAutoEncoder, EncoderWrapper
-from model.lstm.train_lstm import train_lstm_model
-from utils.train_utils import save_model, save_model_results_dict
-from utils.uncertainty import *
-from utils.dataset_utils import TRAIN_K, VALID_K, TEST_K, INCLUDED_JOINTS_COUNT, SKIP_RATE, SCALE_RATIO, H36_ACTIONS, \
+from .data.amass_3d import Amass
+from .data.dpw3 import Dpw3
+from .data.human_36 import Human36M
+from .model.dc.train_dc import train_dc_model, cluster
+from .model.lstm.lstm import LstmAutoEncoder, EncoderWrapper
+from .model.lstm.train_lstm import train_lstm_model
+from .utils.train_utils import save_model, save_model_results_dict
+from .utils.uncertainty import *
+from .utils.dataset_utils import TRAIN_K, VALID_K, TEST_K, INCLUDED_JOINTS_COUNT, SKIP_RATE, SCALE_RATIO, H36_ACTIONS, \
     DIM
-from utils.prediction_util import get_prediction_model_dict, PRED_MODELS, PRED_MODELS_ARGS
+from .utils.prediction_util import get_prediction_model_dict, PRED_MODELS, PRED_MODELS_ARGS
 
 
 def load_dataset(dataset_path: str, dataset_name: str, input_n: int, output_n: int, test: bool) -> dict:

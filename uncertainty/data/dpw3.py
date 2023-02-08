@@ -6,9 +6,9 @@ import numpy as np
 import torch
 from torch.utils.data import Dataset
 
-from data import ang2joint
-from utils.dataset_utils import JOINTS_TO_INCLUDE, SKIP_RATE
-from utils.functions import scale
+from . import ang2joint
+from ..utils.dataset_utils import JOINTS_TO_INCLUDE, SKIP_RATE
+from ..utils.functions import scale
 
 DPW3_DIM_USED = JOINTS_TO_INCLUDE['AMASS']
 DPW3_SKIP_RATE = SKIP_RATE['AMASS']

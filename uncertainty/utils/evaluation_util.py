@@ -1,6 +1,6 @@
 import numpy as np
 from torch.utils.data import DataLoader
-from model.dc.deep_clustering import DCModel
+from ..model.dc.deep_clustering import DCModel
 
 
 def get_clustering_by_label(dc_model: DCModel, train_data_loader: DataLoader, label, dev='cuda') -> np.ndarray:
