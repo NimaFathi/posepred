@@ -41,7 +41,7 @@ def load_dataset(dataset_path: str, dataset_name: str, input_n: int, output_n: i
     return dataset
 
 
-def load_dc_model(dataset_name: str, output_path: str, n_clusters: int=17):
+def load_dc_model(dataset_name: str, output_path: str, n_clusters: int = 17):
     lstm_ae = LstmAutoEncoder(pose_dim=INCLUDED_JOINTS_COUNT[dataset_name]).to('cuda')
     dc_model = DCModel(lstm_ae, n_clusters=n_clusters).to('cuda')
     dc_model.load_state_dict(torch.load(output_path))
