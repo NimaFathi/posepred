@@ -4,7 +4,7 @@ from argparse import Namespace
 
 import numpy as np
 import torch.nn as nn
-from sklearn.cluster import KMeans
+#from sklearn.cluster import KMeans
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
@@ -166,14 +166,14 @@ def cluster(dataset, encoder: EncoderWrapper, k, device):
             hidden_state = encoder(data.to(device)).to(device)
             encoded_data = torch.cat((encoded_data, hidden_state), dim=0)
 
-    kmeans = KMeans(
-        n_clusters=k,
-        init='k-means++',
-        n_init=10,
-        max_iter=1000
-    )
+#    kmeans = KMeans(
+#        n_clusters=k,
+#        init='k-means++',
+#        n_init=10,
+#        max_iter=1000
+#    )
     encoded_data = encoded_data.to('cpu').detach().numpy()
     print('Initializing cluster centers with k-means...')
-    kmeans.fit(encoded_data)
+#    kmeans.fit(encoded_data)
     print('Clustering finished!')
-    return kmeans.cluster_centers_
+#    return kmeans.cluster_centers_

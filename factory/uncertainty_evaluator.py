@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 class UncertaintyEvaluator:
-    def __init__(self, args, dataloader, model, uncertainty_model, input_n, output_n, dataset_name,
+    def __init__(self, args, dataloader, model, uncertainty_model, input_n, output_n, dataset_name, model_dict,
                  reporter):
         self.args = args
         self.dataloader = dataloader
@@ -24,11 +24,9 @@ class UncertaintyEvaluator:
         self.input_n = input_n
         self.output_n = output_n
         self.dataset_name = dataset_name
+        self.batch_size = args.data.batch_size
+        self.model_dict = model_dict
         self.reporter = reporter
-        self.is_interactive = args.data.is_interactive
-        self.pose_metrics = args.pose_metrics
-        self.mask_metrics = args.mask_metrics
-        self.rounds_num = args.rounds_num
         self.device = args.device
 
     def evaluate(self):
@@ -42,10 +40,10 @@ class UncertaintyEvaluator:
 
     def __evaluate(self):
         self.reporter.start_time = time.time()
-        model_dict = get_prediction_model_dict(self.model, self.dataloader, self.input_n, self.output_n,
+        self.model_dict = get_prediction_model_dict(self.model, self.dataloader, self.input_n, self.output_n,
                                                self.dataset_name, self.device)
-        uncertainty_dict = calculate_dict_uncertainty_and_mpjpe(self.dataset_name, model_dict, self.uncertainty_model,
-                                                                self.device)
+        uncertainty_dict = calculate_dict_uncertainty_and_mpjpe(self.dataset_name, self.model_dict, self.uncertainty_model,
+                                                                self.batch_size, self.device)
         print(uncertainty_dict)
         # self.reporter.update(uncertainty_dict, self.batch_size, True, 0)
         # self.reporter.epoch_finished()
