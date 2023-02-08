@@ -7,6 +7,7 @@ from models import MODELS
 from losses import LOSSES
 from factory.evaluator import Evaluator
 from factory.uncertainty_evaluator import UncertaintyEvaluator
+from uncertainty.main import load_dc_model
 from utils.reporter import Reporter
 from utils.save_load import load_snapshot
 import os
@@ -43,7 +44,7 @@ def evaluate(cfg: DictConfig):
     evaluator = Evaluator(cfg, dataloader, model, loss_module, eval_reporter)
     evaluator.evaluate()
     if cfg.eval_uncertainty:
-        uncertainty_model, _, _, _, _, _, _ = load_snapshot(cfg.uncertainty_load_path)
+        uncertainty_model = load_dc_model(cfg.dataset, cfg.uncertainty_load_path)
         uncertainty_evaluator = UncertaintyEvaluator(cfg, dataloader, model, uncertainty_model,
                                                      cfg.model.obs_frames_num, cfg.model.pred_frames_num,
                                                      cfg.dataset, eval_reporter)

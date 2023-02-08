@@ -41,7 +41,7 @@ def load_dataset(dataset_path: str, dataset_name: str, input_n: int, output_n: i
     return dataset
 
 
-def load_dc_model(dataset_name: str, n_clusters: int, output_path: str):
+def load_dc_model(dataset_name: str, output_path: str, n_clusters: int=17):
     lstm_ae = LstmAutoEncoder(pose_dim=INCLUDED_JOINTS_COUNT[dataset_name]).to('cuda')
     dc_model = DCModel(lstm_ae, n_clusters=n_clusters).to('cuda')
     dc_model.load_state_dict(torch.load(output_path))
@@ -147,7 +147,7 @@ def main(main_args: Namespace, dataset_args: Namespace, model_args: Namespace, e
     if not os.path.exists(output_path):
         os.makedirs(output_path)
     if test:
-        dc_model = load_dc_model(dataset_name, model_args.n_clusters, evaluation_args.dc_model_path)
+        dc_model = load_dc_model(dataset_name, evaluation_args.dc_model_path, model_args.n_clusters)
     else:
         dc_model = init_dc_train(dataset_args, model_args, data_loader, train_ds, output_path, dev)
     dc_model.eval()
