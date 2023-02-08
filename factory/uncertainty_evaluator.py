@@ -8,7 +8,7 @@ from tqdm import tqdm
 
 from metrics import POSE_METRICS, MASK_METRICS
 from utils.others import dict_to_device
-from uncertainty.utils.uncertainty import calculate_dict_uncertainty
+from uncertainty.utils.uncertainty import calculate_dict_uncertainty, UNC_K
 from uncertainty.utils.prediction_util import get_prediction_model_dict
 
 logger = logging.getLogger(__name__)
@@ -29,7 +29,7 @@ class UncertaintyEvaluator:
         logger.info('Uncertainty evaluation started.')
         self.model.eval()
         self.__evaluate()
-        self.reporter.print_pretty_uncertainty(logger, self.uncertainty)
+#        self.reporter.print_pretty_uncertainty(logger, UNC_K)
         # self.reporter.save_csv_metrics(self.model.args.use_mask, self.pose_metrics,
         #                                os.path.join(self.args.csv_save_dir, "eval.csv"))
         logger.info("Uncertainty evaluation has been completed.")
@@ -39,5 +39,6 @@ class UncertaintyEvaluator:
         model_dict = get_prediction_model_dict(self.model, self.dataloader, self.device)
         self.uncertainty = calculate_dict_uncertainty(self.dataset_name, model_dict, self.uncertainty_model,
                                                       self.batch_size, self.device)
-        self.reporter.update(self.uncertainty, 1, True, 0)
-        self.reporter.epoch_finished()
+        print(f"Uncertainty: {self.uncertainty[UNC_K]}")
+#        self.reporter.update(self.uncertainty, 1, False)
+#        self.reporter.epoch_finished()
