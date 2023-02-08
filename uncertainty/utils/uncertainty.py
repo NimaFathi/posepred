@@ -31,4 +31,4 @@ def calculate_dict_uncertainty(dataset_name: str, model_dict: dict, dc_model: DC
         with torch.no_grad():
             p, _ = dc_model(scale(out, SCALE_RATIO[dataset_name]))
             uncertainties += entropy_uncertainty(p) * (e_idx - s_idx)
-    return {UNC_K: [uncertainties / total_count]}
+    return {UNC_K: (uncertainties / total_count).item()}
