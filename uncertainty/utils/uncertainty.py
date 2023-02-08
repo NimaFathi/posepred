@@ -20,11 +20,11 @@ def entropy_uncertainty(p):
     return torch.mean(out)
 
 
-def calculate_dict_uncertainty_and_mpjpe(dataset_name: str, model_dict: dict, dc_model: DCModel, batch_size: int,
-                                         dev='cuda') -> dict:
+def calculate_dict_uncertainty_and_mpjpe(dataset_name: str, model_dict: dict, dc_model: DCModel, dev='cuda') -> dict:
     err = 0
     uncertainties = 0
-    total_count = len(model_dict[OUT_K])
+    print(model_dict[OUT_K].shape)
+    total_count, batch_size = model_dict[OUT_K].shape
     num_batches = int(total_count / batch_size)
     if (total_count % batch_size) != 0:
         num_batches += 1
