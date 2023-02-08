@@ -4,6 +4,7 @@ from argparse import Namespace
 from torch.utils.data import Dataset
 from torch.utils.data.dataloader import DataLoader
 
+from . import model
 from .data.amass_3d import Amass
 from .data.dpw3 import Dpw3
 from .data.human_36 import Human36M
