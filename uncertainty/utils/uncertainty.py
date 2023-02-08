@@ -1,9 +1,9 @@
 import torch
 
-from model.dc.deep_clustering import DCModel
-from utils.functions import *
-from utils.dataset_utils import JOINTS_TO_INCLUDE, DIM, SCALE_RATIO, MPJPE_COEFFICIENT
-from utils.prediction_util import OUT_K, GT_K
+from ..model.dc.deep_clustering import DCModel
+from ..utils.functions import *
+from ..utils.dataset_utils import JOINTS_TO_INCLUDE, DIM, SCALE_RATIO, MPJPE_COEFFICIENT
+from ..utils.prediction_util import OUT_K, GT_K
 
 LOSS_K, UNC_K = 'loss', 'uncertainty'
 

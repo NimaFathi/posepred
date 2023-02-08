@@ -1,9 +1,9 @@
 import torch
 from torch.utils.data import DataLoader
 
-from utils.dataset_utils import DIM, JOINTS_TO_INCLUDE, INCLUDED_JOINTS_COUNT
-from utils.functions import rescale_to_original_joints_count
-from model.sts_gcn.sts_gcn import STSGCN
+from .dataset_utils import DIM, JOINTS_TO_INCLUDE, INCLUDED_JOINTS_COUNT
+from .functions import rescale_to_original_joints_count
+from ..model.sts_gcn.sts_gcn import STSGCN
 
 OUT_K, GT_K = 'output', 'gt'
 PRED_MODELS = {'sts': STSGCN}
