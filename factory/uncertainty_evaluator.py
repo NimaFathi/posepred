@@ -30,8 +30,7 @@ class UncertaintyEvaluator:
         self.model.eval()
         self.__evaluate()
         self.reporter.print_pretty_uncertainty(logger, self.uncertainty)
-        # self.reporter.save_csv_metrics(self.model.args.use_mask, self.pose_metrics,
-        #                                os.path.join(self.args.csv_save_dir, "eval.csv"))
+        # self.reporter.save_csv_metrics(self.uncertainty, os.path.join(self.args.csv_save_dir, "uncertainty_eval.csv"))
         logger.info("Uncertainty evaluation has been completed.")
 
     def __evaluate(self):
@@ -39,5 +38,5 @@ class UncertaintyEvaluator:
         model_dict = get_prediction_model_dict(self.model, self.dataloader, self.device)
         self.uncertainty = calculate_dict_uncertainty(self.dataset_name, model_dict, self.uncertainty_model,
                                                       self.batch_size, self.device)
-        self.reporter.update(self.uncertainty, 1, True, 0)
-        self.reporter.epoch_finished()
+        # self.reporter.update(self.uncertainty, 1, False, 0)
+        # self.reporter.epoch_finished()
