@@ -89,23 +89,34 @@ class Reporter:
         actions = []
         for k in self.history.keys():
             if metrics[0] in k:
-                actions.append(k[len(metrics[0])+1:])
+                actions.append(k[len(metrics[0]) + 1:])
         actions = list(sorted(actions))
-        logger.info(' |'.join(["actions".ljust(15)]+[a.center(15) for a in list(metrics)]))
-        logger.info("_"*20*(len(list(metrics))+1))
+        logger.info(' |'.join(["actions".ljust(15)] + [a.center(15) for a in list(metrics)]))
+        logger.info("_" * 20 * (len(list(metrics)) + 1))
         for action in actions:
             to_print = []
             for metric in list(metrics):
                 to_print.append(np.mean(self.history.get(f'{metric}_{action}')))
-            logger.info(' |'.join([action.ljust(15)]+ [str(np.around(a, 4)).center(15) for a in to_print]))
-            
-    def save_csv_metrics(self, metrics, addr):
+            logger.info(' |'.join([action.ljust(15)] + [str(np.around(a, 4)).center(15) for a in to_print]))
+
+    def print_pretty_uncertainty(self, logger, uncertainty):
+        actions = []
+        for k in self.history.keys():
+            actions.append(k[len(uncertainty) + 1:])
+        actions = list(sorted(actions))
+        logger.info(' |'.join(["actions".ljust(15)] + ["Uncertainty".center(15)]))
+        logger.info("_" * 20)
+        for action in actions:
+            to_print = [np.mean(self.history.get(f'{uncertainty}_{action}'))]
+            logger.info(' |'.join([action.ljust(15)] + [str(np.around(a, 4)).center(15) for a in to_print]))
+
+    def save_csv_metrics(self, use_mask, metrics, addr):
         actions = []
         for k in self.history.keys():
             if metrics[0] in k:
-                actions.append(k[len(metrics[0])+1:])
+                actions.append(k[len(metrics[0]) + 1:])
         actions = list(sorted(actions))
-        out = pd.DataFrame(columns=["action"]+list(metrics))
+        out = pd.DataFrame(columns=["action"] + list(metrics))
 
         for action in actions:
             to_print = []
@@ -113,9 +124,9 @@ class Reporter:
             for metric in list(metrics):
                 out_dict[metric] = [np.mean(self.history.get(f'{metric}_{action}'))]
             out_dict["action"] = action
-            temp = [action]+ [a for a in to_print]
+            temp = [action] + [a for a in to_print]
             df_temp = pd.DataFrame(out_dict)
-            out = pd.concat([out, df_temp], ignore_index=True, axis = 0)
+            out = pd.concat([out, df_temp], ignore_index=True, axis=0)
         out.to_csv(addr)
 
     @staticmethod
