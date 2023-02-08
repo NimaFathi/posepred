@@ -1,5 +1,3 @@
-import torch
-
 from ..model.dc.deep_clustering import DCModel
 from ..utils.functions import *
 from ..utils.dataset_utils import JOINTS_TO_INCLUDE, DIM, SCALE_RATIO, MPJPE_COEFFICIENT
@@ -20,8 +18,7 @@ def entropy_uncertainty(p):
     return torch.mean(out)
 
 
-def calculate_dict_uncertainty_and_mpjpe(dataset_name: str, model_dict: dict, dc_model: DCModel, batch_size: int, dev='cuda') -> dict:
-    err = 0
+def calculate_dict_uncertainty(dataset_name: str, model_dict: dict, dc_model: DCModel, batch_size: int, dev='cuda') -> dict:
     uncertainties = 0
     total_count = len(model_dict[OUT_K])
     num_batches = int(total_count / batch_size)
