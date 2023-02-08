@@ -13,13 +13,10 @@ PRED_MODELS_ARGS = {
             'joints_to_consider': -1, 'n_txcnn_layers': 4, 'txc_kernel_size': [DIM, DIM], 'txc_dropout': 0.0}}
 
 
-def get_prediction_model_dict(model, data_loader: DataLoader, input_n: int, output_n: int, dataset_name: str,
-                              dev='cuda') -> dict:
+def get_prediction_model_dict(model, data_loader: DataLoader, dev='cuda') -> dict:
     prediction_dict = {OUT_K: [], GT_K: []}
-    pose_key = None
     for data_arr in data_loader:
-        gt = data_arr["future_pose"]
-        B = gt.shape[0]
+        gt = data_arr["future_pose"].to(dev)
         if len(gt) == 1:
             gt = gt.unsqueeze(0)
         with torch.no_grad():

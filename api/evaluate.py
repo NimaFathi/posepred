@@ -46,10 +46,9 @@ def evaluate(cfg: DictConfig):
     if cfg.eval_uncertainty:
         dataset_name = 'Human36m'
         uncertainty_model = load_dc_model(dataset_name, cfg.uncertainty_load_path)
-        model_dict = torch.load(cfg.model_dict)
         uncertainty_evaluator = UncertaintyEvaluator(cfg, dataloader, model, uncertainty_model,
                                                      cfg.model.obs_frames_num, cfg.model.pred_frames_num,
-                                                     dataset_name, model_dict, eval_reporter)
+                                                     dataset_name, eval_reporter)
         uncertainty_evaluator.evaluate()
 
 
