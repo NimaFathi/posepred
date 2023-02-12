@@ -3,7 +3,6 @@ from .mse_pose import MSEPose
 from .mae_vel import MAEVel
 from .derpof_loss import DeRPoFLoss
 from .his_rep_itself_loss import HisRepItselfLoss
-from .his_rep_itself_amass_loss import HisRepItselfLoss as HRIAmassLoss
 from .mpjpe import MPJPE
 from .msr_gcn_loss import MSRGCNLoss
 from .potr_loss import POTRLoss
@@ -15,7 +14,6 @@ LOSSES = {'mse_vel': MSEVel,
           'mae_vel': MAEVel,
           'derpof': DeRPoFLoss,
           'his_rep_itself': HisRepItselfLoss,
-          'his_rep_itself_amass': HRIAmassLoss,
           'mpjpe': MPJPE,
           'msr_gcn':MSRGCNLoss,
           'potr': POTRLoss,

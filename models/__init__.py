@@ -3,7 +3,6 @@ from .pv_lstm import PVLSTM
 from .disentangled import Disentangled
 from .derpof import DeRPoF
 from  models.history_repeats_itself.history_repeats_itself import HistoryRepeatsItself
-from  models.history_repeats_itself.history_repeats_itself_amass import HistoryRepeatsItself as HRI_AMASS
 from .sts_gcn.sts_gcn import STsGCN
 from .msr_gcn.msrgcn import MSRGCN
 from .potr.potr import POTR
@@ -15,7 +14,6 @@ MODELS = {'zero_vel': ZeroVel,
           'disentangled': Disentangled,
           'derpof': DeRPoF,
           'history_repeats_itself': HistoryRepeatsItself,
-          'history_repeats_itself_amass': HRI_AMASS,
           'potr': POTR,
           'sts_gcn': STsGCN,
           'msr_gcn': MSRGCN,
