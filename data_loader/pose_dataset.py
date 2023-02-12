@@ -14,7 +14,7 @@ import random
 logger = logging.getLogger(__name__)
 
 
-class RandomCropDataset(Dataset):
+class PoseDataset(Dataset):
     def __init__(self,
                  dataset_path,
                  keypoint_dim,

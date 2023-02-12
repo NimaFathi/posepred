@@ -1,6 +1,6 @@
 from torch.utils.data import DataLoader
 
-from .random_crop_dataset import RandomCropDataset
+from .pose_dataset import PoseDataset
 
 DATASETS = ['3dpw', 'human3.6m', 'amass']
 DATA_TYPES = ['train', 'validation', 'test']
@@ -11,7 +11,7 @@ def get_dataloader(dataset_path, args):
     if dataset_path is None:
         return None
     
-    dataset = RandomCropDataset(
+    dataset = PoseDataset(
         dataset_path, args.keypoint_dim, args.is_testing, args.use_mask, args.is_visualizing,
         args.model_pose_format, args.metric_pose_format, args.normalize, args.metadata_path,
         args.seq_rate, args.frame_rate, args.len_observed, args.len_future, args.is_h36_testing

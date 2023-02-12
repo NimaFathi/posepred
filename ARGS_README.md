@@ -41,14 +41,14 @@ Mandatory arguments:
 keypoint_dim:               Number of dim data should have Ex: 2 for 2D and 3 for 3D (int)  
 is_interactive:             Use interactions between persons (bool) (default: False)
 is_noisy:                   Use noisy data_loader `data_loader/noisy_solitary_dataset.py` (bool) (default: False) 
-is_random_crop:             Use random_crop (dynamic) data_loader (bool) (default: False)
+is_pose:             Use pose (dynamic) data_loader (bool) (default: False)
 is_solitary:                Use Solitary data_loader (bool) (default: False) 
 noise_rate:                 A float number to indicate percentage of uniform noisy values or 'mask' to use mask values as noise (float or str) (default: mask)
 persons_num:                Number of people (int)
 use_mask:                   Set True To use mask in dataloader and model (bool)
 use_quaternion:             Set True To use quaternion representation (based on model) (bool) (default: False)
-model_pose_format:          Used data format for random_crop dataset (str)
-metric_pose_format:         Used data format for metrics if random_crop dataset is used. If no value is specified it'll use the model_pose_format's value (str)
+model_pose_format:          Used data format for pose dataset (str)
+metric_pose_format:         Used data format for metrics if pose dataset is used. If no value is specified it'll use the model_pose_format's value (str)
 is_h36_testing:             Set True to configure the dataloader for testing huamn3.6m (bool)
 is_testing:                 Set True to configure the dataloader for testing (bool) (default: False)
 is_visualizing:             Set True to configure dataloader for visualizing (bool) (default: False)
@@ -64,8 +64,8 @@ optional arguments:
 overfit:                    Set True to create a dataloader with small size for testing overfitting (bool)
 noise_keypoint:             Index of specific keypoint you want to make noisy. (int)
 metadata_path:              path to metadata, obligatory when normalize=True
-seq_rate:                   The gap between start of two adjacent sequences (1 means no gap) (int) (default: 1) (only used for random_crop data_loader) 
-frame_rate:                 The gap between two frames (1 means no gap) (int) (default: 2) (only used for random_crop data_loader) 
+seq_rate:                   The gap between start of two adjacent sequences (1 means no gap) (int) (default: 1) (only used for pose data_loader) 
+frame_rate:                 The gap between two frames (1 means no gap) (int) (default: 2) (only used for pose data_loader) 
 ```
 #### model
 Folder Location: 'configs/hydra/model'
@@ -201,7 +201,7 @@ optional arguments:
   - load_60Hz           This value is used only for 3DPW
   - use_video_once      Use whole video just once or use until last frame (bool) (default: false)  
   - output_name         Name of generated csv file (str) (for default we have specific conventions for each dataset)
-  - save_total_frames   This value must be 'true' for random_crop_dataset and flase for other datasets (bool) (default: false)
+  - save_total_frames   This value must be 'true' for pose_dataset and flase for other datasets (bool) (default: false)
   
 ```  
 Example:  
@@ -251,10 +251,10 @@ optional arguments:
   - start_epoch	 	Start epoch (int)
   - device              Choose either 'cpu' or 'cuda' (str)
   - save_dir            Path to save the model (str)
-  - obs_frames_num      Number of observed frames for random_crop dataset (int) (default: 10)
-  - pred_frames_num     Number of future frames for random_crop dataset (int) (default:25)
-  - model_pose_format   Used data format for random_crop dataset (str) (defautl: total -> for more information see the Data section)
-  - metric_pose_format  Used data format for metrics if random_crop dataset is used. If no value is specified it'll use the model_pose_format's value
+  - obs_frames_num      Number of observed frames for pose dataset (int) (default: 10)
+  - pred_frames_num     Number of future frames for pose dataset (int) (default:25)
+  - model_pose_format   Used data format for pose dataset (str) (defautl: total -> for more information see the Data section)
+  - metric_pose_format  Used data format for metrics if pose dataset is used. If no value is specified it'll use the model_pose_format's value
   - experiment_name:    Experiment name for MLFlow (str) (default: "defautl experiment")
   - mlflow_tracking_uri:  Path for mlruns folder for MLFlow (str) (default: saves mlruns in the current folder)
 
@@ -270,7 +270,7 @@ python -m api.train model=history_repeats_itself \
           data.shuffle=True device=cuda \
           snapshot_interval=1 \
           hydra.run.dir=$OUTPUT_PATH \
-          data.is_random_crop=True \
+          data.is_pose=True \
           data.batch_size=256 \
           data.num_workers=10 \
           data.seq_rate=2 \
@@ -306,10 +306,10 @@ optional arguments:
   - normalize   Normalize the data or not (bool)
   - is_noisy    Whether data is noisy or not (bool)
   - device      Choose either 'cpu' or 'gpu' (str)
-  - obs_frames_num      Number of observed frames for random_crop dataset (int) (default: 10)
-  - pred_frames_num     Number of future frames for random_crop dataset (int) (default:25)
-  - model_pose_format   Used data format for random_crop dataset (str) (defautl: total -> for more information see the Data section)
-  - metric_pose_format  Used data format for metrics if random_crop dataset is used. If no value is specified it'll use the model_pose_format's value
+  - obs_frames_num      Number of observed frames for pose dataset (int) (default: 10)
+  - pred_frames_num     Number of future frames for pose dataset (int) (default:25)
+  - model_pose_format   Used data format for pose dataset (str) (defautl: total -> for more information see the Data section)
+  - metric_pose_format  Used data format for metrics if pose dataset is used. If no value is specified it'll use the model_pose_format's value
 ```  
 
 Example:
@@ -321,7 +321,7 @@ python -m api.evaluate model=msr_gcn \
           rounds_num=1 \
           device=cuda \
           hydra.run.dir=$OUTPUT_PATH \
-          data.is_random_crop=True \
+          data.is_pose=True \
           data.batch_size=2048 \
           obs_frames_num=10 \
           pred_frames_num=25 \
@@ -338,7 +338,7 @@ python -m api.evaluate model=zero_vel \
           rounds_num=1 \
           device=cuda \
           hydra.run.dir=$OUTPUT_PATH \
-          data.is_random_crop=True \
+          data.is_pose=True \
           data.batch_size=2048 \
           obs_frames_num=10 \
           pred_frames_num=25 \
