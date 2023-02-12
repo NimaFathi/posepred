@@ -61,7 +61,6 @@ len_observed:               Number of frames to observe (int)
 len_future:                 Number of frames to predict(int)
 
 optional arguments: 
-overfit:                    Set True to create a dataloader with small size for testing overfitting (bool)
 noise_keypoint:             Index of specific keypoint you want to make noisy. (int)
 metadata_path:              path to metadata, obligatory when normalize=True
 seq_rate:                   The gap between start of two adjacent sequences (1 means no gap) (int) (default: 1) (only used for pose data_loader) 

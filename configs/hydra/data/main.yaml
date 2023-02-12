@@ -9,15 +9,14 @@ pose_formats: []
 
 is_h36_testing: false
 is_testing: false
-is_visualizing: false
 batch_size: 16
 shuffle: true
 pin_memory: false
 num_workers: 4
-overfit:
 normalize: ${normalize}
 metadata_path:
 seq_rate: 1
 frame_rate: 2
 len_observed: ${obs_frames_num}
 len_future: ${pred_frames_num}
+random_reverse_prob: 0.5

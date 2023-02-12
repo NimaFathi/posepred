@@ -12,9 +12,9 @@ def get_dataloader(dataset_path, args):
         return None
     
     dataset = PoseDataset(
-        dataset_path, args.keypoint_dim, args.is_testing, args.use_mask, args.is_visualizing,
-        args.model_pose_format, args.metric_pose_format, args.normalize, args.metadata_path,
-        args.seq_rate, args.frame_rate, args.len_observed, args.len_future, args.is_h36_testing
+        dataset_path, args.keypoint_dim, args.is_testing, args.model_pose_format, args.metric_pose_format, 
+        args.normalize, args.metadata_path,args.seq_rate, args.frame_rate, args.len_observed, 
+        args.len_future, args.is_h36_testing, args.random_reverse_prob
     )
     
     dataloader = DataLoader(dataset, batch_size=args.batch_size, shuffle=args.shuffle, pin_memory=args.pin_memory,

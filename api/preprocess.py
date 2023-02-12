@@ -25,23 +25,22 @@ def preprocess(cfg: DictConfig):
     if cfg.dataset == 'human3.6m':
         preprocessor = Human36mPreprocessor(
             dataset_path=cfg.official_annotation_path,
-            custom_name=cfg.output_name, is_interactive=cfg.interactive,
-            skip_frame_num=cfg.skip_num, use_video_once=cfg.use_video_once,
-            obs_frame_num=cfg.obs_frames_num, pred_frame_num= cfg.pred_frames_num,
+            custom_name=cfg.output_name, 
+            use_video_once=cfg.use_video_once,
             save_total_frames=cfg.save_total_frames
         )
     elif cfg.dataset == '3dpw':
         preprocessor = Preprocessor3DPW(
             dataset_path=cfg.official_annotation_path,
-            obs_frame_num=cfg.obs_frames_num, custom_name=cfg.output_name, is_interactive=cfg.interactive,
-            pred_frame_num=cfg.pred_frames_num, skip_frame_num=cfg.skip_num, use_video_once=cfg.use_video_once,
+            custom_name=cfg.output_name, 
+            use_video_once=cfg.use_video_once,
             save_total_frames=cfg.save_total_frames, load_60Hz=cfg.load_60Hz
         )
     elif cfg.dataset == 'amass':
         preprocessor = AmassPreprocessor(
             dataset_path=cfg.official_annotation_path,
-            obs_frame_num=cfg.obs_frames_num, custom_name=cfg.output_name, is_interactive=cfg.interactive,
-            pred_frame_num=cfg.pred_frames_num, skip_frame_num=cfg.skip_num, use_video_once=cfg.use_video_once,
+            ocustom_name=cfg.output_name, 
+            use_video_once=cfg.use_video_once,
             save_total_frames=cfg.save_total_frames
         )
     else:

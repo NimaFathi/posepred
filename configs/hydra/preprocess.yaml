@@ -7,8 +7,6 @@ dataset: ???
 data_type: ???
 output_name:
 use_video_once: false
-skip_num: 0
-interactive: false
 save_total_frames: true
 
 # This is used just for 3DPW

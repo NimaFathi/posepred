@@ -26,7 +26,6 @@ def generate_output(cfg: DictConfig):
         model, _, _, _, _, _, _ = load_snapshot(cfg.load_path)
     else:
         cfg.model.keypoints_num = dataloader.dataset.keypoints_num
-        cfg.model.use_mask = cfg.data.use_mask
         model = MODELS[cfg.model.type](cfg.model)
         if cfg.model.type == 'nearest_neighbor':
             model.train_dataloader = get_dataloader(

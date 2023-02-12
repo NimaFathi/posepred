@@ -20,7 +20,6 @@ class Evaluator:
         self.model = model.to(args.device)
         self.loss_module = loss_module.to(args.device)
         self.reporter = reporter
-        self.is_interactive = args.data.is_interactive
         self.pose_metrics = args.pose_metrics
         self.mask_metrics = args.mask_metrics
         self.rounds_num = args.rounds_num

@@ -26,11 +26,10 @@ SPLIT = {
 
 
 class Human36mPreprocessor(Processor):
-    def __init__(self, dataset_path, is_interactive, skip_frame_num,
-                 use_video_once, custom_name, obs_frame_num, pred_frame_num, save_total_frames):
-        super(Human36mPreprocessor, self).__init__(dataset_path, is_interactive, 0,
-                                                   0, skip_frame_num, use_video_once, custom_name, save_total_frames)
-        assert self.is_interactive is False, 'human3.6m is not interactive'
+    def __init__(self, dataset_path,
+                 custom_name, save_total_frames):
+        super(Human36mPreprocessor, self).__init__(dataset_path, 0,
+                                                   0, custom_name, save_total_frames)
         self.output_dir = os.path.join(
             PREPROCESSED_DATA_DIR, 'human36m'
         )
@@ -45,9 +44,6 @@ class Human36mPreprocessor(Processor):
             'sum_pose': np.zeros(3)
         }
         self.subjects = ['S1', 'S5', 'S6', 'S7', 'S8', 'S9', 'S11']
-
-        self.obs_frame_num = obs_frame_num
-        self.pred_frame_num = pred_frame_num
 
         self.acts = ["walking", "eating", "smoking", "discussion", "directions",
                      "greeting", "phoning", "posing", "purchases", "sitting",
@@ -94,71 +90,13 @@ class Human36mPreprocessor(Processor):
                     euler = euler.reshape(euler.shape[0], -1)
                     quat = quat.reshape(quat.shape[0], -1)
 
-                    if self.save_total_frames == False:
-                        total_frame_num = self.obs_frame_num + self.pred_frame_num
-                        section_range = positions.shape[0] // (
-                                total_frame_num * (
-                                    self.skip_frame_num + 1)) if self.use_video_once is False else 1  # TODO: remove condition
-
-                        for i in range(section_range):
-                            video_data = {
-                                'observed_xyz_pose': list(),
-                                'future_xyz_pose': list(),
-                                'observed_quaternion_pose': list(),
-                                'future_quaternion_pose': list(),
-                                'observed_expmap_pose': list(),
-                                'future_expmap_pose': list(),
-                                'observed_rotmat_pose': list(),
-                                'future_rotmat_pose': list(),
-                                'observed_euler_pose': list(),
-                                'future_euler_pose': list()
-                            }
-                            for j in range(0, total_frame_num * (self.skip_frame_num + 1), self.skip_frame_num + 1):
-                                if j < (self.skip_frame_num + 1) * self.obs_frame_num:
-                                    video_data['observed_xyz_pose'].append(
-                                        positions[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
-                                    video_data['observed_quaternion_pose'].append(
-                                        quat[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
-                                    video_data['observed_expmap_pose'].append(
-                                        expmap[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
-                                    video_data['observed_rotmat_pose'].append(
-                                        rotmat[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
-                                    video_data['observed_euler_pose'].append(
-                                        euler[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
-                                else:
-                                    video_data['future_xyz_pose'].append(
-                                        positions[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
-                                    video_data['future_quaternion_pose'].append(
-                                        quat[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
-                                    video_data['future_expmap_pose'].append(
-                                        expmap[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
-                                    video_data['future_rotmat_pose'].append(
-                                        rotmat[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
-                                    video_data['future_euler_pose'].append(
-                                        euler[i * total_frame_num * (self.skip_frame_num + 1) + j].tolist())
-
-                            for format_data in ["xyz", "quaternion", "expmap", "rotmat", "euler"]:
-                                self.update_meta_data(self.meta_data, video_data['observed_xyz_pose'], 3)
-                                if self.custom_name:
-                                    output_file_name = \
-                                        f'{data_type}_{format_data}_{self.custom_name}.jsonl'
-                                else:
-                                    output_file_name = \
-                                        f'{data_type}_{format_data}_human3.6m.jsonl'
-                                with jsonlines.open(os.path.join(self.output_dir, output_file_name), mode='a') as writer:
-                                    writer.write({
-                                        'video_section': f'{subject}-{action}-{i}',
-                                        'observed_pose': video_data[f'observed_{format_data}_pose'],
-                                        'future_pose': video_data[f'future_{format_data}_pose'],
-                                        'action': super_action
-                                    })
-                    else:
+                    if self.save_total_frames == True:
                         video_data = {
-                            'xyz_pose': positions.tolist()[::self.skip_frame_num + 1],
-                            'quaternion_pose': quat.tolist()[::self.skip_frame_num + 1],
-                            'expmap_pose': expmap.tolist()[::self.skip_frame_num + 1],
-                            'rotmat_pose': rotmat.tolist()[::self.skip_frame_num + 1],
-                            'euler_pose': euler.tolist()[::self.skip_frame_num + 1],
+                            'xyz_pose': positions.tolist()[:],
+                            'quaternion_pose': quat.tolist()[:],
+                            'expmap_pose': expmap.tolist()[:],
+                            'rotmat_pose': rotmat.tolist()[:],
+                            'euler_pose': euler.tolist()[:],
                             'action': super_action
                         }
 

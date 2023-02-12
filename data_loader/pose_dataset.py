@@ -19,8 +19,6 @@ class PoseDataset(Dataset):
                  dataset_path,
                  keypoint_dim,
                  is_testing,
-                 use_mask,
-                 is_visualizing,
                  model_pose_format,
                  metric_pose_format,
                  normalize,
@@ -29,7 +27,8 @@ class PoseDataset(Dataset):
                  frame_rate,
                  len_observed,
                  len_future,
-                 is_h36_testing):
+                 is_h36_testing,
+                 random_reverse_prob=0.5):
 
         self.normalize = normalize
         total_len = (len_observed + len_future) * frame_rate
@@ -37,6 +36,7 @@ class PoseDataset(Dataset):
         self.total_len = total_len
         self.len_observed = len_observed
         self.len_future = len_future
+        self.random_reverse_prob = random_reverse_prob
 
         if normalize:
             assert metadata_path, "Specify metadata_path when normalize is true."
@@ -112,9 +112,8 @@ class PoseDataset(Dataset):
         self.indexes = indexes
         self.keypoint_dim = keypoint_dim
         self.is_testing = is_testing
-        self.use_mask = use_mask
-        self.is_visualizing = is_visualizing
         self.is_h36_testing = is_h36_testing
+        
     def __len__(self): 
         return len(self.indexes)
 
@@ -123,17 +122,16 @@ class PoseDataset(Dataset):
         seq = self.data[data_index]
         outputs = {}
 
+        random_reverse = random.random() < self.random_reverse_prob
+        if self.is_testing or self.is_h36_testing:
+            random_reverse = False
+
         output_keys = ['metric_pose', 'pose']
-        if self.use_mask and 'mask' in seq.keys():
-            output_keys.append('mask')
-        if self.is_visualizing:
-            if 'image_path' in seq.keys():
-                output_keys.append('image_path')
-            if 'cam_extrinsic' in seq.keys():
-                output_keys.append('cam_extrinsic')
 
         for k in output_keys:
             temp_seq = seq[k][seq_index:seq_index + self.total_len]
+            if random_reverse:
+                temp_seq = torch.flip(temp_seq, [0])
             temp_seq = temp_seq[::self.frame_rate]
 
             outputs["observed_" + k] = temp_seq[:self.len_observed]

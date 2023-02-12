@@ -6,13 +6,8 @@ import numpy as np
 
 
 class Processor:
-    def __init__(self, dataset_path, is_interactive, obs_frame_num, pred_frame_num, skip_frame_num,
-                 use_video_once, custom_name, save_total_frames):
-        self.is_interactive = is_interactive
-        self.obs_frame_num = obs_frame_num
-        self.pred_frame_num = pred_frame_num
-        self.skip_frame_num = skip_frame_num
-        self.use_video_once = use_video_once
+    def __init__(self, dataset_path,
+                 custom_name, save_total_frames):
         self.dataset_path = dataset_path
         self.custom_name = custom_name
         self.save_total_frames = save_total_frames

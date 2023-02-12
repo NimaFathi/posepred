@@ -74,10 +74,10 @@ def visualize(cfg: DictConfig):
 
     if 'observed' in showing:
         names.append('observed')
-        pose = data['observed_pose'].squeeze(0) if cfg.data.is_interactive else data['observed_pose']
+        pose = data['observed_pose']
         poses.append(pose.permute(1, 0, 2))
         if 'observed_mask' in data.keys():
-            mask = data['observed_mask'].squeeze(0) if cfg.data.is_interactive else data['observed_mask']
+            mask = data['observed_mask']
             masks.append(mask.permute(1, 0, 2))
         else:
             masks.append(None)
@@ -88,7 +88,7 @@ def visualize(cfg: DictConfig):
 
     if 'completed' in showing:
         names.append('completed')
-        pose = data['comp_pose'].squeeze(0) if cfg.data.is_interactive else data['comp_pose']
+        pose = data['comp_pose']
         poses.append(pose.permute(1, 0, 2))
         masks.append(None)
         image_path = data['observed_image'] if 'observed_image' in data.keys() else None
@@ -102,10 +102,10 @@ def visualize(cfg: DictConfig):
         if tag not in data:
             tag = 'future_pose'
 
-        pose = data[tag].squeeze(0) if cfg.data.is_interactive else data[tag]
+        pose = data[tag]
         poses.append(pose.permute(1, 0, 2))
         if 'future_mask' in data.keys():
-            mask = data['future_mask'].squeeze(0) if cfg.data.is_interactive else data['future_mask']
+            mask = data['future_mask']
             masks.append(mask.permute(1, 0, 2))
         else:
             masks.append(None)
@@ -121,10 +121,10 @@ def visualize(cfg: DictConfig):
         if tag not in data:
             tag = 'pred_pose'
 
-        pose = data[tag].squeeze(0) if cfg.data.is_interactive else data[tag]
+        pose = data[tag]
         poses.append(pose.permute(1, 0, 2))
         if 'pred_mask' in data.keys():
-            mask = data['pred_mask'].squeeze(0) if cfg.data.is_interactive else data['pred_mask']
+            mask = data['pred_mask']
             masks.append(mask.permute(1, 0, 2))
         else:
             masks.append(None)
