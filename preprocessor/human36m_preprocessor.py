@@ -25,14 +25,14 @@ SPLIT = {
 }
 
 
-class StanfordPreprocessor(Processor):
+class Human36mPreprocessor(Processor):
     def __init__(self, dataset_path, is_interactive, skip_frame_num,
                  use_video_once, custom_name, obs_frame_num, pred_frame_num, save_total_frames):
-        super(StanfordPreprocessor, self).__init__(dataset_path, is_interactive, 0,
+        super(Human36mPreprocessor, self).__init__(dataset_path, is_interactive, 0,
                                                    0, skip_frame_num, use_video_once, custom_name, save_total_frames)
         assert self.is_interactive is False, 'human3.6m is not interactive'
         self.output_dir = os.path.join(
-            PREPROCESSED_DATA_DIR, 'stanford36m'
+            PREPROCESSED_DATA_DIR, 'human36m'
         )
         if not os.path.exists(self.output_dir):
             os.makedirs(self.output_dir)
@@ -57,7 +57,7 @@ class StanfordPreprocessor(Processor):
     def normal(self, data_type='train'):
         self.subjects = SPLIT[data_type]
         logger.info(
-            'start creating Stanford3.6m preprocessed data from Stanford\'s Human3.6m dataset ... ')
+            'start creating Human3.6m preprocessed data from Human\'s Human3.6m dataset ... ')
 
         if self.save_total_frames:
             list_format = ["total"]
@@ -70,7 +70,7 @@ class StanfordPreprocessor(Processor):
                     f'{data_type}_{format_data}_{self.custom_name}.jsonl'
             else:
                 output_file_name = \
-                    f'{data_type}_{format_data}_stanford3.6m.jsonl'
+                    f'{data_type}_{format_data}_human3.6m.jsonl'
 
             assert os.path.exists(os.path.join(
                 self.output_dir,
@@ -144,7 +144,7 @@ class StanfordPreprocessor(Processor):
                                         f'{data_type}_{format_data}_{self.custom_name}.jsonl'
                                 else:
                                     output_file_name = \
-                                        f'{data_type}_{format_data}_stanford3.6m.jsonl'
+                                        f'{data_type}_{format_data}_human3.6m.jsonl'
                                 with jsonlines.open(os.path.join(self.output_dir, output_file_name), mode='a') as writer:
                                     writer.write({
                                         'video_section': f'{subject}-{action}-{i}',
@@ -167,7 +167,7 @@ class StanfordPreprocessor(Processor):
                                 f'{data_type}_total_{self.custom_name}.jsonl'
                         else:
                             output_file_name = \
-                                f'{data_type}_total_stanford3.6m.jsonl'
+                                f'{data_type}_total_human3.6m.jsonl'
 
                         self.update_meta_data(self.meta_data, video_data['xyz_pose'], 3)
                         with jsonlines.open(os.path.join(self.output_dir, output_file_name), mode='a') as writer:

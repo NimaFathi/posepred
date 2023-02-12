@@ -2,7 +2,7 @@ from torch.utils.data import DataLoader
 
 from .random_crop_dataset import RandomCropDataset
 
-DATASETS = ['3dpw', 'stanford3.6m', 'amass']
+DATASETS = ['3dpw', 'human3.6m', 'amass']
 DATA_TYPES = ['train', 'validation', 'test']
 VISUALIZING_TYPES = ['observed', 'future', 'predicted', 'completed']
 

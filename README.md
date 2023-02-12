@@ -94,7 +94,7 @@ To fulfill mentioned purpose, put the data in DATASET_PATH and run preprocessing
 Example:  
 ```bash  
 python -m api.preprocess \
-    dataset=stanford3.6m \
+    dataset=human3.6m \
     official_annotation_path=$DATASET_PATH \
     data_type=test
 ```  
@@ -192,7 +192,7 @@ Example:
 ```bash  
 python -m api.visualize model=st_transformer \
             dataset=$DATASET_PATH \
-            dataset_type=stanford3.6m \
+            dataset_type=human3.6m \
             data.len_observed=5 \
             data.len_future=10 \
             load_path=$MODEL_CHECKPOINT \

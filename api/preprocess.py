@@ -5,7 +5,7 @@ from omegaconf import DictConfig
 
 from path_definition import HYDRA_PATH
 from preprocessor.dpw_preprocessor import Preprocessor3DPW
-from preprocessor.stanford_preprocessor import StanfordPreprocessor
+from preprocessor.human36m_preprocessor import Human36mPreprocessor
 from preprocessor.amass_preprocessor import AmassPreprocessor
 from data_loader import DATASETS, DATA_TYPES
 
@@ -22,8 +22,8 @@ def preprocess(cfg: DictConfig):
         logger.error(msg=msg)
         raise Exception(msg)
     
-    if cfg.dataset == 'stanford3.6m':
-        preprocessor = StanfordPreprocessor(
+    if cfg.dataset == 'human3.6m':
+        preprocessor = Human36mPreprocessor(
             dataset_path=cfg.official_annotation_path,
             custom_name=cfg.output_name, is_interactive=cfg.interactive,
             skip_frame_num=cfg.skip_num, use_video_once=cfg.use_video_once,

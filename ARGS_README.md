@@ -207,7 +207,7 @@ optional arguments:
 Example:  
 ```bash
 python -m api.preprocess \
-    dataset=stanford3.6m \
+    dataset=human3.6m \
     official_annotation_path=$DATASET_PATH \
     data_type=train \
     keypoint_dim=3 \
