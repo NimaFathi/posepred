@@ -30,6 +30,9 @@ posepred
 │   ├── disentangled.py
 |   ├── derpof.py
 |   ├── ...
+├── uncertainty
+|   ├── main.py
+|   ├── runner.py
 ├── losses
 |   ├── pua_loss.py
 │   ├── mpjpe.py           
@@ -160,7 +163,8 @@ python -m api.evaluate model=st_transformer \
           uncertainty_load_path=$UNCERTAINTY_MODEL
 ```
 See [here](https://github.com/vita-epfl/posepred/blob/master/ARGS_README.md#evaluation) for more details about evaluation arguments.
-See [here](https://github/com/vita-epfl/posepred/blob/uncertainty-g1/uncertainty/README.md) if training the uncertainty calculator model is needed.
+
+See [here](https://github.com/vita-epfl/posepred/blob/uncertainty-g1/uncertainty/README.md) if training the uncertainty calculator model is needed.
 
 
 # Generating Outputs
