@@ -20,7 +20,7 @@ from os.path import join
 
 class Trainer:
     def __init__(self, args, train_dataloader, valid_dataloader, model, loss_module, optimizer, optimizer_args,
-                 scheduler, train_reporter, valid_reporter):
+                 scheduler, train_reporter, valid_reporter, uncertainty_evaluator=None):
         self.args = args
         self.train_dataloader = train_dataloader
         self.valid_dataloader = valid_dataloader
@@ -33,7 +33,8 @@ class Trainer:
         self.valid_reporter = valid_reporter
         self.tensor_board = SummaryWriter(args.save_dir)
         self.use_validation = False if valid_dataloader is None else True
-        
+        self.uncertainty_evaluator = uncertainty_evaluator
+
         mlflow.set_tracking_uri(join(args.mlflow_tracking_uri, 'mlruns') if args.mlflow_tracking_uri else join(ROOT_DIR, 'mlruns'))
         mlflow.set_experiment(args.experiment_name if args.experiment_name else args.model.type)
            
@@ -78,6 +79,8 @@ class Trainer:
                                 self.train_reporter,
                                 self.valid_reporter, self.args.save_dir, best_model=True)
                     self.best_model = False
+            if self.uncertainty_evaluator is not None:
+                self.__validate_uncertainty()
 
             if (epoch + 1) % self.args.snapshot_interval == 0 or (epoch + 1) == self.args.epochs:
                 save_snapshot(self.model, self.loss_module, self.optimizer, self.optimizer_args, epoch + 1,
@@ -108,7 +111,7 @@ class Trainer:
             self.loss_module.zero_grad()
             
             model_outputs = self.model(data)
-            loss_outputs = self.loss_module(model_outputs, data) 
+            loss_outputs = self.loss_module(model_outputs, data)
 
             assert 'pred_pose' in model_outputs.keys(), 'outputs of model should include pred_pose'
             assert 'loss' in loss_outputs.keys(), 'outputs of loss should include loss'
@@ -208,3 +211,6 @@ class Trainer:
 
         self.valid_reporter.epoch_finished(self.tensor_board, mlflow)
         self.valid_reporter.print_values(logger)
+
+    def __validate_uncertainty(self):
+        self.uncertainty_evaluator.evaluate()

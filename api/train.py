@@ -5,6 +5,7 @@ from itertools import chain
 import hydra
 from omegaconf import DictConfig
 
+from uncertainty.main import load_dc_model
 from data_loader import get_dataloader
 from factory.trainer import Trainer
 from losses import LOSSES
@@ -14,6 +15,7 @@ from path_definition import HYDRA_PATH
 from schedulers import SCHEDULERS
 from utils.reporter import Reporter
 from utils.save_load import load_snapshot, save_snapshot, setup_training_dir
+from factory.uncertainty_evaluator import UncertaintyEvaluator
 
 logger = logging.getLogger(__name__) 
 
@@ -57,10 +59,16 @@ def train(cfg: DictConfig):
         setup_training_dir(cfg.save_dir)
         save_snapshot(model, loss_module, optimizer, cfg.optimizer,
                       0, train_reporter, valid_reporter, cfg.save_dir)
-
+    uncertainty_evaluator = None
+    if cfg.eval_uncertainty:
+        dataset_name = 'Human36m'
+        uncertainty_model = load_dc_model(dataset_name, cfg.oodu_load_path)
+        uncertainty_evaluator = UncertaintyEvaluator(cfg, valid_dataloader, model, uncertainty_model,
+                                                     cfg.model.obs_frames_num, cfg.model.pred_frames_num,
+                                                     dataset_name, valid_reporter)
     scheduler = SCHEDULERS[cfg.scheduler.type](optimizer, cfg.scheduler)
     trainer = Trainer(cfg, train_dataloader, valid_dataloader, model, loss_module, optimizer, cfg.optimizer, scheduler,
-                      train_reporter, valid_reporter)
+                      train_reporter, valid_reporter, uncertainty_evaluator)
     trainer.train()
 
 
