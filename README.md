@@ -30,6 +30,9 @@ posepred
 │   ├── disentangled.py
 |   ├── derpof.py
 |   ├── ...
+├── uncertainty
+|   ├── main.py
+|   ├── runner.py
 ├── losses
 |   ├── pua_loss.py
 │   ├── mpjpe.py           
@@ -147,7 +150,21 @@ python -m api.evaluate model=st_transformer \
           data.is_testing=true \
           data.is_h36_testing=true
 ```
+evaluate model with uncertainty being calculated:
+```bash
+python -m api.evaluate model=st_transformer \
+          dataset=$DATASET_TEST_PATH \
+          load_path=$MODEL_CHECKPOINT \
+          obs_frames_num=10 \
+          pred_frames_num=25 \
+          data.is_testing=true \
+          data.is_h36_testing=true \
+          eval_uncertainty=true \
+          uncertainty_load_path=$UNCERTAINTY_MODEL
+```
 See [here](https://github.com/vita-epfl/posepred/blob/master/ARGS_README.md#evaluation) for more details about evaluation arguments.
+
+See [here](https://github.com/vita-epfl/posepred/blob/uncertainty-g1/uncertainty/README.md) if training the uncertainty calculator model is needed.
 
 
 # Generating Outputs
