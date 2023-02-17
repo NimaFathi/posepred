@@ -43,6 +43,8 @@ class Reporter:
                     self.history[key] = []
                     self.min_attrs[key] = float('inf')
             if counts is not None and key in counts.keys():
+#                print(value)
+#                print(self.attrs.get(key))
                 self.attrs.get(key).update(value, counts[key])
             else:
                 self.attrs.get(key).update(value, batch_size)
@@ -80,6 +82,21 @@ class Reporter:
         for key, value in self.history.items():
             with open(os.path.join(save_dir, 'metrics_history', '_'.join((self.state, key)) + '.json'), "w") as f:
                 json.dump(value, f, indent=4)
+    def print_uncertainty_values(self, logger, unc_k):
+        msg = self.state + '-epoch' + str(len(self.history['time'])) + ': '
+        for key, value in self.history.items():
+            if not unc_k in key:
+                continue
+            msg += key + ': %.5f, ' % value[-1]
+        logger.info(str(msg))
+        sys.stdout.flush()
+
+    def save_uncertainty_data(self, unc_k, save_dir):
+        for key, value in self.history.items():
+            if not unc_k in key:
+                continue
+            with open(os.path.join(save_dir, 'uncertainty_history', '_'.join((self.state, key)) + '.json'), "w") as f:
+                json.dump(value, f, indent=4)
 
     def print_mean_std(self, logger):
         for key, value in self.history.items():
@@ -100,14 +117,11 @@ class Reporter:
             logger.info(' |'.join([action.ljust(15)] + [str(np.around(a, 4)).center(15) for a in to_print]))
 
     def print_pretty_uncertainty(self, logger, unc_k):
-        actions = ["all"]
-        actions = list(sorted(actions))
-        logger.info(' |'.join(["actions".ljust(15)] + ["Uncertainty".center(15)]))
-        logger.info("_" * 20)
-        for action in actions:
-            to_print = []
-            to_print.append(np.mean(self.history.get(f'{unc_k}_{action}')))
-            logger.info(' |'.join([action.ljust(15)] + [str(np.around(to_print, 4)).center(15)]))
+        logger.info("_" * 20 * (2))
+        to_print = []
+        to_print.append(np.mean(self.history.get(unc_k)))
+        logger.info(' |'.join(["all".ljust(15)] + [str(np.around(a, 4)).center(15) for a in to_print]))
+
 
     def save_csv_metrics(self, use_mask, metrics, addr):
         actions = []
@@ -127,6 +141,18 @@ class Reporter:
             df_temp = pd.DataFrame(out_dict)
             out = pd.concat([out, df_temp], ignore_index=True, axis=0)
         out.to_csv(addr)
+
+
+    def save_csv_uncertainty(self, unc_k, addr):
+        out = pd.DataFrame(columns=["action"] + list(unc_k))
+
+        to_print = []
+        out_dict = {}
+        out_dict[unc_k] = [np.mean(self.history.get(unc_k))]
+        out_dict["action"] = "all"
+        out = pd.DataFrame(out_dict)
+        out.to_csv(addr)
+
 
     @staticmethod
     def save_plots(save_dir, train_history, validiation_history, use_validation):

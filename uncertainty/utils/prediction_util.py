@@ -1,6 +1,7 @@
 import torch
 from tqdm import tqdm
 from torch.utils.data import DataLoader
+from utils.others import dict_to_device
 
 from .dataset_utils import DIM, JOINTS_TO_INCLUDE, INCLUDED_JOINTS_COUNT
 from .functions import rescale_to_original_joints_count
@@ -14,13 +15,15 @@ PRED_MODELS_ARGS = {
 
 
 def get_prediction_model_dict(model, data_loader: DataLoader, dev='cuda') -> dict:
+    model.eval()
+    model.to(dev)
     prediction_dict = {OUT_K: [], GT_K: []}
     for data_arr in data_loader:
         gt = data_arr["future_pose"].to(dev)
         if len(gt) == 1:
             gt = gt.unsqueeze(0)
         with torch.no_grad():
-            out = model(dict(data_arr))["pred_pose"]
+            out = model(dict_to_device(dict(data_arr), dev))["pred_pose"]
             prediction_dict[GT_K].append(gt)
             prediction_dict[OUT_K].append(out)
     prediction_dict[GT_K] = torch.concat(prediction_dict[GT_K], dim=0)
