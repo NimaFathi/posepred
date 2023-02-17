@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 class UncertaintyEvaluator:
-    def __init__(self, args, dataloader, model, uncertainty_model, input_n, output_n, dataset_name, reporter):
+    def __init__(self, args, dataloader, model, uncertainty_model, input_n, output_n, dataset_name, reporter, in_line=False, save_dir='/home/posepred/final_yashar/posepred/'):
         self.args = args
         self.dataloader = dataloader
         self.model = model.to(args.device)
@@ -24,14 +24,20 @@ class UncertaintyEvaluator:
         self.batch_size = args.data.batch_size
         self.reporter = reporter
         self.device = args.device
+        self.save_dir = save_dir
+        self.in_line = in_line
 
     def evaluate(self):
-        logger.info('Uncertainty evaluation started.')
         self.model.eval()
         self.__evaluate()
-        self.reporter.print_pretty_uncertainty(logger, UNC_K)
-        self.reporter.save_csv_uncertainty(UNC_K, os.path.join(self.args.csv_save_dir, "uncertainty_eval.csv"))
-        logger.info("Uncertainty evaluation has been completed.")
+        if self.in_line:
+            self.reporter.print_uncertainty_values(logger, UNC_K)
+            self.reporter.save_uncertainty_data(UNC_K, self.save_dir)
+        else:
+            logger.info('Uncertainty evaluation started.')
+            self.reporter.print_pretty_uncertainty(logger, UNC_K)
+            self.reporter.save_csv_uncertainty(UNC_K, os.path.join(self.args.csv_save_dir, "uncertainty_eval.csv"))
+            logger.info("Uncertainty evaluation has been completed.")
 
     def __evaluate(self):
         self.reporter.start_time = time.time()
