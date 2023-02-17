@@ -210,7 +210,7 @@ python -m api.evaluate model=st_transformer \
           data.is_testing=true \
           data.is_h36_testing=true \
           eval_uncertainty=true \
-          uncertainty_load_path=$UNCERTAINTY_MODEL
+          oodu_load_path=$UNCERTAINTY_MODEL
 ```
 See [here](https://github.com/vita-epfl/posepred/blob/master/ARGS_README.md#evaluation) for more details about evaluation arguments.
 
