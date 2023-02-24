@@ -63,12 +63,15 @@ def train(cfg: DictConfig):
     if cfg.eval_uncertainty:
         dataset_name = 'Human36m'
         uncertainty_model = load_dc_model(dataset_name, cfg.oodu_load_path)
-        uncertainty_evaluator = UncertaintyEvaluator(cfg, valid_dataloader, model, uncertainty_model,
+        train_uncertainty_evaluator = UncertaintyEvaluator(cfg, train_dataloader, model, uncertainty_model,
                                                      cfg.model.obs_frames_num, cfg.model.pred_frames_num,
-                                                     dataset_name, valid_reporter)
+                                                     dataset_name, train_reporter, in_line=True)
+        validation_uncertainty_evaluator = UncertaintyEvaluator(cfg, valid_dataloader, model, uncertainty_model,
+                                                     cfg.model.obs_frames_num, cfg.model.pred_frames_num,
+                                                     dataset_name, valid_reporter, in_line=True)
     scheduler = SCHEDULERS[cfg.scheduler.type](optimizer, cfg.scheduler)
     trainer = Trainer(cfg, train_dataloader, valid_dataloader, model, loss_module, optimizer, cfg.optimizer, scheduler,
-                      train_reporter, valid_reporter, uncertainty_evaluator)
+                      train_reporter, valid_reporter, train_uncertainty_evaluator, validation_uncertainty_evaluator)
     trainer.train()
 
 
