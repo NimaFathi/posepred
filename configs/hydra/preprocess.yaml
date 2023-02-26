@@ -6,8 +6,6 @@ official_annotation_path: ???
 dataset: ???
 data_type: ???
 output_name:
-use_video_once: false
-save_total_frames: true
 
 # This is used just for 3DPW
 load_60Hz: True

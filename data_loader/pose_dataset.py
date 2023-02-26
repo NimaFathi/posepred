@@ -21,8 +21,6 @@ class PoseDataset(Dataset):
                  is_testing,
                  model_pose_format,
                  metric_pose_format,
-                 normalize,
-                 metadata_path,
                  seq_rate,
                  frame_rate,
                  len_observed,
@@ -30,23 +28,12 @@ class PoseDataset(Dataset):
                  is_h36_testing,
                  random_reverse_prob=0.5):
 
-        self.normalize = normalize
         total_len = (len_observed + len_future) * frame_rate
         self.frame_rate = frame_rate
         self.total_len = total_len
         self.len_observed = len_observed
         self.len_future = len_future
         self.random_reverse_prob = random_reverse_prob
-
-        if normalize:
-            assert metadata_path, "Specify metadata_path when normalize is true."
-            with open(os.path.join(PREPROCESSED_DATA_DIR, metadata_path)) as meta_file:
-                meta_data = json.load(meta_file)
-                self.mean_pose = list(meta_data['avg_pose'])
-                self.std_pose = list(meta_data['std_pose'])
-        else:
-            self.mean_pose = None
-            self.std_pose = None
 
         data = list()
         self.tensor_keys_to_keep = []

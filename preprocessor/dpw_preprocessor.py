@@ -16,13 +16,11 @@ logger = logging.getLogger(__name__)
 
 class Preprocessor3DPW(Processor):
     def __init__(self, dataset_path,
-                 custom_name, save_total_frames, load_60Hz=False):
+                 custom_name, load_60Hz=False):
         super(Preprocessor3DPW, self).__init__(dataset_path,
-                                               custom_name, save_total_frames)
+                                               custom_name)
 
-        self.output_dir = os.path.join(PREPROCESSED_DATA_DIR, '3DPW')
-        if self.save_total_frames:
-            self.output_dir = os.path.join(PREPROCESSED_DATA_DIR, '3DPW_total')
+        self.output_dir = os.path.join(PREPROCESSED_DATA_DIR, '3DPW_total')
 
         if not os.path.exists(self.output_dir):
             os.makedirs(self.output_dir)
@@ -43,11 +41,10 @@ class Preprocessor3DPW(Processor):
         const_joints = np.arange(4 * 3)
         var_joints = np.arange(4 * 3, 22 * 3)
 
-        if self.save_total_frames:
-            if self.custom_name:
-                output_file_name = f'{data_type}_xyz_{self.custom_name}.jsonl'
-            else:
-                output_file_name = f'{data_type}_xyz_3dpw.jsonl'
+        if self.custom_name:
+            output_file_name = f'{data_type}_xyz_{self.custom_name}.jsonl'
+        else:
+            output_file_name = f'{data_type}_xyz_3dpw.jsonl'
 
         assert os.path.exists(os.path.join(
             self.output_dir,
@@ -73,118 +70,89 @@ class Preprocessor3DPW(Processor):
 
             pose_data = DPWconvertTo3D(pose_data) * 1000
 
-            if self.save_total_frames:
-                section_range = 1
-                total_frame_num = pose_data.shape[1]
+            total_frame_num = pose_data.shape[1]
 
             data = []
-            for i in range(section_range):
+            video_data = {
+                'obs_pose': defaultdict(list),
+                'future_pose': defaultdict(list),
+            }
+            if not self.load_60Hz:
                 video_data = {
                     'obs_pose': defaultdict(list),
                     'future_pose': defaultdict(list),
+                    'obs_frames': defaultdict(list),
+                    'future_frames': defaultdict(list),
+                    'obs_cam_ext': list(),
+                    'future_cam_ext': list()
                 }
-                if not self.load_60Hz:
-                    video_data = {
-                        'obs_pose': defaultdict(list),
-                        'future_pose': defaultdict(list),
-                        'obs_frames': defaultdict(list),
-                        'future_frames': defaultdict(list),
-                        'obs_cam_ext': list(),
-                        'future_cam_ext': list()
-                    }
-                for j in range(1, total_frame_num + 1):
-                    for p_id in range(pose_data.shape[0]):
-                        if j <= total_frame_num:
-                            video_data['obs_pose'][p_id].append(
-                                pose_data[p_id, i * total_frame_num + j - 1, :].tolist()
+            for j in range(1, total_frame_num + 1):
+                for p_id in range(pose_data.shape[0]):
+                    if j <= total_frame_num:
+                        video_data['obs_pose'][p_id].append(
+                            pose_data[p_id, j - 1, :].tolist()
+                        )
+                        if not self.load_60Hz:
+                            video_data['obs_frames'][p_id].append(
+                                f'{video_name}/image_{j - 1:05}.jpg'
                             )
-                            if not self.load_60Hz:
-                                video_data['obs_frames'][p_id].append(
-                                    f'{video_name}/image_{i * total_frame_num + j - 1:05}.jpg'
+                            if p_id == 0:
+                                video_data['obs_cam_ext'].append(
+                                    cam_extrinsic[j - 1].tolist()
                                 )
-                                if p_id == 0:
-                                    video_data['obs_cam_ext'].append(
-                                        cam_extrinsic[i * total_frame_num + j - 1].tolist()
-                                    )
-                        else:
-                            video_data['future_pose'][p_id].append(
-                                pose_data[p_id, i * total_frame_num + j - 1, :].tolist()
-                            )
-                            if not self.load_60Hz:
-                                video_data['future_frames'][p_id].append(
-                                    f'{video_name}/image_{i * total_frame_num + j - 1:05}.jpg'
-                                )
-                                if p_id == 0:
-                                    video_data['future_cam_ext'].append(
-                                        cam_extrinsic[i * total_frame_num + j - 1].tolist()
-                                    )
-                if len(list(video_data['obs_pose'].values())) > 0:
-                    if data_type == 'train':
-                        self.update_meta_data(self.meta_data, list(video_data['obs_pose'].values()), 3)
-                    
-                    for p_id in range(len(pose_data)):
-                        data.append([
-                            '%s-%d' % (video_name, i),
-                            video_data['obs_pose'][p_id], video_data['future_pose'][p_id],
-                            video_data['obs_frames'][p_id], video_data['future_frames'][p_id],
-                            video_data['obs_cam_ext'], video_data['future_cam_ext'], cam_intrinsic
-                        ] if not self.load_60Hz else [
-                            '%s-%d' % (video_name, i),
-                            np.array(video_data['obs_pose'][p_id])[:, var_joints].tolist(),
-                            np.array(video_data['obs_pose'][p_id])[:, const_joints].tolist()
-                        ])
-                        if not self.save_total_frames and self.load_60Hz:
-                            data[-1].extend([
-                                np.array(video_data['future_pose'][p_id])[:, var_joints].tolist(),
-                                np.array(video_data['future_pose'][p_id])[:, const_joints].tolist()
-                            ])
                     else:
-                        data.append([
-                            '%s-%d' % (video_name, i),
-                            list(video_data['obs_pose'].values()), list(video_data['future_pose'].values()),
-                            video_data['obs_frames'][0], video_data['future_frames'][0],
-                            video_data['obs_cam_ext'], video_data['future_cam_ext'], cam_intrinsic
-                        ] if not self.load_60Hz else [
-                            '%s-%d' % (video_name, i),
-                            list(video_data['obs_pose'].values()), list(video_data['future_pose'].values()),
-                        ])
+                        video_data['future_pose'][p_id].append(
+                            pose_data[p_id, j - 1, :].tolist()
+                        )
+                        if not self.load_60Hz:
+                            video_data['future_frames'][p_id].append(
+                                f'{video_name}/image_{j - 1:05}.jpg'
+                            )
+                            if p_id == 0:
+                                video_data['future_cam_ext'].append(
+                                    cam_extrinsic[j - 1].tolist()
+                                )
+            if len(list(video_data['obs_pose'].values())) > 0:
+                if data_type == 'train':
+                    self.update_meta_data(self.meta_data, list(video_data['obs_pose'].values()), 3)
+                
+                for p_id in range(len(pose_data)):
+                    data.append([
+                        '%s-%d' % (video_name, 0),
+                        video_data['obs_pose'][p_id], video_data['future_pose'][p_id],
+                        video_data['obs_frames'][p_id], video_data['future_frames'][p_id],
+                        video_data['obs_cam_ext'], video_data['future_cam_ext'], cam_intrinsic
+                    ] if not self.load_60Hz else [
+                        '%s-%d' % (video_name, 0),
+                        np.array(video_data['obs_pose'][p_id])[:, var_joints].tolist(),
+                        np.array(video_data['obs_pose'][p_id])[:, const_joints].tolist()
+                    ])
+                else:
+                    data.append([
+                        '%s-%d' % (video_name, 0),
+                        list(video_data['obs_pose'].values()), list(video_data['future_pose'].values()),
+                        video_data['obs_frames'][0], video_data['future_frames'][0],
+                        video_data['obs_cam_ext'], video_data['future_cam_ext'], cam_intrinsic
+                    ] if not self.load_60Hz else [
+                        '%s-%d' % (video_name, 0),
+                        list(video_data['obs_pose'].values()), list(video_data['future_pose'].values()),
+                    ])
             with jsonlines.open(os.path.join(self.output_dir, output_file_name), 'a') as writer:
                 for data_row in data:
-                    if not self.save_total_frames:
-                        if not self.load_60Hz:
-                            writer.write({
-                                'video_section': data_row[0],
-                                'observed_pose': data_row[1],
-                                'future_pose': data_row[2],
-                                'observed_image_path': data_row[3],
-                                'future_image_path': data_row[4],
-                                'observed_cam_extrinsic': data_row[5],
-                                'future_cam_extrinsic': data_row[6],
-                                'cam_intrinsic': data_row[7]
-                            })
-                        else:
-                             writer.write({
-                                'video_section': data_row[0],
-                                'observed_pose': data_row[1],
-                                'future_pose': data_row[3],
-                                'observed_const_pose': data_row[2],
-                                'future_const_pose': data_row[4],
-                            })
+                    if not self.load_60Hz:
+                        writer.write({
+                            'video_section': data_row[0],
+                            'total_pose': data_row[1],
+                            'total_image_path': data_row[3],
+                            'total_cam_extrinsic': data_row[5],
+                            'cam_intrinsic': data_row[7]
+                        })
                     else:
-                        if not self.load_60Hz:
-                            writer.write({
-                                'video_section': data_row[0],
-                                'total_pose': data_row[1],
-                                'total_image_path': data_row[3],
-                                'total_cam_extrinsic': data_row[5],
-                                'cam_intrinsic': data_row[7]
-                            })
-                        else:
-                             writer.write({
-                                'video_section': data_row[0],
-                                'xyz_pose': data_row[1],
-                                'xyz_const_pose': data_row[2],
-                            })
+                        writer.write({
+                            'video_section': data_row[0],
+                            'xyz_pose': data_row[1],
+                            'xyz_const_pose': data_row[2],
+                        })
 
         self.save_meta_data(self.meta_data, self.output_dir, True, data_type)
 

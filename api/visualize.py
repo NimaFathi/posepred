@@ -19,8 +19,6 @@ logger = logging.getLogger(__name__)
 @hydra.main(config_path=HYDRA_PATH, config_name="visualize")
 def visualize(cfg: DictConfig):
     assert cfg.dataset_type in DATASETS and cfg.dataset_type not in ['amass', '3dpw'], 'dataset_type chioces: ' + str(DATASETS) + ' and not in [amass, 3dpw]'
-    if cfg.data.normalize:
-        assert cfg.data.metadata_path, 'given normalized data, metadata_path should be given'
     showing = cfg.showing.strip().split('-')
     for k in showing:
         if k not in VISUALIZING_TYPES:

@@ -2,8 +2,6 @@ keypoint_dim: ${keypoint_dim}
 pred_frames_num: ${pred_frames_num}
 obs_frames_num: ${obs_frames_num}
 keypoints_num: 
-use_dct: ${use_dct}
-normalize: ${normalize}
 mean_pose:
 std_pose:
 device: ${device}

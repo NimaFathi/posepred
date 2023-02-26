@@ -27,9 +27,9 @@ SPLIT = {
 
 class Human36mPreprocessor(Processor):
     def __init__(self, dataset_path,
-                 custom_name, save_total_frames):
+                 custom_name):
         super(Human36mPreprocessor, self).__init__(dataset_path, 0,
-                                                   0, custom_name, save_total_frames)
+                                                   0, custom_name)
         self.output_dir = os.path.join(
             PREPROCESSED_DATA_DIR, 'human36m'
         )
@@ -55,23 +55,19 @@ class Human36mPreprocessor(Processor):
         logger.info(
             'start creating Human3.6m preprocessed data from Human\'s Human3.6m dataset ... ')
 
-        if self.save_total_frames:
-            list_format = ["total"]
+        format_data = "total"
+
+        if self.custom_name:
+            output_file_name = \
+                f'{data_type}_{format_data}_{self.custom_name}.jsonl'
         else:
-            list_format = ["xyz", "quaternion", "expmap", "rotmat", "euler"]
+            output_file_name = \
+                f'{data_type}_{format_data}_human3.6m.jsonl'
 
-        for format_data in list_format:
-            if self.custom_name:
-                output_file_name = \
-                    f'{data_type}_{format_data}_{self.custom_name}.jsonl'
-            else:
-                output_file_name = \
-                    f'{data_type}_{format_data}_human3.6m.jsonl'
-
-            assert os.path.exists(os.path.join(
-                self.output_dir,
-                output_file_name
-            )) is False, f"preprocessed file exists at {os.path.join(self.output_dir, output_file_name)}"
+        assert os.path.exists(os.path.join(
+            self.output_dir,
+            output_file_name
+        )) is False, f"preprocessed file exists at {os.path.join(self.output_dir, output_file_name)}"
 
         for subject in self.subjects:
             logger.info("handling subject: {}".format(subject))
@@ -90,34 +86,33 @@ class Human36mPreprocessor(Processor):
                     euler = euler.reshape(euler.shape[0], -1)
                     quat = quat.reshape(quat.shape[0], -1)
 
-                    if self.save_total_frames == True:
-                        video_data = {
-                            'xyz_pose': positions.tolist()[:],
-                            'quaternion_pose': quat.tolist()[:],
-                            'expmap_pose': expmap.tolist()[:],
-                            'rotmat_pose': rotmat.tolist()[:],
-                            'euler_pose': euler.tolist()[:],
-                            'action': super_action
-                        }
+                    video_data = {
+                        'xyz_pose': positions.tolist()[:],
+                        'quaternion_pose': quat.tolist()[:],
+                        'expmap_pose': expmap.tolist()[:],
+                        'rotmat_pose': rotmat.tolist()[:],
+                        'euler_pose': euler.tolist()[:],
+                        'action': super_action
+                    }
 
-                        if self.custom_name:
-                            output_file_name = \
-                                f'{data_type}_total_{self.custom_name}.jsonl'
-                        else:
-                            output_file_name = \
-                                f'{data_type}_total_human3.6m.jsonl'
+                    if self.custom_name:
+                        output_file_name = \
+                            f'{data_type}_total_{self.custom_name}.jsonl'
+                    else:
+                        output_file_name = \
+                            f'{data_type}_total_human3.6m.jsonl'
 
-                        self.update_meta_data(self.meta_data, video_data['xyz_pose'], 3)
-                        with jsonlines.open(os.path.join(self.output_dir, output_file_name), mode='a') as writer:
-                            writer.write({
-                                'video_section': f'{subject}-{action}',
-                                'action': f'{super_action}',
-                                'xyz_pose': video_data['xyz_pose'],
-                                'quaternion_pose': video_data['quaternion_pose'],
-                                'expmap_pose': video_data['expmap_pose'],
-                                'rotmat_pose': video_data['rotmat_pose'],
-                                'euler_pose': video_data['euler_pose']
-                            })
+                    self.update_meta_data(self.meta_data, video_data['xyz_pose'], 3)
+                    with jsonlines.open(os.path.join(self.output_dir, output_file_name), mode='a') as writer:
+                        writer.write({
+                            'video_section': f'{subject}-{action}',
+                            'action': f'{super_action}',
+                            'xyz_pose': video_data['xyz_pose'],
+                            'quaternion_pose': video_data['quaternion_pose'],
+                            'expmap_pose': video_data['expmap_pose'],
+                            'rotmat_pose': video_data['rotmat_pose'],
+                            'euler_pose': video_data['euler_pose']
+                        })
         self.save_meta_data(self.meta_data, self.output_dir, True, data_type)
 
     def expmap_rep(self, action, subject, data_type):

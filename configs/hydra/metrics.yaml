@@ -1,8 +1,6 @@
-pose_metrics: #[]
+pose_metrics: 
   - ADE
   - FDE
   - MSE
   - local_ade
   - local_fde
-  # - VIM
-  # - VAM

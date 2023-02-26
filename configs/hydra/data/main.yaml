@@ -12,10 +12,8 @@ batch_size: 16
 shuffle: true
 pin_memory: false
 num_workers: 4
-normalize: ${normalize}
-metadata_path:
-seq_rate: 1
-frame_rate: 2
+seq_rate: 1 # number of frames to skip between each sequence
+frame_rate: 2 # number of frames to skip between each frame in a sequence
 len_observed: ${obs_frames_num}
 len_future: ${pred_frames_num}
 random_reverse_prob: 0.5

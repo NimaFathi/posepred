@@ -7,10 +7,9 @@ import numpy as np
 
 class Processor:
     def __init__(self, dataset_path,
-                 custom_name, save_total_frames):
+                 custom_name):
         self.dataset_path = dataset_path
         self.custom_name = custom_name
-        self.save_total_frames = save_total_frames
 
     def normal(self, data_type='train'):
         """

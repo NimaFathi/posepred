@@ -13,7 +13,7 @@ def get_dataloader(dataset_path, args):
     
     dataset = PoseDataset(
         dataset_path, args.keypoint_dim, args.is_testing, args.model_pose_format, args.metric_pose_format, 
-        args.normalize, args.metadata_path,args.seq_rate, args.frame_rate, args.len_observed, 
+        args.seq_rate, args.frame_rate, args.len_observed, 
         args.len_future, args.is_h36_testing, args.random_reverse_prob
     )
     

@@ -26,22 +26,17 @@ def preprocess(cfg: DictConfig):
         preprocessor = Human36mPreprocessor(
             dataset_path=cfg.official_annotation_path,
             custom_name=cfg.output_name, 
-            use_video_once=cfg.use_video_once,
-            save_total_frames=cfg.save_total_frames
         )
     elif cfg.dataset == '3dpw':
         preprocessor = Preprocessor3DPW(
             dataset_path=cfg.official_annotation_path,
             custom_name=cfg.output_name, 
-            use_video_once=cfg.use_video_once,
-            save_total_frames=cfg.save_total_frames, load_60Hz=cfg.load_60Hz
+            load_60Hz=cfg.load_60Hz
         )
     elif cfg.dataset == 'amass':
         preprocessor = AmassPreprocessor(
             dataset_path=cfg.official_annotation_path,
             ocustom_name=cfg.output_name, 
-            use_video_once=cfg.use_video_once,
-            save_total_frames=cfg.save_total_frames
         )
     else:
         msg = "Invalid preprocessor."

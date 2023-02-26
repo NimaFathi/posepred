@@ -6,7 +6,6 @@ defaults:
   - metrics
 
 dataset: ???
-normalize: false
 load_path:
 csv_save_dir:
 rounds_num: 1

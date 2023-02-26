@@ -13,8 +13,6 @@ epochs: ???
 snapshot_interval: ${epochs}
 start_epoch: 0
 device: cuda
-use_dct: false
-normalize: false
 load_path:
 save_dir:
 experiment_name: Default

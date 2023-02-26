@@ -18,13 +18,11 @@ amass_splits = {
 
 class AmassPreprocessor(Processor):
     def __init__(self, dataset_path,
-                 custom_name, save_total_frames):
+                 custom_name):
         super(AmassPreprocessor, self).__init__(dataset_path,
-                                               custom_name, save_total_frames)
+                                               custom_name)
 
-        self.output_dir = os.path.join(PREPROCESSED_DATA_DIR, 'AMASS')
-        if self.save_total_frames:
-            self.output_dir = os.path.join(PREPROCESSED_DATA_DIR, 'AMASS_total')
+        self.output_dir = os.path.join(PREPROCESSED_DATA_DIR, 'AMASS_total')
 
         if not os.path.exists(self.output_dir):
             os.makedirs(self.output_dir)
@@ -39,15 +37,11 @@ class AmassPreprocessor(Processor):
 
     def normal(self, data_type='train'):
         logger.info('start creating AMASS normal static data ... ')
-        
-        const_joints = np.arange(4 * 3)
-        var_joints = np.arange(4 * 3, 22 * 3)
 
-        if self.save_total_frames:
-            if self.custom_name:
-                output_file_name = f'{data_type}_xyz_{self.custom_name}.jsonl'
-            else:
-                output_file_name = f'{data_type}_xyz_AMASS.jsonl'
+        if self.custom_name:
+            output_file_name = f'{data_type}_xyz_{self.custom_name}.jsonl'
+        else:
+            output_file_name = f'{data_type}_xyz_AMASS.jsonl'
         
         assert os.path.exists(os.path.join(
             self.output_dir,
@@ -80,62 +74,50 @@ class AmassPreprocessor(Processor):
                     pose_data = AMASSconvertTo3D(pose_data) # shape = [num frames , 66]
                     pose_data = pose_data * 1000 # convert from m to mm
 
-                    if self.save_total_frames:
-                        section_range = 1
-                        total_frame_num = pose_data.shape[0]
+                    total_frame_num = pose_data.shape[0]
 
                     data = []
-                    for i in range(section_range):
-                        video_data = {
-                            'obs_pose': list(),
-                            'obs_const_pose': list(),
-                            'future_pose': list(),
-                            'future_const_pose': list(),
-                            'fps': int(pose_all['mocap_framerate'].item())
-                        }
 
-                        for j in range(0, total_frame_num):
-                            if j <= total_frame_num:
-                                video_data['obs_pose'].append(
-                                    pose_data[i * total_frame_num  + j][var_joints].tolist()
-                                )
-                                video_data['obs_const_pose'].append(
-                                    pose_data[i * total_frame_num  + j][const_joints].tolist()
-                                )
-                            else:
-                                video_data['future_pose'].append(
-                                    pose_data[i * total_frame_num  + j][var_joints].tolist()
-                                )
-                                video_data['future_const_pose'].append(
-                                    pose_data[i * total_frame_num  + j][const_joints].tolist()
-                                )
+                    video_data = {
+                        'obs_pose': list(),
+                        'obs_const_pose': list(),
+                        'future_pose': list(),
+                        'future_const_pose': list(),
+                        'fps': int(pose_all['mocap_framerate'].item())
+                    }
+
+                    for j in range(0, total_frame_num):
+                        if j <= total_frame_num:
+                            video_data['obs_pose'].append(
+                                pose_data[j][var_joints].tolist()
+                            )
+                            video_data['obs_const_pose'].append(
+                                pose_data[j][const_joints].tolist()
+                            )
+                        else:
+                            video_data['future_pose'].append(
+                                pose_data[j][var_joints].tolist()
+                            )
+                            video_data['future_const_pose'].append(
+                                pose_data[j][const_joints].tolist()
+                            )
+                    
+                    if data_type == 'train':
+                        self.update_meta_data(self.meta_data, list(video_data['obs_pose']), 3)
+                    data.append([
+                        '%s-%d' % ("{}-{}-{}".format(raw_dataset_name, raw_sub, raw_act), 0),
+                        video_data['obs_pose'], video_data['obs_const_pose'],
+                        video_data['future_pose'], video_data['future_const_pose'],
+                        video_data['fps']
+                    ])
                         
-                        if data_type == 'train':
-                            self.update_meta_data(self.meta_data, list(video_data['obs_pose']), 3)
-                        data.append([
-                            '%s-%d' % ("{}-{}-{}".format(raw_dataset_name, raw_sub, raw_act), i),
-                            video_data['obs_pose'], video_data['obs_const_pose'],
-                            video_data['future_pose'], video_data['future_const_pose'],
-                            video_data['fps']
-                        ])
-                          
-                    with jsonlines.open(os.path.join(self.output_dir, output_file_name), 'a') as writer:
-                        for data_row in data:
-                            if not self.save_total_frames:
-                                writer.write({
-                                    'video_section': data_row[0],
-                                    'observed_pose': data_row[1],
-                                    'future_pose': data_row[3],
-                                    'observed_const_pose': data_row[2],
-                                    'future_const_pose': data_row[4],
-                                    'fps': data_row[5]
-                                })
-                            else:
-                                writer.write({
-                                    'video_section': data_row[0],
-                                    'xyz_pose': data_row[1],
-                                    'xyz_const_pose': data_row[2],
-                                    'fps': data_row[5]
-                                })
+                with jsonlines.open(os.path.join(self.output_dir, output_file_name), 'a') as writer:
+                    for data_row in data:
+                        writer.write({
+                            'video_section': data_row[0],
+                            'xyz_pose': data_row[1],
+                            'xyz_const_pose': data_row[2],
+                            'fps': data_row[5]
+                        })
 
         self.save_meta_data(self.meta_data, self.output_dir, True, data_type)
