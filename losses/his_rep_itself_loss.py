@@ -235,8 +235,5 @@ class HisRepItselfLoss(nn.Module):
             )
         )
         outputs = {'loss': loss_p3d, 'mpjpe': mpjpe_p3d_h36}
-        if 'pred_mask' in model_outputs.keys():
-            mask_loss = self.bce(model_outputs['pred_mask'], input_data['future_mask'])
-            outputs['mask_loss'] = mask_loss
-
+        
         return outputs

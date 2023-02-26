@@ -6,7 +6,7 @@ from torch.utils.tensorboard import SummaryWriter
 import numpy as np
 from tqdm import tqdm
 from path_definition import *
-from metrics import POSE_METRICS, MASK_METRICS
+from metrics import POSE_METRICS
 from utils.others import dict_to_device
 from utils.reporter import Reporter
 from utils.save_load import save_snapshot
@@ -81,10 +81,10 @@ class Trainer:
                 save_snapshot(self.model, self.loss_module, self.optimizer, self.optimizer_args, epoch + 1,
                               self.train_reporter,
                               self.valid_reporter, self.args.save_dir)
-                self.train_reporter.save_data(self.model.args.use_mask, self.args.save_dir)
+                self.train_reporter.save_data(self.args.save_dir)
                 if self.use_validation:
-                    self.valid_reporter.save_data(self.model.args.use_mask, self.args.save_dir)
-                Reporter.save_plots(self.model.args.use_mask, self.args.save_dir, self.train_reporter.history,
+                    self.valid_reporter.save_data(self.args.save_dir)
+                Reporter.save_plots(self.args.save_dir, self.train_reporter.history,
                                     self.valid_reporter.history, self.use_validation)
             # if self.use_validation and
         self.tensor_board.close()
@@ -132,12 +132,6 @@ class Trainer:
 
             loss_outputs['loss'] = loss_outputs['loss'].detach().item()
 
-            if self.model.args.use_mask:
-                assert 'pred_mask' in model_outputs.keys(), 'outputs of model should include pred_mask'
-                pred_mask = model_outputs['pred_mask']
-            else:
-                pred_mask = None
-
             # calculate pose_metrics
 
             report_attrs = loss_outputs
@@ -156,22 +150,15 @@ class Trainer:
                 metric_value = metric_func(
                     pred_metric_pose.to(self.args.device),
                     future_metric_pose.to(self.args.device),
-                    self.model.args.keypoint_dim, pred_mask
+                    self.model.args.keypoint_dim
                 )
 
                 report_attrs[metric_name] = metric_value.detach().item()
 
-            # calculate mask_metrics
-            if self.model.args.use_mask:
-                for metric_name in self.args.mask_metrics:
-                    metric_func = MASK_METRICS[metric_name]
-                    metric_value = metric_func(pred_mask, data['future_mask'].to(self.args.device), self.args.device)
-                    report_attrs[metric_name] = metric_value
-
             self.train_reporter.update(report_attrs, batch_size)
 
         self.train_reporter.epoch_finished(self.tensor_board, mlflow)
-        self.train_reporter.print_values(logger, self.model.args.use_mask)
+        self.train_reporter.print_values(logger)
 
     def __validate(self):
         self.model.eval()
@@ -192,12 +179,6 @@ class Trainer:
                 
                 assert 'pred_pose' in model_outputs.keys(), 'outputs of model should include pred_pose'
 
-                if self.model.args.use_mask:
-                    assert 'pred_mask' in model_outputs.keys(), 'outputs of model should include pred_mask'
-                    pred_mask = model_outputs['pred_mask']
-                else:
-                    pred_mask = None
-
                 # calculate pose_metrics
                 report_attrs = loss_outputs
                 for metric_name in self.args.pose_metrics:
@@ -213,16 +194,9 @@ class Trainer:
                     metric_value = metric_func(
                         pred_metric_pose.to(self.args.device),
                         future_metric_pose.to(self.args.device),
-                        self.model.args.keypoint_dim, pred_mask
+                        self.model.args.keypoint_dim
                     )
                     report_attrs[metric_name] = metric_value
-
-                # calculate mask_metrics
-                if self.model.args.use_mask:
-                    for metric_name in self.args.mask_metrics:
-                        metric_func = MASK_METRICS[metric_name]
-                        metric_value = metric_func(pred_mask, data['future_mask'], self.args.device)
-                        report_attrs[metric_name] = metric_value
 
                 self.valid_reporter.update(report_attrs, batch_size)
 
@@ -231,4 +205,4 @@ class Trainer:
             self.best_loss = epoch_loss
 
         self.valid_reporter.epoch_finished(self.tensor_board, mlflow)
-        self.valid_reporter.print_values(logger, self.model.args.use_mask)
+        self.valid_reporter.print_values(logger)

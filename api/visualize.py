@@ -34,7 +34,7 @@ def visualize(cfg: DictConfig):
 
     index = random.randint(0, dataloader.dataset.__len__() - 1) if cfg.index is None else cfg.index
     data = dataloader.dataset.__getitem__(index)
-    for key in ['observed_pose', 'observed_metric_pose', 'future_pose', 'future_metric_pose', 'observed_mask', 'future_mask', 'observed_noise']:
+    for key in ['observed_pose', 'observed_metric_pose', 'future_pose', 'future_metric_pose', 'observed_noise']:
         if key in data.keys():
             data[key] = data[key].unsqueeze(0)
 
@@ -44,7 +44,6 @@ def visualize(cfg: DictConfig):
     else:
         cfg.model.keypoint_dim = cfg.data.keypoint_dim
         cfg.model.keypoints_num = dataloader.dataset.keypoints_num
-        cfg.model.use_mask = cfg.data.use_mask
         cfg.model.pred_frames_num = dataloader.dataset.future_frames_num if cfg.pred_frames_num is None else cfg.pred_frames_num
         assert cfg.model.pred_frames_num is not None, 'specify pred_frames_num or set data.is_testing=false'
         model = MODELS[cfg.model.type](cfg.model)
@@ -59,16 +58,12 @@ def visualize(cfg: DictConfig):
         if 'pred_metric_pose' in outputs:
             data['pred_metric_pose'] = outputs['pred_metric_pose']
         data['pred_pose'] = outputs['pred_pose']
-        if cfg.data.use_mask:
-            assert 'pred_mask' in outputs.keys(), 'outputs of model should include pred_mask'
-            data['pred_mask'] = outputs['pred_mask']
         if 'completed' in showing:
             assert 'comp_pose' in outputs.keys(), 'outputs of model should include comp_pose'
             data['comp_pose'] = outputs['comp_pose']
 
     names = []
     poses = []
-    masks = []
     images_path = []
     cam_exs = []
 
@@ -76,11 +71,6 @@ def visualize(cfg: DictConfig):
         names.append('observed')
         pose = data['observed_pose']
         poses.append(pose.permute(1, 0, 2))
-        if 'observed_mask' in data.keys():
-            mask = data['observed_mask']
-            masks.append(mask.permute(1, 0, 2))
-        else:
-            masks.append(None)
         image_path = data['observed_image'] if 'observed_image' in data.keys() else None
         images_path.append(image_path)
         cam_ex = data['observed_cam_ex'] if 'observed_cam_ex' in data.keys() else None
@@ -90,7 +80,6 @@ def visualize(cfg: DictConfig):
         names.append('completed')
         pose = data['comp_pose']
         poses.append(pose.permute(1, 0, 2))
-        masks.append(None)
         image_path = data['observed_image'] if 'observed_image' in data.keys() else None
         images_path.append(image_path)
         cam_ex = data['observed_cam_ex'] if 'observed_cam_ex' in data.keys() else None
@@ -104,11 +93,6 @@ def visualize(cfg: DictConfig):
 
         pose = data[tag]
         poses.append(pose.permute(1, 0, 2))
-        if 'future_mask' in data.keys():
-            mask = data['future_mask']
-            masks.append(mask.permute(1, 0, 2))
-        else:
-            masks.append(None)
         image_path = data['future_image'] if 'future_image' in data.keys() else None
         images_path.append(image_path)
         cam_ex = data['future_cam_ex'] if 'future_cam_ex' in data.keys() else None
@@ -123,11 +107,6 @@ def visualize(cfg: DictConfig):
 
         pose = data[tag]
         poses.append(pose.permute(1, 0, 2))
-        if 'pred_mask' in data.keys():
-            mask = data['pred_mask']
-            masks.append(mask.permute(1, 0, 2))
-        else:
-            masks.append(None)
         image_path = data['future_image'] if 'future_image' in data.keys() else None
         images_path.append(image_path)
         cam_ex = data['future_cam_ex'] if 'future_cam_ex' in data.keys() else None
@@ -139,10 +118,6 @@ def visualize(cfg: DictConfig):
         if p is not None and p.is_cuda:
             poses[i] = p.detach().cpu()
 
-    for i, m in enumerate(masks):
-        if m is not None and m.is_cuda:
-            masks[i] = m.detach().cpu()
-
     if cfg.data.is_noisy:
         observed_noise = data['observed_noise'].squeeze(0) if cfg.data.is_interactive else data['observed_noise']
         observed_noise = observed_noise.detach().cpu() if observed_noise.is_cuda else observed_noise
@@ -153,9 +128,9 @@ def visualize(cfg: DictConfig):
     visualizer = Visualizer(dataset_name=cfg.dataset_type, parent_dir=cfg.save_dir, images_dir=cfg.images_dir)
     gif_name = '_'.join((cfg.model.type, cfg.dataset.split("/")[-1], str(index)))
     if cfg.data.keypoint_dim == 2:
-        visualizer.visualizer_2D(names, poses, masks, images_path, observed_noise, gif_name)
+        visualizer.visualizer_2D(names, poses, images_path, observed_noise, gif_name)
     else:
-        visualizer.visualizer_3D(names, poses, masks, cam_exs, cam_in, images_path, observed_noise, gif_name)
+        visualizer.visualizer_3D(names, poses, cam_exs, cam_in, images_path, observed_noise, gif_name)
 
 
 if __name__ == '__main__':

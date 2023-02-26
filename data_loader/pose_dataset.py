@@ -69,8 +69,6 @@ class PoseDataset(Dataset):
                         seq_tensor["pose"] = torch.tensor(v, dtype=torch.float32)
                     if k == "{}_pose".format(metric_pose_format):
                         seq_tensor["metric_pose"] = torch.tensor(v, dtype=torch.float32)
-                    if k in 'total_mask':
-                        seq_tensor['mask'] = torch.tensor(v, dtype=torch.float32)
                     if k in ['total_image_path', 'total_cam_extrinsic']:
                         seq_tensor[k[6:]] = v
                     if k in self.extra_keys_to_keep:

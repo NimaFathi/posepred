@@ -49,8 +49,6 @@ class DeRPoF(nn.Module):
         outputs = {'pred_pose': pred_pose, 'pred_vel_global': global_vel_out, 'pred_vel_local': local_vel_out,
                    'mean': mean, 'log_var': log_var}
 
-        if self.args.use_mask:
-            outputs['pred_mask'] = inputs['observed_mask'][:, -1:, :].repeat(1, self.args.pred_frames_num, 1)
         return outputs
 
 

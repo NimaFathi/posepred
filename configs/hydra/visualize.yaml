@@ -8,7 +8,6 @@ dataset: ???
 dataset_type: ???
 keypoint_dim: 3
 showing: future, predicted
-use_mask: false
 pred_frames_num:
 load_path:
 index:

@@ -1,5 +1,4 @@
 keypoint_dim: ${keypoint_dim}
-use_mask: ${use_mask}
 use_quaternion: false
 
 model_pose_format: ${model_pose_format}

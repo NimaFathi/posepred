@@ -6,9 +6,3 @@ pose_metrics: #[]
   - local_fde
   # - VIM
   # - VAM
-
-mask_metrics: []
-#  - accuracy
-#  - f1_score
-#  - precision
-#  - recall

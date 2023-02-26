@@ -6,7 +6,7 @@ import numpy as np
 import os
 from tqdm import tqdm
 
-from metrics import POSE_METRICS, MASK_METRICS
+from metrics import POSE_METRICS
 from utils.others import dict_to_device
 
 logger = logging.getLogger(__name__)
@@ -21,7 +21,6 @@ class Evaluator:
         self.loss_module = loss_module.to(args.device)
         self.reporter = reporter
         self.pose_metrics = args.pose_metrics
-        self.mask_metrics = args.mask_metrics
         self.rounds_num = args.rounds_num
         self.device = args.device
 
@@ -32,8 +31,8 @@ class Evaluator:
         for i in range(self.rounds_num):
             logger.info('round ' + str(i + 1) + '/' + str(self.rounds_num))
             self.__evaluate()
-        self.reporter.print_pretty_metrics(logger, self.model.args.use_mask, self.pose_metrics)
-        self.reporter.save_csv_metrics(self.model.args.use_mask, self.pose_metrics, os.path.join(self.args.csv_save_dir,"eval.csv"))
+        self.reporter.print_pretty_metrics(logger, self.pose_metrics)
+        self.reporter.save_csv_metrics(self.pose_metrics, os.path.join(self.args.csv_save_dir,"eval.csv"))
         logger.info("Evaluation has been completed.")
 
     def __evaluate(self):
@@ -52,12 +51,7 @@ class Evaluator:
                 loss_outputs = self.loss_module(model_outputs, dict_to_device(data, self.device))
                 assert 'pred_pose' in model_outputs.keys(), 'outputs of model should include pred_pose'
 
-                if self.model.args.use_mask:
-                    assert 'pred_mask' in model_outputs.keys(), 'outputs of model should include pred_mask'
-                    pred_mask = model_outputs['pred_mask']
-                else:
-                    pred_mask = None
-
+                
                 # calculate pose_metrics
                 report_attrs = loss_outputs
                 dynamic_counts = {}
@@ -78,21 +72,14 @@ class Evaluator:
                         if action == "all":
                             metric_value = metric_func(pred_metric_pose.to(self.device),
                                                        future_metric_pose.to(self.device),
-                                                       self.model.args.keypoint_dim, pred_mask)
+                                                       self.model.args.keypoint_dim)
                         else:
                             indexes = np.where(np.asarray(data['action']) == action)[0]
                             metric_value = metric_func(pred_metric_pose.to(self.device)[indexes],
                                                        future_metric_pose.to(self.device)[indexes],
-                                                       self.model.args.keypoint_dim, pred_mask)
+                                                       self.model.args.keypoint_dim)
                             dynamic_counts[f'{metric_name}_{action}']=len(indexes)
                         report_attrs[f'{metric_name}_{action}'] = metric_value
-
-                # calculate mask_metrics
-                if self.model.args.use_mask:
-                    for metric_name in self.mask_metrics:
-                        metric_func = MASK_METRICS[metric_name]
-                        metric_value = metric_func(pred_mask, data['future_mask'].to(self.device), self.device)
-                        report_attrs[metric_name] = metric_value
 
                 self.reporter.update(report_attrs, batch_size, True, dynamic_counts)
 

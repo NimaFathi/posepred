@@ -23,7 +23,7 @@ class Visualizer:
         self.images_dir = images_dir
         self.dataset_name = dataset_name
 
-    def visualizer_3D(self, names, poses, masks, cam_ext, cam_int, images_paths, observed_noise, gif_name, fig_size=(16, 12)):
+    def visualizer_3D(self, names, poses, cam_ext, cam_int, images_paths, observed_noise, gif_name, fig_size=(16, 12)):
         """
             visualizer_3D(poses, images_paths, fig_size) -> None
                 @brief Draws a 3D figure with matplotlib (it can have multiple sub figures).
@@ -33,9 +33,6 @@ class Visualizer:
                     shape of poses is like: [nun_comparisons, num_frames (which we create gif upon it), num_persons(in each frame), num_keypoints * dim]
                     Ex: poses.shape = [3, 16, 5, 51] means you want to compare 3 different groups of outputs each contain
                     5 persons with 17 joints (17 * 3).
-                :param masks: torch.Tensor or list of torch.Tensors
-                    shape of masks is like: [nun_comparisons, num_frames (which we create gif upon it), num_persons(in each frame), num_keypoints]
-                    Ex: masks.shape = [3, 16, 5, 17] just like 'poses'. The only difference here: we have 1 mask for each joint
                 :param cam_ext: torch.Tensor or list of torch.Tensors: camera extrinsic parameters
                     shape of cam_ext is like: [num_comparisons, num_frames, 3, 4] which last two dimensions demonstrates (3, 4) matrix based on formal definitions
                     Ex: cam_ext.shape = [3, 16, 3, 4] means you want to compare 3 different groups of poses each contain
@@ -68,7 +65,7 @@ class Visualizer:
                     new_group_pose.append(
                         self.__scene_to_image(group_pose[j].unsqueeze(0), cam_ext[i], cam_int).tolist())
                 new_pose.append(torch.tensor(new_group_pose).squeeze(1))
-            self.visualizer_2D(names=names, poses=new_pose, masks=masks, images_paths=images_paths,
+            self.visualizer_2D(names=names, poses=new_pose, images_paths=images_paths,
                                observed_noise=observed_noise, fig_size=fig_size,
                                gif_name=gif_name + '_2D_overlay')
         if self.dataset_name == 'jta':
@@ -78,13 +75,9 @@ class Visualizer:
                 for j in range(len(group_pose)):
                     new_group_pose.append(self.__generate_JTA_2D_pose(group_pose[j].unsqueeze(0)).tolist())
                 new_pose.append(torch.tensor(new_group_pose).squeeze(1))
-            self.visualizer_2D(names=names, poses=new_pose, masks=masks, images_paths=images_paths, fig_size=fig_size,
+            self.visualizer_2D(names=names, poses=new_pose, images_paths=images_paths, fig_size=fig_size,
                                observed_noise=observed_noise, gif_name=gif_name + "_2D_overlay")
         logger.info("start 3D visualizing.")
-        if masks is None or masks == []:
-            masks = []
-        else:
-            masks = self.__clean_data(masks)
         if observed_noise is None or observed_noise == []:
             observed_noise = []
         else:
@@ -106,7 +99,7 @@ class Visualizer:
                 axarr[j].append(fig.add_subplot(1, comparison_number, i + 1, projection='3d'))
                 self.__create_plot(axarr[j][i], max_axes=max_axes, min_axes=min_axes)
                 self.__generate_3D_figure(
-                    i, all_poses=poses[i][j], all_masks=masks[i][j] if i < len(masks) and j < len(masks[i]) else None,
+                    i, all_poses=poses[i][j],
                     all_noises=noise[j] if j < len(noise) else None,
                     ax=axarr[j][i]
                 )
@@ -128,9 +121,9 @@ class Visualizer:
         # optimize(os.path.join(save_dir, f'{gif_name}.gif'))
         logger.info("end 3D visualizing.")
 
-    def visualizer_2D(self, names, poses, masks, images_paths, observed_noise, gif_name, fig_size=(24, 18)):
+    def visualizer_2D(self, names, poses, images_paths, observed_noise, gif_name, fig_size=(24, 18)):
         """
-             visualizer_2D(poses, masks, images_paths, fig_size) -> gif
+             visualizer_2D(poses, images_paths, fig_size) -> gif
                 @brief Draws a 2D figure with matplotlib (it can have multiple sub figures).
                     The function cv:: This function draw multiple 2D poses alongside each other to make comparisons
                     (in different outputs) you can draw many different persons together in one sub figure (scene) .
@@ -139,9 +132,6 @@ class Visualizer:
                     shape of poses is like: [nun_comparisons, num_frames (which we create gif upon it), num_persons(in each frame), num_keypoints * dim]
                     Ex: poses.shape = [3, 16, 5, 34] means you want to compare 3 different groups of outputs each contain
                     5 persons with 17 joints (17 * 2).
-                :param masks: torch.Tensor or list of torch.Tensors
-                    shape of masks is like: [nun_comparisons, num_frames (which we create gif upon it), num_persons(in each frame), num_keypoints]
-                    Ex: masks.shape = [3, 16, 5, 17] just like 'poses'. The only difference here: we have 1 mask for each joint
                 :param images_paths: list or numpy.array: paths to specified outputs (scenes).
                     Ex: images_paths.shape = [3, 16]
                 :param observed_noise: torch.Tensor or list of torch.Tensors
@@ -154,10 +144,6 @@ class Visualizer:
         """
         logger.info("start 2D visualizing.")
         poses = self.__clean_data(poses)
-        if masks is None or masks == []:
-            masks = []
-        else:
-            masks = self.__clean_data(masks)
         if observed_noise is None or observed_noise == []:
             observed_noise = []
         else:
@@ -174,7 +160,6 @@ class Visualizer:
                 images[i].append(
                     self.__generate_2D_figure(
                         color_num=i, all_poses=pose,
-                        all_masks=masks[i][j] if i < len(masks) and j < len(masks[i]) else None,
                         all_noises=observed_noise[j] if j < len(observed_noise) else None,
                         image_path=images_paths[i][j] if i < len(images_paths) and j < len(images_paths[i]) else None
                     )
@@ -204,21 +189,18 @@ class Visualizer:
         # optimize(os.path.join(save_dir, f'{gif_name}.gif'))
         logger.info("end 2D visualizing.")
 
-    def __generate_3D_figure(self, color_num, all_poses, all_masks, all_noises, ax):
+    def __generate_3D_figure(self, color_num, all_poses, all_noises, ax):
         num_keypoints = all_poses.shape[-1] // 3
         poses = all_poses.reshape(all_poses.shape[0], num_keypoints, 3)
         if all_noises is None or all_noises == []:
             all_noises = torch.zeros(all_poses.shape[1] // 3)
-        if all_masks is None:
-            all_masks = torch.zeros(all_poses.shape[0], all_poses.shape[1] // 2)
         visualizing_keypoints = np.array(np.unique(keypoint_connections[self.dataset_name]))
         for i, keypoints in enumerate(poses):
             for ie, edge in enumerate(keypoint_connections[self.dataset_name]):
-                if (all_masks[i][edge[0]] == 0) and (all_masks[i][edge[1]] == 0):
-                    ax.plot(xs=[keypoints[edge, 0][0], keypoints[edge, 0][1]],
-                            zs=[keypoints[edge, 1][0], keypoints[edge, 1][1]],
-                            ys=[keypoints[edge, 2][0], keypoints[edge, 2][1]], linewidth=2, label=r'$x=y=z$',
-                            color=np.array(color_generator.get_color(color_num)) / 255)
+                ax.plot(xs=[keypoints[edge, 0][0], keypoints[edge, 0][1]],
+                        zs=[keypoints[edge, 1][0], keypoints[edge, 1][1]],
+                        ys=[keypoints[edge, 2][0], keypoints[edge, 2][1]], linewidth=2, label=r'$x=y=z$',
+                        color=np.array(color_generator.get_color(color_num)) / 255)
             for k in visualizing_keypoints:
                 ax.scatter(xs=keypoints[k, axes_order_3D[self.dataset_name][0]],
                            ys=keypoints[k, axes_order_3D[self.dataset_name][1]],
@@ -226,33 +208,28 @@ class Visualizer:
                            color=np.array([0, 255, 100]) / 255 if all_noises[k] == 0 else np.array(
                                [255, 40, 0]) / 255)
 
-    def __generate_2D_figure(self, color_num, all_poses, all_masks=None, all_noises=None, image_path=None):
+    def __generate_2D_figure(self, color_num, all_poses, all_noises=None, image_path=None):
         num_keypoints = all_poses.shape[-1] // 2
         poses = all_poses.reshape(all_poses.shape[0], num_keypoints, 2)
         if image_path is None:
             image = np.zeros((1080, 1920, 3)).astype(np.uint8)
         else:
             image = cv2.imread(image_path)
-        if all_masks is None:
-            all_masks = torch.zeros(all_poses.shape[0], all_poses.shape[1] // 2)
         if all_noises is None or all_noises == []:
             all_noises = torch.zeros(all_poses.shape[1] // 2)
         for i, keypoints in enumerate(poses):
             for keypoint in range(keypoints.shape[0]):
                 for ie, edge in enumerate(keypoint_connections[self.dataset_name]):
                     if not ((keypoints[edge, 0][0] <= 0 or keypoints[edge, 1][0] <= 0) or (
-                            keypoints[edge, 0][1] <= 0 or keypoints[edge, 1][1] <= 0)) and (
-                            all_masks[i][edge[0]] == 0) and (
-                            all_masks[i][edge[1]] == 0):
+                            keypoints[edge, 0][1] <= 0 or keypoints[edge, 1][1] <= 0)):
                         ''
                         cv2.line(image, (int(keypoints[edge, 0][0]), int(keypoints[edge, 1][0])),
                                  (int(keypoints[edge, 0][1]), int(keypoints[edge, 1][1])),
                                  color_generator.get_color(color_num), 4, lineType=cv2.LINE_AA)
             for keypoint in range(keypoints.shape[0]):
-                if all_masks[i][keypoint // 2] == 0:
-                    cv2.circle(image, (int(keypoints[keypoint, 0]), int(keypoints[keypoint, 1])), 3,
-                               (0, 255, 100) if all_noises[keypoint // 2] == 0 else (255, 50, 0), thickness=-1,
-                               lineType=cv2.FILLED)
+                cv2.circle(image, (int(keypoints[keypoint, 0]), int(keypoints[keypoint, 1])), 3,
+                            (0, 255, 100) if all_noises[keypoint // 2] == 0 else (255, 50, 0), thickness=-1,
+                            lineType=cv2.FILLED)
         return image
 
     def __create_plot(self, axe, max_axes, min_axes):

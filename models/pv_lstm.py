@@ -14,11 +14,6 @@ class PVLSTM(nn.Module):
         self.vel_decoder = Decoder(args.pred_frames_num, input_size, output_size, args.hidden_size, args.n_layers,
                                    args.dropout_pose_dec, 'hardtanh', args.hardtanh_limit)
 
-        if self.args.use_mask:
-            self.mask_encoder = Encoder(args.keypoints_num, args.hidden_size, args.n_layers, args.dropout_encoder)
-            self.mask_decoder = Decoder(args.pred_frames_num, args.keypoints_num, args.keypoints_num, args.hidden_size,
-                                        args.n_layers, args.dropout_mask_dec, 'sigmoid')
-
     def forward(self, inputs):
         pose = inputs['observed_pose']
         vel = pose[..., 1:, :] - pose[..., :-1, :]
@@ -37,16 +32,6 @@ class PVLSTM(nn.Module):
         pred_vel = self.vel_decoder(vel_dec_input, hidden_dec, cell_dec)
         pred_pose = pose_from_vel(pred_vel, pose[..., -1, :])
         outputs = {'pred_pose': pred_pose, 'pred_vel': pred_vel}
-
-        if self.args.use_mask:
-            mask = inputs['observed_mask']
-            (hidden_mask, cell_mask) = self.mask_encoder(mask.permute(1, 0, 2))
-            hidden_mask = hidden_mask.squeeze(0)
-            cell_mask = cell_mask.squeeze(0)
-
-            mask_dec_input = mask[:, -1, :]
-            pred_mask = self.mask_decoder(mask_dec_input, hidden_mask, cell_mask)
-            outputs['pred_mask'] = pred_mask
 
         return outputs
 

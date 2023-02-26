@@ -34,11 +34,6 @@ class Disentangled(nn.Module):
         local_pose = pose[..., self.args.keypoint_dim:] - global_pose.repeat(tuple(repeat))
         local_inputs = {'observed_pose': local_pose}
 
-        if self.args.use_mask:
-            mask = inputs['observed_mask']
-            global_inputs['observed_mask'] = mask[..., :1]
-            local_inputs['observed_mask'] = mask[..., 1:]
-
         # predict
         global_outputs = self.global_model(global_inputs)
         local_outputs = self.local_model(local_inputs)
@@ -51,9 +46,5 @@ class Disentangled(nn.Module):
         pred_vel = torch.cat((global_vel_out, local_vel_out + global_vel_out.repeat(tuple(repeat))), dim=-1)
         pred_pose = pose_from_vel(pred_vel, pose[..., -1, :])
         outputs = {'pred_pose': pred_pose, 'pred_vel': pred_vel}
-
-        if self.args.use_mask:
-            pred_mask = torch.cat((global_outputs[-1], local_outputs[-1]), dim=-1)
-            outputs['pred_mask'] = pred_mask
 
         return outputs

@@ -7,7 +7,6 @@ defaults:
 
 dataset: ???
 normalize: false
-use_mask: false
 load_path:
 csv_save_dir:
 rounds_num: 1
