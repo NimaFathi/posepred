@@ -6,7 +6,4 @@ defaults:
   - metrics
 
 dataset: ???
-load_path:
-csv_save_dir:
 rounds_num: 1
-device: cuda

@@ -12,9 +12,6 @@ valid_dataset:
 epochs: ???
 snapshot_interval: ${epochs}
 start_epoch: 0
-device: cuda
-load_path:
-save_dir:
 experiment_name: Default
 experiment_tag:
 mlflow_tracking_uri:

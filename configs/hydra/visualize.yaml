@@ -9,11 +9,8 @@ dataset_type: ???
 keypoint_dim: 3
 showing: future, predicted
 pred_frames_num:
-load_path:
 index:
-device: cuda
 images_dir:
-save_dir:
 
 data:
   is_visualizing: true

@@ -25,14 +25,14 @@ def evaluate(cfg: DictConfig):
     eval_reporter = Reporter(state='')
     if cfg.load_path is not None:
         model, loss_module, _, _, _, _, _ = load_snapshot(cfg.load_path)
-        cfg.csv_save_dir = cfg.load_path[:cfg.load_path.rindex('snapshots/')]
+        cfg.save_dir = cfg.load_path[:cfg.load_path.rindex('snapshots/')]
     else:
         cfg.model.pred_frames_num = dataloader.dataset.future_frames_num
         cfg.model.keypoints_num = dataloader.dataset.keypoints_num
         cfg.model.obs_frames_num = dataloader.dataset.obs_frames_num
         cfg.model.mean_pose = dataloader.dataset.mean_pose
         cfg.model.std_pose = dataloader.dataset.std_pose
-        cfg.csv_save_dir = os.getcwd()
+        cfg.save_dir = os.getcwd()
 
         model = MODELS[cfg.model.type](cfg.model)
         loss_module = LOSSES[cfg.model.loss.type](cfg.model.loss)

@@ -17,11 +17,6 @@ def preprocess(cfg: DictConfig):
     assert cfg.dataset in DATASETS, "invalid dataset name"
     assert cfg.data_type in DATA_TYPES, "data_type choices: " + str(DATA_TYPES)
 
-    if cfg.keypoint_dim not in [2, 3]:
-        msg = "Dimension of data must be either 2 or 3"
-        logger.error(msg=msg)
-        raise Exception(msg)
-    
     if cfg.dataset == 'human3.6m':
         preprocessor = Human36mPreprocessor(
             dataset_path=cfg.official_annotation_path,

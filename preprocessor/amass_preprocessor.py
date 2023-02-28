@@ -6,7 +6,6 @@ import numpy as np
 from utils.others import AMASSconvertTo3D
 
 from path_definition import PREPROCESSED_DATA_DIR
-from preprocessor.preprocessor import Processor
 
 logger = logging.getLogger(__name__)
 
@@ -16,27 +15,21 @@ amass_splits = {
     'test': ['BioMotionLab_NTroje'],
 }
 
-class AmassPreprocessor(Processor):
+class AmassPreprocessor:
     def __init__(self, dataset_path,
                  custom_name):
-        super(AmassPreprocessor, self).__init__(dataset_path,
-                                               custom_name)
 
+        self.dataset_path = dataset_path
+        self.custom_name = custom_name
         self.output_dir = os.path.join(PREPROCESSED_DATA_DIR, 'AMASS_total')
 
         if not os.path.exists(self.output_dir):
             os.makedirs(self.output_dir)
-        self.meta_data = {
-            'avg_person': [],
-            'max_pose': np.zeros(3),
-            'min_pose': np.array([1000.0, 1000.0, 1000.0]),
-            'count': 0,
-            'sum2_pose': np.zeros(3),
-            'sum_pose': np.zeros(3)
-        }
 
     def normal(self, data_type='train'):
         logger.info('start creating AMASS normal static data ... ')
+        const_joints = np.arange(4 * 3)
+        var_joints = np.arange(4 * 3, 22 * 3)
 
         if self.custom_name:
             output_file_name = f'{data_type}_xyz_{self.custom_name}.jsonl'
@@ -81,33 +74,16 @@ class AmassPreprocessor(Processor):
                     video_data = {
                         'obs_pose': list(),
                         'obs_const_pose': list(),
-                        'future_pose': list(),
-                        'future_const_pose': list(),
                         'fps': int(pose_all['mocap_framerate'].item())
                     }
 
-                    for j in range(0, total_frame_num):
-                        if j <= total_frame_num:
-                            video_data['obs_pose'].append(
-                                pose_data[j][var_joints].tolist()
-                            )
-                            video_data['obs_const_pose'].append(
-                                pose_data[j][const_joints].tolist()
-                            )
-                        else:
-                            video_data['future_pose'].append(
-                                pose_data[j][var_joints].tolist()
-                            )
-                            video_data['future_const_pose'].append(
-                                pose_data[j][const_joints].tolist()
-                            )
-                    
-                    if data_type == 'train':
-                        self.update_meta_data(self.meta_data, list(video_data['obs_pose']), 3)
+                    for j in range(total_frame_num):
+                        video_data['obs_pose'].append(pose_data[j][var_joints].tolist())
+                        video_data['obs_const_pose'].append(pose_data[j][const_joints].tolist())
+
                     data.append([
                         '%s-%d' % ("{}-{}-{}".format(raw_dataset_name, raw_sub, raw_act), 0),
                         video_data['obs_pose'], video_data['obs_const_pose'],
-                        video_data['future_pose'], video_data['future_const_pose'],
                         video_data['fps']
                     ])
                         
@@ -117,7 +93,5 @@ class AmassPreprocessor(Processor):
                             'video_section': data_row[0],
                             'xyz_pose': data_row[1],
                             'xyz_const_pose': data_row[2],
-                            'fps': data_row[5]
+                            'fps': data_row[3]
                         })
-
-        self.save_meta_data(self.meta_data, self.output_dir, True, data_type)

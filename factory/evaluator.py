@@ -32,7 +32,7 @@ class Evaluator:
             logger.info('round ' + str(i + 1) + '/' + str(self.rounds_num))
             self.__evaluate()
         self.reporter.print_pretty_metrics(logger, self.pose_metrics)
-        self.reporter.save_csv_metrics(self.pose_metrics, os.path.join(self.args.csv_save_dir,"eval.csv"))
+        self.reporter.save_csv_metrics(self.pose_metrics, os.path.join(self.args.save_dir,"eval.csv"))
         logger.info("Evaluation has been completed.")
 
     def __evaluate(self):

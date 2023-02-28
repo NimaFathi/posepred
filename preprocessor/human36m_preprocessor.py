@@ -13,7 +13,6 @@ from torch.autograd.variable import Variable
 import copy
 
 from path_definition import PREPROCESSED_DATA_DIR
-from preprocessor.preprocessor import Processor
 from utils.others import expmap_to_quaternion, qfix, expmap_to_rotmat, expmap_to_euler
 
 logger = logging.getLogger(__name__)
@@ -25,24 +24,16 @@ SPLIT = {
 }
 
 
-class Human36mPreprocessor(Processor):
+class Human36mPreprocessor:
     def __init__(self, dataset_path,
                  custom_name):
-        super(Human36mPreprocessor, self).__init__(dataset_path, 0,
-                                                   0, custom_name)
+        self.dataset_path = dataset_path
+        self.custom_name = custom_name
         self.output_dir = os.path.join(
             PREPROCESSED_DATA_DIR, 'human36m'
         )
         if not os.path.exists(self.output_dir):
             os.makedirs(self.output_dir)
-        self.meta_data = {
-            'avg_person': [],
-            'max_pose': np.zeros(3),
-            'min_pose': np.array([1000.0, 1000.0, 1000.0]),
-            'count': 0,
-            'sum2_pose': np.zeros(3),
-            'sum_pose': np.zeros(3)
-        }
         self.subjects = ['S1', 'S5', 'S6', 'S7', 'S8', 'S9', 'S11']
 
         self.acts = ["walking", "eating", "smoking", "discussion", "directions",
@@ -53,16 +44,14 @@ class Human36mPreprocessor(Processor):
     def normal(self, data_type='train'):
         self.subjects = SPLIT[data_type]
         logger.info(
-            'start creating Human3.6m preprocessed data from Human\'s Human3.6m dataset ... ')
-
-        format_data = "total"
+            'start creating Human3.6m preprocessed data from Human3.6m dataset ... ')
 
         if self.custom_name:
             output_file_name = \
-                f'{data_type}_{format_data}_{self.custom_name}.jsonl'
+                f'{data_type}_{self.custom_name}.jsonl'
         else:
             output_file_name = \
-                f'{data_type}_{format_data}_human3.6m.jsonl'
+                f'{data_type}_human3.6m.jsonl'
 
         assert os.path.exists(os.path.join(
             self.output_dir,
@@ -95,14 +84,6 @@ class Human36mPreprocessor(Processor):
                         'action': super_action
                     }
 
-                    if self.custom_name:
-                        output_file_name = \
-                            f'{data_type}_total_{self.custom_name}.jsonl'
-                    else:
-                        output_file_name = \
-                            f'{data_type}_total_human3.6m.jsonl'
-
-                    self.update_meta_data(self.meta_data, video_data['xyz_pose'], 3)
                     with jsonlines.open(os.path.join(self.output_dir, output_file_name), mode='a') as writer:
                         writer.write({
                             'video_section': f'{subject}-{action}',
@@ -113,7 +94,6 @@ class Human36mPreprocessor(Processor):
                             'rotmat_pose': video_data['rotmat_pose'],
                             'euler_pose': video_data['euler_pose']
                         })
-        self.save_meta_data(self.meta_data, self.output_dir, True, data_type)
 
     def expmap_rep(self, action, subject, data_type):
         data = self.__read_file(action, self.dataset_path, subject, data_type)
