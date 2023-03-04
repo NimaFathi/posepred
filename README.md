@@ -8,6 +8,7 @@ Posepred is an open-source toolbox for pose prediction/forecasting a sequence of
 </p>
 
 # Overview 
+
 The main parts of the library are as follows:
 
 ```
@@ -61,6 +62,7 @@ source <venvname>/bin/activate
 pip install --upgrade pip
 ```  
 ### Requirements  
+
 Furthermore, you just have to install all the packages you need:  
   
 ```bash  
@@ -71,6 +73,7 @@ hydra is A framework for elegantly configuring complex applications with hierarc
 For more information about Hydra, read their official page [documentation](https://hydra.cc/).
 
 ## Hydra
+
 In order to have a better structure and understanding of our arguments, we use Hydra to  dynamically create a hierarchical configuration by composition and override it through config files and the command line.
 If you have any issues and errors install hydra like below:
 ```bash
@@ -79,6 +82,7 @@ pip install hydra-core --upgrade
 for more information about Hydra and modules please visit [here](https://github.com/vita-epfl/posepred/blob/master/ARGS_README.md#Hydra)
 
 ## MLFlow
+
 We use MLflow in this library for tracking the training process. The features provided by MLFlow help users track their training process, set up experiments with multiple runs and compare runs with each other. Its clean, organized and beatiful UI helps users to better understand and track what they are doing: (you can see more from MLFlow in [here](https://mlflow.org/))
 
 You can use MLFlow by running the command below in the folder containing `mlruns` folder.
@@ -87,7 +91,49 @@ mlflow ui
 ```
 ![img](https://www.mlflow.org/docs/latest/_images/tutorial-compare.png)
 
+# Datasets
+
+We currently Support the following datasets:
+- [Human3.6M](http://vision.imar.ro/human3.6m/description.php) in exponential map can be downloaded from [here](http://www.cs.stanford.edu/people/ashesh/h3.6m.zip).
+- [AMASS](https://amass.is.tue.mpg.de/en) from their official website..
+- [3DPW](https://virtualhumans.mpi-inf.mpg.de/3DPW/) from their official website.
+
+
+Please download the datasets and put them in a their specific folder. We will refer to this folder as `$DATASET_PATH` in the following sections.
+
+# Models
+
+We currently Support the following models:
+- [History Repeats Itself](https://arxiv.org/abs/2007.11755)
+- [ST-Transformer](https://arxiv.org/abs/2107.03502)
+- [PG-Big](https://arxiv.org/abs/2203.16051)
+- [MSR-GCN](https://arxiv.org/abs/2108.07152)
+- [PoTR](https://openaccess.thecvf.com/content/ICCV2021W/SoMoF/papers/Martinez-Gonzalez_Pose_Transformers_POTR_Human_Motion_Prediction_With_Non-Autoregressive_Transformers_ICCVW_2021_paper.pdf)
+- [STS-GCN](https://arxiv.org/abs/2110.04573)
+- PV-LSTM
+- Disentangled
+- DER-POF
+- Zero-Vel
+
+# Adding a Model
+
+To add a new model, you need to follow the below steps:
+
+- add the model file or files in the model directory
+- add the model reference to the models.\_\_init\_\_.py
+- add the model's required parameters to the configs/hydra/models. This step is necessary even you don't have additional parameters
+- if your model has new loss function which is not implemented in the library, you can add your loss function to the losses folder.
+
+# Adding a Metric
+
+To add a new model, you need to follow the below steps:
+
+- implement your metric function in the metrics.pose_metrics.py file
+- add the model reference to the metrics.\_\_init\_\_.py
+- add your metric to the configs/hydra/metrics.yml
+
 # Preprocessing
+
 We need to create clean static file to enhance dataloader and speed-up other parts.
 To fulfill mentioned purpose, put the data in DATASET_PATH and run preprocessing api called `preprocess.py` like below:  
 
@@ -102,6 +148,7 @@ See [here](https://github.com/vita-epfl/posepred/blob/master/ARGS_README.md#prep
 This process should be repeated for training, validation and test set. This is a one-time use api and later you just use the saved jsonl files.
   
 # Training
+
 Given the preprocessed data, train models from scratch:
 ```bash  
 python -m api.train model=st_transformer \
@@ -127,6 +174,7 @@ See [here](https://github.com/vita-epfl/posepred/blob/master/ARGS_README.md#trai
 
 
 # Evaluation
+
 Evaluate untrainable model:
 ```bash  
 python -m api.evaluate model=zero_vel \
@@ -151,6 +199,7 @@ See [here](https://github.com/vita-epfl/posepred/blob/master/ARGS_README.md#eval
 
 
 # Generating Outputs
+
 Generate and save the predicted future poses:
 ```bash
 python -m api.generate_final_output model=st_transformer \
@@ -164,7 +213,8 @@ python -m api.generate_final_output model=st_transformer \
 See [here](https://github.com/vita-epfl/posepred/blob/master/ARGS_README.md#generating-outputs) for more details about prediction arguments.
   
   
-# Visualization  
+# Visualization
+
 You can Visualize both 3D and 2D data with visualization module.  
 See here for more details about visualization arguments. <br>
 In order to generate .gif outputs you can run `visualize.py‍‍‍‍` like below:  
@@ -183,7 +233,7 @@ Sample output:
 </div>   -->
   
 ### 3D Visualization  
-  
+
 If we have camera extrinsic and intrinsic parameters and image paths, we would create 2 gifs:  
 - 2D overlay on images  
 - 3D positions from the camera's point of view  
@@ -201,10 +251,9 @@ python -m api.visualize model=st_transformer \
             save_dir=$OUTPUT_PATH
 ```  
   
-<!-- Sample outputs:  
+Sample outputs:  
 <div align="center">  
-   <!--  <img src="visualization/outputs/2D/3D_visualize_2D_overlay.gif" width="600px" alt><br>  -->
     <img src="visualization/outputs/3D/3D_visualize.gif" width="600px" alt>  
-</div> -->
+</div>
 
 see [here](https://github.com/vita-epfl/posepred/blob/master/ARGS_README.md#visualization) for more details about visualization arguments.
