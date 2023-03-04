@@ -252,8 +252,7 @@ python -m api.visualize model=st_transformer \
 ```  
   
 Sample outputs:  
-<div align="center">  
-    <img src="visualization/outputs/3D/3D_visualize.gif" width="600px" alt>  
-</div>
+![3D_visualize](https://user-images.githubusercontent.com/45370204/222929553-d6a399c1-75c5-4a3d-bae0-cff2c3ce9c1d.gif)
 
 see [here](https://github.com/vita-epfl/posepred/blob/master/ARGS_README.md#visualization) for more details about visualization arguments.
+
