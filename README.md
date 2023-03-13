@@ -36,7 +36,14 @@ posepred
 │   ├── mpjpe.py           
 |   ├── ...
 ```
-The library has 5 important API which 1) preprocess data 2) train the model 3) evaluate it quantitatively 4) generate their outputs and 5) visualize it. The details of how to use these API are described below. Two other important directories are models and losses. In these two directories, you can add any desired model and loss function and leverage all predefined functions of the library to train and test and compare in a fair manner.
+The library has 5 important APIs
+- preprocess data
+- train the model
+- evaluate a model quantitatively
+- generate their outputs 
+- visualize the model's outputs
+
+The details of how to use these API are described below. Two other important directories are models and losses. In these two directories, you can add any desired model and loss function and leverage all predefined functions of the library to train and test and compare in a fair manner.
 
 Please check other directories (optimizers, mmetrics, schedulers, visualization, utils, etc.) for more abilites.
 
@@ -105,7 +112,7 @@ Please download the datasets and put them in a their specific folder. We will re
 
 We currently Support the following models:
 - [History Repeats Itself](https://arxiv.org/abs/2007.11755)
-- [ST-Transformer](https://arxiv.org/abs/2107.03502)
+- ST-Transformer
 - [PG-Big](https://arxiv.org/abs/2203.16051)
 - [MSR-GCN](https://arxiv.org/abs/2108.07152)
 - [PoTR](https://openaccess.thecvf.com/content/ICCV2021W/SoMoF/papers/Martinez-Gonzalez_Pose_Transformers_POTR_Human_Motion_Prediction_With_Non-Autoregressive_Transformers_ICCVW_2021_paper.pdf)
@@ -154,13 +161,9 @@ Given the preprocessed data, train models from scratch:
 python -m api.train model=st_transformer \
     train_dataset=$DATASET_TRAIN_PATH \
     valid_dataset=$DATASET_VALIDATION_PATH \
-    epochs=4 \
-    snapshot_interval=2 \
-    obs_frames_num=5 \
-    pred_frames_num=10 \
-    model.loss.nT=10 \
-    experiment_name=stTrans \
-    data.seq_rate=5 \
+    obs_frames_num=10 \
+    pred_frames_num=25 \
+    model.loss.nT=25 \
     model.pre_post_process=human3.6m \
     model.n_major_joints=22 \
     model.loss.nJ=32
@@ -181,7 +184,6 @@ python -m api.evaluate model=zero_vel \
           dataset=$DATASET_TEST_PATH \
           obs_frames_num=10 \
           pred_frames_num=25 \
-          data.is_testing=true \
           data.is_h36_testing=true
 ```  
 
@@ -192,10 +194,9 @@ python -m api.evaluate model=st_transformer \
           load_path=$MODEL_CHECKPOINT \
           obs_frames_num=10 \
           pred_frames_num=25 \
-          data.is_testing=true \
           data.is_h36_testing=true
 ```
-See [here](https://github.com/vita-epfl/posepred/blob/master/ARGS_README.md#evaluation) for more details about evaluation arguments.
+See [here](https://github.com/vita-epfl/posepred/blob/master/ARGS_README.md#evaluation) for more details about evaluation arguments.i
 
 
 # Generating Outputs
@@ -205,8 +206,8 @@ Generate and save the predicted future poses:
 python -m api.generate_final_output model=st_transformer \
           dataset=$DATASET_PATH \
           load_path=$MODEL_CHECKPOINT \
-          obs_frames_num=5 \
-          pred_frames_num=10 \
+          obs_frames_num=10 \
+          pred_frames_num=25 \
           data.is_h36_testing=true \
           save_dir=$OUTPUT_PATH
 ```  
@@ -222,15 +223,7 @@ In order to generate .gif outputs you can run `visualize.py‍‍‍‍` like be
 ### 2D Visualization  
   
 Example:  
-```bash  
-python -m api.visualize model=<model_name> dataset=<path_to_dataset> dataset_type=jta keypoint_dim=2 is_noisy=true data.noise_rate=0.1 device=cpu load_path=<path_to_model> index=25 showing=observed-future
-```  
-<!--   
-Sample output:  
-  
-<div align="center">  
-    <img src="visualization/outputs/2D/2D_visualize.gif" width="600px" alt><br>  
-</div>   -->
+TODO: add examples
   
 ### 3D Visualization  
 
@@ -243,8 +236,8 @@ Example:
 python -m api.visualize model=st_transformer \
             dataset=$DATASET_PATH \
             dataset_type=human3.6m \
-            data.len_observed=5 \
-            data.len_future=10 \
+            data.len_observed=10 \
+            data.len_future=25 \
             load_path=$MODEL_CHECKPOINT \
             index=50 \
             showing=observed-future-predicted \

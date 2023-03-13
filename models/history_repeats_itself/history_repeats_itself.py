@@ -124,7 +124,7 @@ class HistoryRepeatsItself(nn.Module):
                                     26, 27, 28, 29, 30, 31, 32, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45,
                                     46, 47, 51, 52, 53, 54, 55, 56, 57, 58, 59, 63, 64, 65, 66, 67, 68,
                                     75, 76, 77, 78, 79, 80, 81, 82, 83, 87, 88, 89, 90, 91, 92])
-        elif self.modality == "AMASS":
+        elif self.modality == "AMASS" or self.modality == "3DPW":
             pass
         else:
             assert False, "The modality is not supported."
@@ -202,7 +202,7 @@ class HistoryRepeatsItself(nn.Module):
     def forward(self,inputs):
         if self.modality == "Human36":
             return self.forward_human(inputs)
-        elif self.modality == "AMASS":
+        elif self.modality == "AMASS" or self.modality == "3DPW":
             return self.forward_amass(inputs)
         else:
             assert False, "Unknown modality"

@@ -5,51 +5,36 @@
 python -m api.train model=st_transformer \
     train_dataset=$DATASET_TRAIN_PATH \
     valid_dataset=$DATASET_VALIDATION_PATH \
-    epochs=4 \
-    snapshot_interval=2 \
-    obs_frames_num=5 \
-    pred_frames_num=10 \
-    model.loss.nT=10 \
-    experiment_name=stTrans \
-    data.seq_rate=5 \
+    obs_frames_num=10 \
+    pred_frames_num=25 \
+    model.loss.nT=25 \
     model.pre_post_process=human3.6m \
     model.n_major_joints=22 \
-    model.loss.nJ=32 \
-    device=cpu
+    model.loss.nJ=32
 ```
 ## AMASS
 ```bash
 python -m api.train model=st_transformer \
     train_dataset=$DATASET_TRAIN_PATH \
     valid_dataset=$DATASET_VALIDATION_PATH \
-    epochs=4 \
-    snapshot_interval=2 \
-    obs_frames_num=5 \
-    pred_frames_num=10 \
-    model.loss.nT=10 \
-    experiment_name=stTrans \
-    data.seq_rate=5 \
+    obs_frames_num=10 \
+    pred_frames_num=25 \
+    model.loss.nT=25 \
     model.pre_post_process=AMASS \
     model.n_major_joints=18 \
-    model.loss.nJ=18 \
-    device=cpu
+    model.loss.nJ=18 
 ```
 ## 3DPW
 ```bash
 python -m api.train model=st_transformer \
     train_dataset=$DATASET_TRAIN_PATH \
     valid_dataset=$DATASET_VALIDATION_PATH \
-    epochs=4 \
-    snapshot_interval=2 \
-    obs_frames_num=5 \
-    pred_frames_num=10 \
-    model.loss.nT=10 \
-    experiment_name=stTrans \
-    data.seq_rate=5 \
+    obs_frames_num=10 \
+    pred_frames_num=25 \
+    model.loss.nT=25 \
     model.pre_post_process=3DPW \
     model.n_major_joints=18 \
-    model.loss.nJ=18 \
-    device=cpu
+    model.loss.nJ=18
 ```
 
 # History-Repeats-Itself
@@ -60,13 +45,8 @@ python -m api.train model=history_repeats_itself \
     valid_dataset=$DATASET_VALIDATION_PATH \
     model.modality=Human36 \
     model.in_features=66 \
-    keypoint_dim=3 \
-    epochs=10 \
-    snapshot_interval=1 \
     obs_frames_num=50 \
-    pred_frames_num=25 \
-    data.seq_rate=5 \
-    experiment_name=hri
+    pred_frames_num=25
 ```
 ## AMASS
 ```bash
@@ -75,15 +55,20 @@ python -m api.train model=history_repeats_itself \
     valid_dataset=$DATASET_VALIDATION_PATH \
     model.modality=AMASS \
     model.in_features=66 \
-    keypoint_dim=3 \
-    epochs=10 \
-    snapshot_interval=1 \
     obs_frames_num=50 \
-    pred_frames_num=25 \
-    data.seq_rate=5 \
-    experiment_name=hri
+    pred_frames_num=25
 ```
-**NOTE**: the modality for 3DPW is `AMASS` as well.
+
+## 3DPW
+```bash
+python -m api.train model=history_repeats_itself \
+    train_dataset=$DATASET_TRAIN_PATH \
+    valid_dataset=$DATASET_VALIDATION_PATH \
+    model.modality=3DPW \
+    model.in_features=66 \
+    obs_frames_num=50 \
+    pred_frames_num=25
+```
 
 # STS-GCN
 ## Human3.6M
@@ -91,12 +76,8 @@ python -m api.train model=history_repeats_itself \
 python -m api.train model=sts_gcn \
     train_dataset=$DATASET_TRAIN_PATH \
     valid_dataset=$DATASET_VALIDATION_PATH \
-    epochs=4 \
-    snapshot_interval=2 \
-    obs_frames_num=5 \
-    pred_frames_num=10 \
-    experiment_name=STS \
-    data.seq_rate=5 \
+    obs_frames_num=10 \
+    pred_frames_num=25 \
     model.pre_post_process=human3.6m \
     model.n_major_joints=22 \
     model.loss.nJ=32
@@ -106,12 +87,8 @@ python -m api.train model=sts_gcn \
 python -m api.train model=sts_gcn \
     train_dataset=$DATASET_TRAIN_PATH \
     valid_dataset=$DATASET_VALIDATION_PATH \
-    epochs=4 \
-    snapshot_interval=2 \
-    obs_frames_num=5 \
-    pred_frames_num=10 \
-    experiment_name=STS \
-    data.seq_rate=5 \
+    obs_frames_num=10 \
+    pred_frames_num=25 \
     model.pre_post_process=AMASS \
     model.n_major_joints=18 \
     model.loss.nJ=18
@@ -122,12 +99,8 @@ python -m api.train model=sts_gcn \
 python -m api.train model=sts_gcn \
     train_dataset=$DATASET_TRAIN_PATH \
     valid_dataset=$DATASET_VALIDATION_PATH \
-    epochs=4 \
-    snapshot_interval=2 \
-    obs_frames_num=5 \
-    pred_frames_num=10 \
-    experiment_name=STS \
-    data.seq_rate=5 \
+    obs_frames_num=10 \
+    pred_frames_num=25 \
     model.pre_post_process=3DPW \
     model.n_major_joints=18 \
     model.loss.nJ=18
@@ -138,12 +111,8 @@ python -m api.train model=sts_gcn \
 python -m api.train model=pgbig \
     train_dataset=$DATASET_TRAIN_PATH \
     valid_dataset=$DATASET_VALIDATION_PATH \
-    epochs=4 \
-    snapshot_interval=2 \
     obs_frames_num=10 \
     pred_frames_num=25 \
-    experiment_name=pgbig \
-    data.seq_rate=5 \
     model.pre_post_process=human3.6m \
     model.in_features=66 \
     model.loss.nJ=22 \
@@ -154,12 +123,8 @@ python -m api.train model=pgbig \
 python -m api.train model=pgbig \
     train_dataset=$DATASET_TRAIN_PATH \
     valid_dataset=$DATASET_VALIDATION_PATH \
-    epochs=4 \
-    snapshot_interval=2 \
     obs_frames_num=10 \
     pred_frames_num=25 \
-    experiment_name=pgbig \
-    data.seq_rate=5 \
     model.pre_post_process=AMASS \
     model.in_features=54 \
     model.loss.nJ=18 \
@@ -170,12 +135,8 @@ python -m api.train model=pgbig \
 python -m api.train model=pgbig \
     train_dataset=$DATASET_TRAIN_PATH \
     valid_dataset=$DATASET_VALIDATION_PATH \
-    epochs=4 \
-    snapshot_interval=2 \
     obs_frames_num=10 \
     pred_frames_num=25 \
-    experiment_name=pgbig \
-    data.seq_rate=5 \
     model.pre_post_process=3DPW \
     model.in_features=54 \
     model.loss.nJ=18 \
@@ -189,9 +150,6 @@ python -m api.train model=potr \
     keypoint_dim=9 \
     model_pose_format=rotmat \
     metric_pose_format=euler \
-    data.is_pose=True \
-    epochs=10 \
-    data.shuffle=true \
     obs_frames_num=16 \
     pred_frames_num=12 \
     pose_metrics=[MSE]
@@ -203,12 +161,8 @@ python -m api.train model=potr \
 python -m api.train model=msr_gcn \
     train_dataset=$DATASET_VALIDATION_PATH \
     valid_dataset=$DATASET_VALIDATION_PATH \
-    epochs=4 \
-    snapshot_interval=2 \
     obs_frames_num=10 \
-    pred_frames_num=25 \
-    experiment_name=msr_gcn \
-    data.seq_rate=5
+    pred_frames_num=25
 ```
 
 # PV-LSTM
@@ -217,12 +171,8 @@ python -m api.train model=pv_lstm \
     train_dataset=$DATASET_TRAIN_PATH \
     valid_dataset=$DATASET_VALIDATION_PATH \
     model.loss.nJ=32 \
-    epochs=4 \
-    snapshot_interval=2 \
     obs_frames_num=10 \
-    pred_frames_num=25 \
-    experiment_name=pv_lstm \
-    data.seq_rate=5
+    pred_frames_num=25
 ```
 
 # Derpof
@@ -230,12 +180,9 @@ python -m api.train model=pv_lstm \
 python -m api.train model=derpof \
     train_dataset=$DATASET_TRAIN_PATH \
     valid_dataset=$DATASET_VALIDATION_PATH \
-    epochs=10 \
-    snapshot_interval=1 \
     obs_frames_num=50 \
     pred_frames_num=25 \
-    data.seq_rate=5 \
-    experiment_name=derpof
+    data.seq_rate=5
 ```
 
 # Disentangled
@@ -244,11 +191,6 @@ python -m api.train model=derpof \
 python -m api.train model=disentangled \
     train_dataset=$DATASET_TRAIN_PATH \
     valid_dataset=$DATASET_VALIDATION_PATH \
-    epochs=10 \
-    device=cpu \
-    snapshot_interval=2 \
-    obs_frames_num=5 \
-    pred_frames_num=10 \
-    experiment_name=disentangled \
-    data.seq_rate=5
+    obs_frames_num=10 \
+    pred_frames_num=25
 ```

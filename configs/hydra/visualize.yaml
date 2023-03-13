@@ -11,6 +11,3 @@ showing: future, predicted
 pred_frames_num:
 index:
 images_dir:
-
-data:
-  is_visualizing: true

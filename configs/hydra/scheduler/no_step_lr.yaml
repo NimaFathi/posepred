@@ -1,5 +1,0 @@
-type: no_step_lr
-step_size: 2 #50
-gamma: 1 #0.5
-last_epoch: 100
-verbose: true
