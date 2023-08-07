@@ -133,7 +133,7 @@ To add a new model, you need to follow the below steps:
 
 # Adding a Metric
 
-To add a new model, you need to follow the below steps:
+To add a new metric, you need to follow the below steps:
 
 - implement your metric function in the metrics.pose_metrics.py file
 - add the model reference to the metrics.\_\_init\_\_.py
