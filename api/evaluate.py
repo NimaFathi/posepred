@@ -30,8 +30,8 @@ def evaluate(cfg: DictConfig):
         cfg.model.pred_frames_num = dataloader.dataset.future_frames_num
         cfg.model.keypoints_num = dataloader.dataset.keypoints_num
         cfg.model.obs_frames_num = dataloader.dataset.obs_frames_num
-        cfg.model.mean_pose = dataloader.dataset.mean_pose
-        cfg.model.std_pose = dataloader.dataset.std_pose
+        # cfg.model.mean_pose = dataloader.dataset.mean_pose #new commented
+        # cfg.model.std_pose = dataloader.dataset.std_pose  #new commented
         cfg.save_dir = os.getcwd()
 
         model = MODELS[cfg.model.type](cfg.model)

@@ -62,6 +62,14 @@ class PUALoss(nn.Module):
             self.nT = int(args.time_prior[4:]) + 1
             self.s = self.s.repeat(1, self.nT, 1)
             self.s[:, 1:, :] = 0
+        #new:
+        elif args.time_prior == 'r_m':
+            self.nT = 5
+            self.s = self.s.repeat(1, 5, 1)
+            self.s[:, :, :] = 0
+            self.s[:, 0, :] = init_mean
+            self.s[:, 2, :] = 1
+        #end new
         else:
             raise Exception("{} is not a supported prior for time axis, options are: [sig5, sig*, none].".format(args.time_prior))
         # fix tasks for action
@@ -107,6 +115,15 @@ class PUALoss(nn.Module):
                 x = x ** po # 1, T, D, 1
                 local_sigma = local_sigma.unsqueeze(1) # 1, 1, D, ?
                 local_sigma = (local_sigma * x).sum(dim=-2) # 1, T, ?
+            #new:
+            elif self.args.time_prior == 'r_m':
+                x = torch.arange(self.args.nT).to(self.args.device).unsqueeze(1).unsqueeze(0) # 1, T, 1
+                c = 2 * local_sigma[:, 3 - 1, :] * local_sigma[:, 5 - 1, :] / torch.abs(local_sigma[:, 3 - 1, :] + local_sigma[:, 5 - 1, :])
+                f = 1 / (1 + torch.exp(-c * (local_sigma[:, 4 - 1, :] - x)))
+                g = torch.exp(local_sigma[:, 3 - 1, :] * (local_sigma[:, 4 - 1, :] - x))
+                h = torch.exp(local_sigma[:, 5 - 1, :] * (local_sigma[:, 4 - 1, :] - x))
+                local_sigma = local_sigma[:, 1 - 1, :] + (local_sigma[:, 2 - 1, :] / (1 + f * g + (1 - f) * h))
+            #end new
         
         local_sigma = torch.clamp(local_sigma, min=self.args.clipMinS, max=self.args.clipMaxS)
         return local_sigma

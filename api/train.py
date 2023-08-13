@@ -36,9 +36,10 @@ def train(cfg: DictConfig):
         cfg.optimizer = optimizer_args
         cfg.save_dir = cfg.load_path[:cfg.load_path.rindex('snapshots/')]
     else:
-        cfg.model.keypoints_num = train_dataloader.dataset.keypoints_num
-        cfg.model.mean_pose = train_dataloader.dataset.mean_pose
-        cfg.model.std_pose = train_dataloader.dataset.std_pose
+        #new commented
+        # cfg.model.keypoints_num = train_dataloader.dataset.keypoints_num
+        # cfg.model.mean_pose = train_dataloader.dataset.mean_pose
+        # cfg.model.std_pose = train_dataloader.dataset.std_pose
 
         model = MODELS[cfg.model.type](cfg.model)
         loss_module = LOSSES[cfg.model.loss.type](cfg.model.loss)
