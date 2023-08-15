@@ -128,7 +128,7 @@ To add a new model, you need to follow the below steps:
 
 - add the model file or files in the model directory
 - add the model reference to the models.\_\_init\_\_.py
-- add the model's required parameters to the configs/hydra/models. This step is necessary even you don't have additional parameters
+- add the model's required parameters to the configs/hydra/models. This step is necessary even if you don't have additional parameters.
 - if your model has new loss function which is not implemented in the library, you can add your loss function to the losses folder.
 
 # Adding a Metric
