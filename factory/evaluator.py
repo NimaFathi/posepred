@@ -11,6 +11,41 @@ from utils.others import dict_to_device
 
 logger = logging.getLogger(__name__)
 
+#new:
+def visualize_r(model_outputs,data):
+    predicted_poses = model_outputs['pred_pose'][0].clone()
+    predicted_poses = predicted_poses.reshape(predicted_poses.shape[0],-1,3).cpu().numpy()
+    obsereved_poses = data['observed_pose'][0].clone()
+    obsereved_poses = obsereved_poses.reshape(obsereved_poses.shape[0],-1,3).cpu().numpy()
+    gt_poses = data['future_pose'][0].clone()
+    gt_poses = gt_poses.reshape(gt_poses.shape[0],-1,3).cpu().numpy()
+    
+    KeyPoints_from3d = [0,1,2,3,6,7,8,12,13,14,15,17,18,19,25,26,27]
+    predicted_poses = predicted_poses[:,KeyPoints_from3d,:]
+    obsereved_poses = obsereved_poses[:,KeyPoints_from3d,:]
+    gt_poses = gt_poses[:,KeyPoints_from3d,:]
+    skeleton = [[0,1],[1,2],[2,3],[0,4],[4,5],[5,6],[5,6],[0,7],[7,8],[8,9],[9,10],[8,11],[11,12],[12,13],[8,14],[14,15],[15,16]]
+    import matplotlib.pyplot as plt
+    for i in range(gt_poses.shape[0]):
+        xdata = gt_poses[i].T[0]/1000
+        ydata = gt_poses[i].T[1]/1000
+        zdata = gt_poses[i].T[2]/1000
+        fig = plt.figure()
+        ax = plt.axes(projection='3d')
+        ax.scatter(xdata,ydata,zdata, color ="mediumvioletred" , label =data['action'][0])
+        for j in range(17):
+            ax.plot(xdata[ skeleton[j]], ydata[skeleton[j]], zdata[skeleton[j]] , color = "palevioletred" )
+        
+        ax.axes.set_xlim3d(left=-1, right=1) 
+        ax.axes.set_ylim3d(bottom=-1, top=1) 
+        ax.axes.set_zlim3d(bottom=-1 , top=1 )
+        
+        plt.legend() 
+        
+        plt.savefig("/home/rh/codes/posepred/my_temp/test2.png")
+        plt.show()
+        # breakpoint()
+#end new
 
 class Evaluator:
     # evaluator = Evaluator(cfg, eval_dataloader, model, loss_module, eval_reporter)
@@ -23,6 +58,9 @@ class Evaluator:
         self.pose_metrics = args.pose_metrics
         self.rounds_num = args.rounds_num
         self.device = args.device
+        
+        #new:
+        self.visualize = True 
 
     def evaluate(self):
         logger.info('Evaluation started.')
@@ -51,6 +89,11 @@ class Evaluator:
                 loss_outputs = self.loss_module(model_outputs, dict_to_device(data, self.device))
                 assert 'pred_pose' in model_outputs.keys(), 'outputs of model should include pred_pose'
 
+                # new:
+                if self.visualize:
+                    visualize_r(model_outputs,data)
+                    self.visualize = False
+                # end new
                 
                 # calculate pose_metrics
                 report_attrs = loss_outputs
