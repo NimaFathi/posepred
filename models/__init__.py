@@ -8,6 +8,8 @@ from .msr_gcn.msrgcn import MSRGCN
 from .potr.potr import POTR
 from .st_transformer.ST_Transformer import ST_Transformer
 from .pgbig.pgbig import PGBIG
+#new:
+from .my_st_transformer.MY_ST_Transformer import MY_ST_Transformer
 
 MODELS = {'zero_vel': ZeroVel,
           'pv_lstm': PVLSTM,
@@ -18,5 +20,7 @@ MODELS = {'zero_vel': ZeroVel,
           'sts_gcn': STsGCN,
           'msr_gcn': MSRGCN,
           'st_transformer': ST_Transformer,
-          'pgbig': PGBIG
+          'pgbig': PGBIG ,
+          #new:
+          "my_st_transformer":MY_ST_Transformer,
           }

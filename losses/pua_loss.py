@@ -69,6 +69,15 @@ class PUALoss(nn.Module):
             self.s[:, :, :] = 0
             self.s[:, 0, :] = init_mean
             self.s[:, 2, :] = 1
+            
+            self.mlp = torch.nn.Sequential(
+                torch.nn.Linear(16, 64),
+                torch.nn.Sigmoid(), 
+                torch.nn.Linear(64, 256),
+                torch.nn.Sigmoid(), 
+                torch.nn.Linear(256, 1024), 
+                torch.nn.Sigmoid(),
+                torch.nn.Linear(1024, 800))
         #end new
         else:
             raise Exception("{} is not a supported prior for time axis, options are: [sig5, sig*, none].".format(args.time_prior))
@@ -83,6 +92,14 @@ class PUALoss(nn.Module):
         else:
             self.nA = None
             self.sigma = nn.Parameter(self.s)
+            
+    #new:
+    def torch_pca(self, X):
+        centred_X = X - X.mean(dim=1, keepdim=True)
+        covariance_X = (centred_X.transpose(1,2) @ centred_X) / (X.shape[1] - 1)
+        eig_value, eig_vectors = torch.linalg.eigh(covariance_X)
+        return eig_value, eig_vectors
+    #end new
 
     def calc_sigma(self, y_true):
         local_sigma = self.sigma
@@ -117,16 +134,28 @@ class PUALoss(nn.Module):
                 local_sigma = (local_sigma * x).sum(dim=-2) # 1, T, ?
             #new:
             elif self.args.time_prior == 'r_m':
+                poses = y_true['observed_pose']
+                eig_value, eig_vectors = self.torch_pca(poses)
+                eig_value = eig_value[:,-16:]
+                
+                temp = self.mlp(eig_value)
+                temp = temp.reshape(-1, 25, 32)
+
+                
                 x = torch.arange(self.args.nT).to(self.args.device).unsqueeze(1).unsqueeze(0) # 1, T, 1
                 c = 2 * local_sigma[:, 3 - 1, :] * local_sigma[:, 5 - 1, :] / torch.abs(local_sigma[:, 3 - 1, :] + local_sigma[:, 5 - 1, :])
                 f = 1 / (1 + torch.exp(-c * (local_sigma[:, 4 - 1, :] - x)))
                 g = torch.exp(local_sigma[:, 3 - 1, :] * (local_sigma[:, 4 - 1, :] - x))
                 h = torch.exp(local_sigma[:, 5 - 1, :] * (local_sigma[:, 4 - 1, :] - x))
                 local_sigma = local_sigma[:, 1 - 1, :] + (local_sigma[:, 2 - 1, :] / (1 + f * g + (1 - f) * h))
+                
+                temp = temp + local_sigma
+                                
             #end new
         
         local_sigma = torch.clamp(local_sigma, min=self.args.clipMinS, max=self.args.clipMaxS)
         return local_sigma
+
 
 
     def forward(self, y_pred, y_true):
