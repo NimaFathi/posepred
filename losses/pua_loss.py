@@ -77,7 +77,12 @@ class PUALoss(nn.Module):
                 torch.nn.Sigmoid(), 
                 torch.nn.Linear(256, 1024), 
                 torch.nn.Sigmoid(),
-                torch.nn.Linear(1024, 800))
+                torch.nn.Linear(1024, 800),
+                torch.nn.Sigmoid())
+            
+            self.count = 0
+            
+            
         #end new
         else:
             raise Exception("{} is not a supported prior for time axis, options are: [sig5, sig*, none].".format(args.time_prior))
@@ -140,16 +145,22 @@ class PUALoss(nn.Module):
                 
                 temp = self.mlp(eig_value)
                 temp = temp.reshape(-1, 25, 32)
+                self.count += 1
+                if self.count > 1000:
+                    print(temp[0])
+                    self.count = 0
 
                 
-                x = torch.arange(self.args.nT).to(self.args.device).unsqueeze(1).unsqueeze(0) # 1, T, 1
-                c = 2 * local_sigma[:, 3 - 1, :] * local_sigma[:, 5 - 1, :] / torch.abs(local_sigma[:, 3 - 1, :] + local_sigma[:, 5 - 1, :])
-                f = 1 / (1 + torch.exp(-c * (local_sigma[:, 4 - 1, :] - x)))
-                g = torch.exp(local_sigma[:, 3 - 1, :] * (local_sigma[:, 4 - 1, :] - x))
-                h = torch.exp(local_sigma[:, 5 - 1, :] * (local_sigma[:, 4 - 1, :] - x))
-                local_sigma = local_sigma[:, 1 - 1, :] + (local_sigma[:, 2 - 1, :] / (1 + f * g + (1 - f) * h))
+                # x = torch.arange(self.args.nT).to(self.args.device).unsqueeze(1).unsqueeze(0) # 1, T, 1
+                # c = 2 * local_sigma[:, 3 - 1, :] * local_sigma[:, 5 - 1, :] / torch.abs(local_sigma[:, 3 - 1, :] + local_sigma[:, 5 - 1, :])
+                # f = 1 / (1 + torch.exp(-c * (local_sigma[:, 4 - 1, :] - x)))
+                # g = torch.exp(local_sigma[:, 3 - 1, :] * (local_sigma[:, 4 - 1, :] - x))
+                # h = torch.exp(local_sigma[:, 5 - 1, :] * (local_sigma[:, 4 - 1, :] - x))
+                # local_sigma = local_sigma[:, 1 - 1, :] + (local_sigma[:, 2 - 1, :] / (1 + f * g + (1 - f) * h))
                 
-                temp = temp + local_sigma
+                # temp = temp + local_sigma
+                
+                local_sigma = temp
                                 
             #end new
         
@@ -158,11 +169,19 @@ class PUALoss(nn.Module):
 
 
 
-    def forward(self, y_pred, y_true):
+    def forward(self, y_pred_, y_true):
       
-        sigma = self.calc_sigma(y_true)
+        #new:
+        if self.args.time_prior == 'r_m':
+            # breakpoint()
+            sigma = y_pred_['sigmas']
+            sigma = sigma.reshape(-1, 25, 32, 3)
+            sigma = torch.norm(sigma, dim=-1)
+        else:
+            sigma = self.calc_sigma(y_true)
+        
 
-        y_pred = y_pred['pred_pose'] # B,T,JC
+        y_pred = y_pred_['pred_pose'] # B,T,JC
         y_true = y_true['future_pose'] # B,T,JC
 
         B,T,JC = y_pred.shape

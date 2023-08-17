@@ -29,6 +29,12 @@ class diff_CSDI(nn.Module):
         self.input_projection = Conv1d_with_init(inputdim, self.channels, 1)
         self.output_projection1 = Conv1d_with_init(self.channels, self.channels, 1)
         self.output_projection2 = Conv1d_with_init(self.channels, 1, 1)
+        #new:
+        self.output_projection_sigma = Conv1d_with_init(self.channels, self.channels, 1)
+        self.output_projection_sigma2 = Conv1d_with_init(self.channels, 1, 1)
+        #end new
+            
+            
         nn.init.zeros_(self.output_projection2.weight)
 
         self.residual_layers = nn.ModuleList(
@@ -44,7 +50,7 @@ class diff_CSDI(nn.Module):
 
     def forward(self, x, cond_info):
         B, inputdim, K, L = x.shape
-
+        
         x = x.reshape(B, inputdim, K * L)
         x = self.input_projection(x)
         x = F.relu(x)
@@ -56,12 +62,30 @@ class diff_CSDI(nn.Module):
             skip.append(skip_connection)
 
         x = torch.sum(torch.stack(skip), dim=0) / math.sqrt(len(self.residual_layers))
+        
+        #new
+        #I consider this x as the output of the trasformer and I want to use it to predict the sigma
+        #end new
+        
         x = x.reshape(B, self.channels, K * L)
+        
+        #new:
+        y = self.output_projection_sigma(x) 
+        #end new
+        
         x = self.output_projection1(x)
         x = F.relu(x)
         x = self.output_projection2(x)
         x = x.reshape(B, K, L)
-        return x
+        
+        #new:
+        y = F.relu(y)
+        y = self.output_projection_sigma2(y)
+        y = F.sigmoid(y)
+        y = y.reshape(B, K, L)
+        #end new
+        
+        return x, y #new (returning y is new)
 
 
 class ResidualBlock(nn.Module):
@@ -193,10 +217,11 @@ class CSDI_base(nn.Module):
         total_input = self.set_input_to_diffmodel(noisy_data, observed_data, cond_mask)
 
         predicted = self.diffmodel(total_input, side_info)  # (B,K,L)
+        
         return self.postprocess_data(batch, predicted)
 
 
-class MY_ST_Transformer(CSDI_base): #new my
+class MY_ST_Transformer(CSDI_base): #new my_
     def __init__(self, args):
         super(MY_ST_Transformer, self).__init__(args) #new my
         self.Lo = args.obs_frames_num
@@ -217,6 +242,9 @@ class MY_ST_Transformer(CSDI_base): #new my
 
         for p in self.postprocess.parameters():
             p.requires_grad = False
+            
+        #new:
+        self.args = args
 
     def preprocess_data(self, batch):
         observed_data = batch["observed_pose"].to(self.device)
@@ -241,10 +269,21 @@ class MY_ST_Transformer(CSDI_base): #new my
             cond_mask
         )
 
-    def postprocess_data(self, batch, predicted):
+    def postprocess_data(self, batch, predictions):
+        
+        #new:
+        predicted = predictions[0] #this is the poses
+        sigmas = predictions[1] #this is the sigmas
+        sigmas = sigmas[:, :, self.Lo:]
+        sigmas = sigmas.permute(0, 2, 1)
+        # sigmas = sigmas.to(self.args.device)
+        #end new
+        
         predicted = predicted[:, :, self.Lo:]
         predicted = predicted.permute(0, 2, 1)
-
+                
         return {
             'pred_pose': self.postprocess(batch['observed_pose'], predicted),  # B, T, JC
+            #new:
+            "sigmas": self.postprocess(torch.ones(batch['observed_pose'].shape).to(self.args.device), sigmas, normal=False)
         }

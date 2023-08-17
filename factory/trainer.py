@@ -17,6 +17,7 @@ import mlflow.pytorch
 from path_definition import *
 from os.path import join
 
+
 class Trainer:
     def __init__(self, args, train_dataloader, valid_dataloader, model, loss_module, optimizer, optimizer_args,
                  scheduler, train_reporter, valid_reporter):
@@ -106,7 +107,7 @@ class Trainer:
             self.loss_module.zero_grad()
 
             model_outputs = self.model(data)
-            loss_outputs = self.loss_module(model_outputs, data)
+            loss_outputs = self.loss_module(model_outputs, data) 
 
             assert 'pred_pose' in model_outputs.keys(), 'outputs of model should include pred_pose'
             assert 'loss' in loss_outputs.keys(), 'outputs of loss should include loss'
