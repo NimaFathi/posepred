@@ -70,17 +70,60 @@ class PUALoss(nn.Module):
             self.s[:, 0, :] = init_mean
             self.s[:, 2, :] = 1
             
-            self.mlp = torch.nn.Sequential(
-                torch.nn.Linear(16, 64),
-                torch.nn.Sigmoid(), 
-                torch.nn.Linear(64, 256),
-                torch.nn.Sigmoid(), 
-                torch.nn.Linear(256, 1024), 
-                torch.nn.Sigmoid(),
-                torch.nn.Linear(1024, 800),
-                torch.nn.Sigmoid())
+            # self.mlp = torch.nn.Sequential(
+            #     torch.nn.Linear(16, 64),
+            #     torch.nn.ReLU(),
+            #     torch.nn.Dropout(0.3),
+                 
+            #     torch.nn.Linear(64, 256),
+            #     torch.nn.ReLU(), 
+            #     torch.nn.Dropout(0.3),
+                
+            #     torch.nn.Linear(256, 1024), 
+            #     torch.nn.ReLU(),
+            #     torch.nn.Dropout(0.3),
+                
+            #     torch.nn.Linear(1024, 800),
+            #     torch.nn.Sigmoid())
+            
+            # self.mlp = torch.nn.Sequential(
+            #     torch.nn.Linear(16, 64),
+            #     torch.nn.ReLU(),
+            #     torch.nn.Dropout(0.3),
+                 
+            #     torch.nn.Linear(64, 256),
+            #     torch.nn.ReLU(), 
+            #     torch.nn.Dropout(0.3),
+                
+            #     torch.nn.Linear(256, 1024), 
+            #     torch.nn.ReLU(),
+            #     torch.nn.Dropout(0.3),
+                
+            #     torch.nn.Linear(1024, 800),
+            #     torch.nn.Sigmoid())
+            
+            # self.mlp2 = torch.nn.Sequential(
+            #     torch.nn.Linear(5, 64),
+            #     torch.nn.ReLU(),
+            #     torch.nn.Dropout(0.3),
+                 
+            #     torch.nn.Linear(64, 128),
+            #     torch.nn.ReLU(), 
+            #     torch.nn.Dropout(0.3),
+                
+            #     torch.nn.Linear(128, 512), 
+            #     torch.nn.ReLU(),
+            #     torch.nn.Dropout(0.3),
+                
+            #     torch.nn.Linear(512, 160))
             
             self.count = 0
+            
+            #new in new:
+            self.sigmas_to_save = []
+            import matplotlib.pyplot as plt
+            self.fig, self.axes = plt.subplots(8, 4, figsize=(16, 10))
+            self.fig.tight_layout()
             
             
         #end new
@@ -97,6 +140,10 @@ class PUALoss(nn.Module):
         else:
             self.nA = None
             self.sigma = nn.Parameter(self.s)
+            #new:
+            # self.sig5_pose_theta = nn.Parameter(torch.ones(1, 5, 1))
+            #new danger:
+            # self.sig5_pose_theta = nn.Parameter(torch.ones(16, 1, 32))
             
     #new:
     def torch_pca(self, X):
@@ -122,6 +169,7 @@ class PUALoss(nn.Module):
                 g = torch.exp(local_sigma[:, 3 - 1, :] * (local_sigma[:, 4 - 1, :] - x))
                 h = torch.exp(local_sigma[:, 5 - 1, :] * (local_sigma[:, 4 - 1, :] - x))
                 local_sigma = local_sigma[:, 1 - 1, :] + (local_sigma[:, 2 - 1, :] / (1 + f * g + (1 - f) * h))
+                
             elif self.args.time_prior == 'sig*':
                 x = torch.arange(self.args.nT).to(self.args.device).unsqueeze(1).unsqueeze(0) # 1, T, 1
                 local_sigma = local_sigma[:, 0:1, :] / (1 + torch.exp(local_sigma[:, 1:2, :] * (local_sigma[:, 2:3, :] - x)))
@@ -137,37 +185,71 @@ class PUALoss(nn.Module):
                 x = x ** po # 1, T, D, 1
                 local_sigma = local_sigma.unsqueeze(1) # 1, 1, D, ?
                 local_sigma = (local_sigma * x).sum(dim=-2) # 1, T, ?
+                
             #new:
             elif self.args.time_prior == 'r_m':
                 poses = y_true['observed_pose']
                 eig_value, eig_vectors = self.torch_pca(poses)
-                eig_value = eig_value[:,-16:]
+                # eig_value = eig_value[:,-16:]
                 
-                temp = self.mlp(eig_value)
-                temp = temp.reshape(-1, 25, 32)
-                self.count += 1
-                if self.count > 1000:
-                    print(temp[0])
-                    self.count = 0
+                # temp = self.mlp(eig_value)
+                # temp = temp.reshape(-1, 25, 32)
+                # self.count += 1
+                # if self.count > 10000:
+                #     print("eig_value[0][0]",eig_value[0][0])
+                #     print("temp[0][0]",temp[0][0])
+                #     self.count = 0
 
+                # eig_value = eig_value[:,-5:]
+                # temp = self.mlp2(eig_value/300000)
+                # temp = temp.reshape(-1, 5, 32)
+                # local_sigma = temp # 16 , 5 , 32
+                # breakpoint()
                 
-                # x = torch.arange(self.args.nT).to(self.args.device).unsqueeze(1).unsqueeze(0) # 1, T, 1
-                # c = 2 * local_sigma[:, 3 - 1, :] * local_sigma[:, 5 - 1, :] / torch.abs(local_sigma[:, 3 - 1, :] + local_sigma[:, 5 - 1, :])
-                # f = 1 / (1 + torch.exp(-c * (local_sigma[:, 4 - 1, :] - x)))
-                # g = torch.exp(local_sigma[:, 3 - 1, :] * (local_sigma[:, 4 - 1, :] - x))
-                # h = torch.exp(local_sigma[:, 5 - 1, :] * (local_sigma[:, 4 - 1, :] - x))
-                # local_sigma = local_sigma[:, 1 - 1, :] + (local_sigma[:, 2 - 1, :] / (1 + f * g + (1 - f) * h))
+                # sig5_pose_theta = self.sig5_pose_theta
+                # poses = poses.reshape(poses.shape[0], poses.shape[1], -1, 3) #B, T, 32, 3
+                # x = torch.norm(poses, dim=-1) 
+                # x = torch.max(x, dim=-1) - torch.min(x, dim=-1)
+                # x = (x[:,-1:,:]-x[:,0:1,:]).abs() + 0.25 #average abs_velocity + 0.25 to avoid zeros
+                # breakpoint()
+                # c = 2 * sig5_pose_theta[:, 2:3, :] * sig5_pose_theta[:, 4:5, :] / torch.abs(sig5_pose_theta[:, 2:3, :] + sig5_pose_theta[:, 4:5, :])
+                # f = 1 / (1 + torch.exp(-c * (sig5_pose_theta[:, 3:4, :] - x)))
+                # g = torch.exp(sig5_pose_theta[:, 2:3, :] * (sig5_pose_theta[:, 3:4, :] - x))
+                # h = torch.exp(sig5_pose_theta[:, 4:5, :] * (sig5_pose_theta[:, 3:4, :] - x))
+                # sig5_pose = sig5_pose_theta[:, 0:1, :] + (sig5_pose_theta[:, 1:2, :] / (1 + f * g + (1 - f) * h))
                 
-                # temp = temp + local_sigma
+                x = torch.arange(self.args.nT).to(self.args.device).unsqueeze(1).unsqueeze(0) # 1, T, 1
+                c = 2 * local_sigma[:, 3 - 1, :] * local_sigma[:, 5 - 1, :] / torch.abs(local_sigma[:, 3 - 1, :] + local_sigma[:, 5 - 1, :])
+                f = 1 / (1 + torch.exp(-c * (local_sigma[:, 4 - 1, :] - x)))
+                g = torch.exp(local_sigma[:, 3 - 1, :] * (local_sigma[:, 4 - 1, :] - x))
+                h = torch.exp(local_sigma[:, 5 - 1, :] * (local_sigma[:, 4 - 1, :] - x))
+                local_sigma = local_sigma[:, 1 - 1, :] + (local_sigma[:, 2 - 1, :] / (1 + f * g + (1 - f) * h))
                 
-                local_sigma = temp
-                                
+                
+                #new:
+                # local_sigma = (sig5_pose + local_sigma.repeat())/2
+             
             #end new
         
         local_sigma = torch.clamp(local_sigma, min=self.args.clipMinS, max=self.args.clipMaxS)
         return local_sigma
 
 
+    #new:
+    def plot_sigmas(self, sigmas):
+        
+        for sigma in sigmas: #16,    25, 32
+            for i in range(8): 
+                for j in range(4):
+                    self.axes[i, j].plot(sigma[:, i*4+j],"o")
+                    # breakpoint()
+                    self.axes[i, j].set_title("joint {}".format(i*4+j))
+                    # breakpoint()
+                    self.axes[i, j].set_ylim(-1, 2)
+                    
+        self.fig.savefig("/home/rh/codes/posepred/my_temp/sigmas.png")
+        print("saved sigmas.png")
+    #end new
 
     def forward(self, y_pred_, y_true):
       
@@ -176,10 +258,11 @@ class PUALoss(nn.Module):
             # breakpoint()
             sigma = y_pred_['sigmas']
             sigma = sigma.reshape(-1, 25, 32, 3)
-            sigma = torch.norm(sigma, dim=-1)
+            sigma = torch.norm(sigma, dim=-1) / 1.73205080757
         else:
             sigma = self.calc_sigma(y_true)
         
+        # breakpoint()
 
         y_pred = y_pred_['pred_pose'] # B,T,JC
         y_true = y_true['future_pose'] # B,T,JC
@@ -194,6 +277,18 @@ class PUALoss(nn.Module):
 
         l = torch.norm(y_pred - y_true, dim=-1) # B,T,J
         l = torch.mean(torch.exp(-sigma) * l + sigma)
+        
+        if 0:
+            self.plot_sigmas(sigma.detach().cpu().numpy())
+            # breakpoint()
+            
+        
+        #does it make sense to do this: #new danger:
+        #l0 = torch.norm(y_pred - y_true, dim=-1) # B,T,J
+        #l1 = torch.exp(-sigma1) * l0 + sigma1 # B,T,J
+        #l2 = torch.mean(l1, dim=0) # B,J
+        #l3 = torch.exp(-sigma2) * l2 + sigma2 #sigma2: spatial # B,J
+        #l = torch.mean(l2) 
 
         return {
           'loss' : l

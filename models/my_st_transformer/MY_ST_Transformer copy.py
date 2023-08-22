@@ -64,49 +64,9 @@ class diff_CSDI(nn.Module):
                 
                 torch.nn.Linear(1024, 800),
                 torch.nn.Sigmoid())
-        
-        self.flatting = torch.nn.Flatten()
-        self.linear0 = torch.nn.Linear(2310, 2310)
-        self.linear1 = torch.nn.Linear(2310, 2310)
-        self.linear2 = torch.nn.Linear(2310, 2310)
-        
-        self.xmlp = torch.nn.Sequential(
-            torch.nn.Linear(64*2310, 32*2310),
-            torch.nn.ReLU(),
-            torch.nn.Dropout(0.3), 
-            torch.nn.Linear(32*2310, 32*2310),
-            torch.nn.ReLU(),
-            torch.nn.Dropout(0.3), 
-            torch.nn.Linear(32*2310, 16*2310)    
-        )
-        # self.x_mlp = torch.nn.Sequential()
-        self.sigmaMLP = torch.nn.Sequential(
-            torch.nn.Linear((16+3)*2310, 32*2310),
-            torch.nn.ReLU(),
-            torch.nn.Dropout(0.3), 
-            torch.nn.Linear(32*2310, 16*2310),
-            torch.nn.ReLU(),
-            torch.nn.Dropout(0.3), 
-            torch.nn.Linear(16*2310, 8*2310),
-            torch.nn.ReLU(),
-            torch.nn.Dropout(0.3), 
-            torch.nn.Linear(8*2310, 1*2310) ,
-            torch.nn.Sigmoid()  
-        )
         #end new
             
-    def sigma_netwok(self, skip_sigma, x): #new
-        #x: [16, 64, 66, 35] / skip_sigma: 3*[16, 66, 35]
-        x0 = self.linear0(self.flatting(skip_sigma[0]))
-        x1 = self.linear1(self.flatting(skip_sigma[1].flatten()))
-        x2 = self.linear2(self.flatting(skip_sigma[2].flatten()))
-        x_ = torch.cat((x0, x1, x2), dim=0)
-        x = self.xmlp(x)
-        x = torch.cat((x, x_), dim=0)
-        x = self.sigmaMLP(x)
-        return x
         
-           
 
     def forward(self, x, cond_info):
         B, inputdim, K, L = x.shape
@@ -117,17 +77,11 @@ class diff_CSDI(nn.Module):
         x = x.reshape(B, self.channels, K, L)
 
         skip = []
-        skip_sigma = [] #new
         for layer in self.residual_layers:
-            x, skip_connection, skip_connection_sigma = layer(x, cond_info) #new: added skip_connection_sigma
+            x, skip_connection = layer(x, cond_info)
             skip.append(skip_connection)
-            breakpoint()
-            skip_sigma.append(skip_sigma) #new added this / here
-        
 
         x = torch.sum(torch.stack(skip), dim=0) / math.sqrt(len(self.residual_layers))
-        x_sigma = self.sigma_netwok(skip_sigma, x) #new added this / here
-        x_sigma = x_sigma.reshape(B, 1, K, L) #new added this / here
         
         #new
         #I consider this x as the output of the trasformer and I want to use it to predict the sigma
@@ -165,10 +119,6 @@ class ResidualBlock(nn.Module):
 
         self.time_layer = get_torch_trans(heads=nheads, layers=1, channels=channels)
         self.feature_layer = get_torch_trans(heads=nheads, layers=1, channels=channels)
-        
-        #new:
-        self.conv2d_layer_sigma = torch.nn.Conv2d(in_channels=64, out_channels=1, kernel_size=1)
-        self.mid_projection_sigma = Conv1d_with_init(channels, channels, 1)
 
     def forward_time(self, y, base_shape):
         B, channel, K, L = base_shape
@@ -196,15 +146,6 @@ class ResidualBlock(nn.Module):
         y = x
         y = self.forward_time(y, base_shape)
         y = self.forward_feature(y, base_shape)
-        
-        #new
-        skip_sigma = y 
-        skip_sigma = self.mid_projection_sigma(skip_sigma)
-        skip_sigma = skip_sigma.reshape(base_shape) 
-        skip_sigma = self.conv2d_layer_sigma(skip_sigma)
-        skip_sigma = skip_sigma.squeeze(1)
-        #end new
-        
         y = self.mid_projection(y)
 
         _, cond_dim, _, _ = cond_info.shape
@@ -220,9 +161,7 @@ class ResidualBlock(nn.Module):
         x = x.reshape(base_shape)
         residual = residual.reshape(base_shape)
         skip = skip.reshape(base_shape)
-        return (x + residual) / math.sqrt(2.0), skip, skip_sigma #new added skip_sigma
-    
-        #new comment: here
+        return (x + residual) / math.sqrt(2.0), skip
 
 
 class CSDI_base(nn.Module):
@@ -300,8 +239,6 @@ class CSDI_base(nn.Module):
         total_input = self.set_input_to_diffmodel(noisy_data, observed_data, cond_mask)
 
         predicted = self.diffmodel(total_input, side_info)  # (B,K,L)
-        
-        breakpoint()
         
         return self.postprocess_data(batch, predicted)
 

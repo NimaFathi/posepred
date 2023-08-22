@@ -1,0 +1,14 @@
+[2023-08-22 13:56:34,837][utils.save_load][INFO] - ### Taking Snapshot ###
+[2023-08-22 13:56:35,255][factory.trainer][INFO] - Training started.
+[2023-08-22 15:06:33,499][factory.trainer][INFO] - train-epoch1: loss: 30.19615, ADE: 79.68508, FDE: 116.28926, MSE: 609.47405, local_ade: 79.68508, local_fde: 116.28926, time: 4198.22430, 
+[2023-08-22 15:08:33,629][factory.trainer][INFO] - valid-epoch1: loss: 25.37898, ADE: 66.60863, FDE: 106.54459, MSE: 511.66754, local_ade: 66.60863, local_fde: 106.54459, time: 120.10910, 
+[2023-08-22 15:08:33,629][utils.save_load][INFO] - ### Taking Snapshot ###
+[2023-08-22 15:08:33,662][utils.save_load][INFO] - ### Taking Snapshot ###
+[2023-08-22 16:18:19,843][factory.trainer][INFO] - train-epoch2: loss: 27.35246, ADE: 71.97318, FDE: 109.73634, MSE: 554.73246, local_ade: 71.97318, local_fde: 109.73634, time: 4184.84170, 
+[2023-08-22 16:20:16,427][factory.trainer][INFO] - valid-epoch2: loss: 23.79333, ADE: 62.29843, FDE: 102.34673, MSE: 478.24643, local_ade: 62.29843, local_fde: 102.34673, time: 116.56411, 
+[2023-08-22 16:20:16,427][utils.save_load][INFO] - ### Taking Snapshot ###
+[2023-08-22 16:20:16,475][utils.save_load][INFO] - ### Taking Snapshot ###
+[2023-08-22 17:29:22,627][factory.trainer][INFO] - train-epoch3: loss: 26.28387, ADE: 69.06846, FDE: 107.07876, MSE: 533.17697, local_ade: 69.06846, local_fde: 107.07876, time: 4145.45531, 
+[2023-08-22 17:31:13,373][factory.trainer][INFO] - valid-epoch3: loss: 23.45770, ADE: 61.38608, FDE: 101.65588, MSE: 470.53436, local_ade: 61.38608, local_fde: 101.65588, time: 110.72276, 
+[2023-08-22 17:31:13,374][utils.save_load][INFO] - ### Taking Snapshot ###
+[2023-08-22 17:31:13,430][utils.save_load][INFO] - ### Taking Snapshot ###
