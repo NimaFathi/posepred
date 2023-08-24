@@ -4,8 +4,13 @@ import torch
 import torch.nn.functional as F
 from torch import nn
 
+
+
 from models.st_transformer.data_proc import Preprocess, Postprocess, Human36m_Postprocess, Human36m_Preprocess, AMASS_3DPW_Postprocess, AMASS_3DPW_Preprocess
 
+
+#new:
+MLP = 0
 
 def get_torch_trans(heads=8, layers=1, channels=64):
     encoder_layer = nn.TransformerEncoderLayer(
@@ -19,6 +24,12 @@ def Conv1d_with_init(in_channels, out_channels, kernel_size):
     nn.init.kaiming_normal_(layer.weight)
     return layer
 
+#new
+def Conv2d_(in_channels, out_channels, kernel_size):
+    layer = torch.nn.Conv2d(in_channels, out_channels, kernel_size)
+    nn.init.kaiming_normal_(layer.weight)
+    return layer
+#nd new
 
 class diff_CSDI(nn.Module):
     def __init__(self, args, inputdim, side_dim):
@@ -30,8 +41,12 @@ class diff_CSDI(nn.Module):
         self.output_projection1 = Conv1d_with_init(self.channels, self.channels, 1)
         self.output_projection2 = Conv1d_with_init(self.channels, 1, 1)
         #new for conv head:
-        self.output_projection_sigma = Conv1d_with_init(self.channels, self.channels, 1)
-        self.output_projection_sigma2 = Conv1d_with_init(self.channels, 1, 1)
+        if not MLP:
+            self.output_projection_sigma_0 = Conv1d_with_init(66, 66, 1)
+            self.output_projection_sigma_1 = Conv1d_with_init(66, 66, 1)
+            self.output_projection_sigma_2 = Conv1d_with_init(66, 66, 1)     
+            self.output_projection_sigma_second = Conv1d_with_init(66*3, 66, 1)   
+            self.sigmoid = torch.nn.Sigmoid()
         #end new
         
             
@@ -49,64 +64,65 @@ class diff_CSDI(nn.Module):
         )    
         
         #new for mlp head: 
-        self.mlp_sigma_head = torch.nn.Sequential(
-                torch.nn.Linear(16, 64),
+        if MLP:
+            self.mlp_sigma_head = torch.nn.Sequential(
+                    torch.nn.Linear(16, 64),
+                    torch.nn.ReLU(),
+                    torch.nn.Dropout(0.3),
+                    
+                    torch.nn.Linear(64, 256),
+                    torch.nn.ReLU(), 
+                    torch.nn.Dropout(0.3),
+                    
+                    torch.nn.Linear(256, 1024), 
+                    torch.nn.ReLU(),
+                    torch.nn.Dropout(0.3),
+                    
+                    torch.nn.Linear(1024, 800),
+                    torch.nn.Sigmoid())
+            
+            self.flatting = torch.nn.Flatten()
+            self.linear0 = torch.nn.Linear(2310, 2310)
+            self.linear1 = torch.nn.Linear(2310, 2310)
+            self.linear2 = torch.nn.Linear(2310, 2310)
+            
+            self.sigmaMLP = torch.nn.Sequential(
+                torch.nn.Linear((3)*2310, 1*2310),
                 torch.nn.ReLU(),
-                torch.nn.Dropout(0.3),
-                 
-                torch.nn.Linear(64, 256),
-                torch.nn.ReLU(), 
-                torch.nn.Dropout(0.3),
-                
-                torch.nn.Linear(256, 1024), 
+                torch.nn.Dropout(0.3), 
+                torch.nn.Linear(1*2310, int((1/8)*2310)),
                 torch.nn.ReLU(),
-                torch.nn.Dropout(0.3),
-                
-                torch.nn.Linear(1024, 800),
-                torch.nn.Sigmoid())
-        
-        self.flatting = torch.nn.Flatten()
-        self.linear0 = torch.nn.Linear(2310, 2310)
-        self.linear1 = torch.nn.Linear(2310, 2310)
-        self.linear2 = torch.nn.Linear(2310, 2310)
-        
-        self.xmlp = torch.nn.Sequential(
-            torch.nn.Linear(64*2310, 32*2310),
-            torch.nn.ReLU(),
-            torch.nn.Dropout(0.3), 
-            torch.nn.Linear(32*2310, 32*2310),
-            torch.nn.ReLU(),
-            torch.nn.Dropout(0.3), 
-            torch.nn.Linear(32*2310, 16*2310)    
-        )
-        # self.x_mlp = torch.nn.Sequential()
-        self.sigmaMLP = torch.nn.Sequential(
-            torch.nn.Linear((16+3)*2310, 32*2310),
-            torch.nn.ReLU(),
-            torch.nn.Dropout(0.3), 
-            torch.nn.Linear(32*2310, 16*2310),
-            torch.nn.ReLU(),
-            torch.nn.Dropout(0.3), 
-            torch.nn.Linear(16*2310, 8*2310),
-            torch.nn.ReLU(),
-            torch.nn.Dropout(0.3), 
-            torch.nn.Linear(8*2310, 1*2310) ,
-            torch.nn.Sigmoid()  
-        )
+                torch.nn.Dropout(0.3), 
+                torch.nn.Linear(int((1/8)*2310), int((1/4)*2310)),
+                torch.nn.ReLU(),
+                torch.nn.Dropout(0.3), 
+                torch.nn.Linear(int(((1/4)*2310)), 1*2310) ,
+                torch.nn.Sigmoid()  
+            )
+            
         #end new
             
-    def sigma_netwok(self, skip_sigma, x): #new
+    def sigma_netwok(self, skip_sigma): #new
         #x: [16, 64, 66, 35] / skip_sigma: 3*[16, 66, 35]
         x0 = self.linear0(self.flatting(skip_sigma[0]))
-        x1 = self.linear1(self.flatting(skip_sigma[1].flatten()))
-        x2 = self.linear2(self.flatting(skip_sigma[2].flatten()))
-        x_ = torch.cat((x0, x1, x2), dim=0)
-        x = self.xmlp(x)
-        x = torch.cat((x, x_), dim=0)
-        x = self.sigmaMLP(x)
-        return x
+        x1 = self.linear1(self.flatting(skip_sigma[1]))
+        x2 = self.linear2(self.flatting(skip_sigma[2]))
+        x_ = torch.cat((x0, x1, x2), dim=1)
+        x_ = self.sigmaMLP(self.flatting(x_))
+        return x_
+    
+    def sigma_network_conv(self, skip_sigma): #new
+        # breakpoint()
+        x0 = self.output_projection_sigma_0(skip_sigma[0])
+        x1 = self.output_projection_sigma_1(skip_sigma[1])
+        x2 = self.output_projection_sigma_2(skip_sigma[2])
+        x_ = torch.cat((x0, x1, x2), dim=1)
         
-           
+        x_ = self.output_projection_sigma_second(x_)
+        x_ = self.sigmoid(x_)
+        
+        return x_        
+        
 
     def forward(self, x, cond_info):
         B, inputdim, K, L = x.shape
@@ -121,39 +137,26 @@ class diff_CSDI(nn.Module):
         for layer in self.residual_layers:
             x, skip_connection, skip_connection_sigma = layer(x, cond_info) #new: added skip_connection_sigma
             skip.append(skip_connection)
-            breakpoint()
-            skip_sigma.append(skip_sigma) #new added this / here
+            skip_sigma.append(skip_connection_sigma) #new added this / here
         
 
         x = torch.sum(torch.stack(skip), dim=0) / math.sqrt(len(self.residual_layers))
-        x_sigma = self.sigma_netwok(skip_sigma, x) #new added this / here
-        x_sigma = x_sigma.reshape(B, 1, K, L) #new added this / here
+        if MLP:
+            x_sigma = self.sigma_netwok(skip_sigma) #new added this / here
+        else:
+            x_sigma = self.sigma_network_conv(skip_sigma)
+        x_sigma = x_sigma.reshape(B, K, L) #new added this / here
         
-        #new
-        #I consider this x as the output of the trasformer and I want to use it to predict the sigma
-        #end new
+        #new comment: I consider this x as the output of the trasformer 
         
         x = x.reshape(B, self.channels, K * L)
-        
-        #new:
-        breakpoint()
-        y = self.output_projection_sigma(x) 
-        
-        #end new
         
         x = self.output_projection1(x)
         x = F.relu(x)
         x = self.output_projection2(x)
         x = x.reshape(B, K, L)
-        
-        #new:
-        y = torch.relu(y)
-        y = self.output_projection_sigma2(y)
-        y = torch.sigmoid(y)
-        y = y.reshape(B, K, L)
-        #end new
-        
-        return x, y #new (returning y is new)
+
+        return x, x_sigma #new (returning y is new)
 
 
 class ResidualBlock(nn.Module):
@@ -167,7 +170,7 @@ class ResidualBlock(nn.Module):
         self.feature_layer = get_torch_trans(heads=nheads, layers=1, channels=channels)
         
         #new:
-        self.conv2d_layer_sigma = torch.nn.Conv2d(in_channels=64, out_channels=1, kernel_size=1)
+        self.conv2d_layer_sigma = Conv2d_(in_channels=64, out_channels=1, kernel_size=1)
         self.mid_projection_sigma = Conv1d_with_init(channels, channels, 1)
 
     def forward_time(self, y, base_shape):
@@ -300,8 +303,7 @@ class CSDI_base(nn.Module):
         total_input = self.set_input_to_diffmodel(noisy_data, observed_data, cond_mask)
 
         predicted = self.diffmodel(total_input, side_info)  # (B,K,L)
-        
-        breakpoint()
+
         
         return self.postprocess_data(batch, predicted)
 

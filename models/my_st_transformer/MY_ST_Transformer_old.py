@@ -90,7 +90,6 @@ class diff_CSDI(nn.Module):
         x = x.reshape(B, self.channels, K * L)
         
         #new:
-        breakpoint()
         y = self.output_projection_sigma(x) 
         
         #end new

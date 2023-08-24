@@ -241,18 +241,18 @@ class PUALoss(nn.Module):
         for sigma in sigmas: #16,    25, 32
             for i in range(8): 
                 for j in range(4):
-                    self.axes[i, j].plot(sigma[:, i*4+j],"o")
+                    self.axes[i, j].plot(sigma[:, i*4+j],".")
                     # breakpoint()
                     self.axes[i, j].set_title("joint {}".format(i*4+j))
                     # breakpoint()
-                    self.axes[i, j].set_ylim(-1, 2)
+                    # self.axes[i, j].set_ylim(-1, 2)
                     
         self.fig.savefig("/home/rh/codes/posepred/my_temp/sigmas.png")
         print("saved sigmas.png")
     #end new
 
     def forward(self, y_pred_, y_true):
-      
+        
         #new:
         if self.args.time_prior == 'r_m':
             # breakpoint()
@@ -278,8 +278,10 @@ class PUALoss(nn.Module):
         l = torch.norm(y_pred - y_true, dim=-1) # B,T,J
         l = torch.mean(torch.exp(-sigma) * l + sigma)
         
-        if 0:
+        t=0
+        if t<0:
             self.plot_sigmas(sigma.detach().cpu().numpy())
+            t+=1
             # breakpoint()
             
         
