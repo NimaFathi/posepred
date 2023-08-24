@@ -1,0 +1,25 @@
+#!/bin/bash
+#SBATCH --chdir /home/rhossein/codes/posepred
+#SBATCH --nodes 1
+#SBATCH --gres=gpu:1
+#SBATCH --cpus-per-task 16
+#SBATCH --ntasks 1
+#SBATCH --account=vita
+#SBATCH --mem 128G
+#SBATCH --time 23:00:00
+#SBATCH --output out_logs/code%j.log
+#SBATCH --output out_logs/code%j.out
+
+module load gcc/8.4.0-cuda cuda/11.6.2
+
+conda activate posepred
+
+CUDA_VISIBLE_DEVICES=1 python -m api.train model=my_st_transformer \
+train_dataset=/home/rhossein/codes/posepred/preprocessed_data/human36m/train_human3.6m.jsonl \
+valid_dataset=/home/rhossein/codes/posepred/preprocessed_data/human36m/validation_human3.6m.jsonl \
+obs_frames_num=10 \
+pred_frames_num=25 \
+model.loss.nT=25 \
+model.pre_post_process=human3.6m \
+model.n_major_joints=22 \
+model.loss.nJ=32  model.loss.time_prior=r_m  epochs=20 hydra.run.dir="out_izar"
