@@ -46,6 +46,7 @@ class diff_CSDI(nn.Module):
             self.output_projection_sigma_1 = Conv1d_with_init(66, 66, 1)
             self.output_projection_sigma_2 = Conv1d_with_init(66, 66, 1)     
             self.output_projection_sigma_second = Conv1d_with_init(66*3, 66, 1)   
+            self.output_projection_sigma_third = Conv1d_with_init(66, 66, 1)   
             self.sigmoid = torch.nn.Sigmoid()
         #end new
         
@@ -114,11 +115,16 @@ class diff_CSDI(nn.Module):
     def sigma_network_conv(self, skip_sigma): #new
         # breakpoint()
         x0 = self.output_projection_sigma_0(skip_sigma[0])
+        F.relu(x0)
         x1 = self.output_projection_sigma_1(skip_sigma[1])
+        F.relu(x1)
         x2 = self.output_projection_sigma_2(skip_sigma[2])
+        F.relu(x2)
         x_ = torch.cat((x0, x1, x2), dim=1)
         
         x_ = self.output_projection_sigma_second(x_)
+        F.relu(x_)
+        x_ = self.output_projection_sigma_third(x_)
         x_ = self.sigmoid(x_)
         
         return x_        

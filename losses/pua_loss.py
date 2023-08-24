@@ -3,6 +3,9 @@ import numpy as np
 import torch
 import torch.nn as nn
 
+#new
+import matplotlib.pyplot as plt
+
 class PUALoss(nn.Module):
 
     def __init__(self, args):
@@ -64,6 +67,9 @@ class PUALoss(nn.Module):
             self.s[:, 1:, :] = 0
         #new:
         elif args.time_prior == 'r_m':
+            
+            self.t = 0
+            
             self.nT = 5
             self.s = self.s.repeat(1, 5, 1)
             self.s[:, :, :] = 0
@@ -121,7 +127,7 @@ class PUALoss(nn.Module):
             
             #new in new:
             self.sigmas_to_save = []
-            import matplotlib.pyplot as plt
+            
             self.fig, self.axes = plt.subplots(8, 4, figsize=(16, 10))
             self.fig.tight_layout()
             
@@ -248,7 +254,7 @@ class PUALoss(nn.Module):
                     # self.axes[i, j].set_ylim(-1, 2)
                     
         self.fig.savefig("/home/rh/codes/posepred/my_temp/sigmas.png")
-        print("saved sigmas.png")
+        print("saved sigmas 2.png")
     #end new
 
     def forward(self, y_pred_, y_true):
@@ -278,12 +284,13 @@ class PUALoss(nn.Module):
         l = torch.norm(y_pred - y_true, dim=-1) # B,T,J
         l = torch.mean(torch.exp(-sigma) * l + sigma)
         
-        t=0
-        if t<0:
+        #new:
+        if self.t<10:
             self.plot_sigmas(sigma.detach().cpu().numpy())
-            t+=1
+            self.t+=1
             # breakpoint()
-            
+        if self.t==10:
+            plt.close(self.fig)
         
         #does it make sense to do this: #new danger:
         #l0 = torch.norm(y_pred - y_true, dim=-1) # B,T,J
