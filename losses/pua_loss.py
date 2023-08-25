@@ -36,11 +36,23 @@ class PUALoss(nn.Module):
         if 'T' not in args.tasks:
             self.nT = 1
         elif args.time_prior == 'sig5':
+            self.t = 0 #new
+            
             self.nT = 5
             self.s = self.s.repeat(1, 5, 1)
             self.s[:, :, :] = 0
             self.s[:, 0, :] = init_mean
             self.s[:, 2, :] = 1
+            
+            
+            #new:
+            self.count = 0
+            self.sigmas_to_save = []
+            self.fig, self.axes = plt.subplots(8, 4, figsize=(16, 10))
+            self.fig.tight_layout()
+            #end new
+            
+            
         elif args.time_prior == 'sig*':
             self.nT = 3
             self.s = self.s.repeat(1, 3, 1)
@@ -66,10 +78,7 @@ class PUALoss(nn.Module):
             self.s = self.s.repeat(1, self.nT, 1)
             self.s[:, 1:, :] = 0
         #new:
-        elif args.time_prior == 'r_m':
-            
-            self.t = 0
-            
+        elif args.time_prior == 'r_m':            
             self.nT = 5
             self.s = self.s.repeat(1, 5, 1)
             self.s[:, :, :] = 0
@@ -124,7 +133,7 @@ class PUALoss(nn.Module):
             #     torch.nn.Linear(512, 160))
             
             self.count = 0
-            
+            self.t = 0
             #new in new:
             self.sigmas_to_save = []
             
@@ -254,7 +263,7 @@ class PUALoss(nn.Module):
                     # self.axes[i, j].set_ylim(-1, 2)
                     
         self.fig.savefig("/home/rh/codes/posepred/my_temp/sigmas.png")
-        print("saved sigmas 2.png")
+        print("saved sigmas .png")
     #end new
 
     def forward(self, y_pred_, y_true):
@@ -285,6 +294,7 @@ class PUALoss(nn.Module):
         l = torch.mean(torch.exp(-sigma) * l + sigma)
         
         #new:
+        
         if self.t<10:
             self.plot_sigmas(sigma.detach().cpu().numpy())
             self.t+=1

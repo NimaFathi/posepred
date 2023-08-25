@@ -125,7 +125,7 @@ class diff_CSDI(nn.Module):
         x_ = self.output_projection_sigma_second(x_)
         F.relu(x_)
         x_ = self.output_projection_sigma_third(x_)
-        x_ = self.sigmoid(x_)
+        # x_ = self.sigmoid(x_)
         
         return x_        
         
