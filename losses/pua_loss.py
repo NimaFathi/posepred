@@ -11,17 +11,18 @@ EXTRA_HEAD = 0
 
 
 #new:
-def visualize_r(y_pred,y_true,sigma, t):
+def visualize_r(y_pred,y_true,sigma,t,action):
 
-    y_pred = y_pred.reshape(25,32,3).cpu().numpy()
-    y_true = y_true.reshape(25,32,3).cpu().numpy()
-    sigma = sigma.reshape(25,32).cpu().numpy()
-    
-    # fig, axes = plt.subplots(5, 5, figsize=(25, 25))
-    # fig.tight_layout()
+    y_pred = y_pred.reshape(25,32,3).clone().detach().cpu().numpy()
+    y_true = y_true.reshape(25,32,3).clone().detach().cpu().numpy()
+    sigma = sigma.reshape(25,32).clone().detach().cpu().numpy()
     
     fig = plt.figure(figsize=(25,25))
     
+    fig.suptitle(action, fontsize=32)
+    
+    
+    Saeeds = [[0, 1], [1, 2], [2, 3], [0, 6], [6, 7], [7, 8], [0, 12], [12, 13], [13, 14], [14, 15],[13, 17], [17, 18], [18, 19], [13, 25], [25, 26], [26, 27]]
     
     skeleton = [[0,1],[1,2],[2,3],[0,4],[4,5],[5,6],[5,6],[0,7],[7,8],[8,9],[9,10],[8,11],[11,12],[12,13],[8,14],[14,15],[15,16]]
     KeyPoints_from3d = [0,1,2,3,6,7,8,12,13,14,15,17,18,19,25,26,27]
@@ -36,22 +37,28 @@ def visualize_r(y_pred,y_true,sigma, t):
         ydata = y_pred[i].T[0]/1000
         zdata = y_pred[i].T[1]/1000
         xdata = y_pred[i].T[2]/1000
-        
         sigma_ = sigma[i].T
         ax.scatter(xdata,ydata,zdata, color ="mediumvioletred" , label = "prediction" )
         # ax.text(xdata,ydata,zdata, sigma_, color ="mediumvioletred")
         for j in range(17):
             ax.plot(xdata[ skeleton[j]], ydata[skeleton[j]], zdata[skeleton[j]] , color = "palevioletred")
-            ax.text(xdata[ j], ydata[j], zdata[j], str('%.2f'%sigma_[j]), color = "black")
+            ax.text(xdata[j], ydata[j], zdata[j], str('%.2f'%sigma_[j]), color = "black")
+        
+        # for k in range(len(Saeeds)):
+        #     ax.plot(xdata[ Saeeds[k]], ydata[Saeeds[k]], zdata[Saeeds[k]] , color = "palevioletred")
+        #     ax.text(xdata[k], ydata[k], zdata[k], str('%.2f'%sigma_[k]), color = "black")
         
         ydata = y_true[i].T[0]/1000
         zdata = y_true[i].T[1]/1000
         xdata = y_true[i].T[2]/1000
         
-        
         ax.scatter(xdata,ydata,zdata, color ="turquoise" , label = "ground truth" )
-        for k in range(17):
-            ax.plot(xdata[ skeleton[k]], ydata[skeleton[k]], zdata[skeleton[k]] , color = "turquoise")
+        for j in range(17):
+            ax.plot(xdata[ skeleton[j]], ydata[skeleton[j]], zdata[skeleton[j]] , color = "turquoise")
+        
+        # for k in range(len(Saeeds)):
+        #     ax.plot(xdata[ Saeeds[k]], ydata[Saeeds[k]], zdata[Saeeds[k]] , color = "turquoise")
+        
             
         ax.set_title("frame {}".format(i+1))
         # ax.view_init(elev=120, azim=-60)
@@ -76,12 +83,6 @@ def visualize_r(y_pred,y_true,sigma, t):
     # plt.show()
 
 #end new
-
-
-
-
-
-
 
 
 
@@ -261,17 +262,19 @@ class PUALoss(nn.Module):
                 #calculate the varience of keypoint positions
                 variance = torch.norm(poses.reshape(-1,10,32,3), dim=-1) 
                 variance = torch.var(variance, dim=1)
-                eig_value = torch.cat((eig_value, variance), dim=1) #new danger 16, 5+32 / used to be only eig values 16, 5
+                # eig_value = torch.cat((eig_value, variance), dim=1) #new danger 16, 5+32 / used to be only eig values 16, 5
                 
                 
                 thetas = self.mlp(eig_value) #B,5
                 thetas = thetas.reshape(batch_size, 25, 32)
                 
+                local_sigma = thetas
                 
-        thetas = torch.clamp(thetas, min=self.args.clipMinS, max=self.args.clipMaxS)
+                
+        local_sigma = torch.clamp(local_sigma, min=self.args.clipMinS, max=self.args.clipMaxS)
         
         
-        return thetas #local_sigma
+        return local_sigma #local_sigma
 
 
     #new:
@@ -290,7 +293,7 @@ class PUALoss(nn.Module):
         print("saved sigmas .png")
     #end new
 
-    def forward(self, y_pred_, y_true):
+    def forward(self, y_pred_, y_true_):
         
         #new:
         if self.args.time_prior == 'r_m' and EXTRA_HEAD :
@@ -298,11 +301,11 @@ class PUALoss(nn.Module):
             sigma = sigma.reshape(-1, 25, 32, 3)
             sigma = torch.norm(sigma, dim=-1) #/ 1.73205080757
         else:
-            sigma = self.calc_sigma(y_true)
+            sigma = self.calc_sigma(y_true_)
         
 
         y_pred = y_pred_['pred_pose'] # B,T,JC
-        y_true = y_true['future_pose'] # B,T,JC
+        y_true = y_true_['future_pose'] # B,T,JC
 
         B,T,JC = y_pred.shape
         assert T == self.args.nT and JC % self.args.nJ == 0, "Either number or predicted frames (nT) is not right, or number of joints * dim of each joint is not dividable by nJ"
@@ -313,7 +316,8 @@ class PUALoss(nn.Module):
         y_true = y_true.view(B, T, J, C)
 
         l = torch.norm(y_pred - y_true, dim=-1) # B,T,J
-        l = torch.mean(torch.exp(-sigma) * l + sigma)
+        # l = torch.mean(torch.exp(-sigma) * l + sigma)
+        l = torch.mean(l)
         
         #new:
         if self.t<10:
@@ -325,7 +329,8 @@ class PUALoss(nn.Module):
             meow_T = (meow //32) % 25
             meow_B = ((meow //32)//25)%16
             meow = sigma[meow_B,meow_T]
-            visualize_r(y_pred[meow_B], y_true[meow_B], sigma[meow_B], self.t -1 )
+            # breakpoint()
+            visualize_r(y_pred[meow_B], y_true[meow_B], sigma[meow_B], self.t -1, y_true_['action'][meow_B] )
             print(meow)
             # breakpoint()
             
