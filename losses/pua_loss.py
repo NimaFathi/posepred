@@ -5,6 +5,85 @@ import torch.nn as nn
 
 #new
 import matplotlib.pyplot as plt
+EXTRA_HEAD = 0
+#end new
+
+
+
+#new:
+def visualize_r(y_pred,y_true,sigma, t):
+
+    y_pred = y_pred.reshape(25,32,3).cpu().numpy()
+    y_true = y_true.reshape(25,32,3).cpu().numpy()
+    sigma = sigma.reshape(25,32).cpu().numpy()
+    
+    # fig, axes = plt.subplots(5, 5, figsize=(25, 25))
+    # fig.tight_layout()
+    
+    fig = plt.figure(figsize=(25,25))
+    
+    
+    skeleton = [[0,1],[1,2],[2,3],[0,4],[4,5],[5,6],[5,6],[0,7],[7,8],[8,9],[9,10],[8,11],[11,12],[12,13],[8,14],[14,15],[15,16]]
+    KeyPoints_from3d = [0,1,2,3,6,7,8,12,13,14,15,17,18,19,25,26,27]
+    
+    y_pred = y_pred[:,KeyPoints_from3d,:]
+    y_true = y_true[:,KeyPoints_from3d,:]
+    sigma = sigma[:,KeyPoints_from3d]
+    
+    for i in range(25):
+        ax = fig.add_subplot(5, 5, i +1 , projection='3d')
+        
+        ydata = y_pred[i].T[0]/1000
+        zdata = y_pred[i].T[1]/1000
+        xdata = y_pred[i].T[2]/1000
+        
+        sigma_ = sigma[i].T
+        ax.scatter(xdata,ydata,zdata, color ="mediumvioletred" , label = "prediction" )
+        # ax.text(xdata,ydata,zdata, sigma_, color ="mediumvioletred")
+        for j in range(17):
+            ax.plot(xdata[ skeleton[j]], ydata[skeleton[j]], zdata[skeleton[j]] , color = "palevioletred")
+            ax.text(xdata[ j], ydata[j], zdata[j], str('%.2f'%sigma_[j]), color = "black")
+        
+        ydata = y_true[i].T[0]/1000
+        zdata = y_true[i].T[1]/1000
+        xdata = y_true[i].T[2]/1000
+        
+        
+        ax.scatter(xdata,ydata,zdata, color ="turquoise" , label = "ground truth" )
+        for k in range(17):
+            ax.plot(xdata[ skeleton[k]], ydata[skeleton[k]], zdata[skeleton[k]] , color = "turquoise")
+            
+        ax.set_title("frame {}".format(i+1))
+        # ax.view_init(elev=120, azim=-60)
+        ax.set_xlabel('X')
+        ax.set_ylabel('Y')
+        ax.set_zlabel('Z')
+        
+        ax.w_xaxis.set_pane_color((1.0, 1.0, 1.0, 1.0))
+        ax.w_yaxis.set_pane_color((1.0, 1.0, 1.0, 1.0))
+        ax.w_zaxis.set_pane_color((1.0, 1.0, 1.0, 1.0))
+        
+        ax.grid(False)
+            
+        ax.axes.set_xlim3d(left=-0.5, right=0.5) 
+        ax.axes.set_ylim3d(bottom=-0.5, top=0.5) 
+        ax.axes.set_zlim3d(bottom=-0.5 , top=0.5 )
+
+           
+    fig.tight_layout() 
+    plt.legend() 
+    plt.savefig(f"/home/rh/codes/posepred/my_temp/vis_{t}.png")
+    # plt.show()
+
+#end new
+
+
+
+
+
+
+
+
 
 class PUALoss(nn.Module):
 
@@ -85,52 +164,22 @@ class PUALoss(nn.Module):
             self.s[:, 0, :] = init_mean
             self.s[:, 2, :] = 1
             
-            # self.mlp = torch.nn.Sequential(
-            #     torch.nn.Linear(16, 64),
-            #     torch.nn.ReLU(),
-            #     torch.nn.Dropout(0.3),
-                 
-            #     torch.nn.Linear(64, 256),
-            #     torch.nn.ReLU(), 
-            #     torch.nn.Dropout(0.3),
+            self.mlp = torch.nn.Sequential(
+                torch.nn.Linear(5, 32), #new danger used to be 5 for eig values only changed to 5+32 for variance and eig values
+                torch.nn.ReLU(),
+                torch.nn.Dropout(0.2),
                 
-            #     torch.nn.Linear(256, 1024), 
-            #     torch.nn.ReLU(),
-            #     torch.nn.Dropout(0.3),
+                torch.nn.Linear(32, 16),
+                torch.nn.ReLU(),
+                torch.nn.Dropout(0.2),
                 
-            #     torch.nn.Linear(1024, 800),
-            #     torch.nn.Sigmoid())
-            
-            # self.mlp = torch.nn.Sequential(
-            #     torch.nn.Linear(16, 64),
-            #     torch.nn.ReLU(),
-            #     torch.nn.Dropout(0.3),
-                 
-            #     torch.nn.Linear(64, 256),
-            #     torch.nn.ReLU(), 
-            #     torch.nn.Dropout(0.3),
+                torch.nn.Linear(16, 64),
+                torch.nn.ReLU(),
+                torch.nn.Dropout(0.2),
                 
-            #     torch.nn.Linear(256, 1024), 
-            #     torch.nn.ReLU(),
-            #     torch.nn.Dropout(0.3),
+                torch.nn.Linear(64, 25*32)
+            )
                 
-            #     torch.nn.Linear(1024, 800),
-            #     torch.nn.Sigmoid())
-            
-            # self.mlp2 = torch.nn.Sequential(
-            #     torch.nn.Linear(5, 64),
-            #     torch.nn.ReLU(),
-            #     torch.nn.Dropout(0.3),
-                 
-            #     torch.nn.Linear(64, 128),
-            #     torch.nn.ReLU(), 
-            #     torch.nn.Dropout(0.3),
-                
-            #     torch.nn.Linear(128, 512), 
-            #     torch.nn.ReLU(),
-            #     torch.nn.Dropout(0.3),
-                
-            #     torch.nn.Linear(512, 160))
             
             self.count = 0
             self.t = 0
@@ -204,50 +253,25 @@ class PUALoss(nn.Module):
             #new:
             elif self.args.time_prior == 'r_m':
                 poses = y_true['observed_pose']
+                batch_size = poses.shape[0]
                 eig_value, eig_vectors = self.torch_pca(poses)
-                # eig_value = eig_value[:,-16:]
+                eig_value = eig_value[:,-5:]
+                eig_value = eig_value.log() 
                 
-                # temp = self.mlp(eig_value)
-                # temp = temp.reshape(-1, 25, 32)
-                # self.count += 1
-                # if self.count > 10000:
-                #     print("eig_value[0][0]",eig_value[0][0])
-                #     print("temp[0][0]",temp[0][0])
-                #     self.count = 0
-
-                # eig_value = eig_value[:,-5:]
-                # temp = self.mlp2(eig_value/300000)
-                # temp = temp.reshape(-1, 5, 32)
-                # local_sigma = temp # 16 , 5 , 32
-                # breakpoint()
-                
-                # sig5_pose_theta = self.sig5_pose_theta
-                # poses = poses.reshape(poses.shape[0], poses.shape[1], -1, 3) #B, T, 32, 3
-                # x = torch.norm(poses, dim=-1) 
-                # x = torch.max(x, dim=-1) - torch.min(x, dim=-1)
-                # x = (x[:,-1:,:]-x[:,0:1,:]).abs() + 0.25 #average abs_velocity + 0.25 to avoid zeros
-                # breakpoint()
-                # c = 2 * sig5_pose_theta[:, 2:3, :] * sig5_pose_theta[:, 4:5, :] / torch.abs(sig5_pose_theta[:, 2:3, :] + sig5_pose_theta[:, 4:5, :])
-                # f = 1 / (1 + torch.exp(-c * (sig5_pose_theta[:, 3:4, :] - x)))
-                # g = torch.exp(sig5_pose_theta[:, 2:3, :] * (sig5_pose_theta[:, 3:4, :] - x))
-                # h = torch.exp(sig5_pose_theta[:, 4:5, :] * (sig5_pose_theta[:, 3:4, :] - x))
-                # sig5_pose = sig5_pose_theta[:, 0:1, :] + (sig5_pose_theta[:, 1:2, :] / (1 + f * g + (1 - f) * h))
-                
-                x = torch.arange(self.args.nT).to(self.args.device).unsqueeze(1).unsqueeze(0) # 1, T, 1
-                c = 2 * local_sigma[:, 3 - 1, :] * local_sigma[:, 5 - 1, :] / torch.abs(local_sigma[:, 3 - 1, :] + local_sigma[:, 5 - 1, :])
-                f = 1 / (1 + torch.exp(-c * (local_sigma[:, 4 - 1, :] - x)))
-                g = torch.exp(local_sigma[:, 3 - 1, :] * (local_sigma[:, 4 - 1, :] - x))
-                h = torch.exp(local_sigma[:, 5 - 1, :] * (local_sigma[:, 4 - 1, :] - x))
-                local_sigma = local_sigma[:, 1 - 1, :] + (local_sigma[:, 2 - 1, :] / (1 + f * g + (1 - f) * h))
+                #calculate the varience of keypoint positions
+                variance = torch.norm(poses.reshape(-1,10,32,3), dim=-1) 
+                variance = torch.var(variance, dim=1)
+                eig_value = torch.cat((eig_value, variance), dim=1) #new danger 16, 5+32 / used to be only eig values 16, 5
                 
                 
-                #new:
-                # local_sigma = (sig5_pose + local_sigma.repeat())/2
-             
-            #end new
+                thetas = self.mlp(eig_value) #B,5
+                thetas = thetas.reshape(batch_size, 25, 32)
+                
+                
+        thetas = torch.clamp(thetas, min=self.args.clipMinS, max=self.args.clipMaxS)
         
-        local_sigma = torch.clamp(local_sigma, min=self.args.clipMinS, max=self.args.clipMaxS)
-        return local_sigma
+        
+        return thetas #local_sigma
 
 
     #new:
@@ -269,15 +293,13 @@ class PUALoss(nn.Module):
     def forward(self, y_pred_, y_true):
         
         #new:
-        if self.args.time_prior == 'r_m':
-            # breakpoint()
+        if self.args.time_prior == 'r_m' and EXTRA_HEAD :
             sigma = y_pred_['sigmas']
             sigma = sigma.reshape(-1, 25, 32, 3)
-            sigma = torch.norm(sigma, dim=-1) / 1.73205080757
+            sigma = torch.norm(sigma, dim=-1) #/ 1.73205080757
         else:
             sigma = self.calc_sigma(y_true)
         
-        # breakpoint()
 
         y_pred = y_pred_['pred_pose'] # B,T,JC
         y_true = y_true['future_pose'] # B,T,JC
@@ -294,21 +316,22 @@ class PUALoss(nn.Module):
         l = torch.mean(torch.exp(-sigma) * l + sigma)
         
         #new:
-        
         if self.t<10:
             self.plot_sigmas(sigma.detach().cpu().numpy())
             self.t+=1
+            
+            meow = torch.argmax(sigma)
+            meow_J = meow % 32
+            meow_T = (meow //32) % 25
+            meow_B = ((meow //32)//25)%16
+            meow = sigma[meow_B,meow_T]
+            visualize_r(y_pred[meow_B], y_true[meow_B], sigma[meow_B], self.t -1 )
+            print(meow)
             # breakpoint()
-        if self.t==10:
+            
+        elif self.t==10:
             plt.close(self.fig)
         
-        #does it make sense to do this: #new danger:
-        #l0 = torch.norm(y_pred - y_true, dim=-1) # B,T,J
-        #l1 = torch.exp(-sigma1) * l0 + sigma1 # B,T,J
-        #l2 = torch.mean(l1, dim=0) # B,J
-        #l3 = torch.exp(-sigma2) * l2 + sigma2 #sigma2: spatial # B,J
-        #l = torch.mean(l2) 
-
         return {
           'loss' : l
         }

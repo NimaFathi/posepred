@@ -79,8 +79,7 @@ class diff_CSDI(nn.Module):
                     torch.nn.ReLU(),
                     torch.nn.Dropout(0.3),
                     
-                    torch.nn.Linear(1024, 800),
-                    torch.nn.Sigmoid())
+                    torch.nn.Linear(1024, 800))
             
             self.flatting = torch.nn.Flatten()
             self.linear0 = torch.nn.Linear(2310, 2310)
@@ -97,8 +96,8 @@ class diff_CSDI(nn.Module):
                 torch.nn.Linear(int((1/8)*2310), int((1/4)*2310)),
                 torch.nn.ReLU(),
                 torch.nn.Dropout(0.3), 
-                torch.nn.Linear(int(((1/4)*2310)), 1*2310) ,
-                torch.nn.Sigmoid()  
+                torch.nn.Linear(int(((1/4)*2310)), 1*2310)#,
+                # torch.nn.Sigmoid()  
             )
             
         #end new
