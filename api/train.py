@@ -45,6 +45,7 @@ def train(cfg: DictConfig):
         loss_module = LOSSES[cfg.model.loss.type](cfg.model.loss)
         optimizer = OPTIMIZERS[cfg.optimizer.type](
             chain(model.parameters(), loss_module.parameters()), cfg.optimizer)
+        
         train_reporter = Reporter(state='train')
         valid_reporter = Reporter(state='valid')
         cfg.save_dir = os.getcwd()

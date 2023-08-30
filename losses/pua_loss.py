@@ -8,8 +8,6 @@ import matplotlib.pyplot as plt
 EXTRA_HEAD = 0
 #end new
 
-
-
 #new:
 def visualize_r(y_pred,y_true,sigma,t,action):
 
@@ -42,7 +40,8 @@ def visualize_r(y_pred,y_true,sigma,t,action):
         # ax.text(xdata,ydata,zdata, sigma_, color ="mediumvioletred")
         for j in range(17):
             ax.plot(xdata[ skeleton[j]], ydata[skeleton[j]], zdata[skeleton[j]] , color = "palevioletred")
-            ax.text(xdata[j], ydata[j], zdata[j], str('%.2f'%sigma_[j]), color = "black")
+            if j not in [0,1,4] :
+                ax.text(xdata[j], ydata[j], zdata[j], str('%.2f'%sigma_[j]), color = "black")
         
         # for k in range(len(Saeeds)):
         #     ax.plot(xdata[ Saeeds[k]], ydata[Saeeds[k]], zdata[Saeeds[k]] , color = "palevioletred")
@@ -71,15 +70,16 @@ def visualize_r(y_pred,y_true,sigma,t,action):
         ax.w_zaxis.set_pane_color((1.0, 1.0, 1.0, 1.0))
         
         ax.grid(False)
+        ax.set_axis_off()
             
-        ax.axes.set_xlim3d(left=-0.5, right=0.5) 
-        ax.axes.set_ylim3d(bottom=-0.5, top=0.5) 
-        ax.axes.set_zlim3d(bottom=-0.5 , top=0.5 )
+        ax.axes.set_xlim3d(left=-0.45, right=0.45) 
+        ax.axes.set_ylim3d(bottom=-0.45, top=0.45) 
+        ax.axes.set_zlim3d(bottom=-0.45 , top=0.45 )
 
            
     fig.tight_layout() 
     plt.legend() 
-    plt.savefig(f"/home/rh/codes/posepred/my_temp/vis_{t}.png")
+    plt.savefig(f"./plots/new_vis_{t}.png")
     # plt.show()
 
 #end new
@@ -180,8 +180,7 @@ class PUALoss(nn.Module):
                 
                 torch.nn.Linear(64, 25*32)
             )
-                
-            
+                 
             self.count = 0
             self.t = 0
             #new in new:
@@ -189,8 +188,6 @@ class PUALoss(nn.Module):
             
             self.fig, self.axes = plt.subplots(8, 4, figsize=(16, 10))
             self.fig.tight_layout()
-            
-            
         #end new
         else:
             raise Exception("{} is not a supported prior for time axis, options are: [sig5, sig*, none].".format(args.time_prior))
@@ -264,7 +261,6 @@ class PUALoss(nn.Module):
                 variance = torch.var(variance, dim=1)
                 # eig_value = torch.cat((eig_value, variance), dim=1) #new danger 16, 5+32 / used to be only eig values 16, 5
                 
-                
                 thetas = self.mlp(eig_value) #B,5
                 thetas = thetas.reshape(batch_size, 25, 32)
                 
@@ -279,17 +275,14 @@ class PUALoss(nn.Module):
 
     #new:
     def plot_sigmas(self, sigmas):
-        
         for sigma in sigmas: #16,    25, 32
             for i in range(8): 
                 for j in range(4):
-                    self.axes[i, j].plot(sigma[:, i*4+j],".")
-                    # breakpoint()
+                    self.axes[i, j].plot(sigma[:, i*4+j],".", markersize=0.5)
                     self.axes[i, j].set_title("joint {}".format(i*4+j))
-                    # breakpoint()
                     # self.axes[i, j].set_ylim(-1, 2)
-                    
-        self.fig.savefig("/home/rh/codes/posepred/my_temp/sigmas.png")
+              
+        self.fig.savefig("./plots/new_u.png")                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    
         print("saved sigmas .png")
     #end new
 
@@ -315,27 +308,43 @@ class PUALoss(nn.Module):
         y_pred = y_pred.view(B, T, J, C)
         y_true = y_true.view(B, T, J, C)
 
+
+        #new:
+        # sigma = sigma * (1/(1+np.exp(-1*self.t/200)))
+        #end new
+
         l = torch.norm(y_pred - y_true, dim=-1) # B,T,J
-        # l = torch.mean(torch.exp(-sigma) * l + sigma)
-        l = torch.mean(l)
+        
+        #new
+        if np.random.rand() < (1-np.exp(-1*self.t/1000)):
+            l = torch.mean(torch.exp(-sigma) * l + sigma)
+        else:
+            l = torch.mean(l)
+             
+        # l = torch.mean(torch.exp(-sigma) * l + sigma) #commented new
+        
+        # l = torch.mean(l) #new
         
         #new:
         if self.t<10:
             self.plot_sigmas(sigma.detach().cpu().numpy())
-            self.t+=1
-            
-            meow = torch.argmax(sigma)
+               
+            meow = torch.argmin(torch.abs(sigma))
             meow_J = meow % 32
             meow_T = (meow //32) % 25
             meow_B = ((meow //32)//25)%16
             meow = sigma[meow_B,meow_T]
             # breakpoint()
-            visualize_r(y_pred[meow_B], y_true[meow_B], sigma[meow_B], self.t -1, y_true_['action'][meow_B] )
-            print(meow)
+            visualize_r(y_pred[meow_B], y_true[meow_B], sigma[meow_B], self.t , y_true_['action'][meow_B])
+            # print(meow)
+            # print("[meow_B]",torch.mean(torch.norm(y_pred[meow_B] - y_true[meow_B], dim=-1), dim=-1))
             # breakpoint()
             
         elif self.t==10:
             plt.close(self.fig)
+        
+        self.t+=1
+        #end new
         
         return {
           'loss' : l
