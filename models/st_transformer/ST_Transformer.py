@@ -244,6 +244,8 @@ class ST_Transformer(CSDI_base):
     def postprocess_data(self, batch, predicted):
         predicted = predicted[:, :, self.Lo:]
         predicted = predicted.permute(0, 2, 1)
+        
+        torch.clamp(predicted, min=-1000, max=1000) #new
 
         return {
             'pred_pose': self.postprocess(batch['observed_pose'], predicted),  # B, T, JC

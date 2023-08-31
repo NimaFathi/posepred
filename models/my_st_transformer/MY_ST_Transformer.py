@@ -5,12 +5,8 @@ import torch.nn.functional as F
 from torch import nn
 
 
-
 from models.st_transformer.data_proc import Preprocess, Postprocess, Human36m_Postprocess, Human36m_Preprocess, AMASS_3DPW_Postprocess, AMASS_3DPW_Preprocess
 
-
-#new:
-MLP = 0
 
 def get_torch_trans(heads=8, layers=1, channels=64):
     encoder_layer = nn.TransformerEncoderLayer(
@@ -40,14 +36,20 @@ class diff_CSDI(nn.Module):
         self.input_projection = Conv1d_with_init(inputdim, self.channels, 1)
         self.output_projection1 = Conv1d_with_init(self.channels, self.channels, 1)
         self.output_projection2 = Conv1d_with_init(self.channels, 1, 1)
+        
+        
         #new for conv head:
-        if not MLP:
-            self.output_projection_sigma_0 = Conv1d_with_init(66, 66, 1)
-            self.output_projection_sigma_1 = Conv1d_with_init(66, 66, 1)
-            self.output_projection_sigma_2 = Conv1d_with_init(66, 66, 1)     
-            self.output_projection_sigma_second = Conv1d_with_init(66*3, 66, 1)   
-            self.output_projection_sigma_third = Conv1d_with_init(66, 66, 1)   
-            self.sigmoid = torch.nn.Sigmoid()
+        self.output_projection_sigma_0 = Conv1d_with_init(66, 66, 1)
+        self.output_projection_sigma_1 = Conv1d_with_init(66, 66, 1)
+        self.output_projection_sigma_2 = Conv1d_with_init(66, 66, 1)     
+        
+        self.output_projection_sigma_00 = Conv1d_with_init(66, 66, 1) #nn
+        self.output_projection_sigma_11 = Conv1d_with_init(66, 66, 1) #nn
+        self.output_projection_sigma_22 = Conv1d_with_init(66, 66, 1) #nn                 
+        
+        
+        self.output_projection_sigma_second = Conv1d_with_init(66*6, 66, 1)   #nn 6 3
+        self.output_projection_sigma_third = Conv1d_with_init(66, 66, 1)   
         #end new
         
             
@@ -64,52 +66,6 @@ class diff_CSDI(nn.Module):
             ]
         )    
         
-        #new for mlp head: 
-        if MLP:
-            self.mlp_sigma_head = torch.nn.Sequential(
-                    torch.nn.Linear(16, 64),
-                    torch.nn.ReLU(),
-                    torch.nn.Dropout(0.3),
-                    
-                    torch.nn.Linear(64, 256),
-                    torch.nn.ReLU(), 
-                    torch.nn.Dropout(0.3),
-                    
-                    torch.nn.Linear(256, 1024), 
-                    torch.nn.ReLU(),
-                    torch.nn.Dropout(0.3),
-                    
-                    torch.nn.Linear(1024, 800))
-            
-            self.flatting = torch.nn.Flatten()
-            self.linear0 = torch.nn.Linear(2310, 2310)
-            self.linear1 = torch.nn.Linear(2310, 2310)
-            self.linear2 = torch.nn.Linear(2310, 2310)
-            
-            self.sigmaMLP = torch.nn.Sequential(
-                torch.nn.Linear((3)*2310, 1*2310),
-                torch.nn.ReLU(),
-                torch.nn.Dropout(0.3), 
-                torch.nn.Linear(1*2310, int((1/8)*2310)),
-                torch.nn.ReLU(),
-                torch.nn.Dropout(0.3), 
-                torch.nn.Linear(int((1/8)*2310), int((1/4)*2310)),
-                torch.nn.ReLU(),
-                torch.nn.Dropout(0.3), 
-                torch.nn.Linear(int(((1/4)*2310)), 1*2310)#,
-                # torch.nn.Sigmoid()  
-            )
-            
-        #end new
-            
-    def sigma_netwok(self, skip_sigma): #new
-        #x: [16, 64, 66, 35] / skip_sigma: 3*[16, 66, 35]
-        x0 = self.linear0(self.flatting(skip_sigma[0]))
-        x1 = self.linear1(self.flatting(skip_sigma[1]))
-        x2 = self.linear2(self.flatting(skip_sigma[2]))
-        x_ = torch.cat((x0, x1, x2), dim=1)
-        x_ = self.sigmaMLP(self.flatting(x_))
-        return x_
     
     def sigma_network_conv(self, skip_sigma): #new
         # breakpoint()
@@ -119,15 +75,21 @@ class diff_CSDI(nn.Module):
         F.relu(x1)
         x2 = self.output_projection_sigma_2(skip_sigma[2])
         F.relu(x2)
-        x_ = torch.cat((x0, x1, x2), dim=1)
+        
+        x00 = self.output_projection_sigma_00(skip_sigma[3]) #nn
+        F.relu(x0)
+        x11 = self.output_projection_sigma_11(skip_sigma[4]) #nn
+        F.relu(x1)
+        x22 = self.output_projection_sigma_22(skip_sigma[5]) #nn
+        F.relu(x2)        
+        
+        x_ = torch.cat((x0, x1, x2, x00,x11,x22), dim=1) #nn 3 6
         
         x_ = self.output_projection_sigma_second(x_)
         F.relu(x_)
-        x_ = self.output_projection_sigma_third(x_)
-        # x_ = self.sigmoid(x_)
-        
-        return x_        
-        
+        x_ = self.output_projection_sigma_third(x_)        
+        return x_  
+       
 
     def forward(self, x, cond_info):
         B, inputdim, K, L = x.shape
@@ -146,10 +108,9 @@ class diff_CSDI(nn.Module):
         
 
         x = torch.sum(torch.stack(skip), dim=0) / math.sqrt(len(self.residual_layers))
-        if MLP:
-            x_sigma = self.sigma_netwok(skip_sigma) #new added this / here
-        else:
-            x_sigma = self.sigma_network_conv(skip_sigma)
+        
+        #new
+        x_sigma = self.sigma_network_conv(skip_sigma)
         x_sigma = x_sigma.reshape(B, K, L) #new added this / here
         
         #new comment: I consider this x as the output of the trasformer 
@@ -373,9 +334,11 @@ class MY_ST_Transformer(CSDI_base): #new my_
         
         predicted = predicted[:, :, self.Lo:]
         predicted = predicted.permute(0, 2, 1)
+        
+        torch.clamp(predicted, min=-1000, max=1000) #new
                 
         return {
             'pred_pose': self.postprocess(batch['observed_pose'], predicted),  # B, T, JC
             #new:
-            "sigmas": self.postprocess(torch.zeros(batch['observed_pose'].shape).to(self.args.device), sigmas, normal=False) #new danger here : the first time I wrote this I added ones instead of zeros
+            "sigmas": self.postprocess(-1*torch.ones(batch['observed_pose'].shape).to(self.args.device), sigmas, normal=False) #new danger here : the first time I wrote this I added ones instead of zeros
         }

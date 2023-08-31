@@ -6,6 +6,7 @@ import torch.nn as nn
 #new
 import matplotlib.pyplot as plt
 EXTRA_HEAD = 0
+BL = 0
 #end new
 
 #new:
@@ -257,8 +258,8 @@ class PUALoss(nn.Module):
                 eig_value = eig_value.log() 
                 
                 #calculate the varience of keypoint positions
-                variance = torch.norm(poses.reshape(-1,10,32,3), dim=-1) 
-                variance = torch.var(variance, dim=1)
+                # variance = torch.norm(poses.reshape(-1,10,32,3), dim=-1) 
+                # variance = torch.var(variance, dim=1)
                 # eig_value = torch.cat((eig_value, variance), dim=1) #new danger 16, 5+32 / used to be only eig values 16, 5
                 
                 thetas = self.mlp(eig_value) #B,5
@@ -316,10 +317,12 @@ class PUALoss(nn.Module):
         l = torch.norm(y_pred - y_true, dim=-1) # B,T,J
         
         #new
-        if np.random.rand() < (1-np.exp(-1*self.t/1000)):
+        if (np.random.rand() < (1-np.exp(-1*self.t/1000))) and (not BL):
             l = torch.mean(torch.exp(-sigma) * l + sigma)
         else:
-            l = torch.mean(l)
+            l = torch.mean(l)*(0.5)
+            if self.t < 10:
+                print("***", BL)
              
         # l = torch.mean(torch.exp(-sigma) * l + sigma) #commented new
         
