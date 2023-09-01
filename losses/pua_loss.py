@@ -317,14 +317,14 @@ class PUALoss(nn.Module):
         l = torch.norm(y_pred - y_true, dim=-1) # B,T,J
         
         #new
-        if (np.random.rand() < (1-np.exp(-1*self.t/1000))) and (not BL):
-            l = torch.mean(torch.exp(-sigma) * l + sigma)
-        else:
-            l = torch.mean(l)*(0.5)
-            if self.t < 10:
-                print("***", BL)
+        # if (np.random.rand() < (1-np.exp(-1*self.t/1000))) and (not BL):
+        #     l = torch.mean(torch.exp(-sigma) * l + sigma)
+        # else:
+        #     l = torch.mean(l)*(0.5)
+        #     if self.t < 10:
+        #         print("***", BL)
              
-        # l = torch.mean(torch.exp(-sigma) * l + sigma) #commented new
+        l = torch.mean(torch.exp(-sigma) * l + sigma) #commented new
         
         # l = torch.mean(l) #new
         
