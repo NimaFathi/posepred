@@ -20,6 +20,12 @@ def Conv1d_with_init(in_channels, out_channels, kernel_size):
     nn.init.kaiming_normal_(layer.weight)
     return layer
 
+
+#new:
+def Conv1d_with_init_padding(in_channels, out_channels, kernel_size, padding):
+    layer = nn.Conv1d(in_channels, out_channels, kernel_size, padding=padding)
+    nn.init.kaiming_normal_(layer.weight)
+    return layer
 #new
 def Conv2d_(in_channels, out_channels, kernel_size):
     layer = torch.nn.Conv2d(in_channels, out_channels, kernel_size)
@@ -43,12 +49,14 @@ class diff_CSDI(nn.Module):
         self.output_projection_sigma_1 = Conv1d_with_init(66, 66, 1)
         self.output_projection_sigma_2 = Conv1d_with_init(66, 66, 1)     
         
-        self.output_projection_sigma_00 = Conv1d_with_init(66, 66, 1) #nn
-        self.output_projection_sigma_11 = Conv1d_with_init(66, 66, 1) #nn
-        self.output_projection_sigma_22 = Conv1d_with_init(66, 66, 1) #nn                 
+        # self.output_projection_sigma_00 = Conv1d_with_init(66, 66, 1) #nn
+        # self.output_projection_sigma_11 = Conv1d_with_init(66, 66, 1) #nn
+        # self.output_projection_sigma_22 = Conv1d_with_init(66, 66, 1) #nn                 
         
         
-        self.output_projection_sigma_second = Conv1d_with_init(66*6, 66, 1)   #nn 6 3
+        self.output_projection_sigma_first = Conv1d_with_init_padding(66*3, 66*3, 3, 1) #in_channels, out_channels, kernel_size 
+        # self.output_projection_sigma_first = Conv1d_with_init_padding(66*6, 66*3, 3, 1) #in_channels, out_channels, kernel_size #nn 6 3
+        self.output_projection_sigma_second = Conv1d_with_init(66*3, 66, 1) #nn 6 3
         self.output_projection_sigma_third = Conv1d_with_init(66, 66, 1)   
         #end new
         
@@ -76,15 +84,19 @@ class diff_CSDI(nn.Module):
         x2 = self.output_projection_sigma_2(skip_sigma[2])
         F.relu(x2)
         
-        x00 = self.output_projection_sigma_00(skip_sigma[3]) #nn
-        F.relu(x0)
-        x11 = self.output_projection_sigma_11(skip_sigma[4]) #nn
-        F.relu(x1)
-        x22 = self.output_projection_sigma_22(skip_sigma[5]) #nn
-        F.relu(x2)        
+        # x00 = self.output_projection_sigma_00(skip_sigma[3]) #nn
+        # F.relu(x0)
+        # x11 = self.output_projection_sigma_11(skip_sigma[4]) #nn
+        # F.relu(x1)
+        # x22 = self.output_projection_sigma_22(skip_sigma[5]) #nn
+        # F.relu(x2)        
         
-        x_ = torch.cat((x0, x1, x2, x00,x11,x22), dim=1) #nn 3 6
+        # x_ = torch.cat((x0, x1, x2, x00,x11,x22), dim=1) #nn 3 6
         
+        x_ = torch.cat((x0, x1, x2), dim=1) #nn 3 6
+        # breakpoint()
+        x_ = self.output_projection_sigma_first(x_) #new in new
+        F.relu(x_)
         x_ = self.output_projection_sigma_second(x_)
         F.relu(x_)
         x_ = self.output_projection_sigma_third(x_)        

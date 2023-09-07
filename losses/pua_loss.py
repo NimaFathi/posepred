@@ -5,33 +5,49 @@ import torch.nn as nn
 
 #new
 import matplotlib.pyplot as plt
-EXTRA_HEAD = 0
+EXTRA_HEAD = 1
 BL = 0
 #end new
 
 #new:
-def visualize_r(y_pred,y_true,sigma,t,action):
+def visualize_r(y_pred,y_true,sigma,t,action, obs):
 
     y_pred = y_pred.reshape(25,32,3).clone().detach().cpu().numpy()
     y_true = y_true.reshape(25,32,3).clone().detach().cpu().numpy()
     sigma = sigma.reshape(25,32).clone().detach().cpu().numpy()
     
-    fig = plt.figure(figsize=(25,25))
+    fig = plt.figure(figsize=(25,25+10))
     
     fig.suptitle(action, fontsize=32)
     
-    
     Saeeds = [[0, 1], [1, 2], [2, 3], [0, 6], [6, 7], [7, 8], [0, 12], [12, 13], [13, 14], [14, 15],[13, 17], [17, 18], [18, 19], [13, 25], [25, 26], [26, 27]]
     
-    skeleton = [[0,1],[1,2],[2,3],[0,4],[4,5],[5,6],[5,6],[0,7],[7,8],[8,9],[9,10],[8,11],[11,12],[12,13],[8,14],[14,15],[15,16]]
+    skeleton_old = [[0,1],[1,2],[2,3],[0,4],[4,5],[5,6],[0,7],[7,8],[8,9],[9,10],[8,11],[11,12],[12,13],[8,14],[14,15],[15,16]]
+    skeleton= [[0,1],[1,2],[2,3],[0,7],[7,8],[8,9],[9,10],[8,14],[14,15],[15,16],  
+                      [0,4],[4,5],[5,6],[8,11],[11,12],[12,13] ] #left
+    # skeleton_left = [[0,4],[4,5],[5,6],[8,11],[11,12],[12,13]]
+    
     KeyPoints_from3d = [0,1,2,3,6,7,8,12,13,14,15,17,18,19,25,26,27]
     
     y_pred = y_pred[:,KeyPoints_from3d,:]
     y_true = y_true[:,KeyPoints_from3d,:]
     sigma = sigma[:,KeyPoints_from3d]
+    obs = obs[:,KeyPoints_from3d,:]
     
-    for i in range(25):
-        ax = fig.add_subplot(5, 5, i +1 , projection='3d')
+    for i in range(10):
+        ax = fig.add_subplot(5+2, 5, i +1 , projection='3d')
+        ydata = obs[i].T[0]/1000
+        zdata = obs[i].T[1]/1000
+        xdata = obs[i].T[2]/1000
+        ax.scatter(xdata,ydata,zdata, color ="grey" , label = "observation" )
+        for j in range(16):
+            color = "grey" if j<10 else "black"
+            ax.plot(xdata[ skeleton[j]], ydata[skeleton[j]], zdata[skeleton[j]] , color = color)
+        ax.set_title("frame {}".format(-9+i))
+        setup_axes(ax)
+        
+    for i in range(0,25):
+        ax = fig.add_subplot(5+2, 5, i +1 +10 , projection='3d')
         
         ydata = y_pred[i].T[0]/1000
         zdata = y_pred[i].T[1]/1000
@@ -39,8 +55,9 @@ def visualize_r(y_pred,y_true,sigma,t,action):
         sigma_ = sigma[i].T
         ax.scatter(xdata,ydata,zdata, color ="mediumvioletred" , label = "prediction" )
         # ax.text(xdata,ydata,zdata, sigma_, color ="mediumvioletred")
-        for j in range(17):
-            ax.plot(xdata[ skeleton[j]], ydata[skeleton[j]], zdata[skeleton[j]] , color = "palevioletred")
+        for j in range(16):
+            color =  "palevioletred" if i<10 else "pink"
+            ax.plot(xdata[ skeleton[j]], ydata[skeleton[j]], zdata[skeleton[j]] , color =color)
             if j not in [0,1,4] :
                 ax.text(xdata[j], ydata[j], zdata[j], str('%.2f'%sigma_[j]), color = "black")
         
@@ -53,35 +70,38 @@ def visualize_r(y_pred,y_true,sigma,t,action):
         xdata = y_true[i].T[2]/1000
         
         ax.scatter(xdata,ydata,zdata, color ="turquoise" , label = "ground truth" )
-        for j in range(17):
-            ax.plot(xdata[ skeleton[j]], ydata[skeleton[j]], zdata[skeleton[j]] , color = "turquoise")
+        for j in range(16):
+            color = "turquoise" if j<10 else "teal"
+            ax.plot(xdata[ skeleton[j]], ydata[skeleton[j]], zdata[skeleton[j]] , color = color)
         
         # for k in range(len(Saeeds)):
         #     ax.plot(xdata[ Saeeds[k]], ydata[Saeeds[k]], zdata[Saeeds[k]] , color = "turquoise")
-        
-            
-        ax.set_title("frame {}".format(i+1))
+                
+        ax.set_title("frame {}".format(i+1 +10 ))
         # ax.view_init(elev=120, azim=-60)
-        ax.set_xlabel('X')
-        ax.set_ylabel('Y')
-        ax.set_zlabel('Z')
-        
-        ax.w_xaxis.set_pane_color((1.0, 1.0, 1.0, 1.0))
-        ax.w_yaxis.set_pane_color((1.0, 1.0, 1.0, 1.0))
-        ax.w_zaxis.set_pane_color((1.0, 1.0, 1.0, 1.0))
-        
-        ax.grid(False)
-        ax.set_axis_off()
-            
-        ax.axes.set_xlim3d(left=-0.45, right=0.45) 
-        ax.axes.set_ylim3d(bottom=-0.45, top=0.45) 
-        ax.axes.set_zlim3d(bottom=-0.45 , top=0.45 )
-
+        setup_axes(ax)
            
     fig.tight_layout() 
     plt.legend() 
     plt.savefig(f"./plots/new_vis_{t}.png")
     # plt.show()
+
+
+def setup_axes(ax):
+    ax.set_xlabel('X')
+    ax.set_ylabel('Y')
+    ax.set_zlabel('Z')
+    
+    ax.w_xaxis.set_pane_color((1.0, 1.0, 1.0, 1.0))
+    ax.w_yaxis.set_pane_color((1.0, 1.0, 1.0, 1.0))
+    ax.w_zaxis.set_pane_color((1.0, 1.0, 1.0, 1.0))
+    
+    ax.grid(False)
+    ax.set_axis_off()
+        
+    ax.axes.set_xlim3d(left=-0.45, right=0.45) 
+    ax.axes.set_ylim3d(bottom=-0.45, top=0.45) 
+    ax.axes.set_zlim3d(bottom=-0.45 , top=0.45 )
 
 #end new
 
@@ -130,7 +150,7 @@ class PUALoss(nn.Module):
             self.count = 0
             self.sigmas_to_save = []
             self.fig, self.axes = plt.subplots(8, 4, figsize=(16, 10))
-            self.fig.tight_layout()
+            # self.fig.tight_layout()
             #end new
             
             
@@ -257,9 +277,12 @@ class PUALoss(nn.Module):
                 eig_value = eig_value[:,-5:]
                 eig_value = eig_value.log() 
                 
+                
+                # breakpoint()
+                
                 #calculate the varience of keypoint positions
-                # variance = torch.norm(poses.reshape(-1,10,32,3), dim=-1) 
-                # variance = torch.var(variance, dim=1)
+                variance = torch.norm(poses.reshape(-1,10,32,3), dim=-1) 
+                variance = torch.var(variance, dim=1)
                 # eig_value = torch.cat((eig_value, variance), dim=1) #new danger 16, 5+32 / used to be only eig values 16, 5
                 
                 thetas = self.mlp(eig_value) #B,5
@@ -270,22 +293,41 @@ class PUALoss(nn.Module):
                 
         local_sigma = torch.clamp(local_sigma, min=self.args.clipMinS, max=self.args.clipMaxS)
         
-        
         return local_sigma #local_sigma
 
 
     #new:
-    def plot_sigmas(self, sigmas):
+    def plot_sigmas(self, sigmas, actions):
+        
+        action_to_color = { "smoking": "pink", "directions":  "coral", "discussion": "slateblue",
+                "eating": "magenta","greeting": "tan","phoning": "palevioletred","posing": "teal",  
+                "purchases": "navy","sitting": "lime","sittingdown": "green", "takingphoto": "gold",
+                "waiting": "gray","walking": "crimson","walkingdog": "crimson","walkingtogether": "crimson"}
+        
+        b = 0
         for sigma in sigmas: #16,    25, 32
-            for i in range(8): 
-                for j in range(4):
-                    self.axes[i, j].plot(sigma[:, i*4+j],".", markersize=0.5)
-                    self.axes[i, j].set_title("joint {}".format(i*4+j))
-                    # self.axes[i, j].set_ylim(-1, 2)
-              
-        self.fig.savefig("./plots/new_u.png")                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    
-        print("saved sigmas .png")
+            if "walk" in actions[b]:
+                for i in range(8): 
+                    for j in range(4):
+                        self.axes[i, j].plot(sigma[:, i*4+j],".", markersize=0.75, color=action_to_color[actions[b]])
+                        self.axes[i, j].set_title("joint {}".format(i*4+j))
+                        self.axes[i, j].set_ylim(-1, 8)
+            else:
+                pass
+            b+=1
+        
+        # markers = [plt.Line2D([0,0],[0,0],color=color, marker='o', linestyle='') for color in action_to_color.values()]
+        # plt.legend(markers, action_to_color.keys(), numpoints=1, loc ="upper left", ncol=3 )       
+                  
+        self.fig.savefig("./plots/walk_new_u.png")                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    
+        print("saved uncertaity plots .png")
+
+        
+        
+        
     #end new
+    
+    
 
     def forward(self, y_pred_, y_true_):
         
@@ -321,8 +363,7 @@ class PUALoss(nn.Module):
         #     l = torch.mean(torch.exp(-sigma) * l + sigma)
         # else:
         #     l = torch.mean(l)*(0.5)
-        #     if self.t < 10:
-        #         print("***", BL)
+
              
         l = torch.mean(torch.exp(-sigma) * l + sigma) #commented new
         
@@ -330,7 +371,8 @@ class PUALoss(nn.Module):
         
         #new:
         if self.t<10:
-            self.plot_sigmas(sigma.detach().cpu().numpy())
+            # breakpoint()
+            self.plot_sigmas(sigma.detach().cpu().numpy(), y_true_["action"])
                
             meow = torch.argmin(torch.abs(sigma))
             meow_J = meow % 32
@@ -338,10 +380,11 @@ class PUALoss(nn.Module):
             meow_B = ((meow //32)//25)%16
             meow = sigma[meow_B,meow_T]
             # breakpoint()
-            visualize_r(y_pred[meow_B], y_true[meow_B], sigma[meow_B], self.t , y_true_['action'][meow_B])
+            visualize_r(y_pred[meow_B], y_true[meow_B], sigma[meow_B], self.t , y_true_['action'][meow_B],
+                        y_true_['observed_pose'][meow_B].detach().cpu().numpy().reshape(10, J, C))
             # print(meow)
             # print("[meow_B]",torch.mean(torch.norm(y_pred[meow_B] - y_true[meow_B], dim=-1), dim=-1))
-            # breakpoint()
+            # /mnt/nas3_rcp_enac_u0900_vita_scratch/vita-staff/users/rh/codes
             
         elif self.t==10:
             plt.close(self.fig)
