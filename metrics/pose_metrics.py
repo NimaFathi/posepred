@@ -10,14 +10,15 @@ def ADE(pred, target, dim):
     """
     Average Displacement Error
     """
-
     keypoints_num = int(pred.shape[-1] / dim)
     pred = torch.reshape(pred, pred.shape[:-1] + (keypoints_num, dim))
     target = torch.reshape(target, target.shape[:-1] + (keypoints_num, dim))
+    
     displacement = 0
     for d in range(dim):
         displacement += (pred[..., d] - target[..., d]) ** 2
-    ade = torch.mean(torch.sqrt(displacement))
+    
+    ade = torch.mean(torch.sqrt(displacement)) 
     return ade
 
 
@@ -34,7 +35,6 @@ def FDE(pred, target, dim):
     fde = torch.mean(torch.sqrt(displacement))
     return fde
 
-
 def local_ade(pred, target, dim):
     bs, frames, feat = pred.shape
     keypoints = feat // dim
@@ -45,6 +45,7 @@ def local_ade(pred, target, dim):
     local_pred_pose = local_pred_pose.reshape(bs, frames, feat)
     local_target_pose = local_target_pose.reshape(bs, frames, feat)
     return ADE(local_pred_pose, local_target_pose, dim)
+
 
 
 def local_fde(pred, target, dim):
@@ -176,3 +177,90 @@ def VAM(pred, target, dim, mask, occ_cutoff=100):
         else:
             seq_err.append(f_err)
     return np.array(seq_err)
+
+
+#new:
+def F1(pred, target, dim):
+    keypoints_num = int(pred.shape[-1] / dim)
+    pred = torch.reshape(pred, pred.shape[:-1] + (keypoints_num, dim))
+    target = torch.reshape(target, target.shape[:-1] + (keypoints_num, dim))
+    displacement = 0
+    for d in range(dim):
+        displacement += (pred[..., 1, :, d] - target[..., 1, :, d]) ** 2
+    de = torch.mean(torch.sqrt(displacement))
+    return de
+
+def F3(pred, target, dim):
+    keypoints_num = int(pred.shape[-1] / dim)
+    pred = torch.reshape(pred, pred.shape[:-1] + (keypoints_num, dim))
+    target = torch.reshape(target, target.shape[:-1] + (keypoints_num, dim))
+    displacement = 0
+    for d in range(dim):
+        displacement += (pred[..., 3, :, d] - target[..., 3, :, d]) ** 2
+    de = torch.mean(torch.sqrt(displacement))
+    return de
+
+def F7(pred, target, dim):
+    keypoints_num = int(pred.shape[-1] / dim)
+    pred = torch.reshape(pred, pred.shape[:-1] + (keypoints_num, dim))
+    target = torch.reshape(target, target.shape[:-1] + (keypoints_num, dim))
+    displacement = 0
+    for d in range(dim):
+        displacement += (pred[..., 7, :, d] - target[..., 7, :, d]) ** 2
+    de = torch.mean(torch.sqrt(displacement))
+    return de
+
+def F9(pred, target, dim):
+    keypoints_num = int(pred.shape[-1] / dim)
+    pred = torch.reshape(pred, pred.shape[:-1] + (keypoints_num, dim))
+    target = torch.reshape(target, target.shape[:-1] + (keypoints_num, dim))
+    displacement = 0
+    for d in range(dim):
+        displacement += (pred[..., 9, :, d] - target[..., 9, :, d]) ** 2
+    de = torch.mean(torch.sqrt(displacement))
+    return de
+
+def F13(pred, target, dim):
+    keypoints_num = int(pred.shape[-1] / dim)
+    pred = torch.reshape(pred, pred.shape[:-1] + (keypoints_num, dim))
+    target = torch.reshape(target, target.shape[:-1] + (keypoints_num, dim))
+    displacement = 0
+    for d in range(dim):
+        displacement += (pred[..., 13, :, d] - target[..., 13, :, d]) ** 2
+    de = torch.mean(torch.sqrt(displacement))
+    return de
+
+def F17(pred, target, dim):
+    keypoints_num = int(pred.shape[-1] / dim)
+    pred = torch.reshape(pred, pred.shape[:-1] + (keypoints_num, dim))
+    target = torch.reshape(target, target.shape[:-1] + (keypoints_num, dim))
+    displacement = 0
+    for d in range(dim):
+        displacement += (pred[..., 17, :, d] - target[..., 17, :, d]) ** 2
+    de = torch.mean(torch.sqrt(displacement))
+    return de
+
+def F21(pred, target, dim):
+    keypoints_num = int(pred.shape[-1] / dim)
+    pred = torch.reshape(pred, pred.shape[:-1] + (keypoints_num, dim))
+    target = torch.reshape(target, target.shape[:-1] + (keypoints_num, dim))
+    displacement = 0
+    for d in range(dim):
+        displacement += (pred[..., 21, :, d] - target[..., 21, :, d]) ** 2
+    de = torch.mean(torch.sqrt(displacement))
+    return de
+
+
+# def F21(pred, target, dim):
+#     keypoints_num = int(pred.shape[-1] / dim)
+#     pred = torch.reshape(pred, pred.shape[:-1] + (keypoints_num, dim))
+#     target = torch.reshape(target, target.shape[:-1] + (keypoints_num, dim))
+#     displacement = 0
+#     for d in range(dim):
+#         displacement += (pred[..., d] - target[..., d]) ** 2
+    
+#     de = torch.mean(torch.sqrt(displacement), dim=-1) #(na, 25, 32)
+#     de = torch.mean(de, dim=0) #
+
+#     return de[21]
+    

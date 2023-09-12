@@ -5,8 +5,6 @@ import torch.nn as nn
 
 #new
 import matplotlib.pyplot as plt
-EXTRA_HEAD = 1
-BL = 0
 #end new
 
 #new:
@@ -84,6 +82,7 @@ def visualize_r(y_pred,y_true,sigma,t,action, obs):
     fig.tight_layout() 
     plt.legend() 
     plt.savefig(f"./plots/new_vis_{t}.png")
+    plt.close()
     # plt.show()
 
 
@@ -147,7 +146,6 @@ class PUALoss(nn.Module):
             
             
             #new:
-            self.count = 0
             self.sigmas_to_save = []
             self.fig, self.axes = plt.subplots(8, 4, figsize=(16, 10))
             # self.fig.tight_layout()
@@ -178,6 +176,7 @@ class PUALoss(nn.Module):
             self.nT = int(args.time_prior[4:]) + 1
             self.s = self.s.repeat(1, self.nT, 1)
             self.s[:, 1:, :] = 0
+            
         #new:
         elif args.time_prior == 'r_m':            
             self.nT = 5
@@ -188,21 +187,45 @@ class PUALoss(nn.Module):
             
             self.mlp = torch.nn.Sequential(
                 torch.nn.Linear(5, 32), #new danger used to be 5 for eig values only changed to 5+32 for variance and eig values
-                torch.nn.ReLU(),
+                torch.nn.Tanh(), #new dager: used to be ReLU which could be wrong
                 torch.nn.Dropout(0.2),
                 
                 torch.nn.Linear(32, 16),
-                torch.nn.ReLU(),
+                torch.nn.Tanh(),
                 torch.nn.Dropout(0.2),
                 
                 torch.nn.Linear(16, 64),
-                torch.nn.ReLU(),
+                torch.nn.Tanh(),
                 torch.nn.Dropout(0.2),
                 
                 torch.nn.Linear(64, 25*32)
             )
                  
-            self.count = 0
+            self.t = 0
+            #new in new:
+            self.sigmas_to_save = []
+            
+            self.fig, self.axes = plt.subplots(8, 4, figsize=(16, 10))
+            self.fig.tight_layout()
+            
+            #new in new in new
+            self.action_u_info = { "smoking":[0,torch.zeros((25,32)).to(self.args.device),-1000*torch.ones((25,32)).to(self.args.device),1000*torch.ones((25,32)).to(self.args.device)],
+                                "directions":[0,torch.zeros((25,32)).to(self.args.device),-1000*torch.ones((25,32)).to(self.args.device),1000*torch.ones((25,32)).to(self.args.device)],
+                                "discussion":[0,torch.zeros((25,32)).to(self.args.device),-1000*torch.ones((25,32)).to(self.args.device),1000*torch.ones((25,32)).to(self.args.device)],
+                                "eating":[0,torch.zeros((25,32)).to(self.args.device),-1000*torch.ones((25,32)).to(self.args.device),1000*torch.ones((25,32)).to(self.args.device)],
+                                "greeting":[0,torch.zeros((25,32)).to(self.args.device),-1000*torch.ones((25,32)).to(self.args.device),1000*torch.ones((25,32)).to(self.args.device)],
+                                "phoning":[0,torch.zeros((25,32)).to(self.args.device),-1000*torch.ones((25,32)).to(self.args.device),1000*torch.ones((25,32)).to(self.args.device)],
+                                "posing":[0,torch.zeros((25,32)).to(self.args.device),-1000*torch.ones((25,32)).to(self.args.device),1000*torch.ones((25,32)).to(self.args.device)],  
+                                "purchases":[0,torch.zeros((25,32)).to(self.args.device),-1000*torch.ones((25,32)).to(self.args.device),1000*torch.ones((25,32)).to(self.args.device)],
+                                "sitting":[0,torch.zeros((25,32)).to(self.args.device),-1000*torch.ones((25,32)).to(self.args.device),1000*torch.ones((25,32)).to(self.args.device)],
+                                "sittingdown":[0,torch.zeros((25,32)).to(self.args.device),-1000*torch.ones((25,32)).to(self.args.device),1000*torch.ones((25,32)).to(self.args.device)],
+                                "takingphoto":[0,torch.zeros((25,32)).to(self.args.device),-1000*torch.ones((25,32)).to(self.args.device),1000*torch.ones((25,32)).to(self.args.device)],
+                                "waiting":[0,torch.zeros((25,32)).to(self.args.device),-1000*torch.ones((25,32)).to(self.args.device),1000*torch.ones((25,32)).to(self.args.device)],
+                                "walking":[0,torch.zeros((25,32)).to(self.args.device),-1000*torch.ones((25,32)).to(self.args.device),1000*torch.ones((25,32)).to(self.args.device)],
+                                "walkingdog":[0,torch.zeros((25,32)).to(self.args.device),-1000*torch.ones((25,32)).to(self.args.device),1000*torch.ones((25,32)).to(self.args.device)],
+                                "walkingtogether":[0,torch.zeros((25,32)).to(self.args.device),-1000*torch.ones((25,32)).to(self.args.device),1000*torch.ones((25,32)).to(self.args.device)]} #n,sum,max,min
+            
+        elif args.time_prior == 'extra_head' or args.time_prior == 'no_u':    
             self.t = 0
             #new in new:
             self.sigmas_to_save = []
@@ -277,9 +300,7 @@ class PUALoss(nn.Module):
                 eig_value = eig_value[:,-5:]
                 eig_value = eig_value.log() 
                 
-                
-                # breakpoint()
-                
+                            
                 #calculate the varience of keypoint positions
                 variance = torch.norm(poses.reshape(-1,10,32,3), dim=-1) 
                 variance = torch.var(variance, dim=1)
@@ -306,7 +327,7 @@ class PUALoss(nn.Module):
         
         b = 0
         for sigma in sigmas: #16,    25, 32
-            if "walk" in actions[b]:
+            if "" in actions[b]:
                 for i in range(8): 
                     for j in range(4):
                         self.axes[i, j].plot(sigma[:, i*4+j],".", markersize=0.75, color=action_to_color[actions[b]])
@@ -319,27 +340,52 @@ class PUALoss(nn.Module):
         # markers = [plt.Line2D([0,0],[0,0],color=color, marker='o', linestyle='') for color in action_to_color.values()]
         # plt.legend(markers, action_to_color.keys(), numpoints=1, loc ="upper left", ncol=3 )       
                   
-        self.fig.savefig("./plots/walk_new_u.png")                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    
+        self.fig.savefig("./plots/new_u.png")                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    
         print("saved uncertaity plots .png")
-
         
         
         
+    def plot_sigmas_2(self):
+        action_to_color = { "smoking": "pink", "directions":  "coral", "discussion": "slateblue",
+                "eating": "magenta","greeting": "tan","phoning": "palevioletred","posing": "teal",  
+                "purchases": "navy","sitting": "lime","sittingdown": "green", "takingphoto": "gold",
+                "waiting": "gray","walking": "crimson","walkingdog": "crimson","walkingtogether": "crimson"}
+        
+        fig2 = plt.figure(figsize=(16,10))
+        fig2.tight_layout()
+        
+        for act in self.action_u_info.keys():
+            if "pos" in act:
+                print(act)
+                print(self.action_u_info[act][0])
+                for i in range(32):
+                    ax2 = fig2.add_subplot(8,4,i+1)
+                    # breakpoint()
+                    print(action_to_color[act])
+                    ax2.plot( ((self.action_u_info[act][1]/self.action_u_info[act][0])[:,i]).detach().cpu().numpy() , "." , color=action_to_color[act] )
+                    # ax2.plot(((self.action_u_info[act][2])[:,i]).detach().cpu().numpy() , ":" , color=action_to_color[act] )
+                    # ax2.plot(((self.action_u_info[act][3])[:,i]).detach().cpu().numpy() ,":"  , color=action_to_color[act] )
+                  
+        fig2.savefig("./plots/new_u_maxminmean.png")  
+        breakpoint()                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  
+        print("_.png")
+        plt.close()
     #end new
     
     
 
     def forward(self, y_pred_, y_true_):
-        
         #new:
-        if self.args.time_prior == 'r_m' and EXTRA_HEAD :
+        if self.t == 0: print("self.args.time_prior:", self.args.time_prior) 
+        if self.args.time_prior == 'extra_head' :
             sigma = y_pred_['sigmas']
             sigma = sigma.reshape(-1, 25, 32, 3)
             sigma = torch.norm(sigma, dim=-1) #/ 1.73205080757
-        else:
-            sigma = self.calc_sigma(y_true_)
+        elif self.args.time_prior == 'no_u':
+            sigma = torch.zeros((y_true_['pred_pose'].shape[0],25,32)).to(self.args.device)
+        else: 
+            sigma = self.calc_sigma(y_true_) #used to be only this before new
         
-
         y_pred = y_pred_['pred_pose'] # B,T,JC
         y_true = y_true_['future_pose'] # B,T,JC
 
@@ -351,27 +397,21 @@ class PUALoss(nn.Module):
         y_pred = y_pred.view(B, T, J, C)
         y_true = y_true.view(B, T, J, C)
 
-
-        #new:
-        # sigma = sigma * (1/(1+np.exp(-1*self.t/200)))
-        #end new
-
         l = torch.norm(y_pred - y_true, dim=-1) # B,T,J
+        l = l/10  #new:
+        l = torch.mean(torch.exp(-sigma) * l + sigma)
         
         #new
-        # if (np.random.rand() < (1-np.exp(-1*self.t/1000))) and (not BL):
-        #     l = torch.mean(torch.exp(-sigma) * l + sigma)
-        # else:
-        #     l = torch.mean(l)*(0.5)
-
-             
-        l = torch.mean(torch.exp(-sigma) * l + sigma) #commented new
-        
-        # l = torch.mean(l) #new
+        # if self.args.time_prior == 'r_m':
+        #     for i in range(B):
+        #         act = y_true_['action'][i]
+        #         self.action_u_info[act][0] += 1
+        #         self.action_u_info[act][1] += sigma[i]
+        #         self.action_u_info[act][2] = torch.max(self.action_u_info[act][2], sigma[i])
+        #         self.action_u_info[act][3] = torch.min(self.action_u_info[act][3], sigma[i])
         
         #new:
-        if self.t<10:
-            # breakpoint()
+        if self.t<0:
             self.plot_sigmas(sigma.detach().cpu().numpy(), y_true_["action"])
                
             meow = torch.argmin(torch.abs(sigma))
@@ -379,19 +419,26 @@ class PUALoss(nn.Module):
             meow_T = (meow //32) % 25
             meow_B = ((meow //32)//25)%16
             meow = sigma[meow_B,meow_T]
-            # breakpoint()
             visualize_r(y_pred[meow_B], y_true[meow_B], sigma[meow_B], self.t , y_true_['action'][meow_B],
-                        y_true_['observed_pose'][meow_B].detach().cpu().numpy().reshape(10, J, C))
+                        y_true_['observed_pose'][meow_B].detach().cpu().numpy().reshape(50, J, C))
             # print(meow)
             # print("[meow_B]",torch.mean(torch.norm(y_pred[meow_B] - y_true[meow_B], dim=-1), dim=-1))
             # /mnt/nas3_rcp_enac_u0900_vita_scratch/vita-staff/users/rh/codes
             
         elif self.t==10:
             plt.close(self.fig)
-        
+            
+        # elif self.t == 200:
+        #     self.plot_sigmas_2()
+ 
         self.t+=1
         #end new
         
         return {
           'loss' : l
         }
+        
+
+        #new:
+        # sigma = sigma * (1/(1+np.exp(-1*self.t/200)))
+        #end new

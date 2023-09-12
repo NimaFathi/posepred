@@ -4,6 +4,8 @@ import torch
 import torch.nn.functional as F
 from torch import nn
 
+#new
+NEW = 0
 
 from models.st_transformer.data_proc import Preprocess, Postprocess, Human36m_Postprocess, Human36m_Preprocess, AMASS_3DPW_Postprocess, AMASS_3DPW_Preprocess
 
@@ -60,6 +62,34 @@ class diff_CSDI(nn.Module):
         self.output_projection_sigma_third = Conv1d_with_init(66, 66, 1)   
         #end new
         
+        if NEW:
+            self.mlp = torch.nn.Sequential(
+                torch.nn.Linear(66*self.args["obs_frames_num"], 1024*2),  #4950
+                torch.nn.Tanh(),
+                torch.nn.Dropout(0.4),
+                
+                torch.nn.Linear(1024*2, 1024), #new in NEW (used to be 1024 to 256 from first)
+                torch.nn.Tanh(), #used to be ReLU before new in new
+                torch.nn.Dropout(0.3), #used to be 0.2 in frist NEW
+                
+                torch.nn.Linear(1024, 256),
+                torch.nn.Tanh(),
+                torch.nn.Dropout(0.3),
+                
+                torch.nn.Linear(256, 64),
+                torch.nn.Tanh(),
+                torch.nn.Dropout(0.3),
+                
+                torch.nn.Linear(64, 256), 
+                torch.nn.Tanh(),
+                torch.nn.Dropout(0.3),
+                
+                torch.nn.Linear(256, 512), #new in NEW (used to be 64 to 256 to the last )
+                torch.nn.Tanh(),
+                torch.nn.Dropout(0.3),
+                
+                torch.nn.Linear(512, 66*self.args["pred_frames_num"])
+            )
             
         nn.init.zeros_(self.output_projection2.weight)
 
@@ -73,8 +103,21 @@ class diff_CSDI(nn.Module):
                 for _ in range(args.diff_layers)
             ]
         )    
-        
     
+    
+    #new:
+    def sigma_network_NEW(self, skip_sigma):
+        x0 = self.output_projection_sigma_0(skip_sigma) #66 75
+        x0 = x0[...,:self.args["obs_frames_num"]] #B, 66, obs(10 or 50)
+        F.relu(x0)
+        x0 = x0.reshape(-1, 66*self.args["obs_frames_num"])
+        x0 = self.mlp(x0)
+        # zeros = torch.zeros(x0.size(0), 66*self.args["obs_frames_num"], device=x0.device)
+        # x0 = torch.cat([zeros, x0], dim=1)
+        x0 = x0.view(-1, 66, self.args["pred_frames_num"] )
+        return x0        
+        
+        
     def sigma_network_conv(self, skip_sigma): #new
         # breakpoint()
         x0 = self.output_projection_sigma_0(skip_sigma[0])
@@ -84,6 +127,8 @@ class diff_CSDI(nn.Module):
         x2 = self.output_projection_sigma_2(skip_sigma[2])
         F.relu(x2)
         
+        
+        # breakpoint()
         # x00 = self.output_projection_sigma_00(skip_sigma[3]) #nn
         # F.relu(x0)
         # x11 = self.output_projection_sigma_11(skip_sigma[4]) #nn
@@ -122,8 +167,13 @@ class diff_CSDI(nn.Module):
         x = torch.sum(torch.stack(skip), dim=0) / math.sqrt(len(self.residual_layers))
         
         #new
-        x_sigma = self.sigma_network_conv(skip_sigma)
-        x_sigma = x_sigma.reshape(B, K, L) #new added this / here
+        if not NEW:
+            x_sigma = self.sigma_network_conv(skip_sigma)
+            x_sigma = x_sigma.reshape(B, K, L) #new added this / here  
+        else:
+            x_sigma = self.sigma_network_NEW(skip_sigma[0])
+              
+            
         
         #new comment: I consider this x as the output of the trasformer 
         
@@ -339,7 +389,9 @@ class MY_ST_Transformer(CSDI_base): #new my_
         predicted = predictions[0] #this is the poses
         
         sigmas = predictions[1] #this is the sigmas
-        sigmas = sigmas[:, :, self.Lo:]
+        # breakpoint()
+        if not NEW:
+            sigmas = sigmas[:, :, self.Lo:]
         sigmas = sigmas.permute(0, 2, 1)
         # sigmas = sigmas.to(self.args.device)
         #end new

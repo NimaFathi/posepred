@@ -67,6 +67,7 @@ class Trainer:
         self.best_loss = np.inf
         self.best_epoch = -1
         for epoch in range(self.args.start_epoch, self.args.epochs):
+            print("epoch:", epoch) #new
             self.__train()
             if self.use_validation:
                 self.__validate()
