@@ -82,7 +82,7 @@ def visualize_r(y_pred,y_true,sigma,t,action, obs):
     fig.tight_layout() 
     plt.legend() 
     plt.savefig(f"./plots/new_vis_{t}.png")
-    plt.close()
+    # plt.close()
     # plt.show()
 
 
@@ -225,7 +225,7 @@ class PUALoss(nn.Module):
                                 "walkingdog":[0,torch.zeros((25,32)).to(self.args.device),-1000*torch.ones((25,32)).to(self.args.device),1000*torch.ones((25,32)).to(self.args.device)],
                                 "walkingtogether":[0,torch.zeros((25,32)).to(self.args.device),-1000*torch.ones((25,32)).to(self.args.device),1000*torch.ones((25,32)).to(self.args.device)]} #n,sum,max,min
             
-        elif args.time_prior == 'extra_head' or args.time_prior == 'no_u':    
+        elif ('extra_head' in args.time_prior) or (args.time_prior == 'no_u'):    
             self.t = 0
             #new in new:
             self.sigmas_to_save = []
@@ -332,7 +332,7 @@ class PUALoss(nn.Module):
                     for j in range(4):
                         self.axes[i, j].plot(sigma[:, i*4+j],".", markersize=0.75, color=action_to_color[actions[b]])
                         self.axes[i, j].set_title("joint {}".format(i*4+j))
-                        self.axes[i, j].set_ylim(-1, 8)
+                        # self.axes[i, j].set_ylim(-1, 8)
             else:
                 pass
             b+=1
@@ -377,12 +377,12 @@ class PUALoss(nn.Module):
     def forward(self, y_pred_, y_true_):
         #new:
         if self.t == 0: print("self.args.time_prior:", self.args.time_prior) 
-        if self.args.time_prior == 'extra_head' :
+        if 'extra_head' in self.args.time_prior  :
             sigma = y_pred_['sigmas']
             sigma = sigma.reshape(-1, 25, 32, 3)
             sigma = torch.norm(sigma, dim=-1) #/ 1.73205080757
         elif self.args.time_prior == 'no_u':
-            sigma = torch.zeros((y_true_['pred_pose'].shape[0],25,32)).to(self.args.device)
+            sigma = torch.tensor(0).to(self.args.device) #torch.zeros((y_true_['pred_pose'].shape[0],25,32)).to(self.args.device)
         else: 
             sigma = self.calc_sigma(y_true_) #used to be only this before new
         
@@ -398,7 +398,7 @@ class PUALoss(nn.Module):
         y_true = y_true.view(B, T, J, C)
 
         l = torch.norm(y_pred - y_true, dim=-1) # B,T,J
-        l = l/10  #new:
+        # l = l/10  #new:
         l = torch.mean(torch.exp(-sigma) * l + sigma)
         
         #new
@@ -421,9 +421,7 @@ class PUALoss(nn.Module):
             meow = sigma[meow_B,meow_T]
             visualize_r(y_pred[meow_B], y_true[meow_B], sigma[meow_B], self.t , y_true_['action'][meow_B],
                         y_true_['observed_pose'][meow_B].detach().cpu().numpy().reshape(50, J, C))
-            # print(meow)
-            # print("[meow_B]",torch.mean(torch.norm(y_pred[meow_B] - y_true[meow_B], dim=-1), dim=-1))
-            # /mnt/nas3_rcp_enac_u0900_vita_scratch/vita-staff/users/rh/codes
+            
             
         elif self.t==10:
             plt.close(self.fig)
