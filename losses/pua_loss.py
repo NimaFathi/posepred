@@ -124,6 +124,32 @@ class PUALoss(nn.Module):
         '''
 
         self.args = args
+        
+        #new:
+        self.t = 0 
+        
+        self.sigmas_to_save = []
+        self.fig, self.axes = plt.subplots(8, 4, figsize=(16, 10))
+        self.fig.tight_layout()
+        
+        self.action_u_info = { "smoking":[0,torch.zeros((25,32)).to(self.args.device),-1000*torch.ones((25,32)).to(self.args.device),1000*torch.ones((25,32)).to(self.args.device)],
+                            "directions":[0,torch.zeros((25,32)).to(self.args.device),-1000*torch.ones((25,32)).to(self.args.device),1000*torch.ones((25,32)).to(self.args.device)],
+                            "discussion":[0,torch.zeros((25,32)).to(self.args.device),-1000*torch.ones((25,32)).to(self.args.device),1000*torch.ones((25,32)).to(self.args.device)],
+                            "eating":[0,torch.zeros((25,32)).to(self.args.device),-1000*torch.ones((25,32)).to(self.args.device),1000*torch.ones((25,32)).to(self.args.device)],
+                            "greeting":[0,torch.zeros((25,32)).to(self.args.device),-1000*torch.ones((25,32)).to(self.args.device),1000*torch.ones((25,32)).to(self.args.device)],
+                            "phoning":[0,torch.zeros((25,32)).to(self.args.device),-1000*torch.ones((25,32)).to(self.args.device),1000*torch.ones((25,32)).to(self.args.device)],
+                            "posing":[0,torch.zeros((25,32)).to(self.args.device),-1000*torch.ones((25,32)).to(self.args.device),1000*torch.ones((25,32)).to(self.args.device)],  
+                            "purchases":[0,torch.zeros((25,32)).to(self.args.device),-1000*torch.ones((25,32)).to(self.args.device),1000*torch.ones((25,32)).to(self.args.device)],
+                            "sitting":[0,torch.zeros((25,32)).to(self.args.device),-1000*torch.ones((25,32)).to(self.args.device),1000*torch.ones((25,32)).to(self.args.device)],
+                            "sittingdown":[0,torch.zeros((25,32)).to(self.args.device),-1000*torch.ones((25,32)).to(self.args.device),1000*torch.ones((25,32)).to(self.args.device)],
+                            "takingphoto":[0,torch.zeros((25,32)).to(self.args.device),-1000*torch.ones((25,32)).to(self.args.device),1000*torch.ones((25,32)).to(self.args.device)],
+                            "waiting":[0,torch.zeros((25,32)).to(self.args.device),-1000*torch.ones((25,32)).to(self.args.device),1000*torch.ones((25,32)).to(self.args.device)],
+                            "walking":[0,torch.zeros((25,32)).to(self.args.device),-1000*torch.ones((25,32)).to(self.args.device),1000*torch.ones((25,32)).to(self.args.device)],
+                            "walkingdog":[0,torch.zeros((25,32)).to(self.args.device),-1000*torch.ones((25,32)).to(self.args.device),1000*torch.ones((25,32)).to(self.args.device)],
+                            "walkingtogether":[0,torch.zeros((25,32)).to(self.args.device),-1000*torch.ones((25,32)).to(self.args.device),1000*torch.ones((25,32)).to(self.args.device)]} #n,sum,max,min
+          
+        #end new
+        
         init_mean = self.args.init_mean
         self.s = torch.ones(1, 1, 1, requires_grad = True).to(self.args.device) * init_mean
         # Fix tasks for joints
@@ -135,23 +161,12 @@ class PUALoss(nn.Module):
         #fix tasks for time
         if 'T' not in args.tasks:
             self.nT = 1
-        elif args.time_prior == 'sig5':
-            self.t = 0 #new
-            
+        elif args.time_prior == 'sig5':  
             self.nT = 5
             self.s = self.s.repeat(1, 5, 1)
             self.s[:, :, :] = 0
             self.s[:, 0, :] = init_mean
             self.s[:, 2, :] = 1
-            
-            
-            #new:
-            self.sigmas_to_save = []
-            self.fig, self.axes = plt.subplots(8, 4, figsize=(16, 10))
-            # self.fig.tight_layout()
-            #end new
-            
-            
         elif args.time_prior == 'sig*':
             self.nT = 3
             self.s = self.s.repeat(1, 3, 1)
@@ -200,32 +215,8 @@ class PUALoss(nn.Module):
                 
                 torch.nn.Linear(64, 25*32)
             )
-                 
-            self.t = 0
-            #new in new:
-            self.sigmas_to_save = []
-            
-            self.fig, self.axes = plt.subplots(8, 4, figsize=(16, 10))
-            self.fig.tight_layout()
-            
-            #new in new in new
-            self.action_u_info = { "smoking":[0,torch.zeros((25,32)).to(self.args.device),-1000*torch.ones((25,32)).to(self.args.device),1000*torch.ones((25,32)).to(self.args.device)],
-                                "directions":[0,torch.zeros((25,32)).to(self.args.device),-1000*torch.ones((25,32)).to(self.args.device),1000*torch.ones((25,32)).to(self.args.device)],
-                                "discussion":[0,torch.zeros((25,32)).to(self.args.device),-1000*torch.ones((25,32)).to(self.args.device),1000*torch.ones((25,32)).to(self.args.device)],
-                                "eating":[0,torch.zeros((25,32)).to(self.args.device),-1000*torch.ones((25,32)).to(self.args.device),1000*torch.ones((25,32)).to(self.args.device)],
-                                "greeting":[0,torch.zeros((25,32)).to(self.args.device),-1000*torch.ones((25,32)).to(self.args.device),1000*torch.ones((25,32)).to(self.args.device)],
-                                "phoning":[0,torch.zeros((25,32)).to(self.args.device),-1000*torch.ones((25,32)).to(self.args.device),1000*torch.ones((25,32)).to(self.args.device)],
-                                "posing":[0,torch.zeros((25,32)).to(self.args.device),-1000*torch.ones((25,32)).to(self.args.device),1000*torch.ones((25,32)).to(self.args.device)],  
-                                "purchases":[0,torch.zeros((25,32)).to(self.args.device),-1000*torch.ones((25,32)).to(self.args.device),1000*torch.ones((25,32)).to(self.args.device)],
-                                "sitting":[0,torch.zeros((25,32)).to(self.args.device),-1000*torch.ones((25,32)).to(self.args.device),1000*torch.ones((25,32)).to(self.args.device)],
-                                "sittingdown":[0,torch.zeros((25,32)).to(self.args.device),-1000*torch.ones((25,32)).to(self.args.device),1000*torch.ones((25,32)).to(self.args.device)],
-                                "takingphoto":[0,torch.zeros((25,32)).to(self.args.device),-1000*torch.ones((25,32)).to(self.args.device),1000*torch.ones((25,32)).to(self.args.device)],
-                                "waiting":[0,torch.zeros((25,32)).to(self.args.device),-1000*torch.ones((25,32)).to(self.args.device),1000*torch.ones((25,32)).to(self.args.device)],
-                                "walking":[0,torch.zeros((25,32)).to(self.args.device),-1000*torch.ones((25,32)).to(self.args.device),1000*torch.ones((25,32)).to(self.args.device)],
-                                "walkingdog":[0,torch.zeros((25,32)).to(self.args.device),-1000*torch.ones((25,32)).to(self.args.device),1000*torch.ones((25,32)).to(self.args.device)],
-                                "walkingtogether":[0,torch.zeros((25,32)).to(self.args.device),-1000*torch.ones((25,32)).to(self.args.device),1000*torch.ones((25,32)).to(self.args.device)]} #n,sum,max,min
-            
-        elif ('extra_head' in args.time_prior) or (args.time_prior == 'no_u'):    
+ 
+        elif ('extra_head' in args.time_prior) or (args.time_prior == 'no_u') or  ('_' in args.time_prior):    
             self.t = 0
             #new in new:
             self.sigmas_to_save = []
@@ -246,10 +237,6 @@ class PUALoss(nn.Module):
         else:
             self.nA = None
             self.sigma = nn.Parameter(self.s)
-            #new:
-            # self.sig5_pose_theta = nn.Parameter(torch.ones(1, 5, 1))
-            #new danger:
-            # self.sig5_pose_theta = nn.Parameter(torch.ones(16, 1, 32))
             
     #new:
     def torch_pca(self, X):
@@ -311,6 +298,9 @@ class PUALoss(nn.Module):
                 
                 local_sigma = thetas
                 
+            elif self.args.time_prior == 'mlp_sig5':
+                poses = y_true['observed_pose']
+                
                 
         local_sigma = torch.clamp(local_sigma, min=self.args.clipMinS, max=self.args.clipMaxS)
         
@@ -367,14 +357,110 @@ class PUALoss(nn.Module):
                     # ax2.plot(((self.action_u_info[act][3])[:,i]).detach().cpu().numpy() ,":"  , color=action_to_color[act] )
                   
         fig2.savefig("./plots/new_u_maxminmean.png")  
-        breakpoint()                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  
+        # breakpoint()                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  
         print("_.png")
         plt.close()
     #end new
     
+        
+
+    def test_(self, y_true_, name):
+        skeleton= [[0,1],[1,2],[2,3],[0,7],[7,8],[8,9],[9,10],[8,14],[14,15],[15,16],  
+                      [0,4],[4,5],[5,6],[8,11],[11,12],[12,13] ] #left
+
+        KeyPoints_from3d = [0,1,2,3,6,7,8,12,13,14,15,17,18,19,25,26,27]
     
+        y_true = y_true_.detach().cpu().numpy()
+        
+        B,T,JC = y_true.shape
+        y_true = y_true.reshape(B,T,32,3)
+        y_true = y_true[:,:,KeyPoints_from3d,:]
+        
+        link_lenghths = np.zeros((B,T,16))
+          
+        for i in range(16):
+            l = y_true[:,:,skeleton[i][0],:] - y_true[:,:,skeleton[i][1],:] #(B,T,1,3)
+            l2 = (l[:,:,0]**2 + l[:,:,1]**2 + l[:,:,2]**2)**0.5 #(B,T,1
+            link_lenghths[:,:,i] = l2/10
+            # link_lenghths[:,:,i] = np.linalg.norm(l, axis=-1)/100
+            
+                
+        fig3 = plt.figure(figsize=(16,10))
+        fig3.tight_layout()
+        
+        for i in range(16):
+            ax2 = fig3.add_subplot(4,4,i+1) #for each link
+            ax2.set_title("link {}".format(i))
+            for j in range(B):
+                ax2.plot(link_lenghths[j,:,i])
+                    
+        fig3.savefig("./plots/test_"+name+".png")                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   
+        print("HELP")
+        plt.close()
+    
+        
+    def test_sk(self, y_true_, name):
+        skeleton= [[0, 1], [1, 2], [2, 3], [0, 6], [6, 7], [7, 8], [0, 12], [12, 13], 
+                   [13, 14], [14, 15],[13, 17], [17, 18], [18, 19], [13, 25], [25, 26], [26, 27]] #saeed's
+
+        KeyPoints_from3d = [0,1,2,3,6,7,8,12,13,14,15,17,18,19,25,26,27]
+    
+        y_true = y_true_.detach().cpu().numpy()
+        
+        B,T,JC = y_true.shape
+        y_true = y_true.reshape(B,T,32,3)
+        # y_true = y_true[:,:,KeyPoints_from3d,:]
+        
+        link_lenghths = np.zeros((B,T,16))
+          
+        for i in range(16):
+            l = y_true[:,:,skeleton[i][0],:] - y_true[:,:,skeleton[i][1],:] #(B,T,1,3)
+            l2 = (l[:,:,0]**2 + l[:,:,1]**2 + l[:,:,2]**2)**0.5 #(B,T,1
+            link_lenghths[:,:,i] = l2/10
+            # link_lenghths[:,:,i] = np.linalg.norm(l, axis=-1)/100
+            
+                
+        fig3 = plt.figure(figsize=(16,10))
+        fig3.tight_layout()
+        
+        for i in range(16):
+            ax2 = fig3.add_subplot(4,4,i+1) #for each link
+            ax2.set_title("link {}".format(i))
+            for j in range(B):
+                ax2.plot(link_lenghths[j,:,i])
+                    
+        fig3.savefig("./plots/test_"+name+".png")                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   
+        print("HELP")
+        plt.close()
+        
+        
+    def cal_link_len_error(self, y_true, y_pred):
+        skeleton= [[0,1],[1,2],[2,3],[0,7],[7,8],[8,9],[9,10],[8,14],[14,15],[15,16],  
+                      [0,4],[4,5],[5,6],[8,11],[11,12],[12,13] ] #left
+        
+        KeyPoints_from3d = [0,1,2,3,6,7,8,12,13,14,15,17,18,19,25,26,27]
+        y_true = y_true[:,:,KeyPoints_from3d,:]
+        y_pred = y_pred[:,:,KeyPoints_from3d,:]
+        
+        input_len = torch.zeros((y_true.shape[0], 16)).to(self.args.device)
+        output_lens = torch.zeros((y_pred.shape[0], y_pred.shape[1],16)).to(self.args.device)
+        for i in range(16):
+            # breakpoint()
+            input_len[:,i] = torch.mean(torch.norm(y_true[:,:,skeleton[i][0],:] - y_true[:,:,skeleton[i][1],:], dim=-1), dim=1)
+            output_lens[:,:,i] = torch.norm(y_pred[:,:,skeleton[i][0],:] - y_pred[:,:,skeleton[i][1],:], dim=-1)
+            
+        len_error = (torch.abs( output_lens - input_len.unsqueeze(1)))
+        len_error = torch.mean(len_error)
+        
+        return len_error #B,T,16
+            
 
     def forward(self, y_pred_, y_true_):
+        
+        # if self.t==0:
+        #     self.test_(y_true_["observed_pose"],"observed_pose")
+        #     self.test_(y_pred_["pred_pose"],"pred_pose")
+        #     self.test_(torch.cat((y_true_["observed_pose"], y_pred_["pred_pose"]), dim=1),  "obs_pred_pose")
         #new:
         if self.t == 0: print("self.args.time_prior:", self.args.time_prior) 
         if 'extra_head' in self.args.time_prior  :
@@ -400,6 +486,10 @@ class PUALoss(nn.Module):
         l = torch.norm(y_pred - y_true, dim=-1) # B,T,J
         # l = l/10  #new:
         l = torch.mean(torch.exp(-sigma) * l + sigma)
+        # l = l/10 #new:
+        # print(l, self.cal_link_len_error(y_true, y_pred) )
+        # l = self.cal_link_len_error(y_true, y_pred)
+        
         
         #new
         # if self.args.time_prior == 'r_m':
@@ -411,7 +501,7 @@ class PUALoss(nn.Module):
         #         self.action_u_info[act][3] = torch.min(self.action_u_info[act][3], sigma[i])
         
         #new:
-        if self.t<0:
+        if (self.t<10) and (self.args.time_prior != 'no_u') :
             self.plot_sigmas(sigma.detach().cpu().numpy(), y_true_["action"])
                
             meow = torch.argmin(torch.abs(sigma))
@@ -419,6 +509,7 @@ class PUALoss(nn.Module):
             meow_T = (meow //32) % 25
             meow_B = ((meow //32)//25)%16
             meow = sigma[meow_B,meow_T]
+
             visualize_r(y_pred[meow_B], y_true[meow_B], sigma[meow_B], self.t , y_true_['action'][meow_B],
                         y_true_['observed_pose'][meow_B].detach().cpu().numpy().reshape(50, J, C))
             

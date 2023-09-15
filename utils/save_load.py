@@ -16,10 +16,11 @@ def load_snapshot(snapshot_path):
     snapshot = torch.load(snapshot_path, map_location='cpu')
     model = MODELS[snapshot['model_args'].type](snapshot['model_args'])
     model.load_state_dict(snapshot['model_state_dict'])
-    loss_module = LOSSES[snapshot['loss_args'].type](snapshot['loss_args'])
+    loss_module = LOSSES[snapshot['loss_args'].type](snapshot['loss_args']) 
     loss_module.load_state_dict(snapshot['loss_state_dict'])
     optimizer = OPTIMIZERS[snapshot['optimizer_args'].type](chain(model.parameters(), loss_module.parameters()), snapshot['optimizer_args'])
     optimizer.load_state_dict(snapshot['optimizer_state_dict'])
+    optimizer = None
     return (model, loss_module, optimizer, snapshot['optimizer_args'], snapshot['epoch'], snapshot['train_reporter'],
             snapshot['valid_reporter'])
 

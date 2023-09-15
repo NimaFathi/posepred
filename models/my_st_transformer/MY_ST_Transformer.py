@@ -19,6 +19,18 @@ def Conv1d_with_init(in_channels, out_channels, kernel_size):
     nn.init.kaiming_normal_(layer.weight)
     return layer
 
+#new:
+def Conv1d_with_init_padding(in_channels, out_channels, kernel_size, padding):
+    layer = nn.Conv1d(in_channels, out_channels, kernel_size, padding=padding)
+    nn.init.kaiming_normal_(layer.weight)
+    return layer
+#new
+def Conv2d_(in_channels, out_channels, kernel_size):
+    layer = torch.nn.Conv2d(in_channels, out_channels, kernel_size)
+    nn.init.kaiming_normal_(layer.weight)
+    return layer
+#nd new
+
 
 class diff_CSDI(nn.Module):
     def __init__(self, args, inputdim, side_dim):
@@ -29,12 +41,6 @@ class diff_CSDI(nn.Module):
         self.input_projection = Conv1d_with_init(inputdim, self.channels, 1)
         self.output_projection1 = Conv1d_with_init(self.channels, self.channels, 1)
         self.output_projection2 = Conv1d_with_init(self.channels, 1, 1)
-        #new for conv head:
-        self.output_projection_sigma = Conv1d_with_init(self.channels, self.channels, 1)
-        self.output_projection_sigma2 = Conv1d_with_init(self.channels, 1, 1)
-        #end new
-        
-            
         nn.init.zeros_(self.output_projection2.weight)
 
         self.residual_layers = nn.ModuleList(
@@ -46,67 +52,135 @@ class diff_CSDI(nn.Module):
                 )
                 for _ in range(args.diff_layers)
             ]
-        )    
+        )
         
-        #new for mlp head: 
-        self.mlp_sigma_head = torch.nn.Sequential(
-                torch.nn.Linear(16, 64),
-                torch.nn.ReLU(),
-                torch.nn.Dropout(0.3),
-                 
-                torch.nn.Linear(64, 256),
-                torch.nn.ReLU(), 
-                torch.nn.Dropout(0.3),
-                
-                torch.nn.Linear(256, 1024), 
-                torch.nn.ReLU(),
-                torch.nn.Dropout(0.3),
-                
-                torch.nn.Linear(1024, 800),
-                torch.nn.Sigmoid())
-        #end new
+        #new
+        self.mod = self.args['loss']['time_prior'][11:] #extra_head_(A,B,C,...)
+        
+        if "B" in self.mod or "A" in self.mod:
+            self.output_projection_sigma_0 = Conv1d_with_init(66, 66, 1)
+        
+        if "A" in self.mod:
             
+            self.output_projection_sigma_1 = Conv1d_with_init(66, 66, 1)
+            self.output_projection_sigma_2 = Conv1d_with_init(66, 66, 1)  
+            
+            self.output_projection_sigma_second = Conv1d_with_init(66*3, 66, 1) #nn 6 3
+            self.output_projection_sigma_third = Conv1d_with_init(66, 66, 1)   
         
+            if self.mod == "A6" :
+                self.output_projection_sigma_00 = Conv1d_with_init(66, 66, 1) #nn
+                self.output_projection_sigma_11 = Conv1d_with_init(66, 66, 1) #nn
+                self.output_projection_sigma_22 = Conv1d_with_init(66, 66, 1) #nn   
+                self.output_projection_sigma_first = Conv1d_with_init_padding(66*6, 66*3, 3, 1) #nn 6 3  
+            else:
+                self.output_projection_sigma_first = Conv1d_with_init_padding(66*3, 66*3, 3, 1)
+
+        elif self.mod == "B":
+            self.mlp = torch.nn.Sequential(
+                torch.nn.Linear(66*self.args["obs_frames_num"], 1024*2),  #4950
+                torch.nn.Tanh(),
+                torch.nn.Dropout(0.4),
+                
+                torch.nn.Linear(1024*2, 1024), #new in NEW (used to be 1024 to 256 from first)
+                torch.nn.Tanh(), #used to be ReLU before new in new
+                torch.nn.Dropout(0.3), #used to be 0.2 in frist NEW
+                
+                torch.nn.Linear(1024, 256),
+                torch.nn.Tanh(),
+                torch.nn.Dropout(0.3),
+                
+                torch.nn.Linear(256, 64),
+                torch.nn.Tanh(),
+                torch.nn.Dropout(0.3),
+                
+                torch.nn.Linear(64, 256), 
+                torch.nn.Tanh(),
+                torch.nn.Dropout(0.3),
+                
+                torch.nn.Linear(256, 512), #new in NEW (used to be 64 to 256 to the last )
+                torch.nn.Tanh(),
+                torch.nn.Dropout(0.3),
+                
+                torch.nn.Linear(512, 66*self.args["pred_frames_num"])
+            )
+            
+ 
+    def sigma_network_B(self, skip_sigma):
+        x0 = self.output_projection_sigma_0(skip_sigma) #66 75
+        x0 = x0[...,:self.args["obs_frames_num"]] #B, 66, obs(10 or 50)
+        F.relu(x0)
+        x0 = x0.reshape(-1, 66*self.args["obs_frames_num"])
+        x0 = self.mlp(x0)
+        # zeros = torch.zeros(x0.size(0), 66*self.args["obs_frames_num"], device=x0.device)
+        # x0 = torch.cat([zeros, x0], dim=1)
+        x0 = x0.view(-1, 66, self.args["pred_frames_num"] )
+        return x0    
+    
+    def sigma_network_A_conv(self, skip_sigma): #new
+        # breakpoint()
+        x0 = self.output_projection_sigma_0(skip_sigma[0])
+        F.relu(x0)
+        x1 = self.output_projection_sigma_1(skip_sigma[1])
+        F.relu(x1)
+        x2 = self.output_projection_sigma_2(skip_sigma[2])
+        F.relu(x2)
+        
+        if self.mod == "A6" :
+            x00 = self.output_projection_sigma_00(skip_sigma[3]) #nn
+            F.relu(x0)
+            x11 = self.output_projection_sigma_11(skip_sigma[4]) #nn
+            F.relu(x1)
+            x22 = self.output_projection_sigma_22(skip_sigma[5]) #nn
+            F.relu(x2)        
+        
+        
+        if self.mod == "A6" :
+            x_ = torch.cat((x0, x1, x2, x00,x11,x22), dim=1)
+        else:
+            x_ = torch.cat((x0, x1, x2), dim=1) #nn 3 6
+
+
+        x_ = self.output_projection_sigma_first(x_) #new in new
+        F.relu(x_)
+        x_ = self.output_projection_sigma_second(x_)
+        F.relu(x_)
+        x_ = self.output_projection_sigma_third(x_)        
+        return x_                
+            
 
     def forward(self, x, cond_info):
         B, inputdim, K, L = x.shape
-        
+
         x = x.reshape(B, inputdim, K * L)
         x = self.input_projection(x)
         x = F.relu(x)
         x = x.reshape(B, self.channels, K, L)
 
         skip = []
+        skip_sigma = [] #new
         for layer in self.residual_layers:
-            x, skip_connection = layer(x, cond_info)
+            x, skip_connection, skip_connection_sigma = layer(x, cond_info) #new: added skip_connection_sigma
             skip.append(skip_connection)
-
-        x = torch.sum(torch.stack(skip), dim=0) / math.sqrt(len(self.residual_layers))
-        
+            skip_sigma.append(skip_connection_sigma) #new added this / here
+            
         #new
-        #I consider this x as the output of the trasformer and I want to use it to predict the sigma
+        if "A" in self.mod:
+            x_sigma = self.sigma_network_A_conv(skip_sigma)
+            x_sigma = x_sigma.reshape(B, K, L)
+        elif "B" == self.mod:
+            x_sigma = self.sigma_network_B(skip_sigma[0])
+        else:
+            x_sigma = torch.zeros_like(x)    
         #end new
         
+        x = torch.sum(torch.stack(skip), dim=0) / math.sqrt(len(self.residual_layers))
         x = x.reshape(B, self.channels, K * L)
-        
-        #new:
-        y = self.output_projection_sigma(x) 
-        
-        #end new
-        
         x = self.output_projection1(x)
         x = F.relu(x)
         x = self.output_projection2(x)
         x = x.reshape(B, K, L)
-        
-        #new:
-        y = torch.relu(y)
-        y = self.output_projection_sigma2(y)
-        y = torch.sigmoid(y)
-        y = y.reshape(B, K, L)
-        #end new
-        
-        return x, y #new (returning y is new)
+        return x, x_sigma #new (returning y is new)
 
 
 class ResidualBlock(nn.Module):
@@ -118,6 +192,10 @@ class ResidualBlock(nn.Module):
 
         self.time_layer = get_torch_trans(heads=nheads, layers=1, channels=channels)
         self.feature_layer = get_torch_trans(heads=nheads, layers=1, channels=channels)
+        
+        #new
+        self.conv2d_layer_sigma = Conv2d_(in_channels=64, out_channels=1, kernel_size=1)
+        self.mid_projection_sigma = Conv1d_with_init(channels, channels, 1)
 
     def forward_time(self, y, base_shape):
         B, channel, K, L = base_shape
@@ -145,6 +223,15 @@ class ResidualBlock(nn.Module):
         y = x
         y = self.forward_time(y, base_shape)
         y = self.forward_feature(y, base_shape)
+        
+        #new
+        skip_sigma = y.clone() 
+        skip_sigma = self.mid_projection_sigma(skip_sigma)
+        skip_sigma = skip_sigma.reshape(base_shape) 
+        skip_sigma = self.conv2d_layer_sigma(skip_sigma)
+        skip_sigma = skip_sigma.squeeze(1)
+        #end new
+        
         y = self.mid_projection(y)
 
         _, cond_dim, _, _ = cond_info.shape
@@ -160,7 +247,7 @@ class ResidualBlock(nn.Module):
         x = x.reshape(base_shape)
         residual = residual.reshape(base_shape)
         skip = skip.reshape(base_shape)
-        return (x + residual) / math.sqrt(2.0), skip
+        return (x + residual) / math.sqrt(2.0), skip, skip_sigma #new added skip_sigma
 
 
 class CSDI_base(nn.Module):
@@ -238,13 +325,12 @@ class CSDI_base(nn.Module):
         total_input = self.set_input_to_diffmodel(noisy_data, observed_data, cond_mask)
 
         predicted = self.diffmodel(total_input, side_info)  # (B,K,L)
-        
         return self.postprocess_data(batch, predicted)
 
 
 class MY_ST_Transformer(CSDI_base): #new my_
     def __init__(self, args):
-        super(MY_ST_Transformer, self).__init__(args) #new my
+        super(MY_ST_Transformer, self).__init__(args) #new my_
         self.Lo = args.obs_frames_num
         self.Lp = args.pred_frames_num
 
@@ -290,21 +376,24 @@ class MY_ST_Transformer(CSDI_base): #new my_
             cond_mask
         )
 
-    def postprocess_data(self, batch, predictions):
-        #new:
-        predicted = predictions[0] #this is the poses
-        
-        sigmas = predictions[1] #this is the sigmas
-        sigmas = sigmas[:, :, self.Lo:]
-        sigmas = sigmas.permute(0, 2, 1)
-        # sigmas = sigmas.to(self.args.device)
-        #end new
-        
+    def postprocess_data(self, batch, predictions): #new used to be predicted
+
+        predicted = predictions[0] #new: this is the poses      
         predicted = predicted[:, :, self.Lo:]
         predicted = predicted.permute(0, 2, 1)
-                
+        
+        torch.clamp(predicted, min=-1000, max=1000) #new
+        
+        #new
+        sigmas = predictions[1] #this is the sigmas
+        
+        if self.args['loss']['time_prior'][11:] != "B":
+            sigmas = sigmas[:, :, self.Lo:]
+        sigmas = sigmas.permute(0, 2, 1)
+        
+
         return {
             'pred_pose': self.postprocess(batch['observed_pose'], predicted),  # B, T, JC
-            #new:
-            "sigmas": self.postprocess(torch.zeros(batch['observed_pose'].shape).to(self.args.device), sigmas, normal=False) #new danger here : the first time I wrote this I added ones instead of zeros
+        #new:
+            "sigmas": self.postprocess(-1*torch.ones(batch['observed_pose'].shape).to(self.args.device), sigmas, normal=False) #new danger here : the first time I wrote this I added ones instead of zeros
         }
