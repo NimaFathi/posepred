@@ -228,7 +228,9 @@ class ResidualBlock(nn.Module):
         skip_sigma = y.clone() 
         skip_sigma = self.mid_projection_sigma(skip_sigma)
         skip_sigma = skip_sigma.reshape(base_shape) 
-        skip_sigma = self.conv2d_layer_sigma(skip_sigma)
+        # skip_sigma = self.conv2d_layer_sigma(skip_sigma)
+        # breakpoint()
+        skip_sigma = torch.max(skip_sigma, dim=1)[0] #new danger here 
         skip_sigma = skip_sigma.squeeze(1)
         #end new
         

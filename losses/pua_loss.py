@@ -203,18 +203,75 @@ class PUALoss(nn.Module):
             self.mlp = torch.nn.Sequential(
                 torch.nn.Linear(5, 32), #new danger used to be 5 for eig values only changed to 5+32 for variance and eig values
                 torch.nn.Tanh(), #new dager: used to be ReLU which could be wrong
-                torch.nn.Dropout(0.2),
+                torch.nn.Dropout(0.3),
                 
                 torch.nn.Linear(32, 16),
                 torch.nn.Tanh(),
-                torch.nn.Dropout(0.2),
+                torch.nn.Dropout(0.3),
                 
                 torch.nn.Linear(16, 64),
                 torch.nn.Tanh(),
-                torch.nn.Dropout(0.2),
+                torch.nn.Dropout(0.3),
                 
                 torch.nn.Linear(64, 25*32)
             )
+            
+        elif args.time_prior == 'theta_mlp':
+            self.action_list = args.action_list
+            self.nA = len(self.action_list)
+            self.action_map = {self.action_list[i]: i for i in range(self.nA)}
+            
+            self.embed_layer_action = nn.Linear(1, 37)
+            
+            self.nT = 5
+            self.s = self.s.repeat(1, 5, 1)
+            self.s[:, :, :] = 0
+            self.s[:, 0, :] = init_mean
+            self.s[:, 2, :] = 1
+            
+            self.embed_layer_1 = nn.Linear(5, 5)
+            self.embed_layer_2 = nn.Linear(32, 32)
+            
+            self.mlp = torch.nn.Sequential(
+                torch.nn.Linear(16, 64), #new danger used to be 5 for eig values only changed to 5+32 for variance and eig values 5+32
+                torch.nn.Tanh(), #new dager: used to be ReLU which could be wrong
+                torch.nn.Dropout(0.3),
+                
+                torch.nn.Linear(64, 32),
+                torch.nn.Tanh(),
+                torch.nn.Dropout(0.3),
+                
+                torch.nn.Linear(32, 128),
+                torch.nn.Tanh(),
+                torch.nn.Dropout(0.3),
+                
+                torch.nn.Linear(128, 512),
+                torch.nn.Tanh(),
+                torch.nn.Dropout(0.3),
+                
+                torch.nn.Linear(512, 25*32) #800(25*32) 25*22(550) 25*29(725)
+            )
+            # breakpoint()
+            # self.mlp = torch.nn.Sequential(
+            #     torch.nn.Linear(37, 64), #new danger used to be 5 for eig values only changed to 5+32 for variance and eig values
+            #     torch.nn.Tanh(), #new dager: used to be ReLU which could be wrong
+            #     torch.nn.Dropout(0.3),
+                
+            #     torch.nn.Linear(64, 32),
+            #     torch.nn.Tanh(),
+            #     torch.nn.Dropout(0.3),
+                
+            #     torch.nn.Linear(32, 128),
+            #     torch.nn.Tanh(),
+            #     torch.nn.Dropout(0.3),
+                
+            #     torch.nn.Linear(128, 512),
+            #     torch.nn.Tanh(),
+            #     torch.nn.Dropout(0.3),
+                
+            #     torch.nn.Linear(512, 25*32)
+            # )
+                
  
         elif ('extra_head' in args.time_prior) or (args.time_prior == 'no_u') or  ('_' in args.time_prior):    
             self.t = 0
@@ -283,23 +340,63 @@ class PUALoss(nn.Module):
             elif self.args.time_prior == 'r_m':
                 poses = y_true['observed_pose']
                 batch_size = poses.shape[0]
+                n_o = poses.shape[1]
+                
                 eig_value, eig_vectors = self.torch_pca(poses)
                 eig_value = eig_value[:,-5:]
                 eig_value = eig_value.log() 
                 
                             
                 #calculate the varience of keypoint positions
-                variance = torch.norm(poses.reshape(-1,10,32,3), dim=-1) 
+                variance = torch.norm(poses.reshape(-1,n_o,32,3), dim=-1) 
                 variance = torch.var(variance, dim=1)
                 # eig_value = torch.cat((eig_value, variance), dim=1) #new danger 16, 5+32 / used to be only eig values 16, 5
                 
-                thetas = self.mlp(eig_value) #B,5
+                thetas = self.mlp(eig_value) 
                 thetas = thetas.reshape(batch_size, 25, 32)
                 
                 local_sigma = thetas
                 
             elif self.args.time_prior == 'mlp_sig5':
                 poses = y_true['observed_pose']
+                
+            elif self.args.time_prior == 'theta_mlp':
+                
+                actions = y_true['action']
+                indx = torch.tensor([self.action_map[act] for act in actions]).to(self.args.device)
+                # indx = self.embed_layer_action(indx.unsqueeze(1).float())
+                temp = torch.nn.functional.one_hot(indx, num_classes=16)
+                temp = temp.float()
+                # breakpoint()
+                
+                
+                poses = y_true['observed_pose']
+                batch_size = poses.shape[0]
+                n_o = poses.shape[1]
+                
+                eig_value, eig_vectors = self.torch_pca(poses)
+                eig_value = eig_value[:,-5:]
+                eig_value = eig_value.log() 
+                eig_value = self.embed_layer_1(eig_value)
+                
+
+                variance = torch.norm(poses.reshape(-1,n_o,32,3), dim=-1) 
+                variance = torch.var(variance, dim=1)
+                variance = self.embed_layer_2(variance)
+                
+                mlp_inp = torch.cat((eig_value, variance), dim=1) #5+32
+                # print(mlp_inp.shape)
+                # breakpoint()
+                try:
+                    # thetas = self.mlp(mlp_inp) #B,5
+                    thetas = self.mlp(temp.float()) #B,5
+                except:
+                    print("TRY EXCEPT ERROR")
+                    breakpoint()
+                
+                thetas = thetas.reshape(batch_size, 25, 32)
+                thetas[:,[0,1,6]] = -1
+                local_sigma = thetas
                 
                 
         local_sigma = torch.clamp(local_sigma, min=self.args.clipMinS, max=self.args.clipMaxS)
@@ -509,6 +606,8 @@ class PUALoss(nn.Module):
             meow_T = (meow //32) % 25
             meow_B = ((meow //32)//25)%16
             meow = sigma[meow_B,meow_T]
+            
+            meow_B = 0
 
             visualize_r(y_pred[meow_B], y_true[meow_B], sigma[meow_B], self.t , y_true_['action'][meow_B],
                         y_true_['observed_pose'][meow_B].detach().cpu().numpy().reshape(50, J, C))
