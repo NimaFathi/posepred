@@ -129,9 +129,9 @@ class PoseDataset(Dataset):
             except:
                 print(seq["action"])
                 sigma = 0
-            noise = torch.randn_like(temp_seq[:self.len_observed])*sigma #new added noise
+            noise = torch.randn_like(temp_seq[:self.len_observed])*sigma*0 #new added noise
 
-            outputs["observed_" + k] = temp_seq[:self.len_observed] + noise#+ (torch.randn_like(temp_seq[:self.len_observed])-0.5)*20 #* 0.01 #new added noise
+            outputs["observed_" + k] = temp_seq[:self.len_observed] + noise #new + (torch.randn_like(temp_seq[:self.len_observed])-0.5)*20 #* 0.01 #new added noise
             outputs["future_" + k] = temp_seq[self.len_observed:]
             #new:
             # print(torch.max(temp_seq[:self.len_observed]), temp_seq[self.len_observed:], torch.randn_like(temp_seq[:self.len_observed]))

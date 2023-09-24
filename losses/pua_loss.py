@@ -57,7 +57,7 @@ def visualize_r(y_pred,y_true,sigma,t,action, obs):
             color =  "palevioletred" if i<10 else "pink"
             ax.plot(xdata[ skeleton[j]], ydata[skeleton[j]], zdata[skeleton[j]] , color =color)
             if j not in [0,1,4] :
-                ax.text(xdata[j], ydata[j], zdata[j], str('%.2f'%sigma_[j]), color = "black")
+                ax.text(xdata[j], ydata[j], zdata[j], str('%.2f'%sigma_[j]), color = "black", fontsize=18)
         
         # for k in range(len(Saeeds)):
         #     ax.plot(xdata[ Saeeds[k]], ydata[Saeeds[k]], zdata[Saeeds[k]] , color = "palevioletred")
@@ -81,7 +81,7 @@ def visualize_r(y_pred,y_true,sigma,t,action, obs):
            
     fig.tight_layout() 
     plt.legend() 
-    plt.savefig(f"./plots/new_vis_{t}.png")
+    plt.savefig(f"./plots/new_vis_{t}.pdf")
     # plt.close()
     # plt.show()
 
@@ -101,6 +101,54 @@ def setup_axes(ax):
     ax.axes.set_xlim3d(left=-0.45, right=0.45) 
     ax.axes.set_ylim3d(bottom=-0.45, top=0.45) 
     ax.axes.set_zlim3d(bottom=-0.45 , top=0.45 )
+
+
+def visualize_pca(action, eig_value_):
+    eig_value = eig_value_.clone().detach().cpu().numpy()
+    eig_value[eig_value < 1e-4] = 0
+    eig_value = np.log(eig_value)
+    fig1 = plt.figure(figsize=(10,10))
+    fig2 = plt.figure(figsize=(20,10))
+    
+    ax1 = fig1.add_subplot(111)
+    ax2 = fig2.add_subplot(111)
+    
+    action_to_color = { "smoking": "pink", "directions":  "coral", "discussion": "slateblue",
+                "eating": "magenta","greeting": "tan","phoning": "palevioletred","posing": "teal",  
+                "purchases": "navy","sitting": "lime","sittingdown": "green", "takingphoto": "gold",
+                "waiting": "gray","walking": "crimson","walkingdog": "crimson","walkingtogether": "crimson"}
+    
+    action_count = { "smoking": 0, "directions":  0, "discussion": 0,
+                "eating": 0,"greeting": 0,"phoning": 0,"posing": 0,  
+                "purchases": 0,"sitting": 0,"sittingdown": 0, "takingphoto": 0,
+                "waiting": 0,"walking": 0,"walkingdog": 0,"walkingtogether": 0}
+    
+    markers = ["v", "o",  "^","*", "s", "<", ">",  "p", "P", "h", "H", "+", "x", "X", "D", "d"]
+    
+    #plot the eigen values for each first dimention 
+    for i in range(eig_value.shape[0]):
+        action_label = action[i]
+        action_count[action_label] += 1
+        ax1.plot([i] * eig_value.shape[1], eig_value[i], color = "gray", marker = "o", linestyle='')
+        # ax1.plot([i] * 5, eig_value[i, -5: ], label = f"eig {i}",  marker = ".", color = "mediumvioletred", linestyle='')
+        ax1.plot([i] * 5, eig_value[i, -5: ],  marker = ".", color = action_to_color[action_label], linestyle='')
+        
+        #marker = markers[action_count[action_label]] 
+        ax2.plot([action_label] * 5, eig_value[i, -5: ], label = f"eig {i}",  marker = "o", linestyle='', markersize=10)
+    
+    markers = [plt.Line2D([0,0],[0,0],color=color, marker='o', linestyle='') for color in action_to_color.values()]
+    fig1.legend(markers, action_to_color.keys())   #, loc ="upper left" , numpoints=1, ncol=3
+        
+    # fig1.legend()    
+    fig1.tight_layout() 
+    fig2.tight_layout() 
+    fig1.savefig(f"./plots/eig_values.pdf")
+    fig2.savefig(f"./plots/eig_values_2_.pdf")
+    
+    
+    # breakpoint()
+
+        
 
 #end new
 
@@ -216,12 +264,48 @@ class PUALoss(nn.Module):
                 torch.nn.Linear(64, 25*32)
             )
             
+        elif args.time_prior == 'all_mlp':
+            self.action_list = args.action_list
+            self.nA = len(self.action_list)
+            self.action_map = {self.action_list[i]: i for i in range(self.nA)}
+
+            self.embed_layer_action = nn.Linear(16, 16) #1,37
+            self.nT = 5
+            self.s = self.s.repeat(1, 5, 1)
+            self.s[:, :, :] = 0
+            self.s[:, 0, :] = init_mean
+            self.s[:, 2, :] = 1
+            
+            self.embed_layer_1 = nn.Linear(5, 16)
+            self.embed_layer_2 = nn.Linear(32, 32)
+            
+            self.mlp = torch.nn.Sequential(
+                torch.nn.Linear(16+16+32, 128), #new danger used to be 5 for eig values only changed to 5+32 for variance and eig values 5+32
+                torch.nn.Tanh(), #new dager: used to be ReLU which could be wrong
+                torch.nn.Dropout(0.4),
+                
+                torch.nn.Linear(128, 64),
+                torch.nn.Tanh(),
+                torch.nn.Dropout(0.4),
+                
+                torch.nn.Linear(64, 128),
+                torch.nn.Tanh(),
+                torch.nn.Dropout(0.4),
+                
+                torch.nn.Linear(128, 512),
+                torch.nn.Tanh(),
+                torch.nn.Dropout(0.4),
+                
+                torch.nn.Linear(512, 25*32) #800(25*32) 25*22(550) 25*29(725)
+            )
+            
+            
         elif args.time_prior == 'theta_mlp':
             self.action_list = args.action_list
             self.nA = len(self.action_list)
             self.action_map = {self.action_list[i]: i for i in range(self.nA)}
             
-            self.embed_layer_action = nn.Linear(1, 37)
+            # self.embed_layer_action = nn.Linear(16, 16) #1,37
             
             self.nT = 5
             self.s = self.s.repeat(1, 5, 1)
@@ -274,12 +358,13 @@ class PUALoss(nn.Module):
                 
  
         elif ('extra_head' in args.time_prior) or (args.time_prior == 'no_u') or  ('_' in args.time_prior):    
-            self.t = 0
-            #new in new:
-            self.sigmas_to_save = []
+            pass
+            # self.t = 0
+            # #new in new:
+            # self.sigmas_to_save = []
             
-            self.fig, self.axes = plt.subplots(8, 4, figsize=(16, 10))
-            self.fig.tight_layout()
+            # self.fig, self.axes = plt.subplots(8, 4, figsize=(16, 10))
+            # self.fig.tight_layout()
         #end new
         else:
             raise Exception("{} is not a supported prior for time axis, options are: [sig5, sig*, none].".format(args.time_prior))
@@ -343,8 +428,10 @@ class PUALoss(nn.Module):
                 n_o = poses.shape[1]
                 
                 eig_value, eig_vectors = self.torch_pca(poses)
+                if self.t == 0:
+                    visualize_pca(y_true['action'], eig_value)
                 eig_value = eig_value[:,-5:]
-                eig_value = eig_value.log() 
+                eig_value = eig_value.log()
                 
                             
                 #calculate the varience of keypoint positions
@@ -361,13 +448,23 @@ class PUALoss(nn.Module):
                 poses = y_true['observed_pose']
                 
             elif self.args.time_prior == 'theta_mlp':
+                actions = y_true['action']
+                indx = torch.tensor([self.action_map[act] for act in actions]).to(self.args.device)
+                temp = torch.nn.functional.one_hot(indx, num_classes=16)
+                temp = temp.float()
+                thetas = self.mlp(temp.float())
+                thetas = thetas.reshape(batch_size, 25, 32)
+                thetas[:,:,[0,1,6,11]] = -1
+                local_sigma = thetas
+            
+            elif self.args.time_prior == 'all_mlp':
                 
                 actions = y_true['action']
                 indx = torch.tensor([self.action_map[act] for act in actions]).to(self.args.device)
-                # indx = self.embed_layer_action(indx.unsqueeze(1).float())
+                
                 temp = torch.nn.functional.one_hot(indx, num_classes=16)
                 temp = temp.float()
-                # breakpoint()
+                action_embeded = self.embed_layer_action(temp.float())
                 
                 
                 poses = y_true['observed_pose']
@@ -377,27 +474,26 @@ class PUALoss(nn.Module):
                 eig_value, eig_vectors = self.torch_pca(poses)
                 eig_value = eig_value[:,-5:]
                 eig_value = eig_value.log() 
-                eig_value = self.embed_layer_1(eig_value)
+                eig_value_embeded = self.embed_layer_1(eig_value)
                 
 
                 variance = torch.norm(poses.reshape(-1,n_o,32,3), dim=-1) 
                 variance = torch.var(variance, dim=1)
-                variance = self.embed_layer_2(variance)
+                variance_embeded = self.embed_layer_2(variance)
                 
-                mlp_inp = torch.cat((eig_value, variance), dim=1) #5+32
+                mlp_inp = torch.cat((eig_value_embeded, variance_embeded, action_embeded), dim=1) #5+32
                 # print(mlp_inp.shape)
                 # breakpoint()
                 try:
                     # thetas = self.mlp(mlp_inp) #B,5
-                    thetas = self.mlp(temp.float()) #B,5
+                    thetas = self.mlp(mlp_inp.float()) #B,5
                 except:
                     print("TRY EXCEPT ERROR")
                     breakpoint()
                 
                 thetas = thetas.reshape(batch_size, 25, 32)
-                thetas[:,[0,1,6]] = -1
+                thetas[:,:,[0,1,6,11]] = -1
                 local_sigma = thetas
-                
                 
         local_sigma = torch.clamp(local_sigma, min=self.args.clipMinS, max=self.args.clipMaxS)
         
@@ -417,7 +513,7 @@ class PUALoss(nn.Module):
             if "" in actions[b]:
                 for i in range(8): 
                     for j in range(4):
-                        self.axes[i, j].plot(sigma[:, i*4+j],".", markersize=0.75, color=action_to_color[actions[b]])
+                        self.axes[i, j].plot(sigma[:, i*4+j],".", markersize=3, color=action_to_color[actions[b]])
                         self.axes[i, j].set_title("joint {}".format(i*4+j))
                         # self.axes[i, j].set_ylim(-1, 8)
             else:
@@ -426,10 +522,9 @@ class PUALoss(nn.Module):
         
         # markers = [plt.Line2D([0,0],[0,0],color=color, marker='o', linestyle='') for color in action_to_color.values()]
         # plt.legend(markers, action_to_color.keys(), numpoints=1, loc ="upper left", ncol=3 )       
-                  
-        self.fig.savefig("./plots/new_u.png")                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    
-        print("saved uncertaity plots .png")
         
+        self.fig.savefig("./plots/Uncertaties.png")                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    
+        print("saved uncertaity plots .pdf")
         
         
     def plot_sigmas_2(self):
