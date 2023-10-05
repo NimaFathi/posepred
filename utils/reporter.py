@@ -43,8 +43,6 @@ class Reporter:
                     self.history[key] = []
                     self.min_attrs[key] = float('inf')
             if counts is not None and key in counts.keys():
-#                print(value)
-#                print(self.attrs.get(key))
                 self.attrs.get(key).update(value, counts[key])
             else:
                 self.attrs.get(key).update(value, batch_size)
@@ -90,6 +88,22 @@ class Reporter:
             msg += key + ': %.5f, ' % value[-1]
         logger.info(str(msg))
         sys.stdout.flush()
+
+    def print_uncertainty_values(self, logger, unc_k):
+        msg = self.state + '-epoch' + str(len(self.history['time'])) + ': '
+        for key, value in self.history.items():
+            if not unc_k in key:
+                continue
+            msg += key + ': %.5f, ' % value[-1]
+        logger.info(str(msg))
+        sys.stdout.flush()
+
+    def save_uncertainty_data(self, unc_k, save_dir):
+        for key, value in self.history.items():
+            if not unc_k in key:
+                continue
+            with open(os.path.join(save_dir, 'uncertainty_history', '_'.join((self.state, key)) + '.json'), "w") as f:
+                json.dump(value, f, indent=4)
 
     def save_uncertainty_data(self, unc_k, save_dir):
         for key, value in self.history.items():

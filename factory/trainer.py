@@ -38,6 +38,9 @@ class Trainer:
         self.train_uncertainty_evaluator = train_uncertainty_evaluator
         self.validation_uncertainty_evaluator = validation_uncertainty_evaluator
 
+        self.train_uncertainty_evaluator = train_uncertainty_evaluator
+        self.validation_uncertainty_evaluator = validation_uncertainty_evaluator
+
         mlflow.set_tracking_uri(join(args.mlflow_tracking_uri, 'mlruns') if args.mlflow_tracking_uri else join(ROOT_DIR, 'mlruns'))
         mlflow.set_experiment(args.experiment_name if args.experiment_name else args.model.type)
            
@@ -168,6 +171,7 @@ class Trainer:
         self.train_reporter.epoch_finished(self.tensor_board, mlflow)
         self.train_reporter.print_values(logger)
         # self.train_reporter.print_values(logger, self.model.args.use_mask)
+        self.train_reporter.print_values(logger, self.model.args.use_mask)
         if self.train_uncertainty_evaluator is not None:
             self.__validate_uncertainty(train=True)
 
