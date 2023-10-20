@@ -106,7 +106,7 @@ class Trainer:
             # predict & calculate loss
             self.model.zero_grad()
             self.loss_module.zero_grad()
-
+            
             model_outputs = self.model(data)
             loss_outputs = self.loss_module(model_outputs, data) 
 

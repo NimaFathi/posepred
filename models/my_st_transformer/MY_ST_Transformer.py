@@ -305,7 +305,7 @@ class CSDI_base(nn.Module):
     def set_input_to_diffmodel(self, noisy_data, observed_data, cond_mask):
         if self.is_unconditional == True:
             total_input = noisy_data.unsqueeze(1)  # (B,1,K,L)
-        else:
+        else: #new comment: this is the case that happenes in our default case
             cond_obs = (cond_mask * observed_data).unsqueeze(1)
             noisy_target = ((1 - cond_mask) * noisy_data).unsqueeze(1)
             total_input = torch.cat([cond_obs, noisy_target], dim=1)  # (B,2,K,L)
@@ -313,6 +313,7 @@ class CSDI_base(nn.Module):
         return total_input
 
     def forward(self, batch):
+        
         (
             observed_data,
             observed_tp,
@@ -322,6 +323,31 @@ class CSDI_base(nn.Module):
         side_info = self.get_side_info(observed_tp, cond_mask)
 
         B, K, L = observed_data.shape
+        
+        # breakpoint()
+        # import matplotlib.pyplot as plt
+        # plt.close()
+        # for t_ in range(B):
+        #     test_data = observed_data[t_,:,:50].clone()
+        #     test_data = test_data.permute(1,0)
+        #     test_data = test_data.cpu().detach().numpy()
+        #     test_data = test_data.reshape(50, -1 , 3)
+        #     test_data = (test_data+2.5)/(5)
+        #     temp = test_data[-1,:,:]
+        #     test_data_rl = test_data - temp
+        #     temp = test_data[0,:,:]
+        #     test_data_rf = test_data - temp
+            
+        #     #creating 3 subplots with 3 images of test_data and test_data_rf and saving the image:
+        #     fig, axs = plt.subplots(1, 3, figsize=(10, 10))
+        #     axs[0].imshow(test_data)
+        #     axs[1].imshow(test_data_rf)
+        #     axs[2].imshow(test_data_rl)
+               
+        #     plt.savefig('image'+str(t_)+'.png')
+        # breakpoint()
+        
+        
         noisy_data = torch.zeros_like(observed_data).to(self.device)
 
         total_input = self.set_input_to_diffmodel(noisy_data, observed_data, cond_mask)

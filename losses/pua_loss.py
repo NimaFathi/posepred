@@ -5,6 +5,7 @@ import torch.nn as nn
 
 #new
 import matplotlib.pyplot as plt
+from models.st_transformer.data_proc import Human36m_Preprocess
 #end new
 
 #new:
@@ -179,6 +180,8 @@ class PUALoss(nn.Module):
         self.sigmas_to_save = []
         self.fig, self.axes = plt.subplots(8, 4, figsize=(16, 10))
         self.fig.tight_layout()
+        
+        self.preprocess = Human36m_Preprocess(args).to(args.device)
         
         self.action_u_info = { "smoking":[0,torch.zeros((25,32)).to(self.args.device),-1000*torch.ones((25,32)).to(self.args.device),1000*torch.ones((25,32)).to(self.args.device)],
                             "directions":[0,torch.zeros((25,32)).to(self.args.device),-1000*torch.ones((25,32)).to(self.args.device),1000*torch.ones((25,32)).to(self.args.device)],
@@ -355,6 +358,7 @@ class PUALoss(nn.Module):
                 
             #     torch.nn.Linear(512, 25*32)
             # )
+            
                 
  
         elif ('extra_head' in args.time_prior) or (args.time_prior == 'no_u') or  ('_' in args.time_prior):    
@@ -424,6 +428,7 @@ class PUALoss(nn.Module):
             #new:
             elif self.args.time_prior == 'r_m':
                 poses = y_true['observed_pose']
+                poses = self.preprocess(poses) #new in new !!!
                 batch_size = poses.shape[0]
                 n_o = poses.shape[1]
                 
@@ -431,12 +436,14 @@ class PUALoss(nn.Module):
                 if self.t == 0:
                     visualize_pca(y_true['action'], eig_value)
                 eig_value = eig_value[:,-5:]
+                # print("eig_value",eig_value)
                 eig_value = eig_value.log()
+                # print("log eig_value",eig_value)
                 
                             
                 #calculate the varience of keypoint positions
-                variance = torch.norm(poses.reshape(-1,n_o,32,3), dim=-1) 
-                variance = torch.var(variance, dim=1)
+                # variance = torch.norm(poses.reshape(-1,n_o,32,3), dim=-1) 
+                # variance = torch.var(variance, dim=1)
                 # eig_value = torch.cat((eig_value, variance), dim=1) #new danger 16, 5+32 / used to be only eig values 16, 5
                 
                 thetas = self.mlp(eig_value) 
@@ -447,7 +454,7 @@ class PUALoss(nn.Module):
             elif self.args.time_prior == 'mlp_sig5':
                 poses = y_true['observed_pose']
                 
-            elif self.args.time_prior == 'theta_mlp':
+            elif self.args.time_prior == 'theta_mlp': #only action mlp
                 actions = y_true['action']
                 indx = torch.tensor([self.action_map[act] for act in actions]).to(self.args.device)
                 temp = torch.nn.functional.one_hot(indx, num_classes=16)
@@ -494,6 +501,7 @@ class PUALoss(nn.Module):
                 thetas = thetas.reshape(batch_size, 25, 32)
                 thetas[:,:,[0,1,6,11]] = -1
                 local_sigma = thetas
+                
                 
         local_sigma = torch.clamp(local_sigma, min=self.args.clipMinS, max=self.args.clipMaxS)
         
@@ -648,6 +656,39 @@ class PUALoss(nn.Module):
             
 
     def forward(self, y_pred_, y_true_):
+        
+        
+        # breakpoint()
+        # import matplotlib.pyplot as plt
+        # plt.close()
+        # y_pred = y_pred_['pred_pose'] # B,T,JC
+        # y_true = y_true_['future_pose']
+        # observed_data = y_true_['observed_pose']
+        # test_data_ = torch.cat((observed_data, y_pred), dim=1)
+        # test_data_ = self.preprocess(test_data_)
+        # minn = test_data_.min().cpu().detach().numpy()
+        # maxx = test_data_.max().cpu().detach().numpy()
+
+        # for t_ in range(8):
+        #     test_data = test_data_[t_]
+        #     test_data = test_data.cpu().detach().numpy()
+        #     test_data = test_data.reshape(75, -1 , 3)
+        #     test_data = (test_data-minn)/(maxx-minn)
+        #     temp = test_data[50,:,:]
+        #     test_data_rl = test_data - temp + 0.5
+        #     temp = test_data[0,:,:]
+        #     test_data_rf = test_data - temp + 0.5
+            
+        #     #creating 3 subplots with 3 images of test_data and test_data_rf and saving the image:
+        #     fig, axs = plt.subplots(1, 3, figsize=(10, 10))
+        #     axs[0].imshow(test_data)
+        #     axs[1].imshow(test_data_rf)
+        #     axs[2].imshow(test_data_rl)
+        #     #add action as the title to figure:
+        #     fig.suptitle(y_true_['action'][t_])
+               
+        #     plt.savefig('image'+str(t_)+'.png')
+        # breakpoint()
         
         # if self.t==0:
         #     self.test_(y_true_["observed_pose"],"observed_pose")
