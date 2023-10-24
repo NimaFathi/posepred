@@ -15,7 +15,7 @@ from schedulers import SCHEDULERS
 from utils.reporter import Reporter
 from utils.save_load import load_snapshot, save_snapshot, setup_training_dir
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(__name__) 
 
 
 @hydra.main(config_path=HYDRA_PATH, config_name="train")
@@ -42,7 +42,12 @@ def train(cfg: DictConfig):
         # cfg.model.std_pose = train_dataloader.dataset.std_pose
 
         model = MODELS[cfg.model.type](cfg.model)
-        loss_module = LOSSES[cfg.model.loss.type](cfg.model.loss)
+        
+        #new:
+        # loss_module = LOSSES[cfg.model.loss.type](cfg.model.loss)
+        loss_module = LOSSES[cfg.model.loss.type](cfg.model) #I needed the model config to create a model inside loss module
+
+        
         optimizer = OPTIMIZERS[cfg.optimizer.type](
             chain(model.parameters(), loss_module.parameters()), cfg.optimizer)
         
