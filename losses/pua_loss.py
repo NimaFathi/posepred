@@ -437,8 +437,8 @@ class PUALoss(nn.Module):
                     visualize_pca(y_true['action'], eig_value)
                 eig_value = eig_value[:,-5:]
                 # print("eig_value",eig_value)
-                eig_value = eig_value.log()
-                # print("log eig_value",eig_value)
+                # eig_value = eig_value.log() #new DANGERRRRRRRRRRRRRRRRRRRRRR
+                # print("log eig_value",eig_value) 
                 
                             
                 #calculate the varience of keypoint positions
@@ -450,6 +450,48 @@ class PUALoss(nn.Module):
                 thetas = thetas.reshape(batch_size, 25, 32)
                 
                 local_sigma = thetas
+                
+                # breakpoint()
+                data_tensor = poses.view(poses.shape[0], -1, poses.shape[-1])
+
+                # Compute the FFT along the second dimension (time dimension)
+                fft_result_tensor = torch.fft.fft(data_tensor, dim=1)
+                fft_freqs_tensor = torch.fft.fftfreq(data_tensor.shape[1])
+
+                # Calculate the magnitude of the FFT
+                fft_magnitude_tensor = torch.abs(fft_result_tensor)
+
+                # Plot the magnitude of the FFT for each sample in the batch
+                plt.close('all')
+                markers = ['D', 'v', 'o']
+                for b in range(data_tensor.shape[0]):
+                    plt.figure(figsize=(10, 6))
+                    fig, axs = plt.subplots(3, 1, figsize=(10, 10))
+                    for i in range(int(fft_magnitude_tensor.shape[2]/3)): #range(fft_magnitude_tensor.shape[2]):
+                        # plt.plot(fft_freqs_tensor, fft_magnitude_tensor[b, :, i], label=f'Joint {i}')
+                        #detach and make numpy array before ploting:
+                        # plt.plot(fft_freqs_tensor.detach().cpu().numpy(), fft_magnitude_tensor[b, :, i].detach().cpu().numpy(), label=f'Joint {i//3}', marker=markers[i%3], linestyle = 'None', markerfacecolor='None')
+                        axs[0].plot(fft_freqs_tensor.detach().cpu().numpy(), fft_magnitude_tensor[b, :, i].detach().cpu().numpy(), label=f'Joint {i}', marker=markers[0], linestyle = 'None', markerfacecolor='None')
+                        axs[1].plot(fft_freqs_tensor.detach().cpu().numpy(), fft_magnitude_tensor[b, :, i+1].detach().cpu().numpy(), label=f'Joint {i}', marker=markers[1], linestyle = 'None', markerfacecolor='None')
+                        axs[2].plot(fft_freqs_tensor.detach().cpu().numpy(), fft_magnitude_tensor[b, :, i+2].detach().cpu().numpy(), label=f'Joint {i}', marker=markers[2], linestyle = 'None', markerfacecolor='None')
+
+
+                    plt.xlabel('Frequency')
+                    plt.ylabel('Magnitude')
+                    # plt.title('FFT Magnitude for Joint Movement Data - ' +y_true['action'][b]+ f' {b}')
+                    #title on top of the whole image:
+                    plt.suptitle('FFT Magnitude for Joint Movement Data - ' +y_true['action'][b]+ f' {b}')
+                    # plt.legend()
+                    #seperate legend for each subplot:
+                    axs[0].legend()
+                    axs[1].legend()
+                    axs[2].legend()
+                    plt.show()
+                    
+                    #saving the image:
+                    plt.savefig(f"./plots/fft_{b}.png")
+                    plt.close()
+                    breakpoint()
                 
             elif self.args.time_prior == 'mlp_sig5':
                 poses = y_true['observed_pose']
@@ -659,36 +701,37 @@ class PUALoss(nn.Module):
         
         
         # breakpoint()
-        # import matplotlib.pyplot as plt
-        # plt.close()
-        # y_pred = y_pred_['pred_pose'] # B,T,JC
-        # y_true = y_true_['future_pose']
-        # observed_data = y_true_['observed_pose']
-        # test_data_ = torch.cat((observed_data, y_pred), dim=1)
-        # test_data_ = self.preprocess(test_data_)
-        # minn = test_data_.min().cpu().detach().numpy()
-        # maxx = test_data_.max().cpu().detach().numpy()
+        plt.close()
+        y_pred = y_pred_['pred_pose'] # B,T,JC
+        y_true = y_true_['future_pose']
+        observed_data = y_true_['observed_pose']
+        test_data_ = torch.cat((observed_data, y_pred), dim=1)
+        test_data_ = self.preprocess(test_data_)
+        minn = test_data_.min().cpu().detach().numpy()
+        maxx = test_data_.max().cpu().detach().numpy()
 
-        # for t_ in range(8):
-        #     test_data = test_data_[t_]
-        #     test_data = test_data.cpu().detach().numpy()
-        #     test_data = test_data.reshape(75, -1 , 3)
-        #     test_data = (test_data-minn)/(maxx-minn)
-        #     temp = test_data[50,:,:]
-        #     test_data_rl = test_data - temp + 0.5
-        #     temp = test_data[0,:,:]
-        #     test_data_rf = test_data - temp + 0.5
+        for t_ in range(min(16, y_true.shape[0])):
+            test_data = test_data_[t_]
+            test_data = test_data.cpu().detach().numpy()
+            test_data = test_data.reshape(75, -1 , 3)
+            test_data = (test_data-minn)/(maxx-minn)
+            temp = test_data[50,:,:]
+            test_data_rl = test_data - temp + 0.5
+            temp = test_data[0,:,:]
+            test_data_rf = test_data - temp + 0.5
             
-        #     #creating 3 subplots with 3 images of test_data and test_data_rf and saving the image:
-        #     fig, axs = plt.subplots(1, 3, figsize=(10, 10))
-        #     axs[0].imshow(test_data)
-        #     axs[1].imshow(test_data_rf)
-        #     axs[2].imshow(test_data_rl)
-        #     #add action as the title to figure:
-        #     fig.suptitle(y_true_['action'][t_])
+            #creating 3 subplots with 3 images of test_data and test_data_rf and saving the image:
+            fig, axs = plt.subplots(1, 3, figsize=(10, 10))
+            axs[0].imshow(test_data)
+            axs[1].imshow(test_data_rf)
+            axs[2].imshow(test_data_rl)
+            #add action as the title to figure:
+            fig.suptitle(y_true_['action'][t_])
                
-        #     plt.savefig('image'+str(t_)+'.png')
-        # breakpoint()
+            plt.savefig('./plots/image'+str(t_)+'.png')
+        breakpoint()
+        
+        
         
         # if self.t==0:
         #     self.test_(y_true_["observed_pose"],"observed_pose")
@@ -766,3 +809,12 @@ class PUALoss(nn.Module):
         #new:
         # sigma = sigma * (1/(1+np.exp(-1*self.t/200)))
         #end new
+
+
+
+def inverse_fft(fft_amp, fft_pha):
+    imag = fft_amp * torch.sin(fft_pha)
+    real = fft_amp * torch.cos(fft_pha)
+    fft_y = torch.complex(real, imag)
+    y = torch.fft.ifft(fft_y)
+    return y 
