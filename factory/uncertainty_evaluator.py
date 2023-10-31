@@ -6,10 +6,9 @@ import numpy as np
 import os
 from tqdm import tqdm
 
-from metrics import POSE_METRICS, MASK_METRICS
 from utils.others import dict_to_device
-from uncertainty.utils.uncertainty import calculate_dict_uncertainty, UNC_K
-from uncertainty.utils.prediction_util import get_prediction_model_dict
+from ..uncertainty.utils.uncertainty import calculate_dict_uncertainty_and_mpjpe, UNC_K, LOSS_K
+from ..uncertainty.utils.prediction_util import get_prediction_model_dict
 
 logger = logging.getLogger(__name__)
 
@@ -26,6 +25,8 @@ class UncertaintyEvaluator:
         self.device = args.device
         self.save_dir = save_dir
         self.in_line = in_line
+        self.input_n = input_n
+        self.output_n = output_n
 
     def evaluate(self):
         self.model.eval()
@@ -41,8 +42,11 @@ class UncertaintyEvaluator:
 
     def __evaluate(self):
         self.reporter.start_time = time.time()
-        model_dict = get_prediction_model_dict(self.model, self.dataloader, self.device)
-        self.uncertainty = calculate_dict_uncertainty(self.dataset_name, model_dict, self.uncertainty_model,
+        model_dict = get_prediction_model_dict(self.model, self.dataloader, self.input_n, self.output_n,
+                                               self.dataset_name, dev=self.device)
+        self.result = calculate_dict_uncertainty_and_mpjpe(self.dataset_name, model_dict, self.uncertainty_model,
                                                       self.batch_size, self.device)
+        self.uncertainty, self.mpjpe = self.result[UNC_K], self.result[LOSS_K]
+        logger.info(f'## Uncertainty: {self.uncertainty}')
         self.reporter.update(self.uncertainty, 1, True, {UNC_K: 1})
         self.reporter.epoch_finished()
