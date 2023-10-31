@@ -45,7 +45,7 @@ def evaluate(cfg: DictConfig):
     evaluator.evaluate()
     if cfg.eval_uncertainty:
         dataset_name = 'Human36m'
-        uncertainty_model = load_dc_model(dataset_name, cfg.oodu_load_path)
+        uncertainty_model = load_dc_model(dataset_name, cfg.n_clusters, cfg.oodu_load_path)
         uncertainty_evaluator = UncertaintyEvaluator(cfg, dataloader, model, uncertainty_model,
                                                      cfg.model.obs_frames_num, cfg.model.pred_frames_num,
                                                      dataset_name, eval_reporter)
