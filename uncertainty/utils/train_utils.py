@@ -33,10 +33,14 @@ def adjust_lr(optimizer, epoch, lr=None, lr_decay=None, scheduler=None):
     return new_lr
 
 
-def save_model(model, output_path: str):
+def save_model(model, output_path: str, best=False):
     now_str = datetime.now().strftime("%Y_%m_%d_%H_%M")
-    path = f'./{output_path}/dc_{now_str}.pt'
-    print(f'The model saved at {path}')
+    if best:
+        path = f'./{output_path}/dc_best_{now_str}.pt'
+        print(f'The best model saved at {path}')
+    else:
+        path = f'./{output_path}/dc_{now_str}.pt'
+        print(f'The model saved at {path}')
     torch.save(model.state_dict(), path)
 
 

@@ -46,16 +46,16 @@ def load_dataset(dataset_path: str, dataset_name: str, input_n: int, output_n: i
     return dataset
 
 
-def load_dc_model(dataset_name: str, n_clusters: int, output_path: str, vel: bool=False):
-    lstm_ae = LstmAutoEncoder(pose_dim=INCLUDED_JOINTS_COUNT[dataset_name], vel=vel).to('cuda')
-    dc_model = DCModel(lstm_ae, n_clusters=n_clusters).to('cuda')
-    dc_model.load_state_dict(torch.load(output_path))
+def load_dc_model(dataset_name: str, n_clusters: int, dc_model_path: str, dev='cuda'):
+    lstm_ae = LstmAutoEncoder(pose_dim=INCLUDED_JOINTS_COUNT[dataset_name]).to(dev)
+    dc_model = DCModel(lstm_ae, n_clusters=n_clusters).to(dev)
+    dc_model.load_state_dict(torch.load(dc_model_path))
     return dc_model
 
 
 def init_dc_train(dataset_args: Namespace, model_args: Namespace, data_loader: dict, train_ds: Dataset,
         output_path: str, vel: bool, dev='cuda'):
-    lstm_ae = LstmAutoEncoder(pose_dim=INCLUDED_JOINTS_COUNT[dataset_args.dataset], vel=vel, dev=dev)
+    lstm_ae = LstmAutoEncoder(pose_dim=INCLUDED_JOINTS_COUNT[dataset_args.dataset], dev=dev)
     if not model_args.lstm_path is None:
         lstm_ae = torch.load(model_args.lstm_path)
     else:

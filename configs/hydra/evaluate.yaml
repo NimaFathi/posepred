@@ -10,4 +10,4 @@ rounds_num: 1
 device: cuda
 eval_uncertainty: false
 n_clusters: 17
-oodu_load_path:
+uncertainty_model_path: ???

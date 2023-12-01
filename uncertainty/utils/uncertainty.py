@@ -94,3 +94,14 @@ def calculate_dataloader_dict_uncertainty(dataset_name: str, loader_dict: dict, 
         return {UNC_K: np.mean(uncertainties)}
     else:
         return uncertainties
+
+
+def calculate_pose_uncertainty(prediction_pose, dc_model, dataset_name: str) -> dict:
+    uncertainties = []
+    B, SEQ, NJ = prediction_pose.shape
+    for k in range(len(prediction_pose)):
+        with torch.no_grad():
+            p, _ = dc_model(prediction_pose[k][:, :, JOINTS_TO_INCLUDE[dataset_name]])
+            uncertainties.append(entropy_uncertainty(p, as_list=True).cpu().detach().numpy())
+    uncertainties = np.concatenate(uncertainties, axis=0)
+    return np.mean(uncertainties)

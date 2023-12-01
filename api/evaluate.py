@@ -25,6 +25,7 @@ def evaluate(cfg: DictConfig):
         raise Exception(msg)
     dataloader = get_dataloader(cfg.dataset, cfg.data)
     eval_reporter = Reporter(state='')
+    uncertainty_reporter = Reporter(state='')
     if cfg.load_path is not None:
         model, loss_module, _, _, _, _, _ = load_snapshot(cfg.load_path)
         cfg.save_dir = cfg.load_path[:cfg.load_path.rindex('snapshots/')]
@@ -44,11 +45,8 @@ def evaluate(cfg: DictConfig):
     evaluator = Evaluator(cfg, dataloader, model, loss_module, eval_reporter)
     evaluator.evaluate()
     if cfg.eval_uncertainty:
-        dataset_name = 'Human36m'
-        uncertainty_model = load_dc_model(dataset_name, cfg.n_clusters, cfg.oodu_load_path)
-        uncertainty_evaluator = UncertaintyEvaluator(cfg, dataloader, model, uncertainty_model,
-                                                     cfg.model.obs_frames_num, cfg.model.pred_frames_num,
-                                                     dataset_name, eval_reporter)
+        uncertainty_model = load_dc_model(cfg.dataset, cfg.n_clusters, cfg.uncertainty_model_path)
+        uncertainty_evaluator = UncertaintyEvaluator(cfg, dataloader, model, uncertainty_model, uncertainty_reporter)
         uncertainty_evaluator.evaluate()
 
 

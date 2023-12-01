@@ -6,43 +6,67 @@ import numpy as np
 import os
 from tqdm import tqdm
 
-from metrics import POSE_METRICS, MASK_METRICS
 from utils.others import dict_to_device
-from uncertainty.utils.uncertainty import calculate_dict_uncertainty, UNC_K
-from uncertainty.utils.prediction_util import get_prediction_model_dict
+from uncertainty.utils.uncertainty import calculate_pose_uncertainty
 
 logger = logging.getLogger(__name__)
 
 
 class UncertaintyEvaluator:
-    def __init__(self, args, dataloader, model, uncertainty_model, input_n, output_n, dataset_name, reporter, in_line=False, save_dir='/home/posepred/final_yashar/posepred/'):
+    def __init__(self, args, dataloader, model, uncertainty_model, reporter):
         self.args = args
         self.dataloader = dataloader
         self.model = model.to(args.device)
-        self.uncertainty_model = uncertainty_model.to(args.device)
-        self.dataset_name = dataset_name
-        self.batch_size = args.data.batch_size
+        self.uncertainty_model = uncertainty_model
         self.reporter = reporter
+        self.rounds_num = args.rounds_num
         self.device = args.device
-        self.save_dir = save_dir
-        self.in_line = in_line
 
     def evaluate(self):
+        logger.info('Uncertainty Evaluation started.')
         self.model.eval()
-        self.__evaluate()
-        if self.in_line:
-            self.reporter.print_uncertainty_values(logger, UNC_K)
-            self.reporter.save_uncertainty_data(UNC_K, self.save_dir)
-        else:
-            logger.info('Uncertainty evaluation started.')
-            self.reporter.print_pretty_uncertainty(logger, UNC_K)
-            self.reporter.save_csv_uncertainty(UNC_K, os.path.join(self.args.csv_save_dir, "uncertainty_eval.csv"))
-            logger.info("Uncertainty evaluation has been completed.")
+        for i in range(self.rounds_num):
+            logger.info('round ' + str(i + 1) + '/' + str(self.rounds_num))
+            self.__evaluate()
+        self.reporter.print_pretty_metrics(logger, ['UNCERTAINTY'])
+        self.reporter.save_csv_metrics(['UNCERTAINTY'], os.path.join(self.args.save_dir, "uncertainty_eval.csv"))
+        logger.info("Uncertainty evaluation has been completed.")
 
     def __evaluate(self):
         self.reporter.start_time = time.time()
-        model_dict = get_prediction_model_dict(self.model, self.dataloader, self.device)
-        self.uncertainty = calculate_dict_uncertainty(self.dataset_name, model_dict, self.uncertainty_model,
-                                                      self.batch_size, self.device)
-        self.reporter.update(self.uncertainty, 1, True, {UNC_K: 1})
+        pose_key = None
+        for data in tqdm(self.dataloader):
+            actions = set(data['action']) if 'action' in data.keys() else set()
+            actions.add("all")
+            if pose_key is None:
+                pose_key = [k for k in data.keys() if "pose" in k][0]
+            batch_size = data[pose_key].shape[0]
+            with torch.no_grad():
+                # calculate uncertainty
+                model_outputs = self.model(dict_to_device(data, self.device))
+                assert 'pred_pose' in model_outputs.keys(), 'outputs of model should include pred_pose'
+
+                # calculate pose_metrics
+                report_attrs = {}
+                dynamic_counts = {}
+
+                pred_metric_pose = model_outputs['pred_pose']
+                if 'pred_metric_pose' in model_outputs:
+                    pred_metric_pose = model_outputs['pred_metric_pose']
+
+                for action in actions:
+                    if action == "all":
+                        metric_value = calculate_pose_uncertainty(pred_metric_pose.to(self.device),
+                                                                  self.uncertainty_model,
+                                                                  self.args.dataset)
+                    else:
+                        indexes = np.where(np.asarray(data['action']) == action)[0]
+                        metric_value = calculate_pose_uncertainty(pred_metric_pose.to(self.device)[indexes],
+                                                                  self.uncertainty_model,
+                                                                  self.args.dataseet)
+                        dynamic_counts[f'UNCERTAINTY_{action}'] = len(indexes)
+                    report_attrs[f'UNCERTAINTY_{action}'] = metric_value
+
+                self.reporter.update(report_attrs, batch_size, True, dynamic_counts)
+
         self.reporter.epoch_finished()

@@ -116,12 +116,19 @@ class Reporter:
                 to_print.append(np.mean(self.history.get(f'{metric}_{action}')))
             logger.info(' |'.join([action.ljust(15)] + [str(np.around(a, 4)).center(15) for a in to_print]))
 
-    def print_pretty_uncertainty(self, logger, unc_k):
-        logger.info("_" * 20 * (2))
-        to_print = []
-        to_print.append(np.mean(self.history.get(unc_k)))
-        logger.info(' |'.join(["all".ljust(15)] + [str(np.around(a, 4)).center(15) for a in to_print]))
-
+    def print_pretty_uncertainty(self, logger, metrics):
+        actions = []
+        for k in self.history.keys():
+            if metrics[0] in k:
+                actions.append(k[len(metrics[0]) + 1:])
+        actions = list(sorted(actions))
+        logger.info(' |'.join(["actions".ljust(15)] + [a.center(15) for a in list(metrics)]))
+        logger.info("_" * 20 * (len(list(metrics)) + 1))
+        for action in actions:
+            to_print = []
+            for metric in list(metrics):
+                to_print.append(np.mean(self.history.get(f'{metric}_{action}')))
+            logger.info(' |'.join([action.ljust(15)] + [str(np.around(a, 4)).center(15) for a in to_print]))
 
     def save_csv_metrics(self, use_mask, metrics, addr):
         actions = []
