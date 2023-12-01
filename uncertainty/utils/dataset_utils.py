@@ -19,7 +19,7 @@ H36_ACTIONS = ["walking", "eating", "smoking", "discussion", "directions",
                "greeting", "phoning", "posing", "purchases", "sitting",
                "sittingdown", "takingphoto", "waiting", "walkingdog",
                "walkingtogether"]
-SCALE_RATIO = {'Human36m': 0.001, 'AMASS': 1, '3DPW': 1}
+SCALE_RATIO = {'human3.6m': 0.001, 'AMASS': 1, '3DPW': 1}
 SKIP_RATE = {'Human36m': 1, 'AMASS': 5, '3DPW': 5}
 MPJPE_COEFFICIENT = {'Human36m': 1, 'AMASS': 1000, '3DPW': 1000}  # Multiplied to the mpjpe loss to convert them to
 # millimeters
