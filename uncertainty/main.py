@@ -12,7 +12,7 @@ from .utils.train_utils import save_model, save_model_results_dict
 from .utils.uncertainty import *
 from .utils.dataset_utils import TRAIN_K, VALID_K, TEST_K, INCLUDED_JOINTS_COUNT, SKIP_RATE, SCALE_RATIO, H36_ACTIONS, \
     DIM
-from .utils.prediction_util import get_prediction_model_dict, get_dataloader_dict, PRED_MODELS, PRED_MODELS_ARGS
+# from .utils.prediction_util import get_prediction_model_dict, get_dataloader_dict, PRED_MODELS, PRED_MODELS_ARGS
 
 
 # def load_dataset(dataset_path: str, dataset_name: str, input_n: int, output_n: int, test: bool, mode: str, vel: bool) -> dict:

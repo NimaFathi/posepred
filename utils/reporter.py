@@ -130,7 +130,7 @@ class Reporter:
                 to_print.append(np.mean(self.history.get(f'{metric}_{action}')))
             logger.info(' |'.join([action.ljust(15)] + [str(np.around(a, 4)).center(15) for a in to_print]))
 
-    def save_csv_metrics(self, use_mask, metrics, addr):
+    def save_csv_metrics(self, metrics, addr):
         actions = []
         for k in self.history.keys():
             if metrics[0] in k:
