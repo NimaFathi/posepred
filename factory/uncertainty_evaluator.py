@@ -51,12 +51,12 @@ class UncertaintyEvaluator:
                 dynamic_counts = {}
 
                 pred_metric_pose = model_outputs['pred_pose']
-                if 'pred_metric_pose' in model_outputs:
-                    pred_metric_pose = model_outputs['pred_metric_pose']
+                # if 'pred_metric_pose' in model_outputs:
+                #     pred_metric_pose = model_outputs['pred_metric_pose']
 
-                future_metric_pose = data['future_pose']
-                if 'future_metric_pose' in data:
-                    future_metric_pose = data['future_metric_pose']
+                # future_metric_pose = data['future_pose']
+                # if 'future_metric_pose' in data:
+                #     future_metric_pose = data['future_metric_pose']
 
                 for action in actions:
                     if action == "all":
