@@ -19,8 +19,8 @@ class MPJPE(nn.Module):
         y_true = y_true['future_pose'] # B,T,JC
 
         B,T,JC = y_pred.shape
-        assert JC % self.args.nJ == 0, "Number of joints * dim of each joint is not dividable by nJ"
-        J = self.args.nJ
+        assert JC % self.args.loss.nJ == 0, "Number of joints * dim of each joint is not dividable by nJ"
+        J = self.args.loss.nJ
         C = JC // J
 
         y_pred = y_pred.view(B, T, J, C)
