@@ -172,6 +172,19 @@ python -m api.train model=st_transformer \
     model.loss.nJ=32
 ```  
 
+To train the EpU model:
+```bash  
+python -m api.train train_dataset=$DATASET_TRAIN_PATH \
+    valid_dataset=$DATASET_VALIDATION_PATH \
+    obs_frames_num=10 \
+    pred_frames_num=25 \
+    model.loss.nT=25 \
+    model.pre_post_process=human3.6m \
+    model.n_major_joints=22 \
+    model.loss.nJ=32
+    uncertainty_model_path=$UNCERTAINTY_MODEL
+```  
+
 **NOTE**: You can see more commands for training models [here](COMMANDS.md).
 
 Provide **validation_dataset** to adjust learning-rate and report metrics on validation-dataset as well.
@@ -210,7 +223,7 @@ python -m api.evaluate model=st_transformer \
           data.is_testing=true \
           data.is_h36_testing=true \
           eval_uncertainty=true \
-          oodu_load_path=$UNCERTAINTY_MODEL
+          uncertainty_model_path=$UNCERTAINTY_MODEL
 ```
 See [here](https://github.com/vita-epfl/posepred/blob/master/ARGS_README.md#evaluation) for more details about evaluation arguments.
 
