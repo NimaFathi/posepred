@@ -1,5 +1,5 @@
 from .functions import *
-from .dataset_utils import JOINTS_TO_INCLUDE
+from .dataset_utils import JOINTS_TO_INCLUDE, SCALE_RATIO
 
 LOSS_K, UNC_K = 'loss', 'uncertainty'
 
@@ -14,8 +14,10 @@ def entropy_uncertainty(p, as_list=False):
 
 def calculate_pose_uncertainty(prediction_pose, dc_model, dataset_name: str) -> dict:
     uncertainties = []
+    #         uncertainties += entropy_uncertainty(p) * (e_idx - s_idx)
+    # return {LOSS_K: err * MPJPE_COEFFICIENT[dataset_name]/ total_count, UNC_K: uncertainties / total_count}
     with torch.no_grad():
-        p, _ = dc_model(prediction_pose[:, :, JOINTS_TO_INCLUDE[dataset_name]])
+        p, _ = dc_model(scale(prediction_pose[:, :, JOINTS_TO_INCLUDE[dataset_name]], SCALE_RATIO[dataset_name]))
         uncertainties.append(entropy_uncertainty(p, as_list=True).cpu().detach().numpy())
     uncertainties = np.concatenate(uncertainties, axis=0)
     return np.mean(uncertainties)
