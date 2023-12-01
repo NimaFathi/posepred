@@ -63,7 +63,7 @@ class UncertaintyEvaluator:
                         indexes = np.where(np.asarray(data['action']) == action)[0]
                         metric_value = calculate_pose_uncertainty(pred_metric_pose.to(self.device)[indexes],
                                                                   self.uncertainty_model,
-                                                                  self.args.dataseet_name)
+                                                                  self.args.dataset_name)
                         dynamic_counts[f'UNCERTAINTY_{action}'] = len(indexes)
                     report_attrs[f'UNCERTAINTY_{action}'] = metric_value
 
