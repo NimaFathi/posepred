@@ -15,5 +15,22 @@ start_epoch: 0
 experiment_name: Default
 experiment_tag:
 mlflow_tracking_uri:
-eval_uncertainty: false
-oodu_load_path:
+train_uncertainty: False
+uncertainty_model_path: ???
+dataset_name: ???
+lstm:
+  - alpha: 0.001
+  - optimizer: adam
+  - scheduler: tri
+  - lr: 0.0001
+  - lr_decay: 0.99
+  - epochs: 200
+dc:
+  - lr: 0.0005
+  - lr_decay: 0.98
+  - weight_decay: 0.00001
+  - gamma:  0.6
+  - epochs: 30
+  - stop_cret:  0.001
+  - update_interval:  2.0
+  - alpha: 0.001 # equal to lstm.alpha

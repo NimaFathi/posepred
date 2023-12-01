@@ -33,7 +33,7 @@ class Trainer:
         self.valid_reporter = valid_reporter
         self.tensor_board = SummaryWriter(args.save_dir)
         self.use_validation = False if valid_dataloader is None else True
-        self.uncertainty_evaluator = uncertainty_evaluator
+        # self.uncertainty_evaluator = uncertainty_evaluator
 
         self.train_uncertainty_evaluator = train_uncertainty_evaluator
         self.validation_uncertainty_evaluator = validation_uncertainty_evaluator

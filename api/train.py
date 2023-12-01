@@ -5,8 +5,9 @@ from itertools import chain
 import hydra
 from omegaconf import DictConfig
 
+from factory.uncertainty_trainer import UncertaintyTrainer
 from uncertainty.main import load_dc_model
-from data_loader import get_dataloader
+from data_loader import get_dataloader, get_dataset
 from factory.trainer import Trainer
 from losses import LOSSES
 from models import MODELS
@@ -28,6 +29,7 @@ def train(cfg: DictConfig):
         raise Exception(msg)
 
     train_dataloader = get_dataloader(cfg.train_dataset, cfg.data)
+    train_dataset = get_dataset(cfg.train_dataset, cfg.data)
     cfg.data.is_testing = True
     valid_dataloader = get_dataloader(cfg.valid_dataset, cfg.data)
 
@@ -59,20 +61,14 @@ def train(cfg: DictConfig):
         setup_training_dir(cfg.save_dir)
         save_snapshot(model, loss_module, optimizer, cfg.optimizer,
                       0, train_reporter, valid_reporter, cfg.save_dir)
-    uncertainty_evaluator = None
-    if cfg.eval_uncertainty:
-        dataset_name = 'Human36m'
-        uncertainty_model = load_dc_model(dataset_name, cfg.oodu_load_path)
-        train_uncertainty_evaluator = UncertaintyEvaluator(cfg, train_dataloader, model, uncertainty_model,
-                                                     cfg.model.obs_frames_num, cfg.model.pred_frames_num,
-                                                     dataset_name, train_reporter, in_line=True)
-        validation_uncertainty_evaluator = UncertaintyEvaluator(cfg, valid_dataloader, model, uncertainty_model,
-                                                     cfg.model.obs_frames_num, cfg.model.pred_frames_num,
-                                                     dataset_name, valid_reporter, in_line=True)
     scheduler = SCHEDULERS[cfg.scheduler.type](optimizer, cfg.scheduler)
     trainer = Trainer(cfg, train_dataloader, valid_dataloader, model, loss_module, optimizer, cfg.optimizer, scheduler,
-                      train_reporter, valid_reporter, train_uncertainty_evaluator, validation_uncertainty_evaluator)
+                      train_reporter, valid_reporter)
     trainer.train()
+    if cfg.train_uncertainty:
+        uncertainty_model: None
+        uncertainty_trainer = UncertaintyTrainer(cfg, train_dataset, train_dataloader, valid_dataloader)
+        uncertainty_trainer.train()
 
 
 if __name__ == '__main__':

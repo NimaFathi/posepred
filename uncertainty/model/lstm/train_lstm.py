@@ -60,28 +60,19 @@ def lstm_eval_epoch(lstm_model: LstmAutoEncoder, valid_loader: DataLoader, loss_
     return loss_list
 
 
-def train_lstm_model(args: Namespace, lstm_model: LstmAutoEncoder, train_loader: DataLoader, valid_loader: DataLoader,
-                     dev='cuda'):
-    """
-    Trains the given LSTM model
-    :param args:
-    :param lstm_model:
-    :param train_loader:
-    :param valid_loader:
-    :param dev:
-    """
-    optimizer = init_optimizer(lstm_model, args.lstm_optimizer, lr=args.lstm_lr)
-    scheduler = init_scheduler(optimizer, args.lstm_scheduler, lr=args.lstm_lr, epochs=args.lstm_epochs)
+def train_lstm_model(lstm_cfg, lstm_model: LstmAutoEncoder, train_loader: DataLoader, valid_loader: DataLoader, dev):
+    optimizer = init_optimizer(lstm_model, lstm_cfg.optimizer, lr=lstm_cfg.lr)
+    scheduler = init_scheduler(optimizer, lstm_cfg.scheduler, lr=lstm_cfg.lr, epochs=lstm_cfg.epochs)
     lstm_model.train()
     lstm_model.to(dev)
     loss_func = nn.MSELoss()
-    for epoch in range(args.lstm_epochs):
+    for epoch in range(lstm_cfg.epochs):
         ep_start_time = time.time()
         print("Started epoch {}".format(epoch))
-        train_loss = lstm_train_epoch(lstm_model, train_loader, loss_func, args.alpha, optimizer, dev)
-        new_lr = adjust_lr(epoch, args.lstm_lr, args.lstm_lr_decay, optimizer, scheduler)
+        train_loss = lstm_train_epoch(lstm_model, train_loader, loss_func, lstm_cfg.alpha, optimizer, dev)
+        new_lr = adjust_lr(epoch, lstm_cfg.lr, lstm_cfg.lr_decay, optimizer, scheduler)
         print('lr: {0:.3e}'.format(new_lr))
-        eval_loss = lstm_eval_epoch(lstm_model, valid_loader, loss_func, args.alpha, dev)
+        eval_loss = lstm_eval_epoch(lstm_model, valid_loader, loss_func, lstm_cfg.alpha, dev)
         print(f'Epoch {epoch + 1}: Training loss = {np.mean(train_loss)} - Eval loss = {np.mean(eval_loss)}, '
               f'took: {time.time() - ep_start_time} seconds')
 

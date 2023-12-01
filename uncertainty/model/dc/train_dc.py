@@ -4,7 +4,8 @@ from argparse import Namespace
 
 import numpy as np
 import torch.nn as nn
-#from sklearn.cluster import KMeans
+# from sklearn.cluster import KMeans
+from sklearn.cluster import KMeans
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
@@ -14,7 +15,7 @@ from ...utils.train_utils import *
 
 
 # TODO: Copyright after everything!
-def train_dc_model(args: Namespace, dc_model: DCModel, dataset, batch_size, num_workers=8, optimizer=None,
+def train_dc_model(dc_cfg, dc_model: DCModel, dataset, batch_size, num_workers=8, optimizer=None,
                    scheduler=None, dev='cuda'):
     """
     By now, the following should have been completed:
@@ -25,9 +26,9 @@ def train_dc_model(args: Namespace, dc_model: DCModel, dataset, batch_size, num_
     """
     params = list(dc_model.parameters()) + list(dc_model.clustering_layer.parameters())
     if optimizer is None:
-        new_lr, optimizer = get_optimizer(args, optimizer, params)
+        new_lr, optimizer = get_optimizer(dc_cfg, optimizer, params)
     else:
-        new_lr, optimizer = args.dc_lr, optimizer(params)
+        new_lr, optimizer = dc_cfg.lr, optimizer(params)
 
     loader_args = {'batch_size': batch_size, 'num_workers': num_workers, 'pin_memory': True, }
     dataset.return_indices = True
@@ -48,9 +49,9 @@ def train_dc_model(args: Namespace, dc_model: DCModel, dataset, batch_size, num_
     optimizer.zero_grad()
     stop_flag = False
 
-    eval_epochs, eval_iterations = get_eval_epochs_iterations(args, m_loader)
+    eval_epochs, eval_iterations = get_eval_epochs_iterations(dc_cfg, m_loader)
 
-    for epoch in range(args.dc_epochs):
+    for epoch in range(dc_cfg.epochs):
         loss_list = []
         start_time = time.time()
         for it, data_arr in enumerate(tqdm(m_loader, desc="Train Epoch", leave=True)):
@@ -61,7 +62,7 @@ def train_dc_model(args: Namespace, dc_model: DCModel, dataset, batch_size, num_
 
                     if epoch >= 1:
                         stop_flag, y_pred_prev, delta_label = eval_clustering_stop_cret(y_pred, y_pred_prev,
-                                                                                        stop_cret=args.dc_stop_cret)
+                                                                                        stop_cret=dc_cfg.stop_cret)
                         if epoch >= 3 and stop_flag:
                             print("Stop flag in epoch {}".format(epoch))
                             break
@@ -77,14 +78,14 @@ def train_dc_model(args: Namespace, dc_model: DCModel, dataset, batch_size, num_
                 clustering_loss = cls_loss_fn(torch.log(p_iter), cls_softmax)
 
                 reg_loss = calc_reg_loss(dc_model)
-                loss = reconstruction_loss + args.dc_gamma * clustering_loss + args.alpha * reg_loss
+                loss = reconstruction_loss + dc_cfg.gamma * clustering_loss + dc_cfg.alpha * reg_loss
 
                 loss.backward()
                 optimizer.step()
                 optimizer.zero_grad()
                 loss_list.append(loss.item())
 
-        new_lr = adjust_lr(optimizer, epoch, new_lr, args.dc_lr_decay, scheduler=scheduler)
+        new_lr = adjust_lr(optimizer, epoch, new_lr, dc_cfg.lr_decay, scheduler=scheduler)
         print("Epoch {} Done in {}s, loss is {}\n".format(epoch, time.time() - start_time, loss))
         if stop_flag:
             break
@@ -107,14 +108,14 @@ def get_optimizer(args, opt, params):
     if opt is None:
         opt = torch.optim.Adam
 
-    optimizer = opt(params, lr=args.dc_lr, weight_decay=args.dc_weight_decay)
-    new_lr = args.dc_lr
+    optimizer = opt(params, lr=args.lr, weight_decay=args.weight_decay)
+    new_lr = args.lr
     return new_lr, optimizer
 
 
 def get_eval_epochs_iterations(args, m_loader):
     epoch_iterations = len(m_loader.dataset) // m_loader.batch_size
-    eval_frac, eval_intp = math.modf(args.dc_update_interval)
+    eval_frac, eval_intp = math.modf(args.update_interval)
     eval_epochs = int(eval_intp)
     eval_iterations = int(eval_frac * epoch_iterations) + 1  # Round up to avoid eval at last iter
     if eval_epochs == 0:
@@ -155,9 +156,7 @@ def eval_clustering_stop_cret(y_pred, y_pred_prev, stop_cret=1e-3):
 
 def cluster(dataset, encoder: EncoderWrapper, k, device):
     batch_size = 1024
-    data_loader = DataLoader(
-        dataset, batch_size, True
-    )
+    data_loader = DataLoader(dataset, batch_size, True)
     encoded_data = torch.tensor([], device=device)
     encoder.eval()
     with torch.no_grad():
@@ -166,14 +165,10 @@ def cluster(dataset, encoder: EncoderWrapper, k, device):
             hidden_state = encoder(data.to(device)).to(device)
             encoded_data = torch.cat((encoded_data, hidden_state), dim=0)
 
-#    kmeans = KMeans(
-#        n_clusters=k,
-#        init='k-means++',
-#        n_init=10,
-#        max_iter=1000
-#    )
+    kmeans = KMeans(n_clusters=k, init='k-means++', n_init=10, max_iter=1000)
     encoded_data = encoded_data.to('cpu').detach().numpy()
     print('Initializing cluster centers with k-means...')
-#    kmeans.fit(encoded_data)
+    kmeans.fit(encoded_data)
     print('Clustering finished!')
-#    return kmeans.cluster_centers_
+    return kmeans.cluster_centers_
+
