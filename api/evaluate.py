@@ -42,8 +42,8 @@ def evaluate(cfg: DictConfig):
         if cfg.model.type == 'nearest_neighbor':
             model.train_dataloader = get_dataloader(cfg.model.train_dataset, cfg.data)
 
-    # evaluator = Evaluator(cfg, dataloader, model, loss_module, eval_reporter)
-    # evaluator.evaluate()
+    evaluator = Evaluator(cfg, dataloader, model, loss_module, eval_reporter)
+    evaluator.evaluate()
     if cfg.eval_uncertainty:
         uncertainty_model = load_dc_model(cfg.dataset_name, cfg.n_clusters, cfg.uncertainty_model_path)
         uncertainty_evaluator = UncertaintyEvaluator(cfg, dataloader, model, uncertainty_model, uncertainty_reporter)
