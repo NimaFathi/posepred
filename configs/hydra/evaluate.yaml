@@ -8,6 +8,6 @@ defaults:
 dataset: ???
 rounds_num: 1
 device: cuda
-eval_uncertainty: false
+eval_uncertainty: True
 n_clusters: 17
 uncertainty_model_path: ???
