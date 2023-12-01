@@ -11,3 +11,4 @@ device: cuda
 eval_uncertainty: True
 n_clusters: 17
 uncertainty_model_path: ???
+dataset_name: ???
