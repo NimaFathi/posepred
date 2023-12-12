@@ -31,15 +31,12 @@ posepred
 │   ├── disentangled.py
 |   ├── derpof.py
 |   ├── ...
-├── uncertainty
-|   ├── main.py
-|   ├── runner.py
 ├── losses
 |   ├── pua_loss.py
 │   ├── mpjpe.py           
 |   ├── ...
 ```
-The library has 5 important APIs
+The library has 5 important APIs to
 - preprocess data
 - train the model
 - evaluate a model quantitatively
@@ -62,7 +59,6 @@ Make sure you have the following dependencies installed before proceeding:
 ### Virtualenv  
 You can create and activate virtual environment like below:  
 ```bash  
-
 pip install --upgrade virtualenv
 
 virtualenv -p python3.7 <venvname>  
@@ -95,7 +91,7 @@ for more information about Hydra and modules please visit [here](https://github.
 
 We use MLflow in this library for tracking the training process. The features provided by MLFlow help users track their training process, set up experiments with multiple runs and compare runs with each other. Its clean, organized and beatiful UI helps users to better understand and track what they are doing: (you can see more from MLFlow in [here](https://mlflow.org/))
 
-You can use MLFlow by running the command below in the folder containing `mlruns` folder.
+This part is not obligatory but you can use MLFlow by running the command below in the folder containing `mlruns` folder to track the training processes.
 ```bash
 mlflow ui
 ```
@@ -113,28 +109,28 @@ Please download the datasets and put them in a their specific folder. We will re
 
 # Models
 
-We currently Support the following models:
-- [History Repeats Itself](https://arxiv.org/abs/2007.11755)
-- ST-Transformer
+We've tested the following models:
+- [ST-Transformer](https://arxiv.org/abs/2304.06707)
 - [PG-Big](https://arxiv.org/abs/2203.16051)
+- [History Repeats Itself](https://arxiv.org/abs/2007.11755)
+- [STS-GCN](https://arxiv.org/abs/2110.04573)
 - [MSR-GCN](https://arxiv.org/abs/2108.07152)
 - [PoTR](https://openaccess.thecvf.com/content/ICCV2021W/SoMoF/papers/Martinez-Gonzalez_Pose_Transformers_POTR_Human_Motion_Prediction_With_Non-Autoregressive_Transformers_ICCVW_2021_paper.pdf)
-- [STS-GCN](https://arxiv.org/abs/2110.04573)
 - PV-LSTM
 - Disentangled
 - DER-POF
 - Zero-Vel
 
-# Adding a Model
+## Adding a Model
 
 To add a new model, you need to follow the below steps:
 
 - add the model file or files in the model directory
 - add the model reference to the models.\_\_init\_\_.py
-- add the model's required parameters to the configs/hydra/models. This step is necessary even you don't have additional parameters
+- add the model's required parameters to the configs/hydra/models. This step is necessary even if you don't have additional parameters
 - if your model has new loss function which is not implemented in the library, you can add your loss function to the losses folder.
 
-# Adding a Metric
+## Adding a Metric
 
 To add a new metric, you need to follow the below steps:
 
@@ -144,7 +140,7 @@ To add a new metric, you need to follow the below steps:
 
 # Preprocessing
 
-We need to create clean static file to enhance dataloader and speed-up other parts.
+We need to create clean static files to enhance dataloader and speed-up other parts.
 To fulfill mentioned purpose, put the data in DATASET_PATH and run preprocessing api called `preprocess.py` like below:  
 
 Example:  
@@ -171,21 +167,7 @@ python -m api.train model=st_transformer \
     model.n_major_joints=22 \
     model.loss.nJ=32
 ```  
-
-To train the EpU model:
-```bash  
-python -m api.train model=st_transformer 
-    train_dataset=$DATASET_TRAIN_PATH \
-    valid_dataset=$DATASET_VALIDATION_PATH \
-    obs_frames_num=10 \
-    pred_frames_num=25 \
-    model.loss.nT=25 \
-    model.pre_post_process=human3.6m \
-    model.n_major_joints=22 \
-    model.loss.nJ=32    \
-    dataset_name=human3.6   \
-    uncertainty_model_path=$UNCERTAINTY_MODEL
-```  
+DATASET_TRAIN_PATH and DATASET_VALIDATION_PATH refer to the preprocessed json files.
 
 **NOTE**: You can see more commands for training models [here](COMMANDS.md).
 
@@ -196,16 +178,7 @@ See [here](https://github.com/vita-epfl/posepred/blob/master/ARGS_README.md#trai
 
 # Evaluation
 
-Evaluate untrainable model:
-```bash  
-python -m api.evaluate model=zero_vel \
-          dataset=$DATASET_TEST_PATH \
-          obs_frames_num=10 \
-          pred_frames_num=25 \
-          data.is_h36_testing=true
-```  
-
-evaluate pretrained model:
+You can evaluate any pretrained model with:
 ```bash
 python -m api.evaluate model=st_transformer \
           dataset=$DATASET_TEST_PATH \
@@ -214,8 +187,22 @@ python -m api.evaluate model=st_transformer \
           pred_frames_num=25 \
           data.is_h36_testing=true
 ```
-See [here](https://github.com/vita-epfl/posepred/blob/master/ARGS_README.md#evaluation) for more details about evaluation arguments.i
-evaluate model with uncertainty being calculated:
+in case of non-trainable model, run:
+```bash  
+python -m api.evaluate model=zero_vel \
+          dataset=$DATASET_TEST_PATH \
+          obs_frames_num=10 \
+          pred_frames_num=25 \
+          data.is_h36_testing=true
+```  
+See [here](https://github.com/vita-epfl/posepred/blob/master/ARGS_README.md#evaluation) for more details about evaluation arguments.
+
+
+
+## Epistemic Uncertainty
+
+You can also evaluate the epistemic uncertainty of the models using the approach presented in the paper. For the ease of use, we have provided the trained EpU model [here]().
+Using the trained EpU model, one can evaluate the epistemic uncertainty of the pose prediction model too:
 ```bash
 python -m api.evaluate model=st_transformer \
           dataset=$DATASET_TEST_PATH \
@@ -224,13 +211,23 @@ python -m api.evaluate model=st_transformer \
           pred_frames_num=25 \
           data.is_testing=true \
           data.is_h36_testing=true \
-          eval_uncertainty=true \
-          uncertainty_model_path=$UNCERTAINTY_MODEL
+          dataset_name=human3.6m   \
+          eval_epu=true \
+          epu_model_path=$EPU_MODEL
 ```
-See [here](https://github.com/vita-epfl/posepred/blob/master/ARGS_README.md#evaluation) for more details about evaluation arguments.
 
-See [here](https://github.com/vita-epfl/posepred/blob/uncertainty-g1/uncertainty/README.md) if training the uncertainty calculator model is needed.
-
+To train the EpU model, use the following command:
+```bash  
+python -m api.train model=zero_vel \
+    train_dataset=$DATASET_TRAIN_PATH \
+    valid_dataset=$DATASET_VALIDATION_PATH \
+    obs_frames_num=10 \
+    pred_frames_num=25 \
+    dataset_name=human3.6m   \
+    train_epu=True \
+    epu_model_path=$EPU_MODEL
+``` 
+we have used 'zero_vel' as a dummy placeholder here.
 
 # Generating Outputs
 
@@ -246,17 +243,11 @@ python -m api.generate_final_output model=st_transformer \
 ```  
 See [here](https://github.com/vita-epfl/posepred/blob/master/ARGS_README.md#generating-outputs) for more details about prediction arguments.
   
-  
 # Visualization
 
 You can Visualize both 3D and 2D data with visualization module.  
 See here for more details about visualization arguments. <br>
 In order to generate .gif outputs you can run `visualize.py‍‍‍‍` like below:  
-  
-### 2D Visualization  
-  
-Example:  
-TODO: add examples
   
 ### 3D Visualization  
 

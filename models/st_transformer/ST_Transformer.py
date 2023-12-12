@@ -217,9 +217,6 @@ class ST_Transformer(CSDI_base):
 
         for p in self.postprocess.parameters():
             p.requires_grad = False
-            
-        #new:
-        self.args = args
 
     def preprocess_data(self, batch):
         observed_data = batch["observed_pose"].to(self.device)
@@ -247,16 +244,8 @@ class ST_Transformer(CSDI_base):
     def postprocess_data(self, batch, predicted):
         predicted = predicted[:, :, self.Lo:]
         predicted = predicted.permute(0, 2, 1)
-        
-        torch.clamp(predicted, min=-1000, max=1000) #new
-
-        #new:  used to be only the else return and I added the if for the uncertainty model
-        if self.args["mean_pose"] == "uncertainty":
-            return {
-                "sigmas": self.postprocess(-1*torch.ones(batch['observed_pose'].shape).to(self.args.device), predicted, normal=False)  # B, T, JC
-            }
-        else:
-            return {
-                'pred_pose': self.postprocess(batch['observed_pose'], predicted),  # B, T, JC
-            }
+                
+        return {
+            'pred_pose': self.postprocess(batch['observed_pose'], predicted),  # B, T, JC
+        }
         

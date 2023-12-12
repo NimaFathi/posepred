@@ -154,7 +154,7 @@ python -m api.train model=potr \
     pred_frames_num=12 \
     pose_metrics=[MSE]
 ```
-**NOTE**: POTR model only works when the datset is in the format of `rotmat` and the metric is `euler`. This setting is only available in the Human36 version of `Human36` dataset.
+**NOTE**: POTR model only works when the datset is in the format of `rotmat` and the metric is `euler`. This setting is only available in the `Human36` dataset.
 
 # MSR-GCN
 ```bash

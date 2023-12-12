@@ -18,18 +18,18 @@ pre_post_process: human3.6m
 
 device: &device ${device}
 
-# loss:
-#   type: mpjpe
-#   nJ: 32
-
 loss:
-  device: ${device}
-  type: pua_loss
-  tasks: TJ
-  nT: 10
-  nJ: 32 # 32
-  time_prior: sig5
-  action_list: ["walking", "eating", "smoking", "discussion", "directions", "greeting", "phoning", "posing", "purchases", "sitting", "sittingdown", "takingphoto", "waiting", "walkingdog", "walkingtogether"]
-  clipMinS: -1
-  clipMaxS:
-  init_mean: 3.5
+  type: mpjpe
+  nJ: 32
+
+# loss:
+#   device: ${device}
+#   type: pua_loss
+#   tasks: TJ
+#   nT: 10
+#   nJ: 32
+#   time_prior: sig5
+#   action_list: ["walking", "eating", "smoking", "discussion", "directions", "greeting", "phoning", "posing", "purchases", "sitting", "sittingdown", "takingphoto", "waiting", "walkingdog", "walkingtogether"]
+#   clipMinS: -1
+#   clipMaxS:
+#   init_mean: 3.5

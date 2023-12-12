@@ -8,7 +8,7 @@ defaults:
 dataset: ???
 rounds_num: 1
 device: cuda
-eval_uncertainty: True
+eval_epu: False
 n_clusters: 17
-uncertainty_model_path: ???
+epu_model_path: ???
 dataset_name: ???

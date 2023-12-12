@@ -97,12 +97,6 @@ class PoseDataset(Dataset):
         self.is_testing = is_testing
         self.is_h36_testing = is_h36_testing
         
-        #new:
-        self.action_noise_sigma_dict =  { "smoking": 0, "directions": 10, "discussion":20,
-                "eating": 20,"greeting":10,"phoning": 0,"posing": 10,  
-                "purchases": 10,"sitting":20,"sittingdown": 10, "takingphoto": 0,
-                "waiting": 0,"walking": 0,"walkingdog":0,"walkingtogether":0}
-        
     def __len__(self): 
         return len(self.indexes)
 
@@ -123,19 +117,10 @@ class PoseDataset(Dataset):
                 temp_seq = torch.flip(temp_seq, [0])
             temp_seq = temp_seq[::self.frame_rate]
 
-            #new:
-            try:
-                sigma = self.action_noise_sigma_dict[seq["action"]]
-            except:
-                print(seq["action"])
-                sigma = 0
-            noise = torch.randn_like(temp_seq[:self.len_observed])*sigma*0 #new added noise
 
-            outputs["observed_" + k] = temp_seq[:self.len_observed] + noise #new + (torch.randn_like(temp_seq[:self.len_observed])-0.5)*20 #* 0.01 #new added noise
+
+            outputs["observed_" + k] = temp_seq[:self.len_observed]
             outputs["future_" + k] = temp_seq[self.len_observed:]
-            #new:
-            # print(torch.max(temp_seq[:self.len_observed]), temp_seq[self.len_observed:], torch.randn_like(temp_seq[:self.len_observed]))
-            # print(torch.max(temp_seq[:self.len_observed]), torch.min(temp_seq[:self.len_observed]))
 
         for k in self.extra_keys_to_keep:
             if k in seq:

@@ -6,8 +6,8 @@ from data_loader import get_dataloader
 from models import MODELS
 from losses import LOSSES
 from factory.evaluator import Evaluator
-from factory.uncertainty_evaluator import UncertaintyEvaluator
-from uncertainty.main import load_dc_model
+from factory.epistemic_uncertainty_evaluator import UncertaintyEvaluator
+from epistemic_uncertainty.main import load_dc_model
 from utils.reporter import Reporter
 from utils.save_load import load_snapshot
 import os
@@ -44,8 +44,8 @@ def evaluate(cfg: DictConfig):
 
     evaluator = Evaluator(cfg, dataloader, model, loss_module, eval_reporter)
     evaluator.evaluate()
-    if cfg.eval_uncertainty:
-        uncertainty_model = load_dc_model(cfg.dataset_name, cfg.n_clusters, cfg.uncertainty_model_path)
+    if cfg.eval_epu:
+        uncertainty_model = load_dc_model(cfg.dataset_name, cfg.n_clusters, cfg.epu_model_path)
         uncertainty_evaluator = UncertaintyEvaluator(cfg, dataloader, model, uncertainty_model, uncertainty_reporter)
         uncertainty_evaluator.evaluate()
 

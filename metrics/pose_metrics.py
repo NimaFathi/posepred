@@ -249,18 +249,3 @@ def F21(pred, target, dim):
         displacement += (pred[..., 21, :, d] - target[..., 21, :, d]) ** 2
     de = torch.mean(torch.sqrt(displacement))
     return de
-
-
-# def F21(pred, target, dim):
-#     keypoints_num = int(pred.shape[-1] / dim)
-#     pred = torch.reshape(pred, pred.shape[:-1] + (keypoints_num, dim))
-#     target = torch.reshape(target, target.shape[:-1] + (keypoints_num, dim))
-#     displacement = 0
-#     for d in range(dim):
-#         displacement += (pred[..., d] - target[..., d]) ** 2
-    
-#     de = torch.mean(torch.sqrt(displacement), dim=-1) #(na, 25, 32)
-#     de = torch.mean(de, dim=0) #
-
-#     return de[21]
-    
