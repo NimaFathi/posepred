@@ -11,9 +11,9 @@ posepred
 |         └── main.yaml                 -- main config file for data module (Essentially responsible for creating dataloader)             
 |      ├── model
 |         ├── common.yaml                 -- share config file for all models
-|         ├── st_transformer.yaml                 
+|         ├── st_trans.yaml                 
 │         ├── history_repeats_itself.yaml           
-|         ├── msr_gcn.yaml
+|         ├── sts_gcn.yaml
 |         ├── ...              
 |      ├── optimizer
 |         ├── adam.yaml                 -- config file for adam optimizer
@@ -59,7 +59,7 @@ frame_rate:                 The gap between two frames (1 means no gap) (int) (d
 #### model
 Folder Location: 'configs/hydra/model'
 
-**Available model names for Apis:** st_transformer, msr_gcn, pgbig, sts_gcn, history_repeats_itself, potr, pv_lstm, derpof, disentangled, zero_vel
+**Available model names for Apis:** st_trans, msr_gcn, pgbig, sts_gcn, history_repeats_itself, potr, pv_lstm, derpof, disentangled, zero_vel
 
 `common.yaml`:
 ```
@@ -69,7 +69,7 @@ pred_frames_num:            Number of frames to predict, obligatory when ground-
 obs_frames_num:	            Number of frames to observe (int)
 mean_pose:
 std_pose:
-device:                     Choose either 'cpu' or 'gpu' (str)
+device:                     Choose either 'cpu' or 'cuda' (str)
 ```
 
 `<model-name>.yaml`:
@@ -161,8 +161,8 @@ Check preprocessing config file: "configs/hydra/preprocess.yaml" for more detail
 You can change preprocessor via commandline like below:
 ```  
 mandatory arguments:
-  - official_annotation_path  Name of using dataset Ex: 'posetrack' or '3dpw' (str)  
-  - dataset             Name of Dataset []  
+  - annotated_data_path  Path of the dataset  
+  - dataset             Name of the dataset Ex: 'human3.6m' or '3dpw' (str)  
   - data_type           Type of data to use Ex: 'train', 'validation' or 'test' (str)  
     
 optional arguments:  
@@ -173,7 +173,7 @@ Example:
 ```bash
 python -m api.preprocess \
     dataset=human3.6m \
-    official_annotation_path=$DATASET_PATH \
+    annotated_data_path=$DATASET_PATH \
     data_type=train \
     output_name=new_full \
     data_type=train
@@ -233,7 +233,7 @@ mandatory arguments:
   save_dir      Path to save output csv file (str)
 						   
 optional arguments:
-  - device      Choose either 'cpu' or 'gpu' (str)
+  - device      Choose either 'cpu' or 'cuda' (str)
   - obs_frames_num      Number of observed frames for pose dataset (int) (default: 10)
   - pred_frames_num     Number of future frames for pose dataset (int) (default:25)
   - model_pose_format   Used data format for pose dataset (str) (default: xyz)
@@ -271,12 +271,12 @@ mandatory arguments:
 						   
 optional arguments:
   save_dir              Path to save the model (str)
-  device		Choose either 'cpu' or 'gpu' (str)
+  device		Choose either 'cpu' or 'cuda' (str)
 ```  
 
 Example:
 ```bash
-python -m api.generate_final_output model=st_transformer \
+python -m api.generate_final_output model=st_trans \
           dataset=$DATASET_PATH \
           load_path=$MODEL_CHECKPOINT \
           obs_frames_num=10 \

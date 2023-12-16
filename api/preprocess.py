@@ -19,19 +19,19 @@ def preprocess(cfg: DictConfig):
 
     if cfg.dataset == 'human3.6m':
         preprocessor = Human36mPreprocessor(
-            dataset_path=cfg.official_annotation_path,
+            dataset_path=cfg.annotated_data_path,
             custom_name=cfg.output_name, 
         )
     elif cfg.dataset == '3dpw':
         preprocessor = Preprocessor3DPW(
-            dataset_path=cfg.official_annotation_path,
+            dataset_path=cfg.annotated_data_path,
             custom_name=cfg.output_name, 
             load_60Hz=cfg.load_60Hz
         )
     elif cfg.dataset == 'amass':
         preprocessor = AmassPreprocessor(
-            dataset_path=cfg.official_annotation_path,
-            ocustom_name=cfg.output_name, 
+            dataset_path=cfg.annotated_data_path,
+            custom_name=cfg.output_name, 
         )
     else:
         msg = "Invalid preprocessor."

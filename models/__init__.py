@@ -6,7 +6,7 @@ from  models.history_repeats_itself.history_repeats_itself import HistoryRepeats
 from .sts_gcn.sts_gcn import STsGCN
 from .msr_gcn.msrgcn import MSRGCN
 from .potr.potr import POTR
-from .st_transformer.ST_Transformer import ST_Transformer
+from .st_trans.ST_Trans import ST_Trans
 from .pgbig.pgbig import PGBIG
 
 MODELS = {'zero_vel': ZeroVel,
@@ -17,6 +17,6 @@ MODELS = {'zero_vel': ZeroVel,
           'potr': POTR,
           'sts_gcn': STsGCN,
           'msr_gcn': MSRGCN,
-          'st_transformer': ST_Transformer,
+          'st_trans': ST_Trans,
           'pgbig': PGBIG ,
           }

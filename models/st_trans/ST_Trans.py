@@ -4,7 +4,7 @@ import torch
 import torch.nn.functional as F
 from torch import nn
 
-from models.st_transformer.data_proc import Preprocess, Postprocess, Human36m_Postprocess, Human36m_Preprocess, AMASS_3DPW_Postprocess, AMASS_3DPW_Preprocess
+from models.st_trans.data_proc import Preprocess, Postprocess, Human36m_Postprocess, Human36m_Preprocess, AMASS_3DPW_Postprocess, AMASS_3DPW_Preprocess
 
 
 def get_torch_trans(heads=8, layers=1, channels=64):
@@ -196,9 +196,9 @@ class CSDI_base(nn.Module):
         return self.postprocess_data(batch, predicted)
 
 
-class ST_Transformer(CSDI_base):
+class ST_Trans(CSDI_base):
     def __init__(self, args):
-        super(ST_Transformer, self).__init__(args)
+        super(ST_Trans, self).__init__(args)
         self.Lo = args.obs_frames_num
         self.Lp = args.pred_frames_num
 

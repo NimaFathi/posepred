@@ -23,7 +23,7 @@ python -m api.train \
     model.pre_post_process=human3.6m \
     model.n_major_joints=22 \
     model.loss.nJ=32\
-    model=my_st_transformer \
+    model=my_st_trans \
     epochs=5 \
     hydra.run.dir=out_head_st_6TB_5epoch_sep1 \
     model.diff_layers=6 \
@@ -37,5 +37,5 @@ python -m api.train \
 #     pred_frames_num=25 \
 #     data.is_testing=true \
 #     data.is_h36_testing=true\
-#     model=st_transformer\
+#     model=st_trans\
 #     hydra.run.dir=out_PCAwithMLP_st_6TB_15epoch

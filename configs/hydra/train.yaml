@@ -9,7 +9,7 @@ defaults:
 
 train_dataset: ???
 valid_dataset:
-epochs: 10
+epochs: 15
 snapshot_interval: 1
 start_epoch: 0
 experiment_name: Default

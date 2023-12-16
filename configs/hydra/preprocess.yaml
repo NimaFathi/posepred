@@ -2,7 +2,7 @@ defaults:
   - shared
   - _self_
 
-official_annotation_path: ???
+annotated_data_path: ???
 dataset: ???
 data_type: ???
 output_name:
