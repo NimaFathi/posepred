@@ -283,3 +283,5 @@ get_hri_results.ipynb
 #new:
 my_temp/
 out_*/
+
+preprocessed_data/
