@@ -12,7 +12,7 @@ UnPOSed is an open-source toolbox for pose prediction/forecasting a sequence of 
 The main parts of the library are as follows:
 
 ```
-posepred
+unposed
 ├── api
 |   ├── preprocess.py                   -- script to run the preprocessor module
 |   ├── train.py                        -- script to train the models, runs factory.trainer.py
