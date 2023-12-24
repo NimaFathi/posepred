@@ -36,7 +36,7 @@ unposed
 |   ├── ...
 ```
 The library has four important APIs to
-- preprocess data
+- preprocess data 
 - train the model
 - evaluate a model quantitatively
 - generate their outputs 
@@ -239,8 +239,7 @@ python -m api.generate_final_output model=st_trans \
           save_dir=$OUTPUT_PATH
 ```  
 See [here](ARGS_README.md#generating-outputs) for more details about prediction arguments.
-  
 
 
 # Work in Progress
-This repository is being updated so please stay tuned!
+This repository is being updated so please stay tuned!   
