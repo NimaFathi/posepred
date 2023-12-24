@@ -1,5 +1,5 @@
-# Posepred  
-Posepred is an open-source toolbox for pose prediction/forecasting a sequence of human pose given an observed sequence, implemented in PyTorch.
+# UnPOSed  
+UnPOSed is an open-source toolbox for pose prediction/forecasting a sequence of human pose given an observed sequence, implemented in PyTorch.
 
 <p float="left">
   Input pose<br/><img src="https://user-images.githubusercontent.com/33596552/138102745-f6b5c7a0-ee14-40ef-907f-b3ebb98ae08f.gif" alt="observation" width="500">
@@ -83,7 +83,7 @@ If you have any issues and errors install hydra like below:
 ```bash
 pip install hydra-core --upgrade
 ```
-for more information about Hydra and modules please visit [here](https://github.com/vita-epfl/posepred/blob/master/ARGS_README.md#Hydra)
+for more information about Hydra and modules please visit [here](ARGS_README.md#Hydra)
 
 ## MLFlow
 
@@ -147,7 +147,7 @@ python -m api.preprocess \
     annotated_data_path=$DATASET_PATH \
     data_type=test
 ```  
-See [here](https://github.com/vita-epfl/posepred/blob/uncertainty-g1/ARGS_README.md#preprocessing) for more details about preprocessing arguments.
+See [here](ARGS_README.md#preprocessing) for more details about preprocessing arguments.
 This process should be repeated for training, validation and test set. This is a one-time use api and later you just use the saved jsonl files.
   
 # Training
@@ -166,11 +166,11 @@ python -m api.train model=st_trans \
 ```  
 DATASET_TRAIN_PATH and DATASET_VALIDATION_PATH refer to the preprocessed json files.
 
-**NOTE**: You can see more commands for training models [here](COMMANDS.md).
+**NOTE**: You can see more commands for training models [here](trainin_commands.md).
 
 Provide **validation_dataset** to adjust learning-rate and report metrics on validation-dataset as well.
 
-See [here](https://github.com/vita-epfl/posepred/blob/uncertainty-g1/ARGS_README.md#training) for more details about training arguments.
+See [here](ARGS_README.md#training) for more details about training arguments.
 
 
 # Evaluation
@@ -192,7 +192,7 @@ python -m api.evaluate model=zero_vel \
           pred_frames_num=25 \
           data.is_h36_testing=true
 ```  
-See [here](https://github.com/vita-epfl/posepred/blob/uncertainty-g1/ARGS_README.md#evaluation) for more details about evaluation arguments.
+See [here](ARGS_README.md#evaluation) for more details about evaluation arguments.
 
 
 
@@ -238,5 +238,9 @@ python -m api.generate_final_output model=st_trans \
           data.is_h36_testing=true \
           save_dir=$OUTPUT_PATH
 ```  
-See [here](https://github.com/vita-epfl/posepred/blob/master/ARGS_README.md#generating-outputs) for more details about prediction arguments.
+See [here](ARGS_README.md#generating-outputs) for more details about prediction arguments.
   
+
+
+# Work in Progress
+This repository is being updated so stay tuned!
