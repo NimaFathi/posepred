@@ -243,4 +243,4 @@ See [here](ARGS_README.md#generating-outputs) for more details about prediction 
 
 
 # Work in Progress
-This repository is being updated so stay tuned!
+This repository is being updated so please stay tuned!
