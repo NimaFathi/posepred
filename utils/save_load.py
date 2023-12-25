@@ -20,7 +20,6 @@ def load_snapshot(snapshot_path):
     loss_module.load_state_dict(snapshot['loss_state_dict'])
     optimizer = OPTIMIZERS[snapshot['optimizer_args'].type](chain(model.parameters(), loss_module.parameters()), snapshot['optimizer_args'])
     optimizer.load_state_dict(snapshot['optimizer_state_dict'])
-    # optimizer = None
     return (model, loss_module, optimizer, snapshot['optimizer_args'], snapshot['epoch'], snapshot['train_reporter'],
             snapshot['valid_reporter'])
 

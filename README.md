@@ -166,7 +166,7 @@ python -m api.train model=st_trans \
 ```  
 DATASET_TRAIN_PATH and DATASET_VALIDATION_PATH refer to the preprocessed json files.
 
-**NOTE**: You can see more commands for training models [here](trainin_commands.md).
+**NOTE**: You can see more commands for training models [here](training_commands.md).
 
 Provide **validation_dataset** to adjust learning-rate and report metrics on validation-dataset as well.
 
@@ -198,8 +198,8 @@ See [here](ARGS_README.md#evaluation) for more details about evaluation argument
 
 ## Epistemic Uncertainty
 
-You can also evaluate the epistemic uncertainty of the models using the approach presented in the paper. For the ease of use, we have provided the trained EpU model [here]().
-Using the trained EpU model, one can evaluate the epistemic uncertainty of the pose prediction model too:
+You can also evaluate the epistemic uncertainty of the models using the approach presented in the paper. For the ease of use, we have provided the trained EpU model in the release section.
+Using the trained EpU model, one can evaluate the epistemic uncertainty of the pose prediction model:
 ```bash
 python -m api.evaluate model=st_trans \
           dataset=$DATASET_TEST_PATH \

@@ -4,7 +4,7 @@ defaults:
 
 type: st_trans
 
-n_major_joints: 22 # 18 # 22
+n_major_joints: 22 # 18 for AMASS and 3DPW and 22 for human3.6m
 diff_layers: 6
 diff_channels: 64
 diff_nheads: 8
@@ -26,7 +26,7 @@ loss:
   device: ${device}
   type: pua_loss
   tasks: TJ
-  nT: 10
+  nT: 25
   nJ: 32
   time_prior: sig5
   action_list: ["walking", "eating", "smoking", "discussion", "directions", "greeting", "phoning", "posing", "purchases", "sitting", "sittingdown", "takingphoto", "waiting", "walkingdog", "walkingtogether"]
