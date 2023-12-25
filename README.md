@@ -213,18 +213,6 @@ python -m api.evaluate model=st_trans \
           epu_model_path=$EPU_MODEL
 ```
 
-To train the EpU model, use the following command:
-```bash  
-python -m api.train model=zero_vel \
-    train_dataset=$DATASET_TRAIN_PATH \
-    valid_dataset=$DATASET_VALIDATION_PATH \
-    obs_frames_num=10 \
-    pred_frames_num=25 \
-    dataset_name=human3.6m   \
-    train_epu=True \
-    epu_model_path=$EPU_MODEL
-``` 
-we have used 'zero_vel' as a dummy placeholder here.
 
 # Generating Outputs
 
